@@ -1,0 +1,50 @@
+<div id="particles-js"></div>
+
+<div class="login-container">
+  <mat-card class="login-card">
+    <div class="login-card-header">
+      <div class="top-stripes">
+        <div class="stripe stripe-blue"></div>
+        <div class="stripe stripe-yellow"></div>
+      </div>
+    </div>
+
+    <div class="login-card-content">
+      <div class="logo">
+        <img src="/assets/logo.png" alt="Logo" />
+      </div>
+
+      <form (ngSubmit)="onLogin()" #loginForm="ngForm">
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Correo electrónico</mat-label>
+          <input
+            matInput
+            type="email"
+            name="email"
+            [(ngModel)]="email"
+            required
+          />
+        </mat-form-field>
+
+        <mat-form-field appearance="fill" class="full-width">
+          <mat-label>Contraseña</mat-label>
+          <input
+            matInput
+            type="password"
+            name="password"
+            [(ngModel)]="password"
+            required
+          />
+        </mat-form-field>
+
+        <button
+          mat-raised-button
+          class="full-width custom-login-btn"
+          [disabled]="!loginForm.form.valid"
+        >
+          Ingresar
+        </button>
+      </form>
+    </div>
+  </mat-card>
+</div>

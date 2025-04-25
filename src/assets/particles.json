@@ -1,0 +1,40 @@
+{
+    "particles": {
+      "number": {
+        "value": 200
+      },
+      "color": {
+        "value": "#1E2B50"
+      },
+      "shape": {
+        "type": "star"
+      },
+      "opacity": {
+        "value": 0.1
+      },
+      "size": {
+        "value": 0.2
+      },
+      "line_linked": {
+        "enable": true,
+        "distance": 100,
+        "color": "#1E2B50",
+        "opacity": 0.4,
+        "width": 1
+      },
+      "move": {
+        "enable": true,
+        "speed": 1
+      }
+    },
+    "interactivity": {
+      "events": {
+        "onhover": {
+          "enable": true,
+          "mode": "grab"
+        }
+      }
+    },
+    "retina_detect": true
+  }
+  

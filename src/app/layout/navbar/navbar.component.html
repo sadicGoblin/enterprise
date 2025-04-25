@@ -1,0 +1,25 @@
+<nav class="navbar navbar-light justify-content-between px-3">
+  <button
+    class="navbar-toggler text-white"
+    type="button"
+    (click)="toggleSidebar()"
+  >
+    <mat-icon>menu</mat-icon>
+  </button>
+
+  <button
+    mat-button
+    [matMenuTriggerFor]="userMenu"
+    class="d-flex align-items-center text-white"
+  >
+    <span>{{ userName }}</span>
+    <mat-icon class="me-2">account_circle</mat-icon>
+  </button>
+
+  <mat-menu #userMenu="matMenu">
+    <button mat-menu-item (click)="logout()" class="custom-menu-item">
+      <span>Cerrar sesión</span>
+      <mat-icon>logout</mat-icon>
+    </button>
+  </mat-menu>
+</nav>

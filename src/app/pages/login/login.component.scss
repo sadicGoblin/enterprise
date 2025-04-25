@@ -1,0 +1,92 @@
+.login-container {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 100vh;
+  justify-content: center;
+  align-items: center;
+  padding: 1rem;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  padding: 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  background-color: #ffffff;
+  overflow: hidden;
+}
+
+.login-card-header {
+  width: 100%;
+}
+
+.top-stripes {
+  width: 100%;
+}
+
+.stripe {
+  width: 100%;
+}
+
+.stripe-blue {
+  height: 28px;
+  background-color: #1E2B50;
+}
+
+.stripe-yellow {
+  height: 10px;
+  background-color: #FECD0D;
+}
+
+.login-card-content {
+  padding: 2rem;
+}
+
+.logo {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 2rem;
+
+  img {
+    height: 180px;
+    width: 240px;
+    object-fit: contain;
+  }
+}
+
+.full-width {
+  width: 100%;
+  margin-bottom: 1.25rem;
+}
+
+
+.custom-login-btn {
+  background-color: #1E2B50 !important;
+  color: white;
+
+  &:hover {
+    background-color: darken(#1E2B50, 5%);
+  }
+
+  &:disabled {
+    background-color: lighten(#1E2B50, 20%);
+    color: #ccc;
+  }
+
+  &:not(:disabled) {
+    color: #ffffff !important;
+}
+}
+
+
+#particles-js {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  background-color: #F6F5FA;
+}
