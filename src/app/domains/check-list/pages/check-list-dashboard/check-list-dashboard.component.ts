@@ -37,7 +37,7 @@ export class CheckListDashboardComponent {
     {
       label: 'OTROS',
       value: '7,932',
-      change: -8,
+      change: -9,
       color: '#d500f9',
     },
   ];
