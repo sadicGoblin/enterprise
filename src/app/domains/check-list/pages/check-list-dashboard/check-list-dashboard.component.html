@@ -1,14 +1,4 @@
 <div class="dashboard-container">
-  <!-- <div class="metric-cards">
-    <mat-card class="metric-card" *ngFor="let metric of metrics">
-      <div class="metric-title">{{ metric.label }}</div>
-      <div class="metric-value" [style.color]="metric.color">{{ metric.value }}</div>
-      <div class="metric-change" [class.positive]="metric.change >= 0" [class.negative]="metric.change < 0">
-        <span>{{ metric.change }}%</span>
-      </div>
-    </mat-card>
-  </div> -->
-
   <div class="dashboard-cards">
     <mat-card class="metric-card" *ngFor="let metric of metrics">
       <div class="label">{{ metric.label }}</div>
