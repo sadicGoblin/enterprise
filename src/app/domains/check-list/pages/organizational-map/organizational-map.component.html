@@ -1,0 +1,149 @@
+<div class="map-container">
+  <mat-card class="map-card">
+    <div class="map-card-content">
+      <h2 class="title">Mapa Organizacional</h2>
+
+      <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+        <div class="form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre" />
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Usuario</mat-label>
+            <input matInput formControlName="usuario" />
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>eMail</mat-label>
+            <input matInput formControlName="email" />
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Nº Celular</mat-label>
+            <input matInput formControlName="celular" />
+          </mat-form-field>
+        </div>
+
+        <div class="select-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Cargo</mat-label>
+            <mat-select formControlName="cargo">
+              <mat-option *ngFor="let c of cargos" [value]="c">{{
+                c
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Tipo Acceso</mat-label>
+            <mat-select formControlName="tipoAcceso">
+              <mat-option *ngFor="let a of accesos" [value]="a">{{
+                a
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Empresa Contratista</mat-label>
+            <mat-select formControlName="empresa">
+              <mat-option *ngFor="let e of empresas" [value]="e">{{
+                e
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <button mat-raised-button color="primary" class="full-width custom-btn">
+          Grabar
+        </button>
+      </form>
+    </div>
+
+    <hr />
+    <table
+      mat-table
+      [dataSource]="dataSource"
+      class="mat-elevation-z2 full-width"
+    >
+      <ng-container matColumnDef="usuario">
+        <th mat-header-cell *matHeaderCellDef>Usuario</th>
+        <td mat-cell *matCellDef="let element">{{ element.usuario }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef>Nombre</th>
+        <td mat-cell *matCellDef="let element">{{ element.nombre }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="cargo">
+        <th mat-header-cell *matHeaderCellDef>Cargo</th>
+        <td mat-cell *matCellDef="let element">{{ element.cargo }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="tipoAcceso">
+        <th mat-header-cell *matHeaderCellDef>Tipo Acceso</th>
+        <td mat-cell *matCellDef="let element">{{ element.tipoAcceso }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="empresa">
+        <th mat-header-cell *matHeaderCellDef>Empresa</th>
+        <td mat-cell *matCellDef="let element">{{ element.empresa }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef>eMail</th>
+        <td mat-cell *matCellDef="let element">{{ element.email }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="celular">
+        <th mat-header-cell *matHeaderCellDef>Celular</th>
+        <td mat-cell *matCellDef="let element">{{ element.celular }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="obras">
+        <th mat-header-cell *matHeaderCellDef>Obras</th>
+        <td mat-cell *matCellDef="let element">
+          <button mat-icon-button color="primary">
+            <mat-icon>home</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="areas">
+        <th mat-header-cell *matHeaderCellDef>Áreas</th>
+        <td mat-cell *matCellDef="let element">
+          <button mat-icon-button color="primary">
+            <mat-icon>map</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef>Acciones</th>
+        <td mat-cell *matCellDef="let element; let i = index">
+          <button mat-icon-button color="accent" (click)="editar(element, i)">
+            <mat-icon>edit</mat-icon>
+          </button>
+
+          <button mat-icon-button color="warn">
+            <mat-icon>close</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr
+        mat-header-row
+        *matHeaderRowDef="displayedColumns"
+        class="header-row"
+      ></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+    </table>
+
+    <mat-paginator
+      [pageSizeOptions]="[5, 10, 15]"
+      showFirstLastButtons
+    ></mat-paginator>
+  </mat-card>
+</div>

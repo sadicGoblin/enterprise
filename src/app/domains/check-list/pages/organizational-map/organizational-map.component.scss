@@ -1,0 +1,47 @@
+.map-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.map-card {
+  width: 100%;
+  width: 100%;
+  padding: 24px;
+  overflow-x: auto;
+}
+
+.map-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.select-grid {
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+table.mat-table {
+  min-width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+
+.mat-header-cell,
+.mat-cell {
+  white-space: nowrap;
+}

@@ -1,0 +1,96 @@
+.dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  padding: 2rem;
+  background-color: #f5f6fa;
+}
+
+.chart-cards {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 2rem;
+}
+
+.chart-card {
+  padding: 1rem 2rem;
+  border-radius: 10px;
+  background-color: white;
+
+  .chart-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+  }
+
+  .chart-content {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .chart-total {
+    position: absolute;
+    text-align: center;
+    font-weight: bold;
+
+    .total-value {
+      font-size: 2rem;
+      color: #333;
+    }
+  }
+}
+
+.label {
+  font-size: 14px;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.value {
+  font-size: 28px;
+  font-weight: bold;
+  margin: 8px 0;
+}
+
+.progress-bar-container {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+
+.progress-bar {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease-in-out;
+}
+
+.change {
+  font-size: 14px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.dashboard-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.metric-card {
+  flex: 1 1 calc(25% - 16px);
+  min-width: 220px;
+  background: #2e3440;
+  color: white;
+  padding: 16px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 150px;
+}
