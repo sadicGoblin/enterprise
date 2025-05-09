@@ -1,0 +1,91 @@
+<div class="container">
+  <mat-card class="mat-container">
+    <h2 class="title">Planificación Actividades</h2>
+
+    <div class="form-grid">
+      <mat-form-field appearance="fill">
+        <mat-label>Proyecto</mat-label>
+        <mat-select [(ngModel)]="selectedProject">
+          <mat-option value="">Seleccione...</mat-option>
+          <mat-option *ngFor="let p of projects" [value]="p">{{
+            p
+          }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Colaborador</mat-label>
+        <mat-select [(ngModel)]="selectedUser">
+          <mat-option value="">Seleccione...</mat-option>
+          <mat-option *ngFor="let user of collaborators" [value]="user">{{
+            user
+          }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="fill">
+        <mat-label>Periodo</mat-label>
+        <input matInput [matDatepicker]="picker" [(ngModel)]="selectedPeriod" />
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker
+          #picker
+          startView="multi-year"
+          [startAt]="selectedPeriod"
+          panelClass="month-picker"
+        ></mat-datepicker>
+      </mat-form-field>
+
+      <div class="button-row">
+        <button mat-raised-button color="primary">Consultar</button>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table
+        mat-table
+        [dataSource]="activities"
+        class="mat-elevation-z2 custom-table"
+      >
+        <ng-container matColumnDef="activity">
+          <th mat-header-cell *matHeaderCellDef>Actividad</th>
+          <td mat-cell *matCellDef="let element">{{ element.activity }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="periodicity">
+          <th mat-header-cell *matHeaderCellDef>Peri.</th>
+          <td mat-cell *matCellDef="let element">{{ element.periodicity }}</td>
+        </ng-container>
+
+        <ng-container *ngFor="let day of days" [matColumnDef]="'day' + day">
+          <th mat-header-cell *matHeaderCellDef>
+            {{ day < 10 ? "0" + day : day }}
+          </th>
+          <td mat-cell *matCellDef="let element">
+            <mat-checkbox
+              [(ngModel)]="element.dailyChecks[day - 1]"
+              class="check-cell"
+            ></mat-checkbox>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="assign">
+          <th mat-header-cell *matHeaderCellDef>Asig.</th>
+          <td mat-cell *matCellDef="let element">{{ element.assign }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="realized">
+          <th mat-header-cell *matHeaderCellDef>Realiz.</th>
+          <td mat-cell *matCellDef="let element">{{ element.realized }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="compliance">
+          <th mat-header-cell *matHeaderCellDef>%Cump.</th>
+          <td mat-cell *matCellDef="let element">{{ element.compliance }}%</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  </mat-card>
+</div>

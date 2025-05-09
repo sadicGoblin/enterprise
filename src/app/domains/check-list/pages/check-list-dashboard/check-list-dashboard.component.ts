@@ -6,15 +6,16 @@ import {
   ChartConfiguration,
   ChartType,
 } from 'chart.js';
+import { DashboardTableComponent } from '../../components/dashboard-table/dashboard-table.component';
 
 @Component({
   selector: 'app-check-list-dashboard',
   standalone: true,
-  imports: [CommonModule, MatCardModule, NgChartsModule],
+  imports: [CommonModule, MatCardModule, NgChartsModule, DashboardTableComponent],
   templateUrl: './check-list-dashboard.component.html',
   styleUrl: './check-list-dashboard.component.scss',
 })
-export class CheckListDashboardComponent {
+export class CheckListDashboardComponent  {
   metrics = [
     {
       label: 'CHECKLIST DISTRIBUCIONES',
@@ -41,6 +42,7 @@ export class CheckListDashboardComponent {
       color: '#d500f9',
     },
   ];
+
 
   donutChartLabels = ['Distribuciones', 'Personas', 'Enfierradura', 'Otros'];
   donutChartData = {

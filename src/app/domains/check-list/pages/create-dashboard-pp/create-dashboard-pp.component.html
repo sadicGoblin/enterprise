@@ -1,0 +1,35 @@
+<div class="container">
+    <mat-card class="mat-container">
+      <h2 class="title">Dashboard PP</h2>
+      <div class="tab-content">
+        <div class="form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Proyecto</mat-label>
+            <mat-select [(ngModel)]="selectedProject">
+              <mat-option value="">Seleccione...</mat-option>
+              <mat-option *ngFor="let project of projects" [value]="project">{{ project }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+  
+          <mat-form-field appearance="fill">
+            <mat-label>Periodo Inicio</mat-label>
+            <input matInput [matDatepicker]="startPicker" [(ngModel)]="startPeriod" />
+            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+            <mat-datepicker #startPicker></mat-datepicker>
+          </mat-form-field>
+  
+          <mat-form-field appearance="fill">
+            <mat-label>Periodo Fin</mat-label>
+            <input matInput [matDatepicker]="endPicker" [(ngModel)]="endPeriod" />
+            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+            <mat-datepicker #endPicker></mat-datepicker>
+          </mat-form-field>
+        </div>
+  
+        <div class="button-row">
+          <button mat-raised-button color="primary">Generar</button>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+  

@@ -1,0 +1,352 @@
+<div class="container">
+  <mat-card class="mat-container">
+    <mat-tab-group>
+      <mat-tab label="Etapas Constructivas">
+        <div class="tab-content">
+          <mat-form-field appearance="fill">
+            <mat-label>Proyecto</mat-label>
+            <mat-select [(ngModel)]="selectedProjectId">
+              <mat-option
+                *ngFor="let proyecto of projects"
+                [value]="proyecto.id"
+              >
+                {{ proyecto.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Código</mat-label>
+            <input matInput [(ngModel)]="newStageCode" />
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Nombre</mat-label>
+            <input matInput [(ngModel)]="newStageName" />
+          </mat-form-field>
+          <div class="button-row">
+            <button
+              mat-raised-button
+              color="accent"
+              class="save-button"
+              (click)="saveStages()"
+            >
+              Guardar
+            </button>
+            <button mat-raised-button color="primary" (click)="addStage()">
+              Agregar
+            </button>
+          </div>
+        </div>
+
+        <table
+          mat-table
+          [dataSource]="selectedStages"
+          class="mat-elevation-z1 full-width-table"
+        >
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Código</th>
+            <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let row; let i = index">
+              <button mat-icon-button color="accent" (click)="editStage(i)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteStage(i)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="stageColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: stageColumns"></tr>
+        </table>
+      </mat-tab>
+
+      <mat-tab label="Sub-procesos">
+        <div class="tab-content">
+          <mat-form-field appearance="fill">
+            <mat-label>Proyecto</mat-label>
+            <mat-select [(ngModel)]="selectedProjectIdSubprocess">
+              <mat-option
+                *ngFor="let proyecto of projects"
+                [value]="proyecto.id"
+              >
+                {{ proyecto.name }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Código</mat-label>
+            <input matInput [(ngModel)]="newSubprocessCode" />
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Nombre</mat-label>
+            <input matInput [(ngModel)]="newSubprocessName" />
+          </mat-form-field>
+
+          <div class="button-row">
+            <button
+              mat-raised-button
+              color="accent"
+              class="save-button"
+              (click)="saveSubprocesses()"
+            >
+              Guardar
+            </button>
+            <button mat-raised-button color="primary" (click)="addSubprocess()">
+              Agregar
+            </button>
+          </div>
+        </div>
+
+        <table
+          mat-table
+          [dataSource]="selectedSubprocesses"
+          class="mat-elevation-z1 full-width-table"
+        >
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Código</th>
+            <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let row; let i = index">
+              <button
+                mat-icon-button
+                color="accent"
+                (click)="editSubprocess(i)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="deleteSubprocess(i)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="subprocessColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: subprocessColumns"></tr>
+        </table>
+      </mat-tab>
+
+      <mat-tab label="Ámbitos">
+        <div class="tab-content">
+          <mat-form-field appearance="fill">
+            <mat-label>Nombre</mat-label>
+            <input matInput [(ngModel)]="newSubprocessName" />
+          </mat-form-field>
+          <mat-form-field appearance="fill">
+            <mat-label>Código</mat-label>
+            <input matInput [(ngModel)]="newSubprocessCode" />
+          </mat-form-field>
+
+          <div class="button-row">
+            <button
+              mat-raised-button
+              color="accent"
+              class="save-button"
+              (click)="saveSubprocesses()"
+            >
+              Guardar
+            </button>
+            <button mat-raised-button color="primary" (click)="addSubprocess()">
+              Agregar
+            </button>
+          </div>
+        </div>
+        <table
+          mat-table
+          [dataSource]="selectedSubprocesses"
+          class="mat-elevation-z1 full-width-table"
+        >
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Código</th>
+            <td mat-cell *matCellDef="let row">{{ row.code }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let row">{{ row.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Acciones</th>
+            <td mat-cell *matCellDef="let row; let i = index">
+              <button
+                mat-icon-button
+                color="accent"
+                (click)="editSubprocess(i)"
+              >
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button
+                mat-icon-button
+                color="warn"
+                (click)="deleteSubprocess(i)"
+              >
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="subprocessColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: subprocessColumns"></tr>
+        </table>
+      </mat-tab>
+
+      <mat-tab label="Activities">
+        <div class="tab-content">
+          <div class="form-column left">
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Scope</mat-label>
+              <mat-select [(ngModel)]="selectedScope">
+                <mat-option *ngFor="let s of activityScopes" [value]="s">{{
+                  s
+                }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Name</mat-label>
+              <input matInput [(ngModel)]="activityName" />
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Code</mat-label>
+              <input matInput [(ngModel)]="activityCode" />
+            </mat-form-field>
+          </div>
+
+          <div class="form-column right">
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Frequency</mat-label>
+              <mat-select [(ngModel)]="activityFrequency">
+                <mat-option *ngFor="let f of frequencies" [value]="f">{{
+                  f
+                }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Activity Category</mat-label>
+              <mat-select [(ngModel)]="activityCategory">
+                <mat-option *ngFor="let c of activityCategories" [value]="c">{{
+                  c
+                }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Associated Parameter</mat-label>
+              <mat-select [(ngModel)]="activityParameter">
+                <mat-option
+                  *ngFor="let p of associatedParameters"
+                  [value]="p"
+                  >{{ p }}</mat-option
+                >
+              </mat-select>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="full-width">
+              <mat-label>Associated Document</mat-label>
+              <mat-select [(ngModel)]="activityDocument">
+                <mat-option *ngFor="let d of associatedDocuments" [value]="d">{{
+                  d
+                }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <button mat-raised-button color="primary" (click)="addActivity()">
+          Add
+        </button>
+
+        <table
+          mat-table
+          [dataSource]="activities"
+          class="mat-elevation-z2 full-width"
+        >
+          <ng-container matColumnDef="code">
+            <th mat-header-cell *matHeaderCellDef>Code</th>
+            <td mat-cell *matCellDef="let element">{{ element.code }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Name</th>
+            <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="frequency">
+            <th mat-header-cell *matHeaderCellDef>Frequency</th>
+            <td mat-cell *matCellDef="let element">
+              {{ element.frequency }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef>Category</th>
+            <td mat-cell *matCellDef="let element">{{ element.category }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="parameter">
+            <th mat-header-cell *matHeaderCellDef>Parameter</th>
+            <td mat-cell *matCellDef="let element">
+              {{ element.parameter }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="document">
+            <th mat-header-cell *matHeaderCellDef>Document</th>
+            <td mat-cell *matCellDef="let element">{{ element.document }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef>Actions</th>
+            <td mat-cell *matCellDef="let element; let i = index">
+              <button mat-icon-button color="primary" (click)="editActivity(i)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteActivity(i)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumnsActivities"></tr>
+          <tr
+            mat-row
+            *matRowDef="let row; columns: displayedColumnsActivities"
+          ></tr>
+        </table>
+
+        <div class="save-button">
+          <button mat-flat-button color="accent" (click)="saveActivity()">
+            Save
+          </button>
+        </div>
+      </mat-tab>
+    </mat-tab-group>
+  </mat-card>
+</div>

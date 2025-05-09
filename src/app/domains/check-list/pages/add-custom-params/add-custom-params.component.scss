@@ -1,0 +1,31 @@
+.tab-content {
+  margin-top: 40px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+mat-form-field {
+  width: 300px;
+}
+
+.button-row {
+  display: flex;
+  margin-top: -20px;
+  gap: 1rem;
+}
+
+table {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.container {
+  padding: 20px;
+  margin-top: 2rem;
+}
+
+mat-card {
+  padding: 1rem;
+  margin-bottom: 2rem;
+}

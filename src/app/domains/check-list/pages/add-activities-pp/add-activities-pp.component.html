@@ -1,0 +1,151 @@
+<div class="container">
+  <mat-card class="mat-container">
+    <h2 class="title">Mantenedor de Controles</h2>
+    <div class="tab-content">
+      <div class="form-grid">
+        <div class="column">
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Nombre obras</mat-label>
+            <mat-select [(ngModel)]="selectedProject">
+              <mat-option *ngFor="let p of projects" [value]="p.name">{{
+                p.name
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Período</mat-label>
+            <mat-select [(ngModel)]="selectedPeriod">
+              <mat-option *ngFor="let p of periods" [value]="p">{{
+                p
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Usuario Responsable</mat-label>
+            <mat-select [(ngModel)]="selectedUser">
+              <mat-option *ngFor="let u of users" [value]="u">{{
+                u
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Etapa Constructiva</mat-label>
+            <mat-select [(ngModel)]="selectedStage">
+              <mat-option *ngFor="let s of stages" [value]="s">{{
+                s
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="column">
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Sub-proceso</mat-label>
+            <mat-select [(ngModel)]="selectedSubprocess">
+              <mat-option *ngFor="let s of subprocesses" [value]="s">{{
+                s
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Ámbito</mat-label>
+            <mat-select [(ngModel)]="selectedScope">
+              <mat-option *ngFor="let s of scopes" [value]="s">{{
+                s
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Actividad</mat-label>
+            <mat-select [(ngModel)]="selectedActivity">
+              <mat-option *ngFor="let a of activities" [value]="a">{{
+                a
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Parámetro Asociado</mat-label>
+            <mat-select [(ngModel)]="selectedParameter">
+              <mat-option *ngFor="let p of parameters" [value]="p">{{
+                p
+              }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <div class="button-row">
+        <button mat-raised-button color="primary" (click)="addActivity()">
+          Guardar
+        </button>
+        <button mat-raised-button color="warn" (click)="resetFields()">
+          Cancelar
+        </button>
+      </div>
+
+      <table
+        mat-table
+        [dataSource]="tableData"
+        class="mat-elevation-z2 full-width"
+      >
+        <ng-container matColumnDef="project">
+          <th mat-header-cell *matHeaderCellDef>Obra</th>
+          <td mat-cell *matCellDef="let element">{{ element.project }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="user">
+          <th mat-header-cell *matHeaderCellDef>Usuario</th>
+          <td mat-cell *matCellDef="let element">{{ element.user }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="period">
+          <th mat-header-cell *matHeaderCellDef>Periodo</th>
+          <td mat-cell *matCellDef="let element">{{ element.period }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="stage">
+          <th mat-header-cell *matHeaderCellDef>Etapa Const.</th>
+          <td mat-cell *matCellDef="let element">{{ element.stage }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="subprocess">
+          <th mat-header-cell *matHeaderCellDef>Sub-proceso</th>
+          <td mat-cell *matCellDef="let element">{{ element.subprocess }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="scope">
+          <th mat-header-cell *matHeaderCellDef>Ámbito</th>
+          <td mat-cell *matCellDef="let element">{{ element.scope }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="activity">
+          <th mat-header-cell *matHeaderCellDef>Actividad</th>
+          <td mat-cell *matCellDef="let element">{{ element.activity }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="periodicity">
+          <th mat-header-cell *matHeaderCellDef>Días</th>
+          <td mat-cell *matCellDef="let element">{{ element.periodicity }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let element; let i = index">
+            <button mat-icon-button color="warn" (click)="deleteActivity(i)">
+              <mat-icon>delete</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    </div>
+  </mat-card>
+</div>

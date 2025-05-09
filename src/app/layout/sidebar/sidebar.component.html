@@ -14,7 +14,7 @@
           <span *ngIf="!isCollapsed" matLine>Dashboard</span>
         </mat-list-item>
 
-        <mat-list-item class="nav-item">
+        <mat-list-item class="nav-item" [routerLink]="'planificacion-actividades'" > 
           <mat-icon matListIcon>assignment</mat-icon>
           <span *ngIf="!isCollapsed" matLine>Plan Personalizado</span>
         </mat-list-item>
@@ -27,27 +27,27 @@
             </mat-panel-title>
           </mat-expansion-panel-header>
           <div class="mat-expansion-panel-body">
-            <mat-list-item class="nav-item"
+            <mat-list-item class="nav-item" [routerLink]="'ingreso-reporte'"
               ><mat-icon>edit</mat-icon>
               <span>Ingreso Reporte</span></mat-list-item
             >
-            <mat-list-item class="nav-item"
+            <mat-list-item class="nav-item" [routerLink]="'inspeccion-sstma'"
               ><mat-icon>check_circle</mat-icon>
               <span>Inspección SSTMA</span></mat-list-item
             >
-            <mat-list-item class="nav-item"
+            <mat-list-item class="nav-item" [routerLink]="'reporte-incidentes'"
               ><mat-icon>report_problem</mat-icon>
               <span>Reporte Incidentes</span></mat-list-item
             >
-            <mat-list-item class="nav-item"
+            <mat-list-item class="nav-item" [routerLink]="'creacion-dashboard-pp'"
               ><mat-icon>assignment</mat-icon>
               <span>Plan Personalizado</span></mat-list-item
             >
-            <mat-list-item class="nav-item"
+            <mat-list-item class="nav-item" 
               ><mat-icon>insert_chart</mat-icon>
               <span>Consolidado</span></mat-list-item
             >
-            <mat-list-item class="nav-item"
+            <mat-list-item class="nav-item" [routerLink]="'seguimiento-inspecciones-sstma'"
               ><mat-icon>shield</mat-icon>
               <span>Seg. Inspección SSTMA</span></mat-list-item
             >
@@ -64,15 +64,15 @@
             </mat-panel-title>
           </mat-expansion-panel-header>
           <div class="mat-expansion-panel-body">
-            <mat-list-item class="nav-item"
+            <mat-list-item class="nav-item" [routerLink]="'carga-actividades'"
               ><mat-icon>playlist_add</mat-icon>
               <span>Carga Actividades</span></mat-list-item
             >
-            <mat-list-item class="nav-item"
+            <!-- <mat-list-item class="nav-item"
               ><mat-icon>content_copy</mat-icon>
               <span>Replicar PP</span></mat-list-item
-            >
-            <mat-list-item class="nav-item"
+            > -->
+            <mat-list-item class="nav-item" [routerLink]="'biblioteca'"
               ><mat-icon>library_books</mat-icon>
               <span>Biblioteca</span></mat-list-item
             >
@@ -90,11 +90,11 @@
             <mat-list-item class="nav-item" [routerLink]="'obra-mantencion'"
               ><mat-icon>home_work</mat-icon> <span>Obras</span></mat-list-item
             >
-            <mat-list-item class="nav-item" [routerLink]="'parametros'"
+            <mat-list-item class="nav-item" [routerLink]="'ingreso-parametros-pp'"
               ><mat-icon>tune</mat-icon>
               <span>Param. Plan Personalizado</span></mat-list-item
             >
-            <mat-list-item class="nav-item"
+            <mat-list-item class="nav-item" [routerLink]="'parametros'"
               ><mat-icon>settings</mat-icon>
               <span>Parámetros</span></mat-list-item
             >
