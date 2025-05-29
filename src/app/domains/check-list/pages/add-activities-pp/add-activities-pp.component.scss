@@ -1,0 +1,66 @@
+.container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+  }
+  
+  .mat-container {
+    width: 100%;
+    max-width: 1200px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .tab-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  
+  .button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+  
+  .save-button {
+    display: flex;
+    justify-content: center;
+    margin-top: 2rem;
+  }
+  
+  table.mat-table {
+    margin-top: 2rem;
+    overflow: auto;
+  
+    th, td {
+      text-align: left;
+      padding: 0.75rem 1rem;
+    }
+  
+    th {
+      background-color: #f5f5f5;
+      font-weight: bold;
+    }
+  
+    tr.mat-row:hover {
+      background-color: #f9f9f9;
+    }
+  
+    button.mat-icon-button {
+      margin: 0 0.25rem;
+    }
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  
+    mat-form-field {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+  }
+  

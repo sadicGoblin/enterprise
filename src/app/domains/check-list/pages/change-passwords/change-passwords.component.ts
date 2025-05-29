@@ -22,10 +22,11 @@ import { RouterLink } from '@angular/router';
   styleUrls: ['./change-passwords.component.scss']
 })
 export class ChangePasswordsComponent {
-  user = 'FGALLARDO';
-  oldPassword = '';
-  newPassword = '';
-  repeatPassword = '';
+
+  username: string = '';
+  oldPassword: string = '';
+  newPassword: string = '';
+  repeatPassword: string = '';
 
   changePassword() {
     

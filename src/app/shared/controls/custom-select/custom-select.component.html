@@ -1,0 +1,16 @@
+<mat-form-field [appearance]="appearance" class="custom-select-container">
+  <mat-label *ngIf="label">{{ label }}</mat-label>
+  <mat-select
+    [placeholder]="placeholder"
+    [required]="required"
+    [disabled]="disabled || isDisabled"
+    [value]="value"
+    (selectionChange)="onSelectionChange($event)"
+    [compareWith]="compareWith"
+  >
+    <mat-option *ngFor="let option of options" [value]="option.value" [disabled]="option.disabled">
+      {{ option.label }}
+    </mat-option>
+  </mat-select>
+  <mat-error *ngIf="errorMessage">{{ errorMessage }}</mat-error>
+</mat-form-field>

@@ -3,37 +3,39 @@
     <mat-card class="metric-card" *ngFor="let metric of metrics">
       <div class="label">{{ metric.label }}</div>
       <div class="value" [style.color]="metric.color">{{ metric.value }}</div>
-  
+
       <div class="progress-bar-container">
         <div
           class="progress-bar"
           [style.width.%]="metric.change"
           [ngStyle]="{
-            'background': metric.change > 0
-              ? 'linear-gradient(to right, #f26522, #f9a825)'
-              : 'linear-gradient(to right, #d32f2f, #ef5350)'
+            background:
+              metric.change > 0
+                ? 'linear-gradient(to right, #f26522, #f9a825)'
+                : 'linear-gradient(to right, #d32f2f, #ef5350)'
           }"
         ></div>
       </div>
-  
+
       <div class="change">
         <span [style.color]="metric.change > 0 ? 'limegreen' : 'red'">
-          {{ metric.change > 0 ? '▲' : '▼' }}
+          {{ metric.change > 0 ? "▲" : "▼" }}
         </span>
         {{ metric.change }}%
       </div>
     </mat-card>
   </div>
-  
 
   <div class="chart-cards">
     <mat-card class="chart-card donut-card">
       <h3 class="chart-title">CATEGORIES</h3>
       <div class="chart-content">
-        <canvas baseChart
+        <canvas
+          baseChart
           [data]="donutChartData"
           [labels]="donutChartLabels"
-          [type]="donutChartType">
+          [type]="donutChartType"
+        >
         </canvas>
         <div class="chart-total">
           <div>TOTAL</div>
@@ -44,11 +46,14 @@
 
     <mat-card class="chart-card line-card">
       <h3 class="chart-title">CHECKLIST PER MONTH</h3>
-      <canvas baseChart
+      <canvas
+        baseChart
         [data]="lineChartData"
         [options]="lineChartOptions"
-        [type]="lineChartType">
+        [type]="lineChartType"
+      >
       </canvas>
     </mat-card>
   </div>
+  <app-dashboard-table></app-dashboard-table>
 </div>
