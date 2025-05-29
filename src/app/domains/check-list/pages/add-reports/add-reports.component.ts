@@ -32,6 +32,7 @@ import { MatNativeDateModule } from '@angular/material/core';
   templateUrl: './add-reports.component.html',
   styleUrl: './add-reports.component.scss'
 })
+
 export class AddReportsComponent {
   project: string = '';
   type: string = '';

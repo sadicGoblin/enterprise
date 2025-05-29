@@ -17,7 +17,7 @@ export class SidebarComponent {
   @Input() userRole: string = '';
   @Input() isCollapsed = false;
 
-  isExpanded = false;
+  isExpanded = true;
 
   toggleExpansion() {
     this.isExpanded = !this.isExpanded;

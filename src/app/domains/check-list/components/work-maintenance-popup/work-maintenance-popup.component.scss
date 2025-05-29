@@ -1,0 +1,43 @@
+.popup-container {
+    padding: 1rem;
+    max-width: 900px;
+    width: 100%;
+  }
+  
+  .collab-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  
+  .collab-label {
+    background-color: #d0e2ff;
+    font-weight: bold;
+  }
+  
+  .collab-input {
+    flex: 1;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.95rem;
+    background-color: #f9f9f9;
+  }
+  
+  .table-container {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  .footer {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 1rem;
+  }
+  

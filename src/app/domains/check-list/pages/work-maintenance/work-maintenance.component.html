@@ -1,81 +1,91 @@
 <div class="container">
-    <mat-card class="mat-container">
-      <form (ngSubmit)="save()">
-        <div class="row">
-          <div class="col-md-6">
-            <mat-form-field class="w-100" appearance="fill">
-              <mat-label>Nombre Obra</mat-label>
-              <input matInput [(ngModel)]="workForm.name" name="name" required />
-            </mat-form-field>
-          </div>
-          <div class="col-md-3">
-            <mat-form-field class="w-100" appearance="fill">
-              <mat-label>Código Obra</mat-label>
-              <input matInput [(ngModel)]="workForm.code" name="code" required />
-            </mat-form-field>
-          </div>
-          <div class="col-md-3">
-            <mat-form-field class="w-100" appearance="fill">
-              <mat-label>Dirección</mat-label>
-              <input matInput [(ngModel)]="workForm.address" name="address" />
-            </mat-form-field>
-          </div>
+  <h2 class="mb-4">Mantenedor de Obras</h2>
+
+  <mat-card class="mat-container">
+    <mat-card-header>
+      <mat-card-title>{{ isEditing ? 'Editar Obra' : 'Agregar Nueva Obra' }}</mat-card-title>
+    </mat-card-header>
+    <form (ngSubmit)="save()">
+      <div class="row">
+        <div class="col-md-6">
+          <mat-form-field class="w-100" appearance="fill">
+            <mat-label>Nombre Obra</mat-label>
+            <input matInput [(ngModel)]="workForm.name" name="name" required />
+          </mat-form-field>
         </div>
-  
-        <div class="row">
-          <div class="col-md-3">
-            <mat-form-field class="w-100" appearance="fill">
-              <mat-label>Fecha Inicio</mat-label>
-              <input matInput [matDatepicker]="picker1" [(ngModel)]="workForm.startDate" name="startDate" />
-              <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
-              <mat-datepicker #picker1></mat-datepicker>
-            </mat-form-field>
-          </div>
-  
-          <div class="col-md-3">
-            <mat-form-field class="w-100" appearance="fill">
-              <mat-label>Fecha Término</mat-label>
-              <input matInput [matDatepicker]="picker2" [(ngModel)]="workForm.endDate" name="endDate" />
-              <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
-              <mat-datepicker #picker2></mat-datepicker>
-            </mat-form-field>
-          </div>
-  
-          <div class="col-md-3">
-            <mat-form-field class="w-100" appearance="fill">
-              <mat-label>Región</mat-label>
-              <mat-select [(ngModel)]="workForm.region" name="region">
-                <mat-option *ngFor="let region of regions" [value]="region">{{ region }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
-  
-          <div class="col-md-3">
-            <mat-form-field class="w-100" appearance="fill">
-              <mat-label>Comuna</mat-label>
-              <mat-select [(ngModel)]="workForm.commune" name="commune">
-                <mat-option *ngFor="let commune of communes" [value]="commune">{{ commune }}</mat-option>
-              </mat-select>
-            </mat-form-field>
-          </div>
+        <div class="col-md-3">
+          <mat-form-field class="w-100" appearance="fill">
+            <mat-label>Código Obra</mat-label>
+            <input matInput [(ngModel)]="workForm.code" name="code" required />
+          </mat-form-field>
         </div>
-  
-        <mat-form-field class="w-100" appearance="fill">
-          <mat-label>Observaciones</mat-label>
-          <textarea matInput rows="2" [(ngModel)]="workForm.observations" name="observations"></textarea>
-        </mat-form-field>
-  
-        <div class="d-flex justify-content-end gap-2">
-          <button mat-raised-button color="primary" type="submit">
-            {{ isEditing ? 'Actualizar' : 'Guardar' }}
-          </button>
-          <button mat-raised-button color="warn" type="button" (click)="cancel()">Cancelar</button>
+        <div class="col-md-3">
+          <mat-form-field class="w-100" appearance="fill">
+            <mat-label>Dirección</mat-label>
+            <input matInput [(ngModel)]="workForm.address" name="address" />
+          </mat-form-field>
         </div>
+      </div>
+  
+      <div class="row">
+        <div class="col-md-3">
+          <mat-form-field class="w-100" appearance="fill">
+            <mat-label>Fecha Inicio</mat-label>
+            <input matInput [matDatepicker]="picker1" [(ngModel)]="workForm.startDate" name="startDate" />
+            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+            <mat-datepicker #picker1></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <div class="col-md-3">
+          <mat-form-field class="w-100" appearance="fill">
+            <mat-label>Fecha Término</mat-label>
+            <input matInput [matDatepicker]="picker2" [(ngModel)]="workForm.endDate" name="endDate" />
+            <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+            <mat-datepicker #picker2></mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <div class="col-md-6">
+          <mat-form-field class="w-100" appearance="fill">
+            <mat-label>Comuna</mat-label>
+            <mat-select [(ngModel)]="workForm.commune" name="commune">
+              <mat-option *ngFor="let commune of communes" [value]="commune.name">{{ commune.name }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+      </div>
+  
+      <div class="row">
+        <div class="col-md-12">
+          <mat-form-field class="w-100" appearance="fill">
+            <mat-label>Observaciones</mat-label>
+            <textarea matInput rows="2" [(ngModel)]="workForm.observations" name="observations"></textarea>
+          </mat-form-field>
+        </div>
+      </div>
+  
+      <div class="d-flex justify-content-end gap-2">
+        <button mat-raised-button color="primary" type="submit">
+          {{ isEditing ? 'Actualizar' : 'Guardar' }}
+        </button>
+        <button mat-raised-button color="warn" type="button" (click)="cancel()">Cancelar</button>
+      </div>
       </form>
     </mat-card>
   
-    <mat-card class="mt-4">
-      <table mat-table [dataSource]="works" class="mat-elevation-z2 w-100">
+  <mat-card class="mt-4">
+    <mat-card-header>
+      <mat-card-title>Listado de Obras</mat-card-title>
+    </mat-card-header>
+    
+    <div class="loading-container" *ngIf="isLoading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Cargando datos...</p>
+    </div>
+
+    <div class="mat-elevation-z2 w-100 table-responsive" *ngIf="!isLoading">
+      <table mat-table [dataSource]="dataSource" class="w-100">
         <ng-container matColumnDef="code">
           <th mat-header-cell *matHeaderCellDef>Código</th>
           <td mat-cell *matCellDef="let w">{{ w.code }}</td>
@@ -93,12 +103,12 @@
   
         <ng-container matColumnDef="startDate">
           <th mat-header-cell *matHeaderCellDef>Inicio</th>
-          <td mat-cell *matCellDef="let w">{{ w.startDate }}</td>
+          <td mat-cell *matCellDef="let w">{{ formatDate(w.startDate) }}</td>
         </ng-container>
   
         <ng-container matColumnDef="endDate">
           <th mat-header-cell *matHeaderCellDef>Término</th>
-          <td mat-cell *matCellDef="let w">{{ w.endDate }}</td>
+          <td mat-cell *matCellDef="let w">{{ formatDate(w.endDate) }}</td>
         </ng-container>
   
         <ng-container matColumnDef="actions">
@@ -113,9 +123,17 @@
           </td>
         </ng-container>
   
-        <tr mat-header-row *matHeaderRowDef="['code', 'name', 'commune', 'startDate', 'endDate', 'actions']"></tr>
-        <tr mat-row *matRowDef="let row; columns: ['code', 'name', 'commune', 'startDate', 'endDate', 'actions']"></tr>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+        <!-- No data row -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" colspan="6">
+            No hay obras disponibles
+          </td>
+        </tr>
       </table>
+    </div>
     </mat-card>
   </div>
   

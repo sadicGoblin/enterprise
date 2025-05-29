@@ -16,7 +16,7 @@
 
       <form (ngSubmit)="onLogin()" #loginForm="ngForm">
         <mat-form-field appearance="fill" class="full-width">
-          <mat-label>Correo electrónico</mat-label>
+          <mat-label>Nombre de Usuario</mat-label>
           <input
             matInput
             type="email"
@@ -40,9 +40,13 @@
         <button
           mat-raised-button
           class="full-width custom-login-btn"
-          [disabled]="!loginForm.form.valid"
+          [disabled]="!loginForm.form.valid || isLoading"
+          type="submit"
         >
-          Ingresar
+          <span *ngIf="!isLoading">Ingresar</span>
+          <div *ngIf="isLoading" class="spinner-container">
+            <mat-spinner diameter="24" color="accent"></mat-spinner>
+          </div>
         </button>
       </form>
     </div>

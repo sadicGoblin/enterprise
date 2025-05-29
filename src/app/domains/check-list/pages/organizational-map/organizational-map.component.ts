@@ -1,4 +1,4 @@
-import { Component, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, ViewChild, AfterViewInit, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -10,6 +10,15 @@ import { MatOptionModule } from '@angular/material/core';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatDialog } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { WorkMaintenancePopupComponent } from '../../components/work-maintenance-popup/work-maintenance-popup.component';
+import { CustomSelectComponent, SelectOption } from '../../../../shared/controls/custom-select/custom-select.component';
+import { SubParametroService } from '../../services/sub-parametro.service';
+import { UsuarioService } from '../../services/usuario.service';
+import { UsuarioItem } from '../../models/usuario.models';
+import { finalize } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-organizational-map',
@@ -26,17 +35,27 @@ import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
     MatTableModule,
     MatIconModule,
     MatPaginatorModule,
+    MatProgressSpinnerModule,
+    CustomSelectComponent,
   ],
   templateUrl: './organizational-map.component.html',
-  styleUrl: './organizational-map.component.scss',
+  styleUrls: ['./organizational-map.component.scss'],
 })
-export class OrganizationalMapComponent implements AfterViewInit {
+export class OrganizationalMapComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   editForm: FormGroup;
   selectedIndex: number | null = null;
-
-  cargos = [
+  currentEditIndex: number | null = null;
+  isLoading: boolean = false;
+  
+  // Options for the custom-select components
+  cargosOptions: SelectOption[] = [];
+  accesosOptions: SelectOption[] = [];
+  empresasOptions: SelectOption[] = [];
+  
+  // Fallback static data (in case API fails)
+  private fallbackCargos = [
     'Jefe de Obras',
     'Supervisora',
     'Encargado de Seguridad',
@@ -53,8 +72,8 @@ export class OrganizationalMapComponent implements AfterViewInit {
     'Especialista Técnica',
     'Ingeniero de Terreno',
   ];
-  accesos = ['Administrador', 'Limitado', 'Solo lectura'];
-  empresas = [
+  private fallbackAccesos = ['Administrador', 'Limitado', 'Solo lectura'];
+  private fallbackEmpresas = [
     'Vinarco',
     'Constructora Sur',
     'SegurObras',
@@ -67,7 +86,7 @@ export class OrganizationalMapComponent implements AfterViewInit {
     'Consulting Pro',
     'Terreno S.A.',
   ];
-  displayedColumns = [
+  displayedColumns: string[] = [
     'usuario',
     'nombre',
     'cargo',
@@ -80,147 +99,27 @@ export class OrganizationalMapComponent implements AfterViewInit {
     'acciones',
   ];
 
+  // Initial mock data that will be replaced with API data when loaded
   data = [
     {
-      usuario: 'jvalenzuela',
-      nombre: 'Joaquín Valenzuela',
-      cargo: 'Jefe de Obras',
-      tipoAcceso: 'Administrador',
-      empresa: 'Vinarco',
-      email: 'jvalenzuela@vinarco.cl',
-      celular: '+56911112222',
-    },
-    {
-      usuario: 'mmorales',
-      nombre: 'María Morales',
-      cargo: 'Supervisora',
-      tipoAcceso: 'Limitado',
-      empresa: 'Constructora Sur',
-      email: 'mmorales@sur.cl',
-      celular: '+56933334444',
-    },
-    {
-      usuario: 'pperez',
-      nombre: 'Pedro Pérez',
-      cargo: 'Encargado de Seguridad',
-      tipoAcceso: 'Solo lectura',
-      empresa: 'SegurObras',
-      email: 'pperez@segurobras.cl',
-      celular: '+56955556666',
-    },
-    {
-      usuario: 'aespinoza',
-      nombre: 'Andrea Espinoza',
-      cargo: 'Coordinadora',
-      tipoAcceso: 'Administrador',
-      empresa: 'Grupo Norte',
-      email: 'aespinoza@gruponorte.cl',
-      celular: '+56977778888',
-    },
-    {
-      usuario: 'ljimenez',
-      nombre: 'Luis Jiménez',
-      cargo: 'Maestro',
-      tipoAcceso: 'Limitado',
-      empresa: 'Vinarco',
-      email: 'ljimenez@vinarco.cl',
-      celular: '+56999990000',
-    },
-    {
-      usuario: 'nrojas',
-      nombre: 'Natalia Rojas',
-      cargo: 'Analista',
-      tipoAcceso: 'Solo lectura',
-      empresa: 'Vinarco',
-      email: 'nrojas@vinarco.cl',
-      celular: '+56912121212',
-    },
-    {
-      usuario: 'cfuentes',
-      nombre: 'Carlos Fuentes',
-      cargo: 'Ingeniero Civil',
-      tipoAcceso: 'Administrador',
-      empresa: 'Edifica Chile',
-      email: 'cfuentes@edifica.cl',
-      celular: '+56923232323',
-    },
-    {
-      usuario: 'smunoz',
-      nombre: 'Sandra Muñoz',
-      cargo: 'Arquitecta',
-      tipoAcceso: 'Limitado',
-      empresa: 'Diseña SpA',
-      email: 'smunoz@disena.cl',
-      celular: '+56934343434',
-    },
-    {
-      usuario: 'rbustamante',
-      nombre: 'Ricardo Bustamante',
-      cargo: 'Prevencionista',
-      tipoAcceso: 'Solo lectura',
-      empresa: 'Prevencionar',
-      email: 'rbustamante@prev.cl',
-      celular: '+56945454545',
-    },
-    {
-      usuario: 'jpardo',
-      nombre: 'Javiera Pardo',
-      cargo: 'Analista de Proyectos',
-      tipoAcceso: 'Administrador',
-      empresa: 'Planifica Ltda.',
-      email: 'jpardo@planifica.cl',
-      celular: '+56956565656',
-    },
-    {
-      usuario: 'gacosta',
-      nombre: 'Gonzalo Acosta',
-      cargo: 'Obrero',
-      tipoAcceso: 'Limitado',
-      empresa: 'Constructora Sur',
-      email: 'gacosta@sur.cl',
-      celular: '+56967676767',
-    },
-    {
-      usuario: 'lhernandez',
-      nombre: 'Laura Hernández',
-      cargo: 'Jefa de Proyectos',
-      tipoAcceso: 'Administrador',
-      empresa: 'Vinarco',
-      email: 'lhernandez@vinarco.cl',
-      celular: '+56978787878',
-    },
-    {
-      usuario: 'tcastillo',
-      nombre: 'Tomás Castillo',
-      cargo: 'Supervisor de Campo',
-      tipoAcceso: 'Limitado',
-      empresa: 'Infraestructura Ltda.',
-      email: 'tcastillo@infra.cl',
-      celular: '+56989898989',
-    },
-    {
-      usuario: 'mcastro',
-      nombre: 'Marcela Castro',
-      cargo: 'Especialista Técnica',
-      tipoAcceso: 'Solo lectura',
-      empresa: 'Consulting Pro',
-      email: 'mcastro@consulting.cl',
-      celular: '+56990909090',
-    },
-    {
-      usuario: 'fvera',
-      nombre: 'Felipe Vera',
-      cargo: 'Ingeniero de Terreno',
-      tipoAcceso: 'Administrador',
-      empresa: 'Terreno S.A.',
-      email: 'fvera@terreno.cl',
-      celular: '+56911221122',
-    },
+      usuario: 'cargando...',
+      nombre: 'cargando...',
+      cargo: 'cargando...',
+      tipoAcceso: 'cargando...',
+      empresa: 'cargando...',
+      email: 'cargando...',
+      celular: 'cargando...',
+    }
   ];
 
   dataSource = new MatTableDataSource<any>(this.data);
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder, 
+    private dialog: MatDialog,
+    private subParametroService: SubParametroService,
+    private usuarioService: UsuarioService
+  ) {
     this.editForm = this.fb.group({
       usuario: [''],
       nombre: [''],
@@ -232,21 +131,132 @@ export class OrganizationalMapComponent implements AfterViewInit {
     });
   }
 
+  ngOnInit() {
+    this.loadData();
+  }
+  
+  /**
+   * Load all data needed for the page
+   */
+  loadData() {
+    this.isLoading = true;
+    
+    // Load both parameters and user data in parallel
+    forkJoin([
+      this.loadParametros(),
+      this.loadUsers()
+    ])
+    .pipe(
+      finalize(() => this.isLoading = false)
+    )
+    .subscribe();
+  }
+  
   ngAfterViewInit() {
     this.dataSource.paginator = this.paginator;
   }
-
-  editar(element: any, index: number) {
-    this.editForm.patchValue(element);
-    this.selectedIndex = index;
+  
+  /**
+   * Load all parameters from the API
+   */
+  loadParametros() {
+    return this.subParametroService.getAllParametros()
+      .pipe(
+        finalize(() => {})
+      )
+      .subscribe({
+        next: (response) => {
+          console.log('Loaded parameters:', response);
+          
+          // Update options with API data
+          if (response.cargos && response.cargos.length > 0) {
+            this.cargosOptions = response.cargos;
+          } else {
+            console.log('Using fallback cargo data');
+            this.cargosOptions = this.fallbackCargos.map(cargo => ({ value: cargo, label: cargo }));
+          }
+          
+          if (response.tipoAccesos && response.tipoAccesos.length > 0) {
+            this.accesosOptions = response.tipoAccesos;
+          } else {
+            console.log('Using fallback tipoAcceso data');
+            this.accesosOptions = this.fallbackAccesos.map(acceso => ({ value: acceso, label: acceso }));
+          }
+          
+          if (response.empresas && response.empresas.length > 0) {
+            this.empresasOptions = response.empresas;
+          } else {
+            console.log('Using fallback empresa data');
+            this.empresasOptions = this.fallbackEmpresas.map(empresa => ({ value: empresa, label: empresa }));
+          }
+        },
+        error: (error) => {
+          console.error('Error loading parameters:', error);
+          // Fallback to default options if API fails
+          this.cargosOptions = this.fallbackCargos.map(cargo => ({ value: cargo, label: cargo }));
+          this.accesosOptions = this.fallbackAccesos.map(acceso => ({ value: acceso, label: acceso }));
+          this.empresasOptions = this.fallbackEmpresas.map(empresa => ({ value: empresa, label: empresa }));
+        }
+      });
+  }
+  
+  /**
+   * Load user data from API
+   */
+  loadUsers() {
+    return this.usuarioService.getAllUsers()
+      .pipe(
+        finalize(() => {})
+      )
+      .subscribe({
+        next: (response) => {
+          console.log('Loaded users:', response);
+          
+          if (response.glosa === 'Ok' && response.data && response.data.length > 0) {
+            // Replace mock data with API data
+            this.data = response.data.map(user => ({
+              usuario: user.Usuario,
+              nombre: user.Nombre,
+              cargo: user.Cargo,
+              tipoAcceso: user.TipoAcceso,
+              empresa: user.EmpresaContratista,
+              email: user.EMail,
+              celular: user.celular
+            }));
+            
+            // Update data source
+            this.dataSource.data = this.data;
+          }
+        },
+        error: (error) => {
+          console.error('Error loading users:', error);
+          // Keep using the mock data if API fails
+        }
+      });
   }
 
-  onSubmit() {
-    if (this.selectedIndex !== null) {
-      this.data[this.selectedIndex] = this.editForm.value;
-      this.dataSource.data = [...this.data];
-      this.editForm.reset();
-      this.selectedIndex = null;
+  editar(element: any, index: number): void {
+    this.editForm.patchValue(element);
+    this.currentEditIndex = index;
+  }
+
+  onSubmit(): void {
+    if (this.editForm.valid) {
+      if (this.currentEditIndex !== null) {
+        this.data[this.currentEditIndex] = this.editForm.value;
+        this.dataSource.data = this.data;
+      }
     }
+  }
+  
+  openPopup(): void {
+    console.log('opening popup');
+    const dialogRef = this.dialog.open(WorkMaintenancePopupComponent, {
+      width: '800px',
+      disableClose: true,
+      data: {
+        /* data from */
+      },
+    });
   }
 }

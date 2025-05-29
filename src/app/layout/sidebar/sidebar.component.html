@@ -1,5 +1,5 @@
 <div class="sidebar" [class.collapsed]="isCollapsed">
-  <mat-expansion-panel class="submenu-panel">
+  <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
     <mat-expansion-panel-header>
       <mat-panel-title>
         <mat-icon>bar_chart</mat-icon>
@@ -19,7 +19,7 @@
           <span *ngIf="!isCollapsed" matLine>Plan Personalizado</span>
         </mat-list-item>
 
-        <mat-expansion-panel class="submenu-panel">
+        <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>bar_chart</mat-icon>
@@ -54,7 +54,7 @@
           </div>
         </mat-expansion-panel>
 
-        <mat-expansion-panel class="submenu-panel">
+        <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>list_alt</mat-icon>
@@ -79,7 +79,7 @@
           </div>
         </mat-expansion-panel>
 
-        <mat-expansion-panel class="submenu-panel">
+        <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>build</mat-icon>
@@ -101,7 +101,7 @@
           </div>
         </mat-expansion-panel>
 
-        <mat-expansion-panel class="submenu-panel" [expanded]="false">
+        <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>settings</mat-icon>
@@ -133,13 +133,13 @@
     </div>
   </mat-expansion-panel>
 
-  <mat-expansion-panel class="submenu-panel">
-    <mat-expansion-panel-header>
+  <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
+    <!-- <mat-expansion-panel-header>
       <mat-panel-title>
         <mat-icon>assignment</mat-icon>
         <span *ngIf="!isCollapsed" class="ml-2">Orders</span>
       </mat-panel-title>
-    </mat-expansion-panel-header>
+    </mat-expansion-panel-header> -->
 
     <!-- <div class="mat-expansion-panel-body">
       <mat-nav-list>
@@ -235,7 +235,7 @@
           </div>
         </mat-expansion-panel>
 
-        <mat-expansion-panel class="submenu-panel" [expanded]="false">
+        <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>settings</mat-icon>

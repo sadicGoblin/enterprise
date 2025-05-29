@@ -1,14 +1,87 @@
 .container {
   padding: 20px;
-  margin-top: 2rem;
+  margin-top: 1rem;
+  font-size: 0.9rem; // Align with user preference for smaller text sizes
 }
 
-
 mat-card {
-  padding: 1rem;
+  padding: 1.5rem;
   margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1) !important;
+  border-radius: 8px;
+  
+  mat-card-header {
+    margin-bottom: 1.5rem;
+    
+    mat-card-title {
+      font-size: 1.3rem;
+      font-weight: 500;
+      margin-bottom: 0;
+    }
+  }
 }
 
 mat-form-field {
   margin-bottom: 1rem;
+  width: 100%;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+// Table styling
+table {
+  width: 100%;
+}
+
+.table-responsive {
+  overflow-x: auto;
+  
+  th.mat-header-cell {
+    font-weight: 500;
+    color: #333;
+    font-size: 0.9rem;
+  }
+  
+  td.mat-cell {
+    font-size: 0.85rem;
+  }
+}
+
+// Loading container
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  p {
+    margin-top: 1rem;
+    color: #666;
+  }
+}
+
+// No data messaging
+.mat-row.cdk-row.no-data-row {
+  height: 60px;
+}
+
+// Button styling
+button.mat-raised-button {
+  font-size: 0.85rem;
+  padding: 0.25rem 1rem;
+  margin-left: 0.5rem;
+}
+
+// Responsive layout
+@media (max-width: 768px) {
+  .container {
+    padding: 12px;
+  }
+  
+  mat-card {
+    padding: 1rem;
+  }
 }

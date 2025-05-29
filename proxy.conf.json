@@ -1,0 +1,8 @@
+{
+  "/ws": {
+    "target": "http://raam-hosting.cl/apissoma",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

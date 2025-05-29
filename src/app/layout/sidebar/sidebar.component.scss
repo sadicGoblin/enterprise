@@ -2,14 +2,22 @@
   display: flex;
   flex-direction: column;
   width: 350px;
-  height: 100%;
+  height: 100vh;
+  max-height: 100vh;
   background-color: #0d1b42;
   color: #fff;
   box-shadow: 4px 0 10px rgba(0, 0, 0, 0.2);
   transition: width 0.1s ease;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: fixed;
+  top: 50px; /* Adjust based on your navbar height */
+  left: 0;
+  z-index: 900; /* High enough to be above content but below navbar */
+  bottom: 0;
 
   &.collapsed {
-    width: 80px;
+    width: 60px;
 
     .brand {
       display: none;
@@ -62,7 +70,7 @@
     color: #ffffff;
 
     &:hover {
-      background-color: #394b6b;
+      background-color: rgba(0, 0, 0, 0.04);
     }
 
     mat-icon {
@@ -83,6 +91,9 @@
     background-color: transparent;
     color: #ffffff;
     box-shadow: none;
+    border-radius: 0 !important;
+    max-width: 100%;
+    overflow: visible;
 
     .mat-expansion-panel-header {
       background-color: transparent;
@@ -103,6 +114,8 @@
     .mat-expansion-panel-body {
       background-color: transparent;
       padding: 0;
+      max-height: none;
+      overflow: visible;
 
       .nav-item {
         padding-left: 25px;
@@ -110,6 +123,33 @@
       }
     }
   }
+
+  /* Estilizar la barra de scroll */
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 3px;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
 }
 
+.submenu-panel {
+  background: transparent;
+  overflow: visible;
+}
 
+// Ensure the mat-nav-list doesn't break scroll behavior
+mat-nav-list {
+  overflow: visible;
+  max-height: none;
+}

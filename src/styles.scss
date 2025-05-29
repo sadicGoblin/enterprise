@@ -1,8 +1,68 @@
 /* You can add global styles to this file, and also import other style files */
 
-html, body { height: 100%; }
-body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
-$primary-color: #0d1b42; 
+// Font size variables (smaller than default)
+:root {
+  --font-size-xs: 0.75rem;    // 12px
+  --font-size-sm: 0.875rem;   // 14px
+  --font-size-base: 0.9375rem; // 15px (reduced from standard 16px)
+  --font-size-md: 1rem;      // 16px
+  --font-size-lg: 1.125rem;   // 18px
+  --font-size-xl: 1.25rem;    // 20px
+  
+  // Line height variables
+  --line-height-tight: 1.2;
+  --line-height-base: 1.4;
+  --line-height-loose: 1.6;
+}
+
+html, body { 
+  height: 100%; 
+  font-size: 15px; // Base font size reduced from default 16px
+}
+
+body { 
+  margin: 0; 
+  font-family: Roboto, "Helvetica Neue", sans-serif; 
+  font-size: var(--font-size-base);
+  line-height: var(--line-height-base);
+}
+
+// Global text size adjustments
+.mat-typography h1 {
+  font-size: 1.75rem !important; // Reduced from 2.5rem
+}
+
+.mat-typography h2 {
+  font-size: 1.5rem !important; // Reduced from 2rem
+}
+
+.mat-typography h3 {
+  font-size: 1.25rem !important; // Reduced from 1.5rem
+}
+
+.mat-typography h4 {
+  font-size: 1.1rem !important; // Reduced from 1.25rem
+}
+
+// Adjust Material components to use our font sizes
+.mat-button, .mat-raised-button, .mat-icon-button, .mat-stroked-button,
+.mat-flat-button, .mat-fab, .mat-mini-fab {
+  font-size: var(--font-size-sm) !important;
+}
+
+.mat-form-field {
+  font-size: var(--font-size-sm) !important;
+}
+
+.mat-tab-label, .mat-tab-link {
+  font-size: var(--font-size-sm) !important;
+}
+
+.mat-table {
+  font-size: var(--font-size-xs) !important;
+}
+
+$primary-color: #0d1b42;
 
 .mat-expansion-indicator::after {
     color: white !important;

@@ -21,6 +21,7 @@ export const checkListRoutes: Routes = [
     path: '',
     component: CheckListLayoutComponent,
     children: [
+      { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', component: CheckListDashboardComponent },
       { path: 'accesos', component: CheckListAccessComponent },
       { path: 'cambio-clave', component: ChangePasswordsComponent },

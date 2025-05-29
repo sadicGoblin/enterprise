@@ -65,6 +65,7 @@
   background-color: #1e2b50 !important;
   color: white;
   height: 50px;
+  position: relative;
 
   &:hover {
     background-color: darken(#1e2b50, 5%);
@@ -77,6 +78,17 @@
 
   &:not(:disabled) {
     color: #ffffff !important;
+  }
+  
+  .spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    
+    ::ng-deep .mat-mdc-progress-spinner {
+      --mdc-circular-progress-active-indicator-color: white;
+    }
   }
 }
 
