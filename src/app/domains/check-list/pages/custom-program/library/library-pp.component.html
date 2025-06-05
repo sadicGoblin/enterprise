@@ -1,0 +1,100 @@
+<div class="container">
+    <mat-card class="mat-container">
+      <h2 class="title">Biblioteca</h2>
+      <div class="tab-content">
+        <div class="form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Título</mat-label>
+            <input matInput [(ngModel)]="title" />
+          </mat-form-field>
+  
+          <mat-form-field appearance="fill">
+            <mat-label>Año</mat-label>
+            <input matInput type="number" [(ngModel)]="year" />
+          </mat-form-field>
+  
+          <mat-form-field appearance="fill">
+            <mat-label>Tipo Documento</mat-label>
+            <mat-select [(ngModel)]="documentType">
+              <mat-option value="">Seleccione...</mat-option>
+              <mat-option *ngFor="let t of types" [value]="t">{{ t }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+  
+          <mat-form-field appearance="fill">
+            <mat-label>Adj. Documento</mat-label>
+            <input matInput type="text" disabled value="(adjunto simulado)" />
+          </mat-form-field>
+        </div>
+  
+        <div class="button-row">
+          <button mat-flat-button color="primary">
+            Adjuntar
+          </button>
+          <button mat-raised-button color="accent" (click)="saveDocument()">
+            Grabar
+          </button>
+          <button mat-stroked-button color="basic" (click)="fetchDocuments()">
+            <mat-icon>refresh</mat-icon> Actualizar
+          </button>
+        </div>
+  
+        <!-- Loading spinner -->
+        <div class="loading-container" *ngIf="isLoading">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Cargando documentos...</p>
+        </div>
+
+        <!-- Table -->
+        <div class="table-container" *ngIf="!isLoading">
+          <table mat-table [dataSource]="documents" class="mat-elevation-z2 full-width">
+    
+            <ng-container matColumnDef="title">
+              <th mat-header-cell *matHeaderCellDef>Título</th>
+              <td mat-cell *matCellDef="let element">{{ element.title }}</td>
+            </ng-container>
+    
+            <ng-container matColumnDef="year">
+              <th mat-header-cell *matHeaderCellDef>Año</th>
+              <td mat-cell *matCellDef="let element">{{ element.year }}</td>
+            </ng-container>
+    
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Nombre</th>
+              <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+            </ng-container>
+    
+            <ng-container matColumnDef="type">
+              <th mat-header-cell *matHeaderCellDef>Tipo</th>
+              <td mat-cell *matCellDef="let element">{{ element.type }}</td>
+            </ng-container>
+    
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef></th>
+              <td mat-cell *matCellDef="let element" class="action-buttons">
+                <div class="button-container">
+                  <button mat-icon-button color="primary" (click)="viewDocument(element)">
+                    <mat-icon>visibility</mat-icon>
+                  </button>
+                  <button mat-icon-button color="warn" (click)="deleteDocument(element)">
+                    <mat-icon>delete</mat-icon>
+                  </button>
+                </div>
+              </td>
+            </ng-container>
+    
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+            
+            <!-- No data row -->
+            <tr class="mat-row" *matNoDataRow>
+              <td class="mat-cell no-data-cell" colspan="5">
+                No hay documentos disponibles
+              </td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+  

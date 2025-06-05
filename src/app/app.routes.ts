@@ -12,3 +12,4 @@ export const routes: Routes = [
       import('./domains/check-list/check-list.routes').then((m) => m.checkListRoutes),
   },
 ];
+

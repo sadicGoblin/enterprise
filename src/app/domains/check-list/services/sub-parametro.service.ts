@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
+import { ProxyService } from '../../../core/services/proxy.service';
 import { 
   SubParametroRequest, 
   SubParametroResponse, 
@@ -14,8 +15,8 @@ import { SelectOption } from '../../../shared/controls/custom-select/custom-sele
   providedIn: 'root'
 })
 export class SubParametroService {
-  // API URL using relative path that will be handled by the proxy
-  private readonly apiUrl = '/ws/SubParametrosSvcImpl.php';
+  // Complete API path for SubParametros endpoint
+  private readonly apiEndpoint = '/ws/SubParametrosSvcImpl.php';
 
   // ID mapping for different parameter types
   private readonly PARAMETER_IDS = {
@@ -24,7 +25,7 @@ export class SubParametroService {
     EMPRESA: 17
   };
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private proxyService: ProxyService) { }
 
   /**
    * Get cargo options from API
@@ -77,17 +78,31 @@ export class SubParametroService {
       idEnt: idEnt
     };
 
-    return this.http.post<SubParametroResponse>(this.apiUrl, request)
+    // Use Angular's proxy system to avoid CORS issues
+    console.log("calling subparametros api with endpoint: ",this.apiEndpoint)
+    console.log("calling subparametros api with request: ",request)
+    return this.proxyService.post<SubParametroResponse>(this.apiEndpoint, request)
       .pipe(
         map(response => {
-          // Check if response is successful
-          if (response.glosa === 'Ok' && response.data && response.data.length > 0) {
+          console.log(`[SubParametroService] API Response for idEnt=${idEnt}:`, response);
+          
+          // Check if response is successful (handle both new and legacy API formats)
+          if ((response.success === true || response.glosa === 'Ok') && response.data && response.data.length > 0) {
             // Transform API response to SelectOption format
-            return response.data.map(item => ({
-              value: item.IdDet, // Using IdDet as value
-              label: item.Nombre // Using Nombre as display label
-            }));
+            const mappedOptions = response.data.map(item => {
+              const option = {
+                value: item.IdSubParam, // Use IdSubParam as value
+                label: item.Nombre,     // Using Nombre as display label
+                idSubParam: parseInt(item.IdSubParam, 10) // Include IdSubParam for profile API calls
+              };
+              console.log(`[SubParametroService] Mapped option:`, option);
+              return option;
+            });
+            
+            console.log(`[SubParametroService] All mapped options:`, mappedOptions);
+            return mappedOptions;
           }
+          console.log(`[SubParametroService] No data returned or error for idEnt=${idEnt}`);
           return [];
         })
       );

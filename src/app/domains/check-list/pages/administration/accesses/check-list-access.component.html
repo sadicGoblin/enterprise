@@ -1,0 +1,83 @@
+<div class="access-container">
+    <mat-card>
+      <mat-card-content>
+        <!-- Loading spinner for tipo acceso - now handled by the custom-select component -->
+        
+        <!-- Custom-select error handling is now inside the component -->
+        
+        <!-- Tipo Acceso dropdown using custom select with direct API integration -->
+        <div class="custom-select-container">
+          <app-custom-select
+            [formControl]="roleControl"
+            [label]="'Tipo Acceso'"
+            [loadFromApi]="true"
+            [parameterType]="parameterType"
+            (selectionChange)="onAccessTypeChange($event)"
+            (optionsLoaded)="onOptionsLoaded($event)"
+            [required]="false"
+            [appearance]="'fill'"
+          ></app-custom-select>
+        </div>
+  
+        <!-- Loading spinner for table data -->  
+        <div *ngIf="isLoadingScreens" class="spinner-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Cargando permisos de pantallas...</p>
+        </div>
+        
+        <!-- Error message for table data -->
+        <div *ngIf="screenLoadError" class="error-container">
+          <p class="error-message">{{ screenErrorMessage }}</p>
+          <button mat-button color="primary" (click)="retryLoadScreenPermissions()">Reintentar</button>
+        </div>
+
+        <!-- Message when Sin Acceso is selected -->
+        <div *ngIf="!isLoadingScreens && !screenLoadError && isSinAccesoSelected()" class="no-access-message">
+          <p>El tipo de acceso seleccionado no tiene permisos configurados.</p>
+          <p>Seleccione otro tipo de acceso para ver o modificar permisos.</p>
+        </div>
+
+        <!-- Message when no permissions are found for a non-Sin Acceso role -->
+        <div *ngIf="!isLoadingScreens && !screenLoadError && !isSinAccesoSelected() && filteredScreens.length === 0" class="no-data-message">
+          <p>No se encontraron permisos para este tipo de acceso.</p>
+        </div>
+
+        <!-- Table with permissions -->
+        <table mat-table [dataSource]="filteredScreens" class="mat-elevation-z2 full-width" 
+               *ngIf="!isLoadingScreens && !screenLoadError && filteredScreens.length > 0">
+  
+          <ng-container matColumnDef="screen">
+            <th mat-header-cell *matHeaderCellDef>Pantalla</th>
+            <td mat-cell *matCellDef="let element">{{ element.NombrePantalla }}</td>
+          </ng-container>
+  
+          <ng-container matColumnDef="access">
+            <th mat-header-cell *matHeaderCellDef>Acceso</th>
+            <td mat-cell *matCellDef="let element">
+              <mat-checkbox [checked]="element.Acceso" 
+                           (change)="updatePermission(element, 'access', $event.checked)"
+                           class="permission-checkbox access-checkbox"
+                           [color]="'primary'">
+              </mat-checkbox>
+            </td>
+          </ng-container>
+  
+          <ng-container matColumnDef="write">
+            <th mat-header-cell *matHeaderCellDef>Grabar</th>
+            <td mat-cell *matCellDef="let element">
+              <mat-checkbox [checked]="element.Grabar"
+                           [disabled]="!element.Acceso"
+                           (change)="updatePermission(element, 'write', $event.checked)"
+                           class="permission-checkbox write-checkbox"
+                           [color]="'accent'">
+              </mat-checkbox>
+            </td>
+          </ng-container>
+  
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+      </mat-card-content>
+    </mat-card>
+  </div>
+  

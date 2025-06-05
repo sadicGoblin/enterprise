@@ -1,0 +1,61 @@
+.container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+    font-size: 0.9rem; // Align with user preference for smaller text sizes
+  }
+  
+  .mat-container {
+    width: 100%;
+    max-width: 1200px;
+    padding: 2rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .tab-content {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+  
+  .title {
+    text-align: center;
+    font-size: 1.3rem; // Reduced from 1.5rem to align with smaller text preference
+    font-weight: 600;
+  }
+  
+  .button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+  
+    mat-form-field {
+      width: 100%;
+      margin-bottom: 1rem;
+    }
+  }
+  
+  // Loading spinner styles
+  .loading-container {
+    display: flex;
+    justify-content: center;
+    padding: 1rem 0;
+  }
+  
+  // Custom select styling
+  app-custom-select {
+    width: 100%;
+    margin-bottom: 1rem;
+    font-size: 0.9rem; // Maintain the user preference for smaller text
+    
+    ::ng-deep .custom-select-container {
+      width: 100%;
+    }
+  }
+  

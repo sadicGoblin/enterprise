@@ -1,0 +1,80 @@
+<div class="data-table-container">
+  <table 
+    mat-table 
+    [dataSource]="dataSource" 
+    matSort
+    class="mat-elevation-z2 full-width">
+    
+    <!-- Dynamic columns based on input -->
+    <ng-container *ngFor="let column of columns" [matColumnDef]="column.name">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>{{ column.label }}</th>
+      <td 
+        mat-cell 
+        *matCellDef="let element; let i = index" 
+        [ngClass]="{'striped-row': isStripedRow(i)}">
+        <ng-container *ngIf="column.name === 'email' || column.name === 'usuario' || column.name === 'nombre'">
+          <span class="truncate-cell large-cell">{{ element[column.name] }}</span>
+        </ng-container>
+        <ng-container *ngIf="column.name === 'cargo' || column.name === 'tipoAcceso' || column.name === 'empresa'">
+          <span class="truncate-cell medium-cell">{{ element[column.name] }}</span>
+        </ng-container>
+        <ng-container *ngIf="column.name === 'celular'">
+          <span class="truncate-cell small-cell">{{ element[column.name] }}</span>
+        </ng-container>
+        <ng-container *ngIf="column.name === 'obras'">
+          <button mat-icon-button color="primary" (click)="onAction('obras', element, i)">
+            <mat-icon>home</mat-icon>
+          </button>
+        </ng-container>
+        <ng-container *ngIf="column.name === 'areas'">
+          <button mat-icon-button color="primary" (click)="onAction('areas', element, i)">
+            <mat-icon>map</mat-icon>
+          </button>
+        </ng-container>
+        <ng-container *ngIf="!['email', 'usuario', 'nombre', 'cargo', 'tipoAcceso', 'empresa', 'celular', 'obras', 'areas'].includes(column.name)">
+          {{ element[column.name] }}
+        </ng-container>
+      </td>
+    </ng-container>
+    
+    <!-- Actions column -->
+    <ng-container matColumnDef="actions" *ngIf="actionButtons && actionButtons.length > 0">
+      <th mat-header-cell *matHeaderCellDef>Acciones</th>
+      <td 
+        mat-cell 
+        *matCellDef="let element; let i = index"
+        [ngClass]="{'striped-row': isStripedRow(i)}">
+        <ng-container *ngFor="let button of actionButtons">
+          <button 
+            mat-icon-button 
+            [color]="button.color" 
+            [matTooltip]="button.tooltip"
+            (click)="onAction(button.action, element, i)">
+            <mat-icon>{{ button.icon }}</mat-icon>
+          </button>
+        </ng-container>
+      </td>
+    </ng-container>
+    
+    <!-- Header and rows -->
+    <tr mat-header-row *matHeaderRowDef="displayedColumns" class="header-row"></tr>
+    <tr 
+      mat-row 
+      *matRowDef="let row; columns: displayedColumns; let i = index"
+      [ngClass]="{'striped-row': isStripedRow(i)}">
+    </tr>
+    
+    <!-- No data row -->
+    <tr class="mat-row" *matNoDataRow>
+      <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+        No hay datos disponibles
+      </td>
+    </tr>
+  </table>
+  
+  <mat-paginator
+    [pageSizeOptions]="pageSizeOptions"
+    [pageSize]="pageSize"
+    showFirstLastButtons>
+  </mat-paginator>
+</div>

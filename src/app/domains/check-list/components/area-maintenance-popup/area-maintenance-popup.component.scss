@@ -1,0 +1,99 @@
+// Apply scale factor for smaller text size
+$scale-factor: 0.9;
+
+.popup-container {
+  padding: 16px;
+  max-width: 800px;
+  width: 100%;
+  font-size: calc(14px * #{$scale-factor});
+}
+
+h2 {
+  margin-top: 0;
+  font-size: calc(20px * #{$scale-factor});
+  margin-bottom: 20px;
+}
+
+.collab-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  
+  .collab-label {
+    margin-right: 10px;
+    font-weight: 500;
+  }
+  
+  .collab-input {
+    flex-grow: 1;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+  }
+}
+
+.spinner-container, .error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 30px 0;
+  
+  p {
+    margin-top: 15px;
+    color: #555;
+  }
+}
+
+.error-message {
+  color: #f44336;
+  font-weight: 500;
+}
+
+.project-selection {
+  margin-bottom: 20px;
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  ::ng-deep .mat-form-field {
+    font-size: calc(14px * #{$scale-factor});
+  }
+}
+
+.table-container {
+  margin-bottom: 20px;
+  overflow-x: auto;
+  
+  table {
+    width: 100%;
+  }
+  
+  ::ng-deep .mat-mdc-table {
+    font-size: calc(14px * #{$scale-factor});
+  }
+  
+  ::ng-deep .mat-mdc-header-cell {
+    font-size: calc(14px * #{$scale-factor});
+    font-weight: 500;
+  }
+}
+
+.no-data-message {
+  text-align: center;
+  color: #777;
+  margin: 30px 0;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+  
+  button {
+    margin-left: 10px;
+    font-size: calc(14px * #{$scale-factor});
+  }
+}

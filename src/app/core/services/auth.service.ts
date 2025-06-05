@@ -4,25 +4,21 @@ import { Observable } from 'rxjs';
 import { tap, map } from 'rxjs/operators';
 import { LoginRequest, LoginResponse, PerfilRequest, PerfilResponse } from '../models/auth.models';
 import { environment } from '../../../environments/environment';
+import { ProxyService } from './proxy.service';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  // API URLs constructed from environment configuration
-  private readonly usuarioApiUrl = environment.production ? 
-    `${environment.apiBaseUrl}${environment.apis.usuario}` : 
-    environment.apis.usuario; // In dev mode with proxy, we use relative path
-  
-  private readonly perfilApiUrl = environment.production ? 
-    `${environment.apiBaseUrl}${environment.apis.perfil}` : 
-    environment.apis.perfil; // In dev mode with proxy, we use relative path
+  // API endpoints
+  private readonly usuarioEndpoint = environment.apis.usuario;
+  private readonly perfilEndpoint = environment.apis.perfil;
 
   // Store user information
   private currentUserId: number | null = null;
   private userProfile: any = null;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private proxyService: ProxyService) { }
 
   /**
    * Authenticate user using the UsuarioSvcImpl API
@@ -37,7 +33,7 @@ export class AuthService {
       idUsuario: 0
     };
 
-    return this.http.post<LoginResponse>(this.usuarioApiUrl, request)
+    return this.proxyService.post<LoginResponse>(this.usuarioEndpoint, request)
       .pipe(
         tap(response => {
           console.log('Login response:', response);
@@ -90,7 +86,7 @@ export class AuthService {
       usuario: userName
     };
 
-    return this.http.post<PerfilResponse>(this.perfilApiUrl, request)
+    return this.proxyService.post<PerfilResponse>(this.perfilEndpoint, request)
       .pipe(
         tap(response => {
           // Handle the API response according to the actual format it returns

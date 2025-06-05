@@ -10,4 +10,13 @@ export interface EnvironmentConfig {
     perfil: string;
     // Add more API endpoints as needed
   };
+  firebase: {
+    apiKey: string;
+    authDomain: string;
+    projectId: string;
+    storageBucket: string;
+    messagingSenderId: string;
+    appId: string;
+    measurementId: string;
+  };
 }

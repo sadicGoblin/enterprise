@@ -4,8 +4,12 @@ export interface SubParametroRequest {
 }
 
 export interface SubParametroResponse {
-  codigo: number;
-  glosa: string;
+  // Support both old and new API formats
+  codigo?: number;
+  glosa?: string;
+  // New API format
+  success?: boolean;
+  message?: string;
   data: SubParametroItem[];
 }
 

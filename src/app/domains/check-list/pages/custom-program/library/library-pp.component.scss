@@ -1,0 +1,169 @@
+.container {
+  display: flex;
+  justify-content: center;
+  // padding: 1.0rem;
+  font-size: 0.9rem; // Align with user preference for smaller text sizes
+}
+
+.mat-container {
+  width: 100%;
+  max-width: 1400px; // Increased from 1200px to make table wider
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.title {
+  text-align: center;
+  font-size: 1.3rem; // Reduced from 1.5rem to align with smaller text preference
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.button-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+.table-container {
+  margin-top: 1rem;
+  overflow-x: auto;
+}
+
+table.mat-table {
+  width: 100%;
+  table-layout: fixed; // Use fixed layout for better control
+  
+  th, td {
+    text-align: left;
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem; // Smaller text for table cells
+    overflow: hidden; // Hide overflow text
+  }
+
+  th {
+    background-color: #f5f5f5;
+    font-weight: 500; // Slightly reduced weight
+    color: #333;
+  }
+
+  tr.mat-row:hover {
+    background-color: #f9f9f9;
+  }
+
+  // Column widths
+  .mat-column-title {
+    width: 30%;
+    
+    // Text truncation with ellipsis for long titles
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 250px; // Fixed max width
+    }
+  }
+
+  .mat-column-year {
+    width: 10%;
+  }
+
+  .mat-column-name {
+    width: 35%;
+    
+    // Text truncation with ellipsis for long filenames
+    td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px; // Fixed max width
+    }
+  }
+
+  .mat-column-type {
+    width: 15%;
+  }
+
+  .mat-column-actions {
+    width: 10%;
+  }
+  
+  // Action buttons styling
+  .action-buttons {
+    padding: 0.3rem 0.5rem;
+    white-space: nowrap; // Prevent buttons from wrapping
+  }
+  
+  .button-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  
+  button.mat-icon-button {
+    margin: 0 0.25rem;
+    height: 35px;
+    width: 35px;
+    line-height: 35px;
+  }
+  
+  .no-data-cell {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+
+  mat-form-field {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+}
+
+// Loading container styles
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  
+  p {
+    margin-top: 1rem;
+    color: #666;
+    font-size: 0.9rem;
+  }
+}
+
+// Ensure buttons have consistent sizing
+button {
+  font-size: 0.85rem; // Smaller text for buttons
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .container {
+    padding: 1rem;
+  }
+  
+  .mat-container {
+    padding: 1.5rem;
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}

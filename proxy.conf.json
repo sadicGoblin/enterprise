@@ -1,6 +1,6 @@
 {
   "/ws": {
-    "target": "http://raam-hosting.cl/apissoma",
+    "target": "https://inarco-ssoma.favric.cl/",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"

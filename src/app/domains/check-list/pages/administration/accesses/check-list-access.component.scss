@@ -1,0 +1,116 @@
+.access-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 90vh;
+  
+    mat-card {
+      width: 600px;
+      padding: 1rem;
+    }
+  
+    // Apply scale factor for smaller text size as per user preference
+    $scale-factor: 0.9;
+
+    .full-width {
+      width: 100%;
+    }
+
+    .access-container {
+      padding: 16px;
+    }
+
+    table {
+      margin-top: 20px;
+      font-size: calc(14px * #{$scale-factor});
+    }
+
+    .custom-select-container {
+      margin: 10px 0;
+      width: 100%;
+      
+      ::ng-deep {
+        // Scale down form field font size
+        .mat-mdc-form-field {
+          font-size: calc(14px * #{$scale-factor});
+        }
+        
+        // Scale down select options
+        .mat-mdc-select-panel {
+          font-size: calc(14px * #{$scale-factor});
+        }
+      }
+    }
+
+    // Style for checkboxes
+    .permission-checkbox {
+      transform: scale(#{$scale-factor * 1.1}); // Slightly larger than text
+      transition: transform 0.2s ease;
+      
+      &:hover {
+        transform: scale(#{$scale-factor * 1.2});
+      }
+    }
+    
+    // Different colors for different permission types
+    .access-checkbox {
+      ::ng-deep .mdc-checkbox__background {
+        border-color: var(--primary-color, #3f51b5) !important;
+      }
+    }
+    
+    .write-checkbox {
+      ::ng-deep .mdc-checkbox__background {
+        border-color: var(--accent-color, #ff4081) !important;
+      }
+    }
+    
+    // Row hover effect
+    tr.mat-mdc-row:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+    
+    // Message styles
+    .no-access-message, .no-data-message {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 20px 0;
+      padding: 20px;
+      text-align: center;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+      font-size: calc(14px * #{$scale-factor});
+      
+      p {
+        margin: 5px 0;
+      }
+    }
+    
+    .no-access-message {
+      border-left: 4px solid var(--accent-color, #ff4081);
+    }
+    
+    .no-data-message {
+      border-left: 4px solid var(--primary-color, #3f51b5);
+    }
+    
+    .spinner-container, .error-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin: 20px 0;
+      
+      p {
+        margin-top: 10px;
+        font-size: calc(14px * #{$scale-factor});
+      }
+    }
+
+    .error-message {
+      color: #f44336;
+      font-weight: 500;
+    }
+}
