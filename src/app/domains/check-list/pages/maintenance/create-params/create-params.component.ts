@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -9,6 +9,17 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule } from '@angular/material/table';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { ParametroService } from '../../../services/parametro.service';
+import { SubParametroService } from '../../../services/sub-parametro.service';
+import { ParametroItem } from '../../../models/parametro.models';
+
+// Define a local interface for API responses
+interface SelectOption {
+  value: string | number;
+  label: string;
+  idSubParam?: number;
+}
 
 interface SubParam {
   name: string;
@@ -16,6 +27,7 @@ interface SubParam {
 
 interface Param {
   name: string;
+  id?: string;
   subParams: SubParam[];
 }
 
@@ -33,95 +45,59 @@ interface Param {
     MatSelectModule,
     MatTableModule,
     MatTabsModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './create-params.component.html',
   styleUrl: './create-params.component.scss',
 })
-export class CreateParamsComponent {
+export class CreateParamsComponent implements OnInit {
   paramName = '';
   subParamName = '';
   selectedParam?: Param;
+  loadingSubParams = false;
+  subParamError: string | null = null;
 
-  params: Param[] = [
-    {
-      name: 'PERIODICIDAD',
-      subParams: [
-        { name: 'Diaria' },
-        { name: 'Semanal' },
-        { name: 'Mensual' },
-      ],
-    },
-    {
-      name: 'PERFIL',
-      subParams: [
-        { name: 'Administrador' },
-        { name: 'Supervisor' },
-        { name: 'Operador' },
-      ],
-    },
-    {
-      name: 'CARGO',
-      subParams: [
-        { name: 'Jefe de Obra' },
-        { name: 'Capataz' },
-        { name: 'Ingeniero Residente' },
-      ],
-    },
-    {
-      name: 'TIPO ACCESO',
-      subParams: [
-        { name: 'Sin Acceso' },
-        { name: 'Usuario General' },
-        { name: 'Super Usuario' },
-      ],
-    },
-    {
-      name: 'EMPRESA CONTRATISTA',
-      subParams: [
-        { name: 'Constructora Los Andes' },
-        { name: 'Edifica S.A.' },
-        { name: 'Obras del Sur' },
-      ],
-    },
-    {
-      name: 'TIPO DOCUMENTOS',
-      subParams: [
-        { name: 'Manual' },
-        { name: 'Procedimiento' },
-        { name: 'Plan de Trabajo' },
-      ],
-    },
-    {
-      name: 'INCIDENCIA',
-      subParams: [
-        { name: 'Retraso' },
-        { name: 'Falla Técnica' },
-        { name: 'Condición Insegura' },
-      ],
-    },
-    {
-      name: 'POTENCIAL DE RIESGO',
-      subParams: [
-        { name: 'Bajo' },
-        { name: 'Medio' },
-        { name: 'Alto' },
-      ],
-    },
-    {
-      name: 'HALLAZGO',
-      subParams: [
-        { name: 'Observación' },
-        { name: 'No Conformidad' },
-        { name: 'Mejora' },
-      ],
-    },
-  ];
+  params: Param[] = [];
+  isLoading = false;
+  error: string | null = null;
   
   
   subParams: SubParam[] = [];
 
   paramColumns = ['name', 'actions'];
   subParamColumns = ['name'];
+  
+  constructor(
+    private parametroService: ParametroService,
+    private subParametroService: SubParametroService
+  ) {}
+  
+  ngOnInit(): void {
+    this.loadParametros();
+  }
+  
+  loadParametros(): void {
+    this.isLoading = true;
+    this.error = null;
+    
+    this.parametroService.getParametros().subscribe({
+      next: (data) => {
+        console.log('Received parameter data:', data);
+        // Transform API data to our component's format
+        this.params = data.map(item => ({
+          id: item.IdDet,
+          name: item.Nombre,
+          subParams: [] // We're not loading subparams yet
+        }));
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('Error loading parameters:', err);
+        this.error = 'Error al cargar los parámetros. Por favor, intente de nuevo.';
+        this.isLoading = false;
+      }
+    });
+  }
 
   saveParam() {
     if (this.paramName) {
@@ -145,6 +121,45 @@ export class CreateParamsComponent {
       this.selectedParam.subParams.push({ name: this.subParamName });
       this.subParamName = '';
     }
+  }
+  
+  /**
+   * Called when a parameter is selected from the dropdown
+   * Loads the sub-parameters for the selected parameter
+   */
+  onParameterSelected(): void {
+    if (!this.selectedParam || !this.selectedParam.id) {
+      return;
+    }
+    
+    this.loadingSubParams = true;
+    this.subParamError = null;
+    
+    const idEnt = parseInt(this.selectedParam.id, 10);
+    console.log(`Loading sub-parameters for parameter ID: ${idEnt}`);
+    
+    this.subParametroService.getSubParametros(idEnt).subscribe({
+      next: (options: SelectOption[]) => {
+        console.log('Received sub-parameter data:', options);
+        
+        if (this.selectedParam) {
+          // Transform API data to our component's format
+          this.selectedParam.subParams = options.map(option => ({
+            name: option.label
+          }));
+        }
+        
+        this.loadingSubParams = false;
+      },
+      error: (err) => {
+        console.error('Error loading sub-parameters:', err);
+        this.subParamError = 'Error al cargar los sub-parámetros. Por favor, intente de nuevo.';
+        this.loadingSubParams = false;
+        if (this.selectedParam) {
+          this.selectedParam.subParams = [];
+        }
+      }
+    });
   }
   
 }

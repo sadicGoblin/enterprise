@@ -26,26 +26,32 @@ export class AuthService {
    * @param password User's password
    * @returns Observable with authentication result
    */
-  login(username: string, password: string): Observable<LoginResponse> {
+  login(username: string, password: string = ''): Observable<LoginResponse> {
+    // For this implementation, password is not required as per your specifications
     const request: LoginRequest = {
       caso: 'Consulta',
-      usuario: username,
-      idUsuario: 0
+      usuario: username
     };
 
+    console.log(`[AuthService] Login request for user: ${username}`, request);
     return this.proxyService.post<LoginResponse>(this.usuarioEndpoint, request)
       .pipe(
         tap(response => {
-          console.log('Login response:', response);
-          // Handle the API response according to the actual format it returns
-          if (response.glosa === 'Ok' && response.data && Array.isArray(response.data) && response.data.length > 0) {
+          console.log('[AuthService] Login response:', response);
+          
+          // Handle the API response according to the new format
+          // Check for success in either the new format (success) or legacy format (glosa)
+          const isSuccess = (response.success === true)
+          
+          if (isSuccess && response.data && Array.isArray(response.data) && response.data.length > 0) {
             const userData = response.data[0];
+            console.log('[AuthService] User data:', userData);
             
             // Extract user ID from the response data array
             if (userData.IdUsuario) {
               this.currentUserId = Number(userData.IdUsuario);
               localStorage.setItem('userId', userData.IdUsuario);
-              console.log('Stored user ID:', userData.IdUsuario);
+              console.log('[AuthService] Stored user ID:', userData.IdUsuario);
             }
             
             // Store username and other user info
@@ -55,6 +61,10 @@ export class AuthService {
             if (userData.Nombre) localStorage.setItem('userFullName', userData.Nombre);
             if (userData.EMail) localStorage.setItem('userEmail', userData.EMail);
             if (userData.Perfil) localStorage.setItem('userRole', userData.Perfil);
+            if (userData.TipoAcceso) localStorage.setItem('userAccessType', userData.TipoAcceso);
+            if (userData.Cargo) localStorage.setItem('userPosition', userData.Cargo);
+            if (userData.EmpresaContratista) localStorage.setItem('userCompany', userData.EmpresaContratista);
+            if (userData.NroCelular) localStorage.setItem('userPhone', userData.NroCelular);
           }
         })
       );

@@ -7,9 +7,14 @@ export interface ObraRequest {
 
 // Response model
 export interface ObraResponse<T = any> {
-  codigo: number;
-  glosa: string;
+  success: boolean;
+  code: number;
+  message: string;
   data: T[];
+  
+  // Legacy fields
+  codigo?: number;
+  glosa?: string;
 }
 
 // Specific response types

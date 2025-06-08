@@ -86,7 +86,10 @@ export class WorkMaintenanceComponent implements OnInit {
     this.isLoading = true;
     this.obraService.getObras().subscribe({
       next: (response) => {
-        if (response.codigo === 0) {
+        console.log('[WorkMaintenanceComponent] API Response:', response);
+        
+        // Check for successful response (supporting both new and legacy formats)
+        if (response.success === true || response.codigo === 0) {
           const works: Work[] = response.data.map(obra => ({
             id: obra.IdObra,
             code: obra.Codigo,
@@ -110,7 +113,9 @@ export class WorkMaintenanceComponent implements OnInit {
           });
           this.communes = Array.from(uniqueCommunesMap.values());
         } else {
-          this.showMessage(`Error: ${response.glosa}`);
+          // Use either new or legacy error message
+          const errorMsg = response.message || response.glosa || 'Error desconocido';
+          this.showMessage(`Error: ${errorMsg}`);
         }
       },
       error: (error) => {

@@ -72,7 +72,7 @@ export class SubParametroService {
    * @param idEnt Parameter ID to fetch
    * @returns Observable with SelectOption array formatted for custom-select
    */
-  private getSubParametros(idEnt: number): Observable<SelectOption[]> {
+  getSubParametros(idEnt: number): Observable<SelectOption[]> {
     const request: SubParametroRequest = {
       caso: 'SubParametroConsulta',
       idEnt: idEnt
