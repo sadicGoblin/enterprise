@@ -59,14 +59,14 @@ table.mat-table {
 
   // Column widths
   .mat-column-title {
-    width: 30%;
+    width: 35%; // Increased since we now have separate action columns
     
     // Text truncation with ellipsis for long titles
     td {
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      max-width: 250px; // Fixed max width
+      max-width: 300px; // Fixed max width
     }
   }
 
@@ -87,31 +87,58 @@ table.mat-table {
   }
 
   .mat-column-type {
-    width: 15%;
+    width: 12%;
   }
 
-  .mat-column-actions {
-    width: 10%;
+  .mat-column-view {
+    width: 4%;
+    text-align: center;
+    
+    th {
+      text-align: center;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.2rem;
+    }
+    
+    td {
+      text-align: center;
+      padding: 0.2rem;
+    }
+  }
+
+  .mat-column-delete {
+    width: 4%;
+    text-align: center;
+    
+    th {
+      text-align: center;
+      font-size: 0.8rem;
+      padding: 0.4rem 0.2rem;
+    }
+    
+    td {
+      text-align: center;
+      padding: 0.2rem;
+    }
   }
   
-  // Action buttons styling
-  .action-buttons {
-    padding: 0.3rem 0.5rem;
-    white-space: nowrap; // Prevent buttons from wrapping
-  }
-  
-  .button-container {
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-start;
-    align-items: center;
-  }
-  
-  button.mat-icon-button {
-    margin: 0 0.25rem;
-    height: 35px;
-    width: 35px;
-    line-height: 35px;
+  .action-cell {
+    text-align: center !important;
+    padding: 0.2rem !important;
+    
+    button.mat-icon-button {
+      margin: 0;
+      height: 30px;
+      width: 30px;
+      line-height: 30px;
+      min-width: 30px;
+      
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+      }
+    }
   }
   
   .no-data-cell {

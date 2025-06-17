@@ -39,6 +39,20 @@ export class BibliotecaService {
     return this.http.post<BibliotecaResponse>(this.apiUrl, request);
   }
 
+  /**
+   * Get a specific document from the library by ID with base64 content
+   * @param id The document ID to fetch
+   * @returns Observable with biblioteca data
+   */
+  getDocumentByIdWithBase64Content(id: number): Observable<BibliotecaResponse> {
+    const request: BibliotecaRequest = {
+      caso: 'ConsultaIdDocumento',
+      idBiblioteca: id
+    };
+
+    return this.http.post<BibliotecaResponse>(this.apiUrl, request);
+  }
+
   // Additional methods for CRUD operations can be added here
   // createDocument, updateDocument, deleteDocument, etc.
 }
