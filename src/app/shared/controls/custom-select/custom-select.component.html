@@ -1,0 +1,31 @@
+<!-- Loading spinner while fetching options from API -->
+<div *ngIf="loadFromApi && isLoading" class="spinner-container">
+  <mat-spinner diameter="24"></mat-spinner>
+  <p>Cargando opciones de {{ label }}...</p>
+</div>
+
+<!-- Error message if API call fails -->
+<div *ngIf="loadFromApi && hasError && !isLoading" class="error-container">
+  <p class="error-message">{{ apiErrorMessage }}</p>
+  <button class="mat-raised-button" color="primary" (click)="loadOptionsFromApi()">
+    Reintentar
+  </button>
+</div>
+
+<!-- Select field (shown when not loading or if not using API) -->
+<mat-form-field *ngIf="(!loadFromApi || !isLoading && !hasError)" [appearance]="appearance" class="full-width" [class.disabled]="isDisabled">
+  <mat-label *ngIf="label">{{ label }}</mat-label>
+  <mat-select
+    [placeholder]="placeholder"
+    [disabled]="isDisabled || disabled"
+    [required]="required"
+    [(ngModel)]="value"
+    (ngModelChange)="onSelectionChange($event)"
+    (blur)="markAsTouched()"
+  >
+    <mat-option *ngFor="let option of options" [value]="option.value">
+      {{ option.label }}
+    </mat-option>
+  </mat-select>
+  <mat-error *ngIf="errorMessage">{{ errorMessage }}</mat-error>
+</mat-form-field>

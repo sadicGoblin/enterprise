@@ -1,0 +1,8 @@
+{
+  "/ws": {
+    "target": "https://inarco-ssoma.favric.cl/",
+    "secure": false,
+    "changeOrigin": true,
+    "logLevel": "debug"
+  }
+}

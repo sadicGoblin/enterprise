@@ -1,0 +1,65 @@
+<mat-card class="popup-container">
+    <h2>Mantenedor Usuario / Obras</h2>
+  
+    <div class="collab-row">
+      <button mat-button color="primary" class="collab-label">Colaborador</button>
+      <input matInput [value]="collaborator" readonly class="collab-input" />
+    </div>
+
+    <!-- Loading spinner -->
+    <div *ngIf="isLoading" class="spinner-container">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Cargando obras...</p>
+    </div>
+
+    <!-- Error message -->
+    <div *ngIf="hasError" class="error-container">
+      <p class="error-message">{{ errorMessage }}</p>
+      <button mat-button color="primary" (click)="loadUserWorks()">Reintentar</button>
+    </div>
+  
+    <div class="table-container">
+      <table mat-table [dataSource]="dataSource" class="mat-elevation-z2 full-width">
+  
+        <ng-container matColumnDef="work">
+          <th mat-header-cell *matHeaderCellDef>Obra</th>
+          <td mat-cell *matCellDef="let row">{{ row.work }}</td>
+        </ng-container>
+  
+        <ng-container matColumnDef="enable">
+          <th mat-header-cell *matHeaderCellDef>Habilita</th>
+          <td mat-cell *matCellDef="let row">
+            <mat-checkbox [(ngModel)]="row.enable" (change)="onCheckboxChange()"></mat-checkbox>
+          </td>
+        </ng-container>
+  
+        <ng-container matColumnDef="validator">
+          <th mat-header-cell *matHeaderCellDef>Validador</th>
+          <td mat-cell *matCellDef="let row">
+            <mat-checkbox [(ngModel)]="row.validator" (change)="onCheckboxChange()"></mat-checkbox>
+          </td>
+        </ng-container>
+  
+        <ng-container matColumnDef="reviewer">
+          <th mat-header-cell *matHeaderCellDef>Revisor</th>
+          <td mat-cell *matCellDef="let row">
+            <mat-checkbox [(ngModel)]="row.reviewer" (change)="onCheckboxChange()"></mat-checkbox>
+          </td>
+        </ng-container>
+  
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+  
+      </table>
+    </div>
+  
+    <div class="footer">
+      <button mat-button color="primary" (click)="save()" [disabled]="isLoading || !isDirty">
+        <mat-icon>save</mat-icon> Guardar
+      </button>
+      <button mat-button color="warn" (click)="close()">
+        <mat-icon>close</mat-icon> Salir
+      </button>
+    </div>
+  </mat-card>
+  

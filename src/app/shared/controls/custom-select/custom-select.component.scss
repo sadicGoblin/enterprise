@@ -1,0 +1,73 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+// Apply scale factor for smaller text size as per user preference
+$scale-factor: 0.9;
+
+.full-width {
+  width: 100%;
+}
+
+.spinner-container, .error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 10px 0;
+  min-height: 56px;
+  
+  p {
+    margin-top: 10px;
+    font-size: calc(14px * #{$scale-factor});
+  }
+}
+
+.error-message {
+  color: #f44336;
+  font-weight: 500;
+  font-size: calc(14px * #{$scale-factor});
+}
+
+.custom-select-container {
+  width: 100%;
+  
+  ::ng-deep {
+    // Force smaller font size on all select components
+    .mat-form-field-infix {
+      font-size: 11px !important;
+    }
+    
+    .mat-select-value, .mat-select-arrow {
+      font-size: 11px !important;
+    }
+    
+    .mat-form-field-label {
+      font-size: 11px !important;
+    }
+    
+    .mat-option-text {
+      font-size: 11px !important;
+    }
+    
+    .mat-form-field-label-wrapper {
+      font-size: 11px !important;
+    }
+  }
+  
+  // Add any custom styling for the select here
+  &.with-icon {
+    .mat-select-arrow-wrapper {
+      transform: translateY(0);
+    }
+  }
+}
+
+.custom-select-label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+  color: rgba(0, 0, 0, 0.87);
+  font-size: 11px !important;
+}

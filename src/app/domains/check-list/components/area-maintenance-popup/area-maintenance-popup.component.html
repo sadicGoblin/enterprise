@@ -1,0 +1,66 @@
+<mat-card class="popup-container">
+  <h2>Mantenedor Usuario / Áreas</h2>
+
+  <div class="collab-row">
+    <button mat-button color="primary" class="collab-label">Colaborador</button>
+    <input matInput [value]="collaborator" readonly class="collab-input" />
+  </div>
+
+  <!-- Loading spinner -->
+  <div *ngIf="isLoading" class="spinner-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando proyectos...</p>
+  </div>
+
+  <!-- Error message -->
+  <div *ngIf="hasError" class="error-container">
+    <p class="error-message">{{ errorMessage }}</p>
+    <button mat-button color="primary" (click)="loadProjects()">Reintentar</button>
+  </div>
+
+  <!-- Project dropdown -->
+  <div class="project-selection" *ngIf="!isLoading && !hasError">
+    <mat-form-field appearance="fill" class="full-width">
+      <mat-label>Proyecto</mat-label>
+      <mat-select [(ngModel)]="selectedProjectId" (selectionChange)="onProjectChange()">
+        <mat-option *ngFor="let option of projectOptions" [value]="option.value">
+          {{ option.label }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </div>
+
+  <!-- Areas table -->
+  <div class="table-container" *ngIf="!isLoading && !hasError && dataSource.length > 0">
+    <table mat-table [dataSource]="dataSource" class="mat-elevation-z2 full-width">
+
+      <ng-container matColumnDef="area">
+        <th mat-header-cell *matHeaderCellDef>Área</th>
+        <td mat-cell *matCellDef="let row">{{ row.area }}</td>
+      </ng-container>
+
+      <ng-container matColumnDef="responsible">
+        <th mat-header-cell *matHeaderCellDef>Responsable</th>
+        <td mat-cell *matCellDef="let row">{{ row.responsible }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+      <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+    </table>
+  </div>
+
+  <!-- No data message -->
+  <div *ngIf="!isLoading && !hasError && dataSource.length === 0 && selectedProjectId" class="no-data-message">
+    <p>No hay áreas disponibles para este proyecto.</p>
+  </div>
+
+  <div class="footer">
+    <button mat-button color="primary" (click)="save()" [disabled]="isLoading || !isDirty">
+      <mat-icon>save</mat-icon> Guardar
+    </button>
+    <button mat-button color="warn" (click)="close()">
+      <mat-icon>close</mat-icon> Salir
+    </button>
+  </div>
+</mat-card>

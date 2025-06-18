@@ -1,0 +1,123 @@
+.map-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.map-card {
+  width: 100%;
+  padding: 24px;
+  overflow-x: auto;
+  position: relative; /* For the spinner overlay positioning */
+}
+
+// Spinner overlay styling
+.spinner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.map-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.select-grid {
+  margin-top: 15px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.full-width {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+// Improved table styling with forced font size
+::ng-deep table.mat-table {
+  width: 100%;
+  table-layout: fixed; // Important for controlling column widths
+  font-size: 11px !important; // Direct override with !important
+  
+  th.mat-header-cell {
+    font-size: 11px !important;
+    font-weight: 500;
+    color: rgba(0, 0, 0, 0.87);
+  }
+  
+  td.mat-cell {
+    font-size: 11px !important;
+  }
+}
+
+// Fix for table header row
+.header-row {
+  height: 40px !important;
+  background-color: #f5f5f5;
+}
+
+// Fix for all rows to have consistent height
+tr.mat-row {
+  height: 40px !important;
+}
+
+// Cell styling for better text handling
+.mat-cell, .mat-header-cell {
+  padding: 0 12px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: middle;
+  line-height: 20px;
+  max-width: 150px;
+}
+
+// Special styling for specific columns that might need more space
+.mat-column-nombre {
+  max-width: 200px;
+}
+
+.mat-column-email {
+  max-width: 180px;
+}
+
+// Button styling for better table flow
+.custom-btn {
+  margin-top: 20px;
+  font-size: 11px !important;
+}
+
+// Force form field font size
+::ng-deep .form-grid, ::ng-deep .select-grid {
+  .mat-form-field {
+    font-size: 11px !important;
+    
+    .mat-form-field-infix {
+      font-size: 11px !important;
+    }
+    
+    .mat-form-field-label {
+      font-size: 11px !important;
+    }
+    
+    input.mat-input-element {
+      font-size: 11px !important;
+    }
+  }
+}

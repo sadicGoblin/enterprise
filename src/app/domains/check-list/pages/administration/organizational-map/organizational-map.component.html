@@ -1,0 +1,79 @@
+<div class="map-container">
+  <mat-card class="map-card">
+    <div *ngIf="isLoading" class="spinner-overlay">
+      <mat-spinner></mat-spinner>
+    </div>
+    
+    <div class="map-card-content">
+      <h2 class="title">Mapa Organizacional</h2>
+
+      <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+        <div class="form-grid">
+          <mat-form-field appearance="fill">
+            <mat-label>Nombre</mat-label>
+            <input matInput formControlName="nombre" />
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Usuario</mat-label>
+            <input matInput formControlName="usuario" />
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>eMail</mat-label>
+            <input matInput formControlName="email" />
+          </mat-form-field>
+
+          <mat-form-field appearance="fill">
+            <mat-label>Nº Celular</mat-label>
+            <input matInput formControlName="celular" />
+          </mat-form-field>
+        </div>
+
+        <div class="select-grid">
+          <app-custom-select
+            formControlName="cargo"
+            [loadFromApi]="true"
+            [parameterType]="parameterTypes.CARGO"
+            label="Cargo"
+            [appearance]="'fill'"
+            [required]="true"
+          ></app-custom-select>
+
+          <app-custom-select
+            formControlName="tipoAcceso"
+            [loadFromApi]="true"
+            [parameterType]="parameterTypes.TIPO_ACCESO"
+            label="Tipo Acceso"
+            [appearance]="'fill'"
+            [required]="true"
+          ></app-custom-select>
+
+          <app-custom-select
+            formControlName="empresa"
+            [loadFromApi]="true"
+            [parameterType]="parameterTypes.EMPRESA"
+            label="Empresa Contratista"
+            [appearance]="'fill'"
+            [required]="true"
+          ></app-custom-select>
+        </div>
+
+        <button mat-raised-button color="primary" class="full-width custom-btn">
+          Grabar
+        </button>
+      </form>
+    </div>
+
+    <hr />
+    <app-data-table
+      [columns]="tableColumns"
+      [data]="tableData"
+      [actionButtons]="tableActionButtons"
+      [pageSizeOptions]="[10, 25, 50, 100]"
+      [pageSize]="25"
+      [striped]="true"
+      (rowAction)="handleTableAction($event)"
+    ></app-data-table>
+  </mat-card>
+</div>

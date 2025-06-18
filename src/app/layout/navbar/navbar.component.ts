@@ -13,13 +13,16 @@ import { Router } from '@angular/router';
 })
 export class NavbarComponent {
 
-  constructor(private route: Router){}
+  userName: string; // Declare userName, will be set in constructor
+
+  constructor(private route: Router) {
+    this.userName = localStorage.getItem('userFullName') || 'Usuario'; // Fetch from localStorage or fallback
+  }
 
   @Output() sidebarToggle = new EventEmitter<void>();
 
 
   isCollapsed = false;
-  userName = 'James Gandolfini';
 
   toggleSidebar() {
     this.isCollapsed = !this.isCollapsed;

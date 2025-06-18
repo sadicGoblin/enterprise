@@ -3,10 +3,14 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "build:prod": "ng build --configuration production",
+    "firebase:login": "npx firebase login",
+    "firebase:init": "npx firebase init",
+    "firebase:deploy": "npm run build:prod && npx firebase deploy --only hosting"
   },
   "private": true,
   "dependencies": {
@@ -21,6 +25,8 @@
     "@angular/platform-browser-dynamic": "^17.3.0",
     "@angular/router": "^17.3.0",
     "bootstrap": "^5.3.5",
+    "chart.js": "^4.4.9",
+    "ng2-charts": "^4.1.1",
     "particles.js": "^2.0.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
@@ -31,6 +37,10 @@
     "@angular/cli": "^17.3.16",
     "@angular/compiler-cli": "^17.3.0",
     "@types/jasmine": "~5.1.0",
+    "firebase": "^11.8.1",
+    "firebase-admin": "^13.4.0",
+    "firebase-functions": "^6.3.2",
+    "firebase-tools": "^14.7.0",
     "jasmine-core": "~5.1.0",
     "karma": "~6.4.0",
     "karma-chrome-launcher": "~3.2.0",

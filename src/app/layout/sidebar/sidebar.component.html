@@ -1,124 +1,269 @@
 <div class="sidebar" [class.collapsed]="isCollapsed">
-  <mat-nav-list>
-    <!-- Dashboard -->
-    <mat-list-item class="nav-item">
-      <mat-icon matListIcon>dashboard</mat-icon>
-      <span *ngIf="!isCollapsed" matLine>Dashboard</span>
-    </mat-list-item>
+  <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
+    <mat-expansion-panel-header>
+      <mat-panel-title>
+        <mat-icon>bar_chart</mat-icon>
+        <span *ngIf="!isCollapsed" class="ml-2">Check List</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header>
 
-    <!-- Plan Personalizado -->
-    <mat-list-item class="nav-item">
-      <mat-icon matListIcon>assignment</mat-icon>
-      <span *ngIf="!isCollapsed" matLine>Plan Personalizado</span>
-    </mat-list-item>
-
-    <!-- REGISTRO REPORTES -->
-    <mat-expansion-panel class="submenu-panel">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon>bar_chart</mat-icon>
-          <span *ngIf="!isCollapsed" class="ml-2">Registro Reportes</span>
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <div class="mat-expansion-panel-body">
-        <mat-list-item class="nav-item"
-          ><mat-icon>edit</mat-icon> <span>Ingreso Reporte</span></mat-list-item
-        >
-        <mat-list-item class="nav-item"
-          ><mat-icon>check_circle</mat-icon>
-          <span>Inspección SSTMA</span></mat-list-item
-        >
-        <mat-list-item class="nav-item"
-          ><mat-icon>report_problem</mat-icon>
-          <span>Reporte Incidentes</span></mat-list-item
-        >
-        <mat-list-item class="nav-item"
-          ><mat-icon>assignment</mat-icon>
-          <span>Plan Personalizado</span></mat-list-item
-        >
-        <mat-list-item class="nav-item"
-          ><mat-icon>insert_chart</mat-icon>
-          <span>Consolidado</span></mat-list-item
-        >
-        <mat-list-item class="nav-item"
-          ><mat-icon>shield</mat-icon>
-          <span>Seg. Inspección SSTMA</span></mat-list-item
-        >
-      </div>
-    </mat-expansion-panel>
-
-    <!-- PROGRAMA PERSONALIZADO (PP) -->
-    <mat-expansion-panel class="submenu-panel">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon>list_alt</mat-icon>
-          <span *ngIf="!isCollapsed" class="ml-2"
-            >Programa Personalizado</span
-          >
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <div class="mat-expansion-panel-body">
-        <mat-list-item class="nav-item"
-          ><mat-icon>playlist_add</mat-icon>
-          <span>Carga Actividades</span></mat-list-item
-        >
-        <mat-list-item class="nav-item"
-          ><mat-icon>content_copy</mat-icon>
-          <span>Replicar PP</span></mat-list-item
-        >
-        <mat-list-item class="nav-item"
-          ><mat-icon>library_books</mat-icon>
-          <span>Biblioteca</span></mat-list-item
-        >
-      </div>
-    </mat-expansion-panel>
-
-    <!-- MANTENEDOR -->
-    <mat-expansion-panel class="submenu-panel">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon>build</mat-icon>
-          <span *ngIf="!isCollapsed" class="ml-2">Mantenedor</span>
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-      <div class="mat-expansion-panel-body">
-        <mat-list-item class="nav-item"
-          ><mat-icon>home_work</mat-icon> <span>Obras</span></mat-list-item
-        >
-        <mat-list-item class="nav-item"
-          ><mat-icon>tune</mat-icon>
-          <span>Param. Plan Personalizado</span></mat-list-item
-        >
-        <mat-list-item class="nav-item"
-          ><mat-icon>settings</mat-icon> <span>Parámetros</span></mat-list-item
-        >
-      </div>
-    </mat-expansion-panel>
-
-    <mat-expansion-panel class="submenu-panel" [expanded]="false">
-      <mat-expansion-panel-header>
-        <mat-panel-title>
-          <mat-icon>settings</mat-icon>
-          <span *ngIf="!isCollapsed" class="ml-2">Administración</span>
-        </mat-panel-title>
-      </mat-expansion-panel-header>
-
-      <mat-nav-list *ngIf="!isCollapsed">
-        <mat-list-item class="nav-item">
-          <mat-icon matListIcon>map</mat-icon>
-          <span matLine>Mapa Organizacional</span>
+    <div class="mat-expansion-panel-body">
+      <mat-nav-list>
+        <mat-list-item class="nav-item" [routerLink]="'dashboard'">
+          <mat-icon matListIcon>dashboard</mat-icon>
+          <span *ngIf="!isCollapsed" matLine>Dashboard</span>
         </mat-list-item>
 
-        <mat-list-item class="nav-item">
-          <mat-icon matListIcon>vpn_key</mat-icon>
-          <span matLine>Cambio Clave</span>
+        <mat-list-item class="nav-item" [routerLink]="'planning'" > 
+          <mat-icon matListIcon>assignment</mat-icon>
+          <span *ngIf="!isCollapsed" matLine>Plan Personalizado</span>
         </mat-list-item>
 
-        <mat-list-item class="nav-item">
-          <mat-icon matListIcon>people</mat-icon>
-          <span matLine>Accesos</span>
-        </mat-list-item>
+        <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>bar_chart</mat-icon>
+              <span *ngIf="!isCollapsed" class="ml-2">Registro Reportes</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="mat-expansion-panel-body">
+            <mat-list-item class="nav-item" [routerLink]="'reports/add'"
+              ><mat-icon>edit</mat-icon>
+              <span>Ingreso Reporte</span></mat-list-item
+            >
+            <mat-list-item class="nav-item" [routerLink]="'reports/sstma'"
+              ><mat-icon>check_circle</mat-icon>
+              <span>Inspección SSTMA</span></mat-list-item
+            >
+            <mat-list-item class="nav-item" [routerLink]="'reports/incidents'"
+              ><mat-icon>report_problem</mat-icon>
+              <span>Reporte Incidentes</span></mat-list-item
+            >
+            <mat-list-item class="nav-item" [routerLink]="'reports/dashboard'"
+              ><mat-icon>assignment</mat-icon>
+              <span>Plan Personalizado</span></mat-list-item
+            >
+            <mat-list-item class="nav-item" 
+              ><mat-icon>insert_chart</mat-icon>
+              <span>Consolidado</span></mat-list-item
+            >
+            <mat-list-item class="nav-item" [routerLink]="'reports/tracking'"
+              ><mat-icon>shield</mat-icon>
+              <span>Seg. Inspección SSTMA</span></mat-list-item
+            >
+          </div>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>list_alt</mat-icon>
+              <span *ngIf="!isCollapsed" class="ml-2"
+                >Programa Personalizado</span
+              >
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="mat-expansion-panel-body">
+            <mat-list-item class="nav-item" [routerLink]="'custom-program/activities'"
+              ><mat-icon>playlist_add</mat-icon>
+              <span>Carga Actividades</span></mat-list-item
+            >
+            <!-- <mat-list-item class="nav-item"
+              ><mat-icon>content_copy</mat-icon>
+              <span>Replicar PP</span></mat-list-item
+            > -->
+            <mat-list-item class="nav-item" [routerLink]="'custom-program/library'"
+              ><mat-icon>library_books</mat-icon>
+              <span>Biblioteca</span></mat-list-item
+            >
+          </div>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>build</mat-icon>
+              <span *ngIf="!isCollapsed" class="ml-2">Mantenedor</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="mat-expansion-panel-body">
+            <mat-list-item class="nav-item" [routerLink]="'maintenance/work'"
+              ><mat-icon>home_work</mat-icon> <span>Obras</span></mat-list-item
+            >
+            <mat-list-item class="nav-item" [routerLink]="'maintenance/custom-params'"
+              ><mat-icon>tune</mat-icon>
+              <span>Param. Plan Personalizado</span></mat-list-item
+            >
+            <mat-list-item class="nav-item" [routerLink]="'maintenance/params'"
+              ><mat-icon>settings</mat-icon>
+              <span>Parámetros</span></mat-list-item
+            >
+          </div>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>settings</mat-icon>
+              <span *ngIf="!isCollapsed" class="ml-2">Administración</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+
+          <mat-nav-list *ngIf="!isCollapsed">
+            <mat-list-item
+              class="nav-item"
+              [routerLink]="'administration/organizational-map'"
+            >
+              <mat-icon matListIcon>map</mat-icon>
+              <span matLine>Mapa Organizacional</span>
+            </mat-list-item>
+
+            <mat-list-item class="nav-item" [routerLink]="'administration/password-change'">
+              <mat-icon matListIcon>vpn_key</mat-icon>
+              <span matLine>Cambio Clave</span>
+            </mat-list-item>
+
+            <mat-list-item class="nav-item" [routerLink]="'administration/accesses'">
+              <mat-icon matListIcon>people</mat-icon>
+              <span matLine>Accesos</span>
+            </mat-list-item>
+          </mat-nav-list>
+        </mat-expansion-panel>
       </mat-nav-list>
-    </mat-expansion-panel>
-  </mat-nav-list>
+    </div>
+  </mat-expansion-panel>
+
+  <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
+    <!-- <mat-expansion-panel-header>
+      <mat-panel-title>
+        <mat-icon>assignment</mat-icon>
+        <span *ngIf="!isCollapsed" class="ml-2">Orders</span>
+      </mat-panel-title>
+    </mat-expansion-panel-header> -->
+
+    <!-- <div class="mat-expansion-panel-body">
+      <mat-nav-list>
+        <mat-list-item class="nav-item">
+          <mat-icon matListIcon>dashboard</mat-icon>
+          <span *ngIf="!isCollapsed" matLine>Dashboard</span>
+        </mat-list-item>
+
+        <mat-list-item class="nav-item">
+          <mat-icon matListIcon>assignment</mat-icon>
+          <span *ngIf="!isCollapsed" matLine>Plan Personalizado</span>
+        </mat-list-item>
+
+        <mat-expansion-panel class="submenu-panel">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>bar_chart</mat-icon>
+              <span *ngIf="!isCollapsed" class="ml-2">Registro Reportes</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="mat-expansion-panel-body">
+            <mat-list-item class="nav-item"
+              ><mat-icon>edit</mat-icon>
+              <span>Ingreso Reporte</span></mat-list-item
+            >
+            <mat-list-item class="nav-item"
+              ><mat-icon>check_circle</mat-icon>
+              <span>Inspección SSTMA</span></mat-list-item
+            >
+            <mat-list-item class="nav-item"
+              ><mat-icon>report_problem</mat-icon>
+              <span>Reporte Incidentes</span></mat-list-item
+            >
+            <mat-list-item class="nav-item"
+              ><mat-icon>assignment</mat-icon>
+              <span>Plan Personalizado</span></mat-list-item
+            >
+            <mat-list-item class="nav-item"
+              ><mat-icon>insert_chart</mat-icon>
+              <span>Consolidado</span></mat-list-item
+            >
+            <mat-list-item class="nav-item"
+              ><mat-icon>shield</mat-icon>
+              <span>Seg. Inspección SSTMA</span></mat-list-item
+            >
+          </div>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel class="submenu-panel">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>list_alt</mat-icon>
+              <span *ngIf="!isCollapsed" class="ml-2"
+                >Programa Personalizado</span
+              >
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="mat-expansion-panel-body">
+            <mat-list-item class="nav-item"
+              ><mat-icon>playlist_add</mat-icon>
+              <span>Carga Actividades</span></mat-list-item
+            >
+            <mat-list-item class="nav-item"
+              ><mat-icon>content_copy</mat-icon>
+              <span>Replicar PP</span></mat-list-item
+            >
+            <mat-list-item class="nav-item"
+              ><mat-icon>library_books</mat-icon>
+              <span>Biblioteca</span></mat-list-item
+            >
+          </div>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel class="submenu-panel">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>build</mat-icon>
+              <span *ngIf="!isCollapsed" class="ml-2">Mantenedor</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="mat-expansion-panel-body">
+            <mat-list-item class="nav-item"
+              ><mat-icon>home_work</mat-icon> <span>Obras</span></mat-list-item
+            >
+            <mat-list-item class="nav-item"
+              ><mat-icon>tune</mat-icon>
+              <span>Param. Plan Personalizado</span></mat-list-item
+            >
+            <mat-list-item class="nav-item"
+              ><mat-icon>settings</mat-icon>
+              <span>Parámetros</span></mat-list-item
+            >
+          </div>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>settings</mat-icon>
+              <span *ngIf="!isCollapsed" class="ml-2">Administración</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+
+          <mat-nav-list *ngIf="!isCollapsed">
+            <mat-list-item
+              class="nav-item"
+              [routerLink]="'administration/organizational-map'"
+            >
+              <mat-icon matListIcon>map</mat-icon>
+              <span matLine>Mapa Organizacional</span>
+            </mat-list-item>
+
+            <mat-list-item class="nav-item" [routerLink]="'administration/password-change'">
+              <mat-icon matListIcon>vpn_key</mat-icon>
+              <span matLine>Cambio Clave</span>
+            </mat-list-item>
+
+            <mat-list-item class="nav-item" [routerLink]="'administration/accesses'">
+              <mat-icon matListIcon>people</mat-icon>
+              <span matLine>Accesos</span>
+            </mat-list-item>
+          </mat-nav-list>
+        </mat-expansion-panel>
+      </mat-nav-list>
+    </div> -->
+  </mat-expansion-panel>
 </div>

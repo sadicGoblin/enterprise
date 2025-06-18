@@ -1,16 +1,42 @@
 .layout-container {
     display: flex;
+    flex-direction: column;
     height: 100vh;
+    width: 100%;
+    overflow: hidden;
   }
   
   app-sidebar {
     flex-shrink: 0; 
   }
   
+  .navbar-fixed {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .content-wrapper {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
+  
   .main-content {
     flex: 1;
-    padding: 1rem;
+    padding: 1.5rem 1.5rem 1.5rem calc(350px + 1.5rem); /* Add padding to account for sidebar width */
     overflow-y: auto;
+    height: calc(100vh - 64px); /* Adjust based on your navbar height */
     background-color: #f9f9f9;
+    position: relative;
+    z-index: 100; /* Lower than sidebar */
+    transition: padding-left 0.1s ease;
+    font-size: 0.9rem; /* Align with user preference for smaller text */
+  }
+  
+  /* Adjust main content when sidebar is collapsed */
+  app-sidebar.collapsed + .main-content {
+    padding-left: calc(60px + 1.5rem); /* Adjust based on collapsed sidebar width */
   }
   

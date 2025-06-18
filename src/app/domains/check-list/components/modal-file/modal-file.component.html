@@ -1,0 +1,24 @@
+<h1 mat-dialog-title>{{ data.filename || 'Documento PDF' }}</h1>
+
+<div mat-dialog-content class="pdf-viewer-content">
+  <!-- Primary PDF viewer using embed -->
+  <embed [src]="pdfSrc" type="application/pdf" width="100%" height="600px" id="pdf-embed">
+  
+  <!-- Fallback PDF viewer using iframe -->
+  <iframe [src]="pdfSrc" width="100%" height="600px" style="border: none; display: none;" id="pdf-iframe"></iframe>
+  
+  <!-- Fallback PDF viewer using object -->
+  <object [data]="pdfSrc" type="application/pdf" width="100%" height="600px" style="display: none;" id="pdf-object">
+    <p>Su navegador no puede mostrar archivos PDF. 
+       <a [href]="pdfSrc" download="{{ data.filename }}">Descargar PDF</a>
+    </p>
+  </object>
+</div>
+
+<div mat-dialog-actions class="pdf-viewer-actions">
+  <button mat-raised-button color="primary" (click)="onDownload()">
+    <mat-icon>download</mat-icon>
+    Descargar
+  </button>
+  <button mat-button (click)="onClose()">Cerrar</button>
+</div>
