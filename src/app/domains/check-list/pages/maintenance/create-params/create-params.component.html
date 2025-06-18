@@ -1,0 +1,107 @@
+<div class="params-container">
+  <mat-card class="params-card">
+    <h2 class="title">Creación de parámetros</h2>
+
+
+    <div class="param-grid">
+      <div class="left-panel">
+        <h3 class="section-title">Parámetros</h3>
+        
+        <!-- Loading indicator -->
+        <div *ngIf="isLoading" class="loading-container">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Cargando parámetros...</p>
+        </div>
+        
+        <!-- Error message -->
+        <div *ngIf="error" class="error-message">
+          <p>{{ error }}</p>
+          <button mat-button color="primary" (click)="loadParametros()">Reintentar</button>
+        </div>
+        <div class="toolbar">
+          <mat-form-field appearance="fill" class=" input-full">
+            <mat-label>Nombre</mat-label>
+            <input matInput [(ngModel)]="paramName" />
+          </mat-form-field>
+          <button
+            (click)="saveParam()"
+            mat-raised-button
+            color="primary"
+            class="add-btn"
+          >
+            Agregar
+          </button>
+        </div>
+
+        <table mat-table [dataSource]="params" class="mat-elevation-z1" *ngIf="!isLoading && !error">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Parámetro</th>
+            <td mat-cell *matCellDef="let p">{{ p.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="actions">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let p; let i = index">
+              <button mat-icon-button color="accent" (click)="editParam(i)">
+                <mat-icon>edit</mat-icon>
+              </button>
+              <button mat-icon-button color="warn" (click)="deleteParam(i)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="paramColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: paramColumns"></tr>
+        </table>
+      </div>
+
+      <div class="right-panel">
+        <h3 class="section-title">Sub-parámetros</h3>
+        <div class="toolbar">
+          <mat-form-field appearance="fill" class="input-full">
+            <mat-label>Parámetro</mat-label>
+            <mat-select [(ngModel)]="selectedParam" (ngModelChange)="onParameterSelected()">
+              <mat-option *ngFor="let p of params" [value]="p">{{ p.name }}</mat-option>
+            </mat-select>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="input-small">
+            <mat-label>Nombre</mat-label>
+            <input matInput [(ngModel)]="subParamName" />
+          </mat-form-field>
+
+          <button mat-icon-button color="primary" (click)="saveSubParam()">
+            <mat-icon>add_circle</mat-icon>
+          </button>
+        </div>
+
+        <!-- Loading indicator for sub-parameters -->
+        <div *ngIf="loadingSubParams" class="loading-container">
+          <mat-spinner diameter="30"></mat-spinner>
+          <p>Cargando sub-parámetros...</p>
+        </div>
+        
+        <!-- Error message for sub-parameters -->
+        <div *ngIf="subParamError && !loadingSubParams" class="error-message">
+          <p>{{ subParamError }}</p>
+          <button mat-button color="primary" (click)="onParameterSelected()">Reintentar</button>
+        </div>
+        
+        <table mat-table [dataSource]="selectedParam?.subParams || []" class="mat-elevation-z1" *ngIf="!loadingSubParams && !subParamError">
+            <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let s">{{ s.name }}</td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="subParamColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: subParamColumns"></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="footer">
+      <button mat-raised-button color="primary">Guardar</button>
+    </div>
+  </mat-card>
+</div>

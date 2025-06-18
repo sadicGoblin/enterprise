@@ -1,0 +1,51 @@
+<div class="container">
+    <mat-card class="mat-container">
+      <h2 class="title">Inspección SSTMA</h2>
+      
+      <!-- Loading spinner -->
+      <div *ngIf="isLoading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+      </div>
+      
+      <div class="tab-content">
+        <div class="form-grid">
+          <app-custom-select
+            [(ngModel)]="obrea"
+            [options]="obraOptions"
+            [label]="'Obra'"
+            [placeholder]="'Seleccione una obra'"
+            [appearance]="'fill'"
+            [required]="true"
+          ></app-custom-select>
+  
+          <app-custom-select
+            [(ngModel)]="indicator"
+            [options]="indicatorOptions"
+            [label]="'Indicador'"
+            [placeholder]="'Seleccione un indicador'"
+            [appearance]="'fill'"
+            [required]="true"
+          ></app-custom-select>
+  
+          <mat-form-field appearance="fill">
+            <mat-label>Fecha desde</mat-label>
+            <input matInput [matDatepicker]="picker1" [(ngModel)]="fromDate" />
+            <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
+            <mat-datepicker #picker1></mat-datepicker>
+          </mat-form-field>
+  
+          <mat-form-field appearance="fill">
+            <mat-label>Fecha Hasta</mat-label>
+            <input matInput [matDatepicker]="picker2" [(ngModel)]="toDate" />
+            <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
+            <mat-datepicker #picker2></mat-datepicker>
+          </mat-form-field>
+        </div>
+  
+        <div class="button-row">
+          <button mat-raised-button color="primary">Generar</button>
+        </div>
+      </div>
+    </mat-card>
+  </div>
+  

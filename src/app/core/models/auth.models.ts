@@ -5,17 +5,32 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  glosa: string;
-  codigo: number;
+  // New API format fields
+  success: boolean;
+  code: number;
+  message: string;
   data?: Array<{
     IdUsuario: string;
     Usuario: string;
     Nombre: string;
-    EMail: string;
-    Perfil: string;
+    IdCargo: string;
     Cargo: string;
+    IdPerfil: string;
+    Perfil: string;
+    IdTipoAcceso: string;
+    TipoAcceso: string;
+    IdEmpresaContratista: string;
+    EmpresaContratista: string;
+    EMail: string;
+    NroCelular: string;
+    Clave: string;
+    Nueva: string;
     [key: string]: any; // For other potential fields
   }>;
+  
+  // Keep legacy fields for backward compatibility
+  glosa?: string;
+  codigo?: number;
 }
 
 export interface PerfilRequest {

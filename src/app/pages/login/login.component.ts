@@ -47,31 +47,39 @@ export class LoginComponent implements AfterViewInit {
   }
 
   onLogin() {
+    if (!this.email) {
+      this.showErrorMessage('Por favor ingrese su usuario');
+      return;
+    }
+    
     this.isLoading = true;
     
-    this.authService.login(this.email, this.password)
+    // Call login service with only username, no password needed as per the API requirements
+    this.authService.login(this.email)
       .pipe(
         finalize(() => this.isLoading = false)
       )
       .subscribe({
         next: (response) => {
-          console.log(response);
-          // if (response.success) {
-          //   // After successful login, load user profile
-          //   this.loadUserProfile();
-          //   // Navigate to main dashboard
-          //   this.router.navigate(['/check-list']);
-          // } else {
-          //   console.log(response);
-          //   this.showErrorMessage(response.message || 'Error de autenticación');
-          // }
-          if(response.glosa === 'Ok') {
-            this.loadUserProfile();
+          console.log('[LoginComponent] Login response:', response);
+          
+          // Check for successful response (supporting both new and legacy formats)
+          const isSuccess = (response.success === true) || (response.glosa === 'Ok');
+          
+          if (isSuccess) {
+            console.log('[LoginComponent] Login successful');
+            
+            // No need to load user profile separately since all data comes in the login response
+            // Navigate to main dashboard
             this.router.navigate(['/check-list']);
+          } else {
+            // Use either new or legacy error message
+            const errorMsg = response.message || response.glosa || 'Error de autenticación';
+            this.showErrorMessage(errorMsg);
           }
         },
         error: (error) => {
-          console.error('Login error:', error);
+          console.error('[LoginComponent] Login error:', error);
           this.showErrorMessage('Error al conectar con el servidor');
         }
       });
