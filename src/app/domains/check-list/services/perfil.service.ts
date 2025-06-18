@@ -24,8 +24,9 @@ export interface PantallaPerfil {
 }
 
 export interface PerfilPantallaResponse {
-  codigo: number;
-  glosa: string;
+  success: boolean;
+  code: number;
+  message: string;
   data: PantallaPerfil[];
 }
 
@@ -70,7 +71,7 @@ export class PerfilService {
         map(response => {
           console.log('[PerfilService] API response:', response);
           
-          if (response.codigo === 0 && response.data) {
+          if ((response.success === true || (response as any).code === 200) && response.data) {
             // Transform API response - ensure proper types and property names
             const transformedData = response.data.map(item => {
               // Cast to any to safely access potential properties that might exist in API response
@@ -99,7 +100,7 @@ export class PerfilService {
             console.log('[PerfilService] Transformed data:', transformedData);
             return transformedData;
           } else {
-            console.error(`PerfilService: API error: ${response.glosa}`);
+            console.error(`PerfilService: API error: ${response.message}`);
             return [];
           }
         })
@@ -137,7 +138,7 @@ export class PerfilService {
       .pipe(
         map(response => {
           console.log('PerfilService: Update response:', response);
-          return response.codigo === 0;
+          return response.success === true;
         })
       );
   }

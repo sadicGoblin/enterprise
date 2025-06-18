@@ -94,50 +94,38 @@ export class CheckListAccessComponent implements OnInit {
     });
   }
   
-  onAccessTypeChange(selectedOption: SelectOption): void {
-    console.log('[CheckList] Access type changed to:', selectedOption);
-    
-    // Store the selected option for later use (like retry operations)
-    this.selectedOption = selectedOption;
-    
-    if (!selectedOption) {
-      console.log('[CheckList] No option selected, clearing permissions');
-      // Clear screen permissions if no profile selected
+  onAccessTypeChange(selection: SelectOption | string): void {
+    let selectedOption: SelectOption | undefined;
+
+    // Handle if the event emits a string value or the full object
+    if (typeof selection === 'string') {
+      selectedOption = this.accessTypes.find(opt => opt.value === selection);
+    } else {
+      selectedOption = selection;
+    }
+
+    console.log('[CheckList] Access type changed. Resolved option:', selectedOption);
+    this.selectedOption = selectedOption || null;
+
+    // If no valid option is selected (e.g., placeholder "Seleccionar..."), clear the table
+    if (!selectedOption || !selectedOption.value) {
+      console.log('[CheckList] Placeholder selected. Clearing screen permissions.');
       this.screenPermissions = [];
+      this.screenLoadError = false; // Reset error state
       return;
     }
-    
-    // Log the exact structure of the selected option to debug
-    console.log('[CheckList] Selected option structure:', JSON.stringify(selectedOption));
-    
-    // Check if it's 'Sin Acceso' option
-    if (selectedOption.label.toLowerCase().includes('sin acceso')) {
-      console.log('[CheckList] Sin Acceso selected - clearing screen permissions');
-      // Clear screen permissions for 'Sin Acceso'
-      this.screenPermissions = [];
-      this.isLoadingScreens = false;
-      this.screenLoadError = false;
-      return;
-    }
-    
-    // Get the idSubParam from the selected option - this is what we need for the API call
-    // Make sure we convert it to a number for the API call
-    const idSubParamStr = selectedOption.idSubParam;
-    const idPerfil = Number(idSubParamStr);
-    
-    console.log('[CheckList] Raw idSubParam value:', idSubParamStr);
-    console.log('[CheckList] Converted idPerfil for API call:', idPerfil);
-    console.log('[CheckList] Type of idPerfil after conversion:', typeof idPerfil);
-    
-    if (idPerfil === undefined || idPerfil === null) {
-      console.error('[CheckList] Missing idSubParam in selected option:', selectedOption);
+
+    const idPerfil = selectedOption.idSubParam;
+
+    // Ensure idPerfil is a valid number before making the API call (0 is a valid ID)
+    if (typeof idPerfil !== 'number') {
+      console.error('[CheckList] Invalid idPerfil, cannot load permissions:', idPerfil);
       this.screenPermissions = [];
       this.screenLoadError = true;
-      this.screenErrorMessage = 'Error: Falta información de perfil en la opción seleccionada';
+      this.screenErrorMessage = 'El tipo de acceso seleccionado es inválido.';
       return;
     }
-    
-    // Load screen permissions using the idSubParam as the IdPerfil for the API call
+
     this.loadScreenPermissions(idPerfil);
   }
   
@@ -146,22 +134,17 @@ export class CheckListAccessComponent implements OnInit {
    */
   onOptionsLoaded(options: SelectOption[]): void {
     console.log('Options loaded from custom-select:', options);
-    this.accessTypes = options;
+
+    // Create a placeholder option
+    const placeholderOption: SelectOption = { value: '', label: 'Seleccionar...', idSubParam: undefined };
+
+    // Add the placeholder to the beginning of the list and store it
+    this.accessTypes = [placeholderOption, ...options];
     
-    if (this.accessTypes.length > 0) {
-      // Find 'Sin Acceso' option in the dropdown
-      const sinAccesoOption = this.accessTypes.find(option => 
-        option.label.toLowerCase().includes('sin acceso'));
-      
-      // Use 'Sin Acceso' as default if found, otherwise use first option
-      const defaultOption = sinAccesoOption || this.accessTypes[0];
-      this.selectedOption = defaultOption;
-      this.roleControl.setValue(defaultOption.value);
-      console.log('Selected default option:', defaultOption);
-      
-      // Intentionally not loading screen permissions for 'Sin Acceso'
-      // User must select a different option to see permissions
-    }
+    // Set the initial value of the form control to the placeholder
+    this.roleControl.setValue(placeholderOption.value);
+
+    console.log('Access types initialized with placeholder:', this.accessTypes);
   }
 
   /**
@@ -185,15 +168,22 @@ export class CheckListAccessComponent implements OnInit {
     }
     
     this.perfilService.getScreensForProfile(idPerfil).subscribe({
-      next: (data) => {
-        console.log('[CheckList] SUCCESS: Screen permissions API response for IdPerfil', idPerfil, ':', data);
-        if (data && data.length > 0) {
-          console.log('[CheckList] ✅ Permissions loaded successfully with', data.length, 'items');
-          console.log('[CheckList] SAMPLE DATA:', JSON.stringify(data[0]));
+      next: (permissions: PantallaPerfil[]) => {
+        console.log('[CheckList] SUCCESS: Received screen permissions for IdPerfil', idPerfil, ':', permissions);
+
+        if (Array.isArray(permissions)) {
+          this.screenPermissions = permissions;
+          this.screenLoadError = false;
+          this.screenErrorMessage = '';
+          console.log(`[CheckList] ✅ Permissions loaded successfully with ${permissions.length} items.`);
         } else {
-          console.log('[CheckList] API returned empty permissions array');
+          // This case should ideally not be reached if the service is correct, but it's good for safety.
+          console.error('[CheckList] Error: Expected an array of permissions, but received:', permissions);
+          this.screenPermissions = [];
+          this.screenLoadError = true;
+          this.screenErrorMessage = 'Error: Formato de datos de permisos inesperado.';
         }
-        this.screenPermissions = data;
+
         this.isLoadingScreens = false;
       },
       error: (error) => {
