@@ -1,7 +1,22 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, forkJoin, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
+
+// Interfaces for Etapas Constructivas API
+export interface EtapaConstructivaItem {
+  idEtapaConstructiva: string;
+  codigo: string;
+  nombre: string;
+  idObra: string;
+}
+
+export interface EtapasConstructivasResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  data: EtapaConstructivaItem[];
+}
 import { environment } from '../../../../environments/environment';
 import { ProxyService } from '../../../core/services/proxy.service';
 import { 
@@ -9,6 +24,19 @@ import {
   SubParametroResponse, 
   SubParametroItem 
 } from '../models/sub-parametro.models';
+
+// Interface for the Obras API response structure
+interface ObraItem {
+  IdObra: string;
+  Obra: string;
+}
+
+interface ObrasResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  data: ObraItem[];
+}
 import { SelectOption } from '../../../shared/controls/custom-select/custom-select.component';
 
 @Injectable({
@@ -104,6 +132,39 @@ export class SubParametroService {
           }
           console.log(`[SubParametroService] No data returned or error for idEnt=${idEnt}`);
           return [];
+        })
+      );
+  }
+
+  getEtapasConstructivas(): Observable<EtapaConstructivaItem[]> {
+    const endpoint = '/ws/EtapaConstructivaSvcImpl.php';
+    const requestBody = {
+      caso: 'ConsultaEtapaConstructiva',
+      idEtapaConstructiva: 0,
+      idObra: 0,
+      codigo: 0,
+      nombre: null,
+    };
+    return this.proxyService
+      .post<EtapasConstructivasResponse>(endpoint, requestBody)
+      .pipe(
+        map((response) => {
+          if (response && response.success && response.data) {
+            return response.data;
+          } else {
+            console.error(
+              '[SubParametroService] Error fetching Etapas Constructivas or invalid response:',
+              response
+            );
+            return []; // Return empty array on error or invalid response
+          }
+        }),
+        catchError((error: any) => {
+          console.error(
+            '[SubParametroService] API Error fetching Etapas Constructivas:',
+            error
+          );
+          return of([]); // Return empty array on API error
         })
       );
   }

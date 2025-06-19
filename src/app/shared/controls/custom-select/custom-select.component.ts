@@ -5,10 +5,12 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { finalize } from 'rxjs/operators';
+import { Observable } from 'rxjs'; // Add Observable import
+import { finalize, map } from 'rxjs/operators'; // Ensure map is imported
 
 // Import the service for API calls - use the relative path based on project structure
 import { SubParametroService } from '../../../domains/check-list/services/sub-parametro.service';
+import { ProxyService } from '../../../core/services/proxy.service'; // Import ProxyService
 
 export interface SelectOption {
   value: any;
@@ -22,7 +24,8 @@ export enum ParameterType {
   NONE = 'none',
   CARGO = 'cargo',          // idEnt = 15
   TIPO_ACCESO = 'tipo_acceso', // idEnt = 16
-  EMPRESA = 'empresa'        // idEnt = 17
+  EMPRESA = 'empresa',        // idEnt = 17
+  OBRA = 'obra'              // Custom API call for projects/obras
 }
 
 @Component({
@@ -59,6 +62,12 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
   // New input to determine if component should load data from API
   @Input() parameterType: ParameterType = ParameterType.NONE;
   @Input() loadFromApi: boolean = false;
+
+  // Inputs for custom API calls when parameterType is OBRA or a similar generic type
+  @Input() customApiEndpoint?: string;
+  @Input() customApiRequestBody?: any;
+  @Input() customOptionValueKey: string = 'value'; // Default, parent can override
+  @Input() customOptionLabelKey: string = 'label'; // Default, parent can override
   
   @Output() selectionChange = new EventEmitter<any>();
   @Output() optionsLoaded = new EventEmitter<SelectOption[]>();
@@ -70,7 +79,10 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
   hasError: boolean = false;
   apiErrorMessage: string = '';
   
-  constructor(private subParametroService: SubParametroService) {}
+  constructor(
+    private subParametroService: SubParametroService,
+    private proxyService: ProxyService // Inject ProxyService
+  ) {}
 
   ngOnInit(): void {
     // If loadFromApi is true and a valid parameterType is provided, fetch options from API
@@ -87,7 +99,7 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
     this.hasError = false;
     console.log(`CustomSelect: Loading options for ${this.parameterType} from API...`);
     
-    let apiCall;
+    let apiCall: Observable<SelectOption[]>; // Explicitly type apiCall
     
     // Select the appropriate API call based on parameterType
     switch(this.parameterType) {
@@ -99,6 +111,30 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
         break;
       case ParameterType.EMPRESA:
         apiCall = this.subParametroService.getEmpresas();
+        break;
+      case ParameterType.OBRA:
+        if (!this.customApiEndpoint || !this.customApiRequestBody) {
+          console.error('CustomSelect: customApiEndpoint and customApiRequestBody are required for ParameterType.OBRA');
+          this.hasError = true;
+          this.apiErrorMessage = 'Configuración de API personalizada incompleta.';
+          this.isLoading = false;
+          return;
+        }
+        console.log(`CustomSelect: Calling custom API for OBRA at ${this.customApiEndpoint} with body:`, this.customApiRequestBody);
+        // Directly use proxyService for the custom call
+        apiCall = this.proxyService.post<any>(this.customApiEndpoint, this.customApiRequestBody).pipe(
+          map((response: any): SelectOption[] => { // Explicit return type for map callback
+            if (response && response.success && response.data && Array.isArray(response.data)) {
+              return response.data.map((item: any) => ({
+                value: item[this.customOptionValueKey],
+                label: item[this.customOptionLabelKey]
+              } as SelectOption));
+            } else {
+              console.error('CustomSelect: Custom API response for OBRA is not in the expected format or call failed.', response);
+              throw new Error('Respuesta de API personalizada inválida para Obras');
+            }
+          })
+        );
         break;
       default:
         console.error('Invalid parameter type:', this.parameterType);
@@ -114,7 +150,7 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
         this.isLoading = false;
       })
     ).subscribe({
-      next: (data) => {
+      next: (data: SelectOption[]) => { // Explicitly type data
         this.options = data;
         console.log(`CustomSelect: Received ${data.length} options for ${this.parameterType}:`, data);
         
@@ -127,7 +163,7 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
         // Emit that options have been loaded
         this.optionsLoaded.emit(this.options);
       },
-      error: (error) => {
+      error: (error: any) => { // Explicitly type error parameter
         console.error(`CustomSelect: Error loading ${this.parameterType} options:`, error);
         this.hasError = true;
         this.apiErrorMessage = `Error al cargar opciones de ${this.label}`;
