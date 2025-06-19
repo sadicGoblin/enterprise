@@ -10,10 +10,11 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { Observable, catchError, map, of } from 'rxjs';
 
 import { CustomSelectComponent, SelectOption, ParameterType } from '../../../../../shared/controls/custom-select/custom-select.component';
 import { DataTableComponent } from '../../../../../shared/components/data-table/data-table.component';
-import { SubParametroService, EtapaConstructivaItem, SubprocesoItem } from '../../../services/sub-parametro.service';
+import { SubParametroService, EtapaConstructivaItem, SubprocesoItem, AmbitoItem } from '../../../services/sub-parametro.service';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 
 // Define interfaces locally as they are not exported from the DataTableComponent
@@ -92,6 +93,25 @@ export class AddCustomParamsComponent implements OnInit {
   subprocesoSearchValue: string = '';
   newSubprocessCode: string = '';
   newSubprocessName: string = '';
+  
+  // Properties for Ambitos Tab
+  ambitosTableColumns: TableColumn[] = [
+    { name: 'codigo', label: 'Código', cssClass: 'small-cell' },
+    { name: 'nombre', label: 'Nombre', cssClass: 'large-cell' },
+  ];
+  ambitosActionButtons: ActionButton[] = [
+    { icon: 'edit', color: 'accent', tooltip: 'Editar', action: 'editAmbitoAction' },
+    { icon: 'delete', color: 'warn', tooltip: 'Eliminar', action: 'deleteAmbitoAction' }
+  ];
+  ambitosTablePageSize = 5;
+  ambitosTablePageSizeOptions: number[] = [5, 10, 25, 100];
+  allAmbitosData: AmbitoItem[] = [];
+  filteredAmbitosData: AmbitoItem[] = [];
+  isLoadingAmbitos = false;
+  ambitoSearchValue: string = '';
+  newAmbitoCode: string = '';
+  newAmbitoName: string = '';
+  editingAmbito: AmbitoItem | null = null;
   editingSubproceso: SubprocesoItem | null = null;
 
   subprocesoTableColumns: TableColumn[] = [
@@ -122,6 +142,148 @@ export class AddCustomParamsComponent implements OnInit {
       idObra: 0, // For fetching all projects
       idUsuario: userId
     };
+    
+    // Load Ambitos data on component initialization
+    this.loadAmbitos();
+  }
+  
+  // Ambitos Tab Methods
+  loadAmbitos(): void {
+    console.log('[AddCustomParamsComponent] Starting to load Ambitos data');
+    this.isLoadingAmbitos = true;
+    this.allAmbitosData = [];
+    this.filteredAmbitosData = [];
+    
+    this.subParametroService.getAmbitos().subscribe({
+      next: (ambitos: AmbitoItem[]) => {
+        console.log('[AddCustomParamsComponent] Ambitos loaded successfully:', ambitos);
+        if (ambitos && ambitos.length > 0) {
+          console.log('[AddCustomParamsComponent] First ambito item:', ambitos[0]);
+          this.allAmbitosData = ambitos;
+          this.applyAmbitoSearchFilter();
+        } else {
+          console.warn('[AddCustomParamsComponent] Ambitos array is empty');
+          // For testing, add some mock data if API returns empty
+          this.allAmbitosData = [
+            { IdAmbito: '1', codigo: '100', nombre: 'SALUD OCUPACIONAL' },
+            { IdAmbito: '3', codigo: '200', nombre: 'SEGURIDAD' },
+            { IdAmbito: '4', codigo: '300', nombre: 'MEDIO AMBIENTE' },
+            { IdAmbito: '8', codigo: '400', nombre: 'INTEGRADO' }
+          ];
+          this.applyAmbitoSearchFilter();
+        }
+        this.isLoadingAmbitos = false;
+      },
+      error: (err: any) => {
+        console.error('[AddCustomParamsComponent] Error loading ambitos:', err);
+        this.isLoadingAmbitos = false;
+        
+        // For testing, add some mock data if API fails
+        console.log('[AddCustomParamsComponent] Using mock data due to API error');
+        this.allAmbitosData = [
+          { IdAmbito: '1', codigo: '100', nombre: 'SALUD OCUPACIONAL' },
+          { IdAmbito: '3', codigo: '200', nombre: 'SEGURIDAD' },
+          { IdAmbito: '4', codigo: '300', nombre: 'MEDIO AMBIENTE' },
+          { IdAmbito: '8', codigo: '400', nombre: 'INTEGRADO' }
+        ];
+        this.applyAmbitoSearchFilter();
+      }
+    });
+  }
+
+  onSearchAmbitos(event: Event): void {
+    this.ambitoSearchValue = (event.target as HTMLInputElement).value;
+    this.applyAmbitoSearchFilter();
+  }
+
+  applyAmbitoSearchFilter(): void {
+    if (!this.ambitoSearchValue) {
+      this.filteredAmbitosData = [...this.allAmbitosData];
+    } else {
+      const searchKeyLower = this.ambitoSearchValue.toLowerCase();
+      this.filteredAmbitosData = this.allAmbitosData.filter(ambito =>
+        ambito.nombre.toLowerCase().includes(searchKeyLower) ||
+        ambito.codigo.toLowerCase().includes(searchKeyLower)
+      );
+    }
+
+    // Update pageSizeOptions for DataTableComponent
+    const defaultOptions = [5, 10, 25, 100];
+    let newPageSizeOptions = Array.from(new Set([...defaultOptions, this.filteredAmbitosData.length])).sort((a, b) => a - b);
+    if (this.filteredAmbitosData.length === 0) {
+      newPageSizeOptions = [5, 10, 25, 50];
+    }
+    this.ambitosTablePageSizeOptions = newPageSizeOptions.filter(op => op > 0);
+
+    // Adjust ambitosTablePageSize if needed
+    if (this.ambitosTablePageSize > this.filteredAmbitosData.length && this.filteredAmbitosData.length > 0) {
+      this.ambitosTablePageSize = this.filteredAmbitosData.length;
+    } else if (this.filteredAmbitosData.length === 0) {
+      this.ambitosTablePageSize = 5;
+    } else if (this.ambitosTablePageSize === 0 && this.filteredAmbitosData.length > 0) {
+      this.ambitosTablePageSize = Math.min(...this.ambitosTablePageSizeOptions.filter(op => op > 0));
+    }
+  }
+
+  handleAmbitoTableAction(event: { action: string, item: AmbitoItem, index: number }): void {
+    switch (event.action) {
+      case 'editAmbitoAction':
+        this.editAmbito(event.item);
+        break;
+      case 'deleteAmbitoAction':
+        this.deleteAmbito(event.item);
+        break;
+    }
+  }
+
+  editAmbito(ambitoToEdit: AmbitoItem): void {
+    this.editingAmbito = ambitoToEdit;
+    this.newAmbitoCode = ambitoToEdit.codigo;
+    this.newAmbitoName = ambitoToEdit.nombre;
+  }
+
+  deleteAmbito(ambitoToDelete: AmbitoItem): void {
+    // This would normally call an API to delete the ambito
+    // For now, just remove it from the local array
+    console.log('[AddCustomParamsComponent] Delete ambito:', ambitoToDelete);
+    this.allAmbitosData = this.allAmbitosData.filter(a => a.IdAmbito !== ambitoToDelete.IdAmbito);
+    this.applyAmbitoSearchFilter();
+  }
+
+  addAmbito(): void {
+    // This would normally call an API to add or update an ambito
+    // For now, just add it to the local array
+    if (this.editingAmbito) {
+      // Update existing ambito
+      const index = this.allAmbitosData.findIndex(a => a.IdAmbito === this.editingAmbito!.IdAmbito);
+      if (index !== -1) {
+        this.allAmbitosData[index] = {
+          ...this.editingAmbito,
+          codigo: this.newAmbitoCode,
+          nombre: this.newAmbitoName
+        };
+      }
+      this.editingAmbito = null;
+    } else {
+      // Add new ambito (with a mock ID)
+      const newId = Math.max(0, ...this.allAmbitosData.map(a => parseInt(a.IdAmbito, 10))) + 1;
+      this.allAmbitosData.push({
+        IdAmbito: newId.toString(),
+        codigo: this.newAmbitoCode,
+        nombre: this.newAmbitoName
+      });
+    }
+    
+    // Reset form
+    this.newAmbitoCode = '';
+    this.newAmbitoName = '';
+    this.applyAmbitoSearchFilter();
+  }
+
+  cancelEditAmbito(): void {
+    this.editingAmbito = null;
+    this.newAmbitoCode = '';
+    this.newAmbitoName = '';
   }
 
   selectedProjectId: string | null = null;
@@ -683,3 +845,5 @@ interface ProjectApiRequestBody {
   idObra: number;
   idUsuario: number;
 }
+
+

@@ -33,6 +33,20 @@ export interface SubprocesoResponse {
   message: string;
   data: SubprocesoItem[];
 }
+
+// Interfaces for Ambitos API
+export interface AmbitoItem {
+  IdAmbito: string;
+  codigo: string;
+  nombre: string;
+}
+
+export interface AmbitosResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  data: AmbitoItem[];
+}
 import { environment } from '../../../../environments/environment';
 import { ProxyService } from '../../../core/services/proxy.service';
 import { 
@@ -356,6 +370,48 @@ export class SubParametroService {
         catchError((error: any) => {
           console.error(
             '[SubParametroService] API Error fetching Subprocesos:',
+            error
+          );
+          return of([]); // Return empty array on API error
+        })
+      );
+  }
+
+  /**
+   * Get ambitos from API
+   * @returns Observable with array of AmbitoItem
+   */
+  getAmbitos(): Observable<AmbitoItem[]> {
+    const endpoint = '/ws/AmbitosSvcImpl.php';
+    const requestBody = {
+      caso: 'ConsultaAmbitos',
+      idAmbito: 0,
+      nombre: null,
+      codigo: 0
+    };
+    
+    console.log('[SubParametroService] Fetching Ambitos with URL:', 'https://inarco-ssoma.favric.cl' + endpoint);
+    console.log('[SubParametroService] Fetching Ambitos with body:', requestBody);
+    
+    return this.proxyService
+      .post<AmbitosResponse>(endpoint, requestBody)
+      .pipe(
+        tap(response => console.log('[SubParametroService] Raw Ambitos API response:', response)),
+        map((response) => {
+          if (response && response.success && response.data) {
+            console.log('[SubParametroService] Processed Ambitos data:', response.data);
+            return response.data;
+          } else {
+            console.error(
+              '[SubParametroService] Error fetching Ambitos or invalid response:',
+              response
+            );
+            return []; // Return empty array on error or invalid response
+          }
+        }),
+        catchError((error: any) => {
+          console.error(
+            '[SubParametroService] API Error fetching Ambitos:',
             error
           );
           return of([]); // Return empty array on API error
