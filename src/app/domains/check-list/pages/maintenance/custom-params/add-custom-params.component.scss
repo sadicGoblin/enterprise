@@ -77,3 +77,55 @@ mat-card {
   padding: 1rem;
   margin-bottom: 2rem;
 }
+
+.stage-form-container {
+  display: flex;
+  flex-direction: column; // Stack rows vertically
+  width: 100%; // Take full width to allow content alignment
+  gap: 1rem; // Space between form rows
+  margin-bottom: 1.5rem; // Space before the search bar/table
+}
+
+.selection-row {
+  display: flex;
+  gap: 16px; // Space between the dropdowns
+  width: 100%;
+
+  > app-custom-select {
+    flex: 1; // Each dropdown takes up equal space
+  }
+}
+
+.form-row {
+  display: flex;
+  width: 100%;
+  gap: 1rem; // Space between items in a row (inputs or buttons)
+}
+
+.input-row {
+  justify-content: flex-start; // Align inputs to the left
+
+  .form-field {
+    flex-grow: 1; // Allow input fields to share space
+    max-width: 400px; // Max width for each input field, adjust as needed
+  }
+}
+
+.action-buttons-right {
+  justify-content: flex-end; // Align buttons to the right
+}
+
+// Override for .tab-content if it's interfering with the form layout
+// This makes the direct children of .tab-content (like .stage-form-container and .custom-params-section) stack vertically.
+.tab-content {
+  display: flex;
+  flex-direction: column; // Change from row to column
+  align-items: flex-start; // Align items to the start of the cross axis
+  // gap: 1rem; // Keep the gap - already defined, might not need to repeat or adjust
+  // margin-top: 20px; // Adjusted from 40px to be more standard - already defined
+}
+
+// Ensure the search bar and table section take full width
+.custom-params-section {
+  width: 100%;
+}

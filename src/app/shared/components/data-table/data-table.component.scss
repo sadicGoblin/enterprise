@@ -48,7 +48,7 @@
 
 /* Text truncation for all cells */
 .truncate-cell {
-  max-width: 150px;
+  max-width: 250px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -65,7 +65,7 @@
 }
 
 .large-cell {
-  max-width: 180px;
+  max-width: 450px;
 }
 
 /* Icon column styles */

@@ -10,10 +10,25 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatCardModule } from '@angular/material/card';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+
 import { CustomSelectComponent, SelectOption, ParameterType } from '../../../../../shared/controls/custom-select/custom-select.component';
-import { SubParametroService, EtapaConstructivaItem } from '../../../services/sub-parametro.service'; // Import service and interface
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'; // Added Validators
+import { DataTableComponent } from '../../../../../shared/components/data-table/data-table.component';
+import { SubParametroService, EtapaConstructivaItem, SubprocesoItem } from '../../../services/sub-parametro.service';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+
+// Define interfaces locally as they are not exported from the DataTableComponent
+export interface TableColumn {
+  name: string;
+  label: string;
+  cssClass?: string;
+}
+
+export interface ActionButton {
+  icon: string;
+  color: string;
+  tooltip: string;
+  action: string;
+}
 
 @Component({
   selector: 'app-add-custom-params',
@@ -26,37 +41,70 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms'; /
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    MatTableModule,
+    MatTableModule, // Re-added for other tabs still using mat-table
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
-    MatPaginatorModule,
+    // MatPaginatorModule, // Still removed as other tables don't seem to use it
     CustomSelectComponent,
     ReactiveFormsModule,
+    DataTableComponent, // Ensured DataTableComponent is here
   ],
   templateUrl: './add-custom-params.component.html',
   styleUrls: ['./add-custom-params.component.scss'],
 })
 export class AddCustomParamsComponent implements OnInit {
-  // Pagination for Stages
-  currentPageStages = 1;
-  itemsPerPageStages = 5;
-  pagedStages: { code: string; name: string }[] = [];
-  stagePaginatorPageSizeOptions: number[] = [5, 10, 25, 100];
-  allStagesData: { code: string; name: string }[] = []; // Holds all stages from API
-  filteredStages: { code: string; name: string }[] = []; // Holds stages after search filter
+  // Configuration for DataTableComponent (Stages)
+  stageTablePageSize = 5;
+  stageTablePageSizeOptions: number[] = [5, 10, 25, 100]; // DataTableComponent uses number[] for pageSizeOptions
+  stageTableColumns: TableColumn[] = [
+    { name: 'codigo', label: 'Código', cssClass: 'small-cell' },
+    { name: 'nombre', label: 'Nombre', cssClass: 'large-cell' },
+  ];
+  stageActionButtons = [
+    { icon: 'edit', color: 'accent', tooltip: 'Editar', action: 'editStageAction' },
+    { icon: 'delete', color: 'warn', tooltip: 'Eliminar', action: 'deleteStageAction' }
+  ];
+  allStagesData: EtapaConstructivaItem[] = []; // Holds all stages from API for the selected project
+  filteredStages: EtapaConstructivaItem[] = []; // Holds stages after search filter
   stageSearchKey: string = '';
   isLoadingStages = false;
   constructor(private subParametroService: SubParametroService) {} // Inject service
   // Properties for Project app-custom-select
   projectControl = new FormControl(null, [Validators.required]);
-  subprocessProjectControl = new FormControl(null, [Validators.required]);
+
   projectApiEndpoint = '/ws/ObrasSvcImpl.php'; // Make path relative for proxy
   projectApiCaso = 'Consulta';
-  projectApiRequestBody: any; // Will be initialized in ngOnInit 
+  projectApiRequestBody!: ProjectApiRequestBody; // Will be initialized in ngOnInit 
   projectOptionValue = 'IdObra';
   projectOptionLabel = 'Obra';
   projectParameterType = ParameterType.OBRA;
+
+  // Properties for E. Constructiva app-custom-select (Sub-procesos Tab)
+  etapaConstructivaControl = new FormControl({ value: null, disabled: true }, [Validators.required]);
+  etapasParaSubprocesoSelect: SelectOption[] = [];
+
+  // Properties for Sub-procesos Tab
+  selectedEtapaId: number | null = null;
+  allSubprocesosData: SubprocesoItem[] = [];
+  filteredSubprocesosData: SubprocesoItem[] = [];
+  isLoadingSubprocesos = false;
+  subprocesoSearchValue: string = '';
+  newSubprocessCode: string = '';
+  newSubprocessName: string = '';
+  editingSubproceso: SubprocesoItem | null = null;
+
+  subprocesoTableColumns: TableColumn[] = [
+    { name: 'codigo', label: 'Código', cssClass: 'small-cell' },
+    { name: 'nombre', label: 'Nombre', cssClass: 'large-cell' },
+  ];
+
+  subprocesoActionButtons: ActionButton[] = [
+    { icon: 'edit', color: 'primary', tooltip: 'Editar Sub-proceso', action: 'edit' },
+    { icon: 'delete', color: 'warn', tooltip: 'Eliminar Sub-proceso', action: 'delete' },
+  ];
+  // You can create a form group for adding new sub-processes later for better validation
+
 
   ngOnInit(): void {
     let userId = 0; // Default user ID
@@ -77,14 +125,13 @@ export class AddCustomParamsComponent implements OnInit {
   }
 
   selectedProjectId: string | null = null;
-  newStageName = '';
   newStageCode = '';
+  newStageName = '';
+  editingStage: EtapaConstructivaItem | null = null;
 
-  newSubprocessName = '';
-  newSubprocessCode = '';
   selectedProjectIdSubprocess: string | null = null;
 
-  // stagesByProject: Record<string, { code: string; name: string }[]> = {
+  // stagesByProject: Record<string, EtapaConstructivaItem[]> = {
   //   1: [
   //     { code: '2900', name: 'Aguas lluvias piso -1 obra gruesa' },
   //     { code: '14400', name: 'Aguas lluvias (piso 11 azotea - obra gruesa)' },
@@ -208,77 +255,107 @@ export class AddCustomParamsComponent implements OnInit {
       : [];
   }
 
-  addStage() {
-    if (!this.selectedProjectId || !this.newStageCode || !this.newStageName)
+  addStage(): void {
+    if (!this.selectedProjectId) {
+      console.error('No project selected.');
+      // TODO: Show user-friendly message
       return;
+    }
+    const stageCode = this.newStageCode.trim();
+    const stageName = this.newStageName.trim();
 
-    const newStage = { code: this.newStageCode, name: this.newStageName };
-    this.allStagesData.push(newStage);
-    console.log('Added stage locally to allStagesData:', newStage);
-    this.applyStageSearchFilter(); // Re-apply search and update pagination
+    if (!stageName || !stageCode) {
+      console.error('Stage Name and Code are required.');
+      // TODO: Show user-friendly message
+      return;
+    }
 
+    this.isLoadingStages = true;
+
+    if (this.editingStage) {
+      // Update existing stage
+      const updatedStage: EtapaConstructivaItem = {
+        ...this.editingStage,
+        codigo: stageCode,
+        nombre: stageName,
+        idObra: this.selectedProjectId // Ensure idObra is correctly passed
+      };
+
+      this.subParametroService.updateEtapaConstructiva(updatedStage).subscribe({
+        next: (response) => {
+          console.log('Stage updated successfully via API:', response);
+          // TODO: Show success message
+          this.newStageName = '';
+          this.newStageCode = '';
+          this.editingStage = null;
+          this.loadStagesForProject(); // Reload stages
+        },
+        error: (error) => {
+          console.error('Error updating stage via API:', error);
+          // TODO: Show error message
+          this.isLoadingStages = false;
+        }
+      });
+    } else {
+      // Add new stage
+      const stageData = { codigo: stageCode, nombre: stageName };
+      this.subParametroService.addEtapaConstructiva(stageData, this.selectedProjectId).subscribe({
+        next: (response) => {
+          console.log('Stage added successfully via API:', response);
+          // TODO: Show success message
+          this.newStageName = '';
+          this.newStageCode = '';
+          this.loadStagesForProject(); // Reload stages
+        },
+        error: (error) => {
+          console.error('Error adding stage via API:', error);
+          // TODO: Show error message
+          this.isLoadingStages = false;
+        }
+      });
+    }
+  }
+
+  deleteStage(stageToDelete: EtapaConstructivaItem): void {
+    if (!stageToDelete || !stageToDelete.idEtapaConstructiva) {
+      console.error('Invalid stage data for deletion.');
+      // TODO: Show user-friendly error
+      return;
+    }
+
+    // Optional: Add a confirmation dialog here before deleting
+    // if (!confirm(`¿Está seguro de que desea eliminar la etapa "${stageToDelete.nombre}"?`)) {
+    //   return;
+    // }
+
+    this.isLoadingStages = true; // Show loading indicator
+    this.subParametroService.deleteEtapaConstructiva(stageToDelete.idEtapaConstructiva).subscribe({
+      next: (response) => {
+        console.log('Stage deleted successfully via API:', response);
+        // TODO: Show success message to user
+        this.loadStagesForProject(); // Reload stages to reflect deletion
+        // isLoadingStages will be set to false in loadStagesForProject
+      },
+      error: (error) => {
+        console.error('Error deleting stage via API:', error);
+        // TODO: Show error message to user
+        this.isLoadingStages = false; // Hide loading indicator on error
+      }
+    });
+  }
+
+  editStage(stageToEdit: EtapaConstructivaItem): void {
+    console.log('Editing stage:', stageToEdit);
+    this.editingStage = stageToEdit;
+    this.newStageCode = stageToEdit.codigo;
+    this.newStageName = stageToEdit.nombre;
+    // Consider scrolling to the form or highlighting it
+  }
+
+  cancelEditStage(): void {
+    this.editingStage = null;
     this.newStageCode = '';
     this.newStageName = '';
-  }
-
-  addSubprocess(): void {
-    if (
-      !this.selectedProjectIdSubprocess ||
-      !this.newSubprocessCode ||
-      !this.newSubprocessName
-    )
-      return;
-
-    // Use subprocessesByProject here
-    const list = this.subprocessesByProject[this.selectedProjectIdSubprocess] || [];
-    list.push({ code: this.newSubprocessCode, name: this.newSubprocessName });
-    this.subprocessesByProject[this.selectedProjectIdSubprocess] = list;
-
-    this.newSubprocessCode = '';
-    this.newSubprocessName = '';
-  }
-
-  deleteStage(index: number): void {
-    if (this.selectedProjectId && index >= 0 && index < this.pagedStages.length) {
-      const stageToDelete = this.pagedStages[index];
-      const actualIndexInAllData = this.allStagesData.findIndex(s => s.code === stageToDelete.code && s.name === stageToDelete.name);
-      if (actualIndexInAllData > -1) {
-        const removedStage = this.allStagesData.splice(actualIndexInAllData, 1);
-        console.log('Deleted stage from allStagesData:', removedStage);
-        this.applyStageSearchFilter(); // Re-apply search and update pagination
-      } else {
-        console.warn('Could not find stage to delete in allStagesData:', stageToDelete);
-      }
-    }
-  }
-
-  editStage(index: number): void {
-    const stageToEdit = this.pagedStages[index]; // Edit from the currently viewed page
-    if (stageToEdit) {
-      this.newStageCode = stageToEdit.code;
-      this.newStageName = stageToEdit.name;
-      console.log('Populated form fields for editing stage:', stageToEdit);
-      // TODO: Implement actual update logic (e.g., mark for update, open dialog, etc.)
-    }
-  }
-
-  deleteSubprocess(index: number): void {
-    if (this.selectedProjectIdSubprocess && this.subprocessesByProject[this.selectedProjectIdSubprocess]) {
-      const removedSubprocess = this.subprocessesByProject[this.selectedProjectIdSubprocess].splice(index, 1);
-      console.log('Deleted subprocess locally:', removedSubprocess);
-    }
-  }
-
-  editSubprocess(index: number): void {
-    if (this.selectedProjectIdSubprocess && this.subprocessesByProject[this.selectedProjectIdSubprocess]) {
-      const subprocessToEdit = this.subprocessesByProject[this.selectedProjectIdSubprocess][index];
-      if (subprocessToEdit) {
-        this.newSubprocessCode = subprocessToEdit.code;
-        this.newSubprocessName = subprocessToEdit.name;
-        console.log('Populated form fields for editing subprocess:', subprocessToEdit);
-        // TODO: Implement actual update logic for subprocesses
-      }
-    }
   }
 
   saveStages() {
@@ -289,91 +366,295 @@ export class AddCustomParamsComponent implements OnInit {
     console.log('Subprocesses saved:', this.subprocessesByProject);
   }
 
-  stageColumns = ['code', 'name', 'actions'];
-  subprocessColumns = ['code', 'name', 'actions'];
-
-  onProjectSelectionChange(selectedOption: SelectOption): void {
-    if (selectedOption && selectedOption.value !== null && selectedOption.value !== undefined) {
-      this.selectedProjectId = String(selectedOption.value);
-      console.log('Project selected:', this.selectedProjectId);
-      this.loadStagesForProject();
+  onEtapaConstructivaSelectionChange(selectedOption: SelectOption): void {
+    if (selectedOption && selectedOption.value) {
+      this.selectedEtapaId = Number(selectedOption.value);
+      this.loadSubprocesosForEtapa();
     } else {
-      this.selectedProjectId = null;
-      this.selectedStages = []; // Clear stages if no project is selected
-      console.log('Project selection cleared');
+      this.selectedEtapaId = null;
+      this.allSubprocesosData = [];
+      this.applySubprocesoSearchFilter();
     }
+  }
+
+  loadSubprocesosForEtapa(): void {
+    if (!this.selectedEtapaId) return;
+
+    this.isLoadingSubprocesos = true;
+    this.subParametroService.getSubprocesosPorEtapa(this.selectedEtapaId).subscribe({
+      next: (subprocesos) => {
+        this.allSubprocesosData = subprocesos;
+        console.log(`Loaded subprocesos for etapa ${this.selectedEtapaId}:`, this.allSubprocesosData);
+        this.applySubprocesoSearchFilter();
+        this.isLoadingSubprocesos = false;
+      },
+      error: (err) => {
+        console.error('Error loading subprocesos:', err);
+        this.isLoadingSubprocesos = false;
+        this.allSubprocesosData = [];
+        this.applySubprocesoSearchFilter();
+      }
+    });
+  }
+
+  handleSubprocesoTableAction(event: { action: string; item: SubprocesoItem; index?: number }): void {
+    console.log('Subproceso action:', event.action, 'Item:', event.item);
+    switch (event.action) {
+      case 'edit': // Corrected to match subprocesoActionButtons
+        this.populateSubprocessFormForEdit(event.item);
+        break;
+      case 'delete': // Corrected to match subprocesoActionButtons
+        this.deleteSubprocesoItem(event.item);
+        break;
+    }
+  }
+
+  populateSubprocessFormForEdit(item: SubprocesoItem): void {
+    console.log('Populating form for subproceso edit:', item);
+    this.editingSubproceso = item;
+    this.newSubprocessCode = item.codigo;
+    this.newSubprocessName = item.nombre;
+    // Consider scrolling to the form or highlighting it
+    console.log('Populated form for editing subprocess:', item, 'editingSubproceso set to:', this.editingSubproceso);
+  }
+
+  deleteSubprocesoItem(itemToDelete: SubprocesoItem): void {
+    if (!itemToDelete || !itemToDelete.idSubproceso) {
+      console.error('Invalid subprocess data for deletion.');
+      // TODO: Show user-friendly error
+      return;
+    }
+
+    // Optional: Add a confirmation dialog here
+    // if (!confirm(`¿Está seguro de que desea eliminar el subproceso "${itemToDelete.nombre}"?`)) {
+    //   return;
+    // }
+
+    this.isLoadingSubprocesos = true;
+    this.subParametroService.deleteSubproceso(itemToDelete.idSubproceso).subscribe({
+      next: (response) => {
+        console.log('Subprocess deleted successfully via API:', response);
+        // TODO: Show success message
+        if (this.selectedEtapaId) {
+          this.loadSubprocesosForEtapa(); // Reload subprocesses for the current stage
+        }
+      },
+      error: (error) => {
+        console.error('Error deleting subprocess via API:', error);
+        // TODO: Show error message
+        this.isLoadingSubprocesos = false;
+      }
+    });
+  }
+
+  addSubproceso(): void {
+    if (!this.selectedEtapaId) {
+      console.error('No stage selected to add or update subprocess.');
+      // TODO: Show user-friendly message
+      return;
+    }
+    const subprocessCode = this.newSubprocessCode.trim();
+    const subprocessName = this.newSubprocessName.trim();
+
+    if (!subprocessCode || !subprocessName) {
+      console.error('Subprocess Code and Name are required.');
+      // TODO: Show user-friendly message
+      return;
+    }
+
+    this.isLoadingSubprocesos = true;
+
+    if (this.editingSubproceso) {
+      // Update existing subprocess
+      const updatedSubproceso: SubprocesoItem = {
+        ...this.editingSubproceso,
+        codigo: subprocessCode,
+        nombre: subprocessName,
+        // idEtapaConstructiva is already part of editingSubproceso and shouldn't change here
+      };
+      this.subParametroService.updateSubproceso(updatedSubproceso).subscribe({
+        next: (response) => {
+          console.log('Subprocess updated successfully via API:', response);
+          // TODO: Show success message
+          this.newSubprocessCode = '';
+          this.newSubprocessName = '';
+          this.editingSubproceso = null;
+          if (this.selectedEtapaId) {
+            this.loadSubprocesosForEtapa();
+          }
+        },
+        error: (error) => {
+          console.error('Error updating subprocess via API:', error);
+          // TODO: Show error message
+          this.isLoadingSubprocesos = false;
+        }
+      });
+    } else {
+      // Add new subprocess
+      const subprocessData = { codigo: subprocessCode, nombre: subprocessName };
+      this.subParametroService.addSubproceso(subprocessData, String(this.selectedEtapaId!)).subscribe({
+        next: (response) => {
+          console.log('Subprocess added successfully via API:', response);
+          // TODO: Show success message
+          this.newSubprocessCode = '';
+          this.newSubprocessName = '';
+          if (this.selectedEtapaId) {
+            this.loadSubprocesosForEtapa();
+          }
+        },
+        error: (error) => {
+          console.error('Error adding subprocess via API:', error);
+          // TODO: Show error message
+          this.isLoadingSubprocesos = false;
+        }
+      });
+    }
+  }
+
+  cancelEditSubproceso(): void {
+    this.editingSubproceso = null;
+    this.newSubprocessCode = '';
+    this.newSubprocessName = '';
+    console.log('Subprocess edit cancelled.');
+  }
+
+  applySubprocesoSearchFilter(): void {
+    if (!this.subprocesoSearchValue) {
+      this.filteredSubprocesosData = [...this.allSubprocesosData];
+    } else {
+      const filterValue = this.subprocesoSearchValue.toLowerCase();
+      this.filteredSubprocesosData = this.allSubprocesosData.filter(item =>
+        item.nombre.toLowerCase().includes(filterValue) ||
+        item.codigo.toLowerCase().includes(filterValue)
+      );
+    }
+    // Here you would update the data source for the new table
+    // For now, we just log it.
+    console.log('Filtered subprocesos:', this.filteredSubprocesosData);
   }
 
   loadStagesForProject(): void {
     if (!this.selectedProjectId) {
       this.allStagesData = [];
+      this.filteredStages = []; // Ensure filteredStages is also cleared
       this.applyStageSearchFilter();
+      // Clear and disable E. Constructiva select if no project
+      this.etapasParaSubprocesoSelect = [];
+      this.etapaConstructivaControl.reset();
+      this.etapaConstructivaControl.disable();
+      // Clear sub-process data as well
+      this.selectedEtapaId = null;
+      this.allSubprocesosData = [];
+      this.filteredSubprocesosData = [];
       return;
     }
-    // The API for Etapas Constructivas doesn't use selectedProjectId in request body, it uses idObra: 0
-    // So, we call it directly without passing the selectedProjectId to the service method itself.
-    // The service method getEtapasConstructivas already has idObra: 0 hardcoded in its request.
+
     this.isLoadingStages = true;
     this.subParametroService.getEtapasConstructivas().subscribe({
       next: (etapas: EtapaConstructivaItem[]) => {
-        this.allStagesData = etapas.map(etapa => ({
-          code: etapa.codigo,
-          name: etapa.nombre
-        }));
-        console.log('Loaded all stages:', this.allStagesData);
-        this.applyStageSearchFilter(); // Apply filter and update pagination
+        this.allStagesData = etapas.filter(etapa => etapa.idObra === this.selectedProjectId);
+        console.log(`Loaded and filtered stages for idObra ${this.selectedProjectId}:`, this.allStagesData);
+        this.applyStageSearchFilter();
 
         if (this.allStagesData.length > 0) {
           const defaultOptions = [5, 10, 25, 100];
-          // Use a Set to ensure uniqueness if selectedStages.length is already in defaultOptions
           const combinedOptions = new Set([...defaultOptions, this.allStagesData.length]);
-          this.stagePaginatorPageSizeOptions = Array.from(combinedOptions).sort((a, b) => a - b);
+          this.stageTablePageSizeOptions = Array.from(combinedOptions).filter(op => typeof op === 'number').sort((a, b) => a - b) as number[];
         } else {
-          this.stagePaginatorPageSizeOptions = [5, 10, 25, 100];
+          this.stageTablePageSizeOptions = [5, 10, 25, 100];
         }
 
-        this.updatePagedStages(); // Update paged data before hiding spinner
         this.isLoadingStages = false;
+
+        // Populate E. Constructiva select for Sub-procesos tab
+        if (this.allStagesData && this.allStagesData.length > 0) {
+          this.etapasParaSubprocesoSelect = this.allStagesData.map(etapa => ({
+            value: etapa.idEtapaConstructiva,
+            label: `${etapa.codigo} - ${etapa.nombre}` // Using detailed label
+          }));
+          this.etapaConstructivaControl.enable();
+        } else {
+          this.etapasParaSubprocesoSelect = [];
+          this.etapaConstructivaControl.reset();
+          this.etapaConstructivaControl.disable(); // Ensure it's disabled if no stages
+        }
+        // Reset sub-process selection when project changes and stages are reloaded
+        this.etapaConstructivaControl.reset();
+        this.selectedEtapaId = null;
+        this.allSubprocesosData = [];
+        this.filteredSubprocesosData = [];
       },
       error: (err) => {
-        console.error('Error loading stages:', err);
-        this.allStagesData = []; // Clear stages on error
-        this.applyStageSearchFilter(); // Apply filter and update paged stages
-        this.stagePaginatorPageSizeOptions = [5, 10, 25, 100]; // Reset options on error
+        console.error(`Error loading stages for project ${this.selectedProjectId}:`, err);
         this.isLoadingStages = false;
+        this.allStagesData = [];
+        this.filteredStages = [];
+        this.applyStageSearchFilter();
+        this.etapasParaSubprocesoSelect = [];
+        this.etapaConstructivaControl.reset();
+        this.etapaConstructivaControl.disable();
+        this.selectedEtapaId = null;
+        this.allSubprocesosData = [];
+        this.filteredSubprocesosData = [];
       }
     });
   }
 
-  onSubprocessProjectSelectionChange(selectedOption: SelectOption): void {
-    if (selectedOption && selectedOption.value !== null && selectedOption.value !== undefined) {
-      this.selectedProjectIdSubprocess = String(selectedOption.value);
-      console.log('Subprocess Project selected:', this.selectedProjectIdSubprocess);
-      // Any additional logic when a project is selected for subprocesses
+  onProjectSelectionChange(selectedProject: SelectOption | null): void {
+    if (selectedProject && selectedProject.value) {
+      this.selectedProjectId = String(selectedProject.value);
+      console.log('Project selected in Etapas:', this.selectedProjectId);
+      this.loadStagesForProject(); // This will now also handle sub-process tab's E.Constructiva dropdown
     } else {
-      this.selectedProjectIdSubprocess = null;
-      // Clear dependent data if needed
+      console.log('Project cleared in Etapas');
+      this.selectedProjectId = null;
+      this.allStagesData = [];
+      this.filteredStages = [];
+      this.applyStageSearchFilter();
+
+      // Clear and disable E. Constructiva dropdown in Sub-procesos tab
+      this.etapasParaSubprocesoSelect = [];
+      this.etapaConstructivaControl.reset();
+      this.etapaConstructivaControl.disable();
+      this.selectedEtapaId = null;
+      this.allSubprocesosData = [];
+      this.filteredSubprocesosData = [];
     }
   }
 
-  updatePagedStages(): void {
-    const startIndex = (this.currentPageStages - 1) * this.itemsPerPageStages;
-    const endIndex = startIndex + this.itemsPerPageStages;
-    this.pagedStages = this.filteredStages.slice(startIndex, endIndex);
-  }
-
-  applyStageSearchFilter(): void {
+  // updatePagedStages(): void { // Removed, DataTableComponent handles its own pagination
+  //   const startIndex = (this.currentPageStages - 1) * this.itemsPerPageStages;
+  //   const endIndex = startIndex + this.itemsPerPageStages;
+  //   this.pagedStages = this.filteredStages.slice(startIndex, endIndex);
+  // }
+    applyStageSearchFilter(): void {
     if (!this.stageSearchKey) {
       this.filteredStages = [...this.allStagesData];
     } else {
       const searchKeyLower = this.stageSearchKey.toLowerCase();
       this.filteredStages = this.allStagesData.filter(stage =>
-        stage.name.toLowerCase().includes(searchKeyLower) ||
-        stage.code.toLowerCase().includes(searchKeyLower)
+        stage.nombre.toLowerCase().includes(searchKeyLower) ||
+        stage.codigo.toLowerCase().includes(searchKeyLower)
       );
     }
-    this.currentPageStages = 1; // Reset to first page after search
-    this.updatePagedStages();
+    // DataTableComponent manages its own page state and data updates.
+
+    // Update pageSizeOptions for DataTableComponent
+    const defaultOptions = [5, 10, 25, 100]; // Match initial pageSizeOptions
+    let newPageSizeOptions = Array.from(new Set([...defaultOptions, this.filteredStages.length])).sort((a, b) => a - b);
+    if (this.filteredStages.length === 0) {
+      newPageSizeOptions = [5, 10, 25, 50]; // Default if no data
+    }
+    this.stageTablePageSizeOptions = newPageSizeOptions.filter(op => op > 0); // Ensure no zero or negative options
+
+    // Adjust stageTablePageSize if it was set to 'all' (i.e., > largest default option) and now exceeds the new total
+    if (this.stageTablePageSize > this.filteredStages.length && this.filteredStages.length > 0) {
+      this.stageTablePageSize = this.filteredStages.length;
+    } else if (this.filteredStages.length === 0) {
+      this.stageTablePageSize = 5; // Default page size if no data
+    } else if (this.stageTablePageSize === 0 && this.filteredStages.length > 0) {
+      this.stageTablePageSize = Math.min(...this.stageTablePageSizeOptions.filter(op => op > 0)); // Smallest valid option
+    }
   }
 
   onSearchStages(event: Event): void {
@@ -381,9 +662,24 @@ export class AddCustomParamsComponent implements OnInit {
     this.applyStageSearchFilter();
   }
 
-  onStagePageChange(event: PageEvent): void {
-    this.currentPageStages = event.pageIndex + 1;
-    this.itemsPerPageStages = event.pageSize;
-    this.updatePagedStages();
+  handleStageTableAction(event: { action: string, item: EtapaConstructivaItem, index: number }): void {
+    switch (event.action) {
+      case 'editStageAction':
+        this.editStage(event.item);
+        break;
+      case 'deleteStageAction':
+        this.deleteStage(event.item);
+        break;
+    }
   }
+
+  // onStagePageChange(event: PageEvent): void { // Removed, DataTableComponent handles its own pagination events
+  //   // Logic previously here is now handled by DataTableComponent or removed.
+  // }
+}
+
+interface ProjectApiRequestBody {
+  caso: string;
+  idObra: number;
+  idUsuario: number;
 }

@@ -5,7 +5,7 @@
         <div class="tab-content">
           <app-custom-select
             label="Proyecto"
-            [formControl]="projectControl" 
+            [formControl]="projectControl"
             [parameterType]="projectParameterType"
             [loadFromApi]="true"
             [customApiEndpoint]="projectApiEndpoint"
@@ -18,173 +18,140 @@
             appearance="fill"
           ></app-custom-select>
 
-          <mat-form-field appearance="fill">
-            <mat-label>Código</mat-label>
-            <input matInput [(ngModel)]="newStageCode" />
-          </mat-form-field>
-
-          <mat-form-field appearance="fill">
-            <mat-label>Nombre</mat-label>
-            <input matInput [(ngModel)]="newStageName" />
-          </mat-form-field>
-          <div class="button-row">
-            <button
-              mat-raised-button
-              color="accent"
-              class="save-button"
-              (click)="saveStages()"
-            >
-              Guardar
-            </button>
-            <button mat-raised-button color="primary" (click)="addStage()">
-              Agregar
-            </button>
-          </div>
-        </div>
-
-        <div class="table-controls">
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Buscar Etapa</mat-label>
-            <input matInput (input)="onSearchStages($event)" placeholder="Código o Nombre">
-            <mat-icon matSuffix>search</mat-icon>
-          </mat-form-field>
-        </div>
-        <div class="table-container">
-          <div *ngIf="isLoadingStages" class="spinner-container">
-            <mat-spinner diameter="50"></mat-spinner>
+          <!-- Form to add new stage -->
+          <div class="stage-form-container" *ngIf="projectControl.value">
+            <div class="form-row input-row">
+              <mat-form-field appearance="fill" class="form-field">
+                <mat-label>Código Nueva Etapa</mat-label>
+                <input matInput [(ngModel)]="newStageCode" name="newStageCode" placeholder="Ej: ET001">
+              </mat-form-field>
+              <mat-form-field appearance="fill" class="form-field">
+                <mat-label>Nombre Nueva Etapa</mat-label>
+                <input matInput [(ngModel)]="newStageName" name="newStageName" placeholder="Ej: Excavación">
+              </mat-form-field>
+            </div>
+            <div class="form-row button-row action-buttons-right">
+              <button mat-raised-button color="primary" (click)="addStage()" [disabled]="!newStageCode || !newStageName">
+                {{ editingStage ? 'Actualizar Etapa' : 'Agregar Etapa' }}
+              </button>
+              <button mat-stroked-button color="warn" (click)="cancelEditStage()" *ngIf="editingStage" class="ml-2">
+                Cancelar Edición
+              </button>
+              <button mat-raised-button color="accent" class="save-button" (click)="saveStages()" [disabled]="!projectControl.value || allStagesData.length === 0">
+                <mat-icon>save</mat-icon> Guardar Cambios
+              </button>
+            </div>
           </div>
 
-          <div class="empty-state-message" *ngIf="!isLoadingStages && selectedProjectId && allStagesData.length > 0 && filteredStages.length === 0 && stageSearchKey">
-            No hay resultados para la búsqueda.
+          <!-- Section for listing stages -->
+          <div class="custom-params-section" *ngIf="projectControl.value">
+            <div class="section-header">
+              <h3>Listado de Etapas Constructivas del Proyecto</h3>
+            </div>
+
+            <div class="table-controls">
+              <mat-form-field appearance="fill" class="search-field">
+                <mat-label>Buscar Etapa</mat-label>
+                <input matInput (keyup)="onSearchStages($event)" placeholder="Por Código o Nombre" [(ngModel)]="stageSearchKey" name="stageSearchKey">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+            </div>
+            
+            <div *ngIf="isLoadingStages" class="loading-state">
+              <mat-spinner diameter="50"></mat-spinner>
+              <p>Cargando etapas...</p>
+            </div>
+
+            <app-data-table
+              *ngIf="!isLoadingStages"
+              [columns]="stageTableColumns"
+              [data]="filteredStages"
+              [actionButtons]="stageActionButtons"
+              [pageSize]="stageTablePageSize"
+              [pageSizeOptions]="stageTablePageSizeOptions"
+              (rowAction)="handleStageTableAction($event)"
+              [striped]="true"
+              class="mat-elevation-z2">
+            </app-data-table>
+            <!-- DataTableComponent handles its own 'no data' message -->
           </div>
-          <div class="empty-state-message" *ngIf="!isLoadingStages && selectedProjectId && allStagesData.length === 0 && !stageSearchKey">
-            No hay etapas constructivas para el proyecto seleccionado.
+
+          <div *ngIf="!projectControl.value && !isLoadingStages" class="empty-state">
+            <mat-icon>info_fill</mat-icon>
+            <p>Por favor, seleccione un proyecto para ver o agregar etapas constructivas.</p>
           </div>
-          <div *ngIf="!isLoadingStages && !projectControl.value" class="empty-state-message">
-            Seleccione un proyecto para ver sus etapas constructivas.
-          </div>
-
-          <table mat-table [dataSource]="pagedStages" class="mat-elevation-z8 full-width-table" *ngIf="!isLoadingStages && filteredStages.length > 0">
-            <ng-container matColumnDef="code">
-              <th mat-header-cell *matHeaderCellDef>Código</th>
-              <td mat-cell *matCellDef="let row">{{ row.code }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Nombre</th>
-              <td mat-cell *matCellDef="let row">{{ row.name }}</td>
-            </ng-container>
-
-            <ng-container matColumnDef="actions">
-              <th mat-header-cell *matHeaderCellDef>Acciones</th>
-              <td mat-cell *matCellDef="let row; let i = index">
-                <button mat-icon-button color="accent" (click)="editStage(i)">
-                  <mat-icon>edit</mat-icon>
-                </button>
-                <button mat-icon-button color="warn" (click)="deleteStage(i)">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </td>
-            </ng-container>
-
-            <tr mat-header-row *matHeaderRowDef="stageColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: stageColumns"></tr>
-          </table>
-
-          <mat-paginator
-            *ngIf="!isLoadingStages && filteredStages.length > 0"
-            [length]="filteredStages.length"
-            [pageSize]="itemsPerPageStages"
-            [pageSizeOptions]="stagePaginatorPageSizeOptions"
-            (page)="onStagePageChange($event)"
-            aria-label="Select page of stages">
-          </mat-paginator>
         </div>
       </mat-tab>
 
       <mat-tab label="Sub-procesos">
         <div class="tab-content">
-          <app-custom-select
-            label="Proyecto"
-            [formControl]="subprocessProjectControl"
-            [parameterType]="projectParameterType"
-            [loadFromApi]="true"
-            [customApiEndpoint]="projectApiEndpoint"
-            [customApiRequestBody]="projectApiRequestBody"
-            [customOptionValueKey]="projectOptionValue"
-            [customOptionLabelKey]="projectOptionLabel"
-            (selectionChange)="onSubprocessProjectSelectionChange($event)"
-            placeholder="Seleccionar Proyecto"
-            [required]="true"
-            appearance="fill"
-          ></app-custom-select>
+          <!-- Project and Stage Selection -->
+          <div class="selection-row">
+            <app-custom-select
+              label="E. Constructiva"
+              [formControl]="etapaConstructivaControl"
+              [options]="etapasParaSubprocesoSelect"
+              [loadFromApi]="false"
+              (selectionChange)="onEtapaConstructivaSelectionChange($event)"
+              placeholder="Seleccione Etapa Constructiva"
+              [required]="true"
+              appearance="fill"
+            ></app-custom-select>
+          </div>
 
-          <mat-form-field appearance="fill">
-            <mat-label>Código</mat-label>
-            <input matInput [(ngModel)]="newSubprocessCode" />
-          </mat-form-field>
+          <!-- Form to add new sub-process -->
+          <div class="stage-form-container" *ngIf="etapaConstructivaControl.value">
+            <div class="form-row input-row">
+              <mat-form-field appearance="fill" class="form-field">
+                <mat-label>Código Nuevo Sub-proceso</mat-label>
+                <input matInput [(ngModel)]="newSubprocessCode" name="newSubprocessCode">
+              </mat-form-field>
+              <mat-form-field appearance="fill" class="form-field">
+                <mat-label>Nombre Nuevo Sub-proceso</mat-label>
+                <input matInput [(ngModel)]="newSubprocessName" name="newSubprocessName">
+              </mat-form-field>
+            </div>
+            <div class="form-row button-row action-buttons-right">
+              <button mat-raised-button color="primary" (click)="addSubproceso()" [disabled]="!newSubprocessCode || !newSubprocessName" class="add-button">
+                <mat-icon>add_circle_fill</mat-icon> Agregar Sub-proceso
+              </button>
+            </div>
+          </div>
 
-          <mat-form-field appearance="fill">
-            <mat-label>Nombre</mat-label>
-            <input matInput [(ngModel)]="newSubprocessName" />
-          </mat-form-field>
+          <!-- Section for listing sub-processes -->
+          <div class="custom-params-section" *ngIf="etapaConstructivaControl.value">
+            <div class="table-controls">
+              <mat-form-field appearance="fill" class="search-field">
+                <mat-label>Buscar Sub-proceso</mat-label>
+                <input matInput (keyup)="applySubprocesoSearchFilter()" placeholder="Por Código o Nombre" [(ngModel)]="subprocesoSearchValue" name="subprocesoSearchValue">
+                <mat-icon matSuffix>search</mat-icon>
+              </mat-form-field>
+            </div>
 
-          <div class="button-row">
-            <button
-              mat-raised-button
-              color="accent"
-              class="save-button"
-              (click)="saveSubprocesses()"
-            >
-              Guardar
-            </button>
-            <button mat-raised-button color="primary" (click)="addSubprocess()">
-              Agregar
-            </button>
+            <div *ngIf="isLoadingSubprocesos" class="loading-state">
+              <mat-spinner diameter="50"></mat-spinner>
+              <p>Cargando sub-procesos...</p>
+            </div>
+
+            <app-data-table
+              *ngIf="!isLoadingSubprocesos"
+              [columns]="subprocesoTableColumns"
+              [data]="filteredSubprocesosData"
+              [actionButtons]="subprocesoActionButtons"
+              (rowAction)="handleSubprocesoTableAction($event)"
+              [striped]="true"
+              class="mat-elevation-z2">
+            </app-data-table>
+          </div>
+
+          <div *ngIf="!etapaConstructivaControl.value && !isLoadingSubprocesos" class="empty-state">
+            <mat-icon>info_fill</mat-icon>
+            <p>Por favor, seleccione un proyecto y una etapa constructiva para continuar.</p>
           </div>
         </div>
-
-        <table
-          mat-table
-          [dataSource]="selectedSubprocesses"
-          class="mat-elevation-z1 full-width-table"
-        >
-          <ng-container matColumnDef="code">
-            <th mat-header-cell *matHeaderCellDef>Código</th>
-            <td mat-cell *matCellDef="let row">{{ row.code }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Nombre</th>
-            <td mat-cell *matCellDef="let row">{{ row.name }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Acciones</th>
-            <td mat-cell *matCellDef="let row; let i = index">
-              <button
-                mat-icon-button
-                color="accent"
-                (click)="editSubprocess(i)"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="deleteSubprocess(i)"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="subprocessColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: subprocessColumns"></tr>
-        </table>
       </mat-tab>
 
-      <mat-tab label="Ámbitos">
+      <mat-tab label="Sub-procesos">
         <div class="tab-content">
           <mat-form-field appearance="fill">
             <mat-label>Nombre</mat-label>
@@ -204,49 +171,39 @@
             >
               Guardar
             </button>
-            <button mat-raised-button color="primary" (click)="addSubprocess()">
-              Agregar
+            <button mat-raised-button color="primary" (click)="addSubproceso()">
+              {{ editingSubproceso ? 'Actualizar Subproceso' : 'Agregar Subproceso' }}
+            </button>
+            <button *ngIf="editingSubproceso" mat-button color="warn" (click)="cancelEditSubproceso()" class="cancel-edit-button">
+              Cancelar Edición
             </button>
           </div>
         </div>
-        <table
-          mat-table
-          [dataSource]="selectedSubprocesses"
-          class="mat-elevation-z1 full-width-table"
+        <div *ngIf="isLoadingSubprocesos" class="spinner-container">
+          <mat-spinner diameter="50"></mat-spinner>
+        </div>
+
+        <app-data-table
+          *ngIf="!isLoadingSubprocesos && filteredSubprocesosData.length > 0"
+          [data]="filteredSubprocesosData"
+          [columns]="subprocesoTableColumns" 
+          [actionButtons]="subprocesoActionButtons"
+          (action)="handleSubprocesoTableAction($any($event))"
+          [pageSizeOptions]="[5, 10, 20]"
+          [pageSize]="5"
+          tableClass="mat-elevation-z1 full-width-table"
         >
-          <ng-container matColumnDef="code">
-            <th mat-header-cell *matHeaderCellDef>Código</th>
-            <td mat-cell *matCellDef="let row">{{ row.code }}</td>
-          </ng-container>
+        </app-data-table>
 
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Nombre</th>
-            <td mat-cell *matCellDef="let row">{{ row.name }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Acciones</th>
-            <td mat-cell *matCellDef="let row; let i = index">
-              <button
-                mat-icon-button
-                color="accent"
-                (click)="editSubprocess(i)"
-              >
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button
-                mat-icon-button
-                color="warn"
-                (click)="deleteSubprocess(i)"
-              >
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="subprocessColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: subprocessColumns"></tr>
-        </table>
+        <div *ngIf="!isLoadingSubprocesos && filteredSubprocesosData.length === 0 && selectedEtapaId" class="empty-state-message">
+          No se encontraron sub-procesos para la etapa constructiva seleccionada o el filtro aplicado.
+        </div>
+        <div *ngIf="!isLoadingSubprocesos && filteredSubprocesosData.length === 0 && !selectedEtapaId && projectControl.value" class="empty-state-message">
+          Por favor, seleccione una Etapa Constructiva para ver sus sub-procesos.
+        </div>
+        <div *ngIf="!isLoadingSubprocesos && !projectControl.value" class="empty-state-message">
+          Por favor, seleccione un Proyecto y luego una Etapa Constructiva para ver los sub-procesos.
+        </div>
       </mat-tab>
 
       <mat-tab label="Actividades">
