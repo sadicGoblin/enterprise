@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Observable, catchError, map, of } from 'rxjs';
 
 import { CustomSelectComponent, SelectOption, ParameterType } from '../../../../../shared/controls/custom-select/custom-select.component';
+import { ProxyService } from '../../../../../core/services/proxy.service';
 import { DataTableComponent } from '../../../../../shared/components/data-table/data-table.component';
 import { SubParametroService, EtapaConstructivaItem, SubprocesoItem, AmbitoItem } from '../../../services/sub-parametro.service';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -55,6 +56,29 @@ export interface ActionButton {
   styleUrls: ['./add-custom-params.component.scss'],
 })
 export class AddCustomParamsComponent implements OnInit {
+  // Parameter types enum for custom-select
+  parameterTypes = ParameterType;
+  
+  // Document API configuration
+  documentApiEndpoint = '/ws/BibliotecaSvcImpl.php';
+  documentApiRequestBody = {
+    "caso": "ConsultaSinDocumento",
+    "idBiblioteca": 0
+  };
+  documentControl = new FormControl(null);
+  selectedDocument: any = null;
+  
+  // Parameter API configuration - using SubParametroService
+  parameterControl = new FormControl(null);
+  selectedParameter: any = null;
+  
+  // Category API configuration - using SubParametroService
+  categoryControl = new FormControl(null);
+  selectedCategory: any = null;
+  
+  // Frequency API configuration - using SubParametroService
+  frequencyControl = new FormControl(null);
+  selectedFrequency: any = null;
   // Configuration for DataTableComponent (Stages)
   stageTablePageSize = 5;
   stageTablePageSizeOptions: number[] = [5, 10, 25, 100]; // DataTableComponent uses number[] for pageSizeOptions
@@ -70,7 +94,10 @@ export class AddCustomParamsComponent implements OnInit {
   filteredStages: EtapaConstructivaItem[] = []; // Holds stages after search filter
   stageSearchKey: string = '';
   isLoadingStages = false;
-  constructor(private subParametroService: SubParametroService) {} // Inject service
+  constructor(
+    private subParametroService: SubParametroService,
+    private proxyService: ProxyService
+  ) {} // Inject service
   // Properties for Project app-custom-select
   projectControl = new FormControl(null, [Validators.required]);
 
@@ -143,8 +170,52 @@ export class AddCustomParamsComponent implements OnInit {
       idUsuario: userId
     };
     
-    // Load Ambitos data on component initialization
+    // Load initial data
     this.loadAmbitos();
+  }
+  
+  /**
+   * Handle document selection change from app-custom-select
+   */
+  onDocumentSelectionChange(selectedOption: SelectOption): void {
+    if (selectedOption) {
+      console.log('Selected document:', selectedOption);
+      this.selectedDocument = selectedOption;
+      this.activityDocument = selectedOption.label; // Using label for display
+    }
+  }
+  
+  /**
+   * Handle parameter selection change from app-custom-select
+   */
+  onParameterSelectionChange(selectedOption: SelectOption): void {
+    if (selectedOption) {
+      console.log('Selected parameter:', selectedOption);
+      this.selectedParameter = selectedOption;
+      this.activityParameter = selectedOption.label; // Using label for display
+    }
+  }
+  
+  /**
+   * Handle category selection change from app-custom-select
+   */
+  onCategorySelectionChange(selectedOption: SelectOption): void {
+    if (selectedOption) {
+      console.log('Selected category:', selectedOption);
+      this.selectedCategory = selectedOption;
+      this.activityCategory = selectedOption.label; // Using label for display
+    }
+  }
+  
+  /**
+   * Handle frequency selection change from app-custom-select
+   */
+  onFrequencySelectionChange(selectedOption: SelectOption): void {
+    if (selectedOption) {
+      console.log('Selected frequency:', selectedOption);
+      this.selectedFrequency = selectedOption;
+      this.activityFrequency = selectedOption.label; // Using label for display
+    }
   }
   
   // Ambitos Tab Methods

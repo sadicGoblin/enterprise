@@ -301,134 +301,160 @@
 
       <mat-tab label="Actividades">
         <div class="tab-content">
-          <div class="form-column left">
-            <mat-form-field appearance="fill" class="full-width">
-              <mat-label>Scope</mat-label>
+          <div class="form-row input-row">
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>Ambito</mat-label>
               <mat-select [(ngModel)]="selectedScope">
-                <mat-option *ngFor="let s of activityScopes" [value]="s">{{
-                  s
-                }}</mat-option>
+                <mat-option *ngFor="let s of activityScopes" [value]="s">
+                  {{ s }}
+                </mat-option>
               </mat-select>
             </mat-form-field>
 
-            <mat-form-field appearance="fill" class="full-width">
-              <mat-label>Name</mat-label>
-              <input matInput [(ngModel)]="activityName" />
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>Nombre</mat-label>
+              <input matInput [(ngModel)]="activityName" placeholder="Nombre" />
             </mat-form-field>
 
-            <mat-form-field appearance="fill" class="full-width">
-              <mat-label>Code</mat-label>
-              <input matInput [(ngModel)]="activityCode" />
+            <mat-form-field appearance="fill" class="form-field">
+              <mat-label>Código</mat-label>
+              <input matInput [(ngModel)]="activityCode" placeholder="Código" />
             </mat-form-field>
           </div>
 
-          <div class="form-column right">
-            <mat-form-field appearance="fill" class="full-width">
-              <mat-label>Frequency</mat-label>
-              <mat-select [(ngModel)]="activityFrequency">
-                <mat-option *ngFor="let f of frequencies" [value]="f">{{
-                  f
-                }}</mat-option>
-              </mat-select>
-            </mat-form-field>
+          <div class="form-row input-row">
+            <app-custom-select
+              [formControl]="frequencyControl"
+              [loadFromApi]="true"
+              [parameterType]="parameterTypes.EMPRESA" 
+              label="Periocidad"
+              [appearance]="'fill'"
+              class="form-field"
+              (selectionChange)="onFrequencySelectionChange($event)"
+            ></app-custom-select>
 
-            <mat-form-field appearance="fill" class="full-width">
-              <mat-label>Activity Category</mat-label>
-              <mat-select [(ngModel)]="activityCategory">
-                <mat-option *ngFor="let c of activityCategories" [value]="c">{{
-                  c
-                }}</mat-option>
-              </mat-select>
-            </mat-form-field>
+            <app-custom-select
+              [formControl]="categoryControl"
+              [loadFromApi]="true"
+              [parameterType]="parameterTypes.TIPO_ACCESO" 
+              label="Categoría"
+              [appearance]="'fill'"
+              class="form-field"
+              (selectionChange)="onCategorySelectionChange($event)"
+            ></app-custom-select>
 
-            <mat-form-field appearance="fill" class="full-width">
-              <mat-label>Associated Parameter</mat-label>
-              <mat-select [(ngModel)]="activityParameter">
-                <mat-option
-                  *ngFor="let p of associatedParameters"
-                  [value]="p"
-                  >{{ p }}</mat-option
-                >
-              </mat-select>
-            </mat-form-field>
+            <app-custom-select
+              [formControl]="parameterControl"
+              [loadFromApi]="true"
+              [parameterType]="parameterTypes.CARGO" 
+              label="Parámetro Asociado"
+              [appearance]="'fill'"
+              class="form-field"
+              (selectionChange)="onParameterSelectionChange($event)"
+            ></app-custom-select>
+          </div>
 
-            <mat-form-field appearance="fill" class="full-width">
-              <mat-label>Associated Document</mat-label>
-              <mat-select [(ngModel)]="activityDocument">
-                <mat-option *ngFor="let d of associatedDocuments" [value]="d">{{
-                  d
-                }}</mat-option>
-              </mat-select>
+          <div class="form-row input-row">
+            <app-custom-select
+              [formControl]="documentControl"
+              [loadFromApi]="true"
+              [parameterType]="parameterTypes.OBRA" 
+              [customApiEndpoint]="documentApiEndpoint"
+              [customApiRequestBody]="documentApiRequestBody"
+              [customOptionValueKey]="'IdDocumento'"
+              [customOptionLabelKey]="'Nombre'"
+              label="Documento Asociado"
+              [appearance]="'fill'"
+              class="form-field"
+              (selectionChange)="onDocumentSelectionChange($event)"
+            ></app-custom-select>
+          </div>
+
+          <div class="form-row button-row action-buttons-right">
+            <button mat-raised-button color="primary" (click)="addActivity()" class="add-button">
+              Agregar
+            </button>
+          </div>
+
+          <div class="table-controls">
+            <mat-form-field appearance="fill" class="search-field">
+              <mat-label>Buscar</mat-label>
+              <input 
+                matInput 
+                placeholder="Buscar" 
+              />
+              <mat-icon matSuffix>search</mat-icon>
             </mat-form-field>
           </div>
-        </div>
+          
+          <table
+            mat-table
+            [dataSource]="activities"
+            class="mat-elevation-z2 full-width-table"
+          >
+            <ng-container matColumnDef="code">
+              <th mat-header-cell *matHeaderCellDef>Código</th>
+              <td mat-cell *matCellDef="let element">{{ element.code }}</td>
+            </ng-container>
 
-        <button mat-raised-button color="primary" (click)="addActivity()">
-          Add
-        </button>
+            <ng-container matColumnDef="name">
+              <th mat-header-cell *matHeaderCellDef>Nombre</th>
+              <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+            </ng-container>
 
-        <table
-          mat-table
-          [dataSource]="activities"
-          class="mat-elevation-z2 full-width"
-        >
-          <ng-container matColumnDef="code">
-            <th mat-header-cell *matHeaderCellDef>Code</th>
-            <td mat-cell *matCellDef="let element">{{ element.code }}</td>
-          </ng-container>
+            <ng-container matColumnDef="frequency">
+              <th mat-header-cell *matHeaderCellDef>Frecuencia</th>
+              <td mat-cell *matCellDef="let element">
+                {{ element.frequency }}
+              </td>
+            </ng-container>
 
-          <ng-container matColumnDef="name">
-            <th mat-header-cell *matHeaderCellDef>Name</th>
-            <td mat-cell *matCellDef="let element">{{ element.name }}</td>
-          </ng-container>
+            <ng-container matColumnDef="category">
+              <th mat-header-cell *matHeaderCellDef>Categoría</th>
+              <td mat-cell *matCellDef="let element">{{ element.category }}</td>
+            </ng-container>
 
-          <ng-container matColumnDef="frequency">
-            <th mat-header-cell *matHeaderCellDef>Frequency</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.frequency }}
-            </td>
-          </ng-container>
+            <ng-container matColumnDef="parameter">
+              <th mat-header-cell *matHeaderCellDef>Parámetro</th>
+              <td mat-cell *matCellDef="let element">
+                {{ element.parameter }}
+              </td>
+            </ng-container>
 
-          <ng-container matColumnDef="category">
-            <th mat-header-cell *matHeaderCellDef>Category</th>
-            <td mat-cell *matCellDef="let element">{{ element.category }}</td>
-          </ng-container>
+            <ng-container matColumnDef="document">
+              <th mat-header-cell *matHeaderCellDef>Documento</th>
+              <td mat-cell *matCellDef="let element">{{ element.document }}</td>
+            </ng-container>
 
-          <ng-container matColumnDef="parameter">
-            <th mat-header-cell *matHeaderCellDef>Parameter</th>
-            <td mat-cell *matCellDef="let element">
-              {{ element.parameter }}
-            </td>
-          </ng-container>
+            <ng-container matColumnDef="actions">
+              <th mat-header-cell *matHeaderCellDef>Acciones</th>
+              <td mat-cell *matCellDef="let element; let i = index">
+                <button mat-icon-button color="primary" (click)="editActivity(i)">
+                  <mat-icon>edit</mat-icon>
+                </button>
+                <button mat-icon-button color="warn" (click)="deleteActivity(i)">
+                  <mat-icon>delete</mat-icon>
+                </button>
+              </td>
+            </ng-container>
 
-          <ng-container matColumnDef="document">
-            <th mat-header-cell *matHeaderCellDef>Document</th>
-            <td mat-cell *matCellDef="let element">{{ element.document }}</td>
-          </ng-container>
-
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Actions</th>
-            <td mat-cell *matCellDef="let element; let i = index">
-              <button mat-icon-button color="primary" (click)="editActivity(i)">
-                <mat-icon>edit</mat-icon>
-              </button>
-              <button mat-icon-button color="warn" (click)="deleteActivity(i)">
-                <mat-icon>delete</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumnsActivities"></tr>
-          <tr
-            mat-row
-            *matRowDef="let row; columns: displayedColumnsActivities"
-          ></tr>
-        </table>
-
-        <div class="save-button">
-          <button mat-flat-button color="accent" (click)="saveActivity()">
-            Save
-          </button>
+            <tr mat-header-row *matHeaderRowDef="displayedColumnsActivities"></tr>
+            <tr
+              mat-row
+              *matRowDef="let row; columns: displayedColumnsActivities"
+            ></tr>
+          </table>
+          
+          <div *ngIf="activities.length === 0" class="empty-state">
+            <mat-icon>info</mat-icon>
+            <p>No se encontraron actividades.</p>
+          </div>
+          
+          <div class="save-button">
+            <button mat-flat-button color="accent" (click)="saveActivity()">
+              Guardar
+            </button>
+          </div>
         </div>
       </mat-tab>
     </mat-tab-group>
