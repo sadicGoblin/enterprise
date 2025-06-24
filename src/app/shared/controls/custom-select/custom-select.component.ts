@@ -25,7 +25,8 @@ export enum ParameterType {
   CARGO = 'cargo',          // idEnt = 15
   TIPO_ACCESO = 'tipo_acceso', // idEnt = 16
   EMPRESA = 'empresa',        // idEnt = 17
-  OBRA = 'obra'              // Custom API call for projects/obras
+  OBRA = 'obra',             // Custom API call for projects/obras
+  CUSTOM_API = 'custom_api'  // Generic custom API call for any endpoint
 }
 
 @Component({
@@ -113,14 +114,15 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
         apiCall = this.subParametroService.getEmpresas();
         break;
       case ParameterType.OBRA:
+      case ParameterType.CUSTOM_API:
         if (!this.customApiEndpoint || !this.customApiRequestBody) {
-          console.error('CustomSelect: customApiEndpoint and customApiRequestBody are required for ParameterType.OBRA');
+          console.error(`CustomSelect: customApiEndpoint and customApiRequestBody are required for ${this.parameterType}`);
           this.hasError = true;
           this.apiErrorMessage = 'Configuración de API personalizada incompleta.';
           this.isLoading = false;
           return;
         }
-        console.log(`CustomSelect: Calling custom API for OBRA at ${this.customApiEndpoint} with body:`, this.customApiRequestBody);
+        console.log(`CustomSelect: Calling custom API for ${this.parameterType} at ${this.customApiEndpoint} with body:`, this.customApiRequestBody);
         // Directly use proxyService for the custom call
         apiCall = this.proxyService.post<any>(this.customApiEndpoint, this.customApiRequestBody).pipe(
           map((response: any): SelectOption[] => { // Explicit return type for map callback
@@ -130,8 +132,8 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
                 label: item[this.customOptionLabelKey]
               } as SelectOption));
             } else {
-              console.error('CustomSelect: Custom API response for OBRA is not in the expected format or call failed.', response);
-              throw new Error('Respuesta de API personalizada inválida para Obras');
+              console.error(`CustomSelect: Custom API response for ${this.parameterType} is not in the expected format or call failed.`, response);
+              throw new Error(`Respuesta de API personalizada inválida para ${this.label}`);
             }
           })
         );

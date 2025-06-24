@@ -32,6 +32,17 @@ export interface ActionButton {
   action: string;
 }
 
+// Interface for Activity items
+export interface Activity {
+  id?: string | number;
+  code: string;
+  name: string;
+  frequency: string;
+  category: string;
+  parameter: string;
+  document: string;
+}
+
 @Component({
   selector: 'app-add-custom-params',
   standalone: true,
@@ -68,17 +79,63 @@ export class AddCustomParamsComponent implements OnInit {
   documentControl = new FormControl(null);
   selectedDocument: any = null;
   
-  // Parameter API configuration - using SubParametroService
+  // Parameter API configuration - using custom API
+  parameterApiEndpoint = '/ws/ParametrosSvcImpl.php';
+  parameterApiRequestBody = {
+    "caso": "DetalleConsulta",
+    "idCab": 5
+  };
   parameterControl = new FormControl(null);
   selectedParameter: any = null;
   
-  // Category API configuration - using SubParametroService
+  // Category API configuration - using custom API
+  categoryApiEndpoint = '/ws/SubParametrosSvcImpl.php';
+  categoryApiRequestBody = {
+    "caso": "SubParametroConsulta",
+    "idEnt": 141
+  };
   categoryControl = new FormControl(null);
   selectedCategory: any = null;
   
-  // Frequency API configuration - using SubParametroService
+  // Frequency API configuration - using custom API
+  frequencyApiEndpoint = '/ws/SubParametrosSvcImpl.php';
+  frequencyApiRequestBody = {
+    "caso": "SubParametroConsulta",
+    "idEnt": 4
+  };
   frequencyControl = new FormControl(null);
   selectedFrequency: any = null;
+  
+  // Scope API configuration - using custom API
+  scopeApiEndpoint = '/ws/AmbitosSvcImpl.php';
+  scopeApiRequestBody = {
+    "caso": "ConsultaAmbitos",
+    "idAmbito": 0,
+    "nombre": null,
+    "codigo": 0
+  };
+  scopeControl = new FormControl(null);
+  selectedScopeOption: any = null;
+  
+  // Activities Tab Data
+  activities: Activity[] = [];
+  displayedColumnsActivities: string[] = [
+    'code',
+    'name',
+    'frequency',
+    'category',
+    'parameter',
+    'document',
+    'edit',
+    'delete'
+  ];
+  selectedScope: string = '';
+  activityName: string = '';
+  activityCode: string = '';
+  activityFrequency: string = '';
+  activityCategory: string = '';
+  activityParameter: string = '';
+  activityDocument: string = '';
   // Configuration for DataTableComponent (Stages)
   stageTablePageSize = 5;
   stageTablePageSizeOptions: number[] = [5, 10, 25, 100]; // DataTableComponent uses number[] for pageSizeOptions
@@ -216,6 +273,72 @@ export class AddCustomParamsComponent implements OnInit {
       this.selectedFrequency = selectedOption;
       this.activityFrequency = selectedOption.label; // Using label for display
     }
+  }
+  
+  /**
+   * Handle scope selection change from app-custom-select
+   */
+  onScopeSelectionChange(selectedOption: SelectOption): void {
+    if (selectedOption) {
+      console.log('Selected scope:', selectedOption);
+      this.selectedScopeOption = selectedOption;
+      this.selectedScope = selectedOption.label; // Using label for display
+      
+      // Fetch activities for the selected scope
+      this.loadActivitiesByScope(selectedOption.value);
+    }
+  }
+  
+  /**
+   * Load activities by scope ID
+   */
+  loadActivitiesByScope(scopeId: string | number): void {
+    if (!scopeId) {
+      console.error('Cannot load activities: No scope ID provided');
+      return;
+    }
+    
+    console.log(`Loading activities for scope ID: ${scopeId}`);
+    
+    // Create request body for activities API
+    const requestBody = {
+      "caso": "ConsultaActividades",
+      "idActividades": 0,
+      "idAmbito": scopeId,
+      "codigo": 0,
+      "nombre": null,
+      "idPeriocidad": 0,
+      "idCategoriaActividad": 0,
+      "idParametroAsociado": 0,
+      "idBiblioteca": 0
+    };
+    
+    // Call the API to get activities
+    this.proxyService.post<any>('/ws/AmbitosSvcImpl.php', requestBody).subscribe({
+      next: (response: any) => {
+        if (response && response.success && response.data && Array.isArray(response.data)) {
+          console.log('Activities loaded successfully:', response.data);
+          
+          // Map API response to activities array
+          this.activities = response.data.map((item: any) => ({
+            id: item.IdActividades || '',
+            code: item.codigo || '',
+            name: item.nombre || '',
+            frequency: item.Periocidad || '',
+            category: item.CategoriaActividad || '',
+            parameter: item.ParametroAsociado || '',
+            document: item.Documento || ''
+          }));
+        } else {
+          console.error('Invalid activities response format:', response);
+          this.activities = [];
+        }
+      },
+      error: (error: any) => {
+        console.error('Error loading activities:', error);
+        this.activities = [];
+      }
+    });
   }
   
   // Ambitos Tab Methods
@@ -390,45 +513,20 @@ export class AddCustomParamsComponent implements OnInit {
   // };
 
   subprocessesByProject: Record<string, { code: string; name: string }[]> = {
-    1: [{ code: 'SP01', name: 'Hormigón losa piso 1' }],
-    2: [{ code: 'SP02', name: 'Tabiquería estructural' }],
+    '1': [{ code: 'SP01', name: 'Hormigón losa piso 1' }],
+    '2': [{ code: 'SP02', name: 'Tabiquería estructural' }]
   };
+  
+  // Activities properties are already defined above, removing duplicates
 
-  activityScopes = ['Safety', 'Quality', 'Environment'];
-  frequencies = ['Daily', 'Weekly', 'Biweekly', 'Monthly'];
-  activityCategories = ['Photo Evidence', 'Technical Report', 'Checklist'];
-  associatedParameters = ['Parameter A', 'Parameter B', 'Parameter C'];
-  associatedDocuments = ['Document X', 'Document Y', 'Document Z'];
+  /**
+   * Activities related methods
+   */
 
-  selectedScope: string = '';
-  activityName = '';
-  activityCode = '';
-  activityFrequency = '';
-  activityCategory = '';
-  activityParameter = '';
-  activityDocument = '';
-
-  activities: {
-    code: string;
-    name: string;
-    scope: string;
-    frequency: string;
-    category: string;
-    parameter: string;
-    document: string;
-  }[] = [];
-
-  displayedColumnsActivities = [
-    'code',
-    'name',
-    'frequency',
-    'category',
-    'parameter',
-    'document',
-    'actions',
-  ];
-
-  addActivity() {
+  /**
+   * Adds a new activity to the activities array
+   */
+  addActivity(): void {
     if (
       !this.activityCode ||
       !this.activityName ||
@@ -437,19 +535,24 @@ export class AddCustomParamsComponent implements OnInit {
       !this.activityCategory ||
       !this.activityParameter ||
       !this.activityDocument
-    )
+    ) {
       return;
+    }
 
-    this.activities.push({
+    // Create a new activity object that matches the Activity interface
+    const newActivity: Activity = {
+      id: '', // Will be assigned by backend when saved
       code: this.activityCode,
       name: this.activityName,
-      scope: this.selectedScope,
       frequency: this.activityFrequency,
       category: this.activityCategory,
       parameter: this.activityParameter,
-      document: this.activityDocument,
-    });
+      document: this.activityDocument
+    };
 
+    this.activities.push(newActivity);
+
+    // Clear form fields
     this.activityCode = '';
     this.activityName = '';
     this.selectedScope = '';
@@ -459,24 +562,34 @@ export class AddCustomParamsComponent implements OnInit {
     this.activityDocument = '';
   }
 
-  editActivity(index: number) {
-    const a = this.activities[index];
-    this.activityCode = a.code;
-    this.activityName = a.name;
-    this.selectedScope = a.scope;
-    this.activityFrequency = a.frequency;
-    this.activityCategory = a.category;
-    this.activityParameter = a.parameter;
-    this.activityDocument = a.document;
+  /**
+   * Edits an existing activity
+   * @param index Index of the activity to edit
+   */
+  editActivity(index: number): void {
+    const activity = this.activities[index];
+    this.activityCode = activity.code;
+    this.activityName = activity.name;
+    this.activityFrequency = activity.frequency;
+    this.activityCategory = activity.category;
+    this.activityParameter = activity.parameter;
+    this.activityDocument = activity.document;
     this.deleteActivity(index);
   }
 
-  deleteActivity(index: number) {
+  /**
+   * Deletes an activity from the activities array
+   * @param index Index of the activity to delete
+   */
+  deleteActivity(index: number): void {
     this.activities.splice(index, 1);
   }
 
-  saveActivity(){
-    
+  /**
+   * Saves the current activity data
+   */
+  saveActivity(): void {
+    // Implementation will be added later
   }
 
   selectedStages: { code: string; name: string }[] = []; // Direct source for the table

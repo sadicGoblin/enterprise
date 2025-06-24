@@ -19,6 +19,16 @@ mat-form-field {
   width: 100%;
 }
 
+.mat-column-edit, .mat-column-delete {
+  width: 4%;
+  text-align: center;
+}
+
+.action-cell {
+  text-align: center !important;
+  padding: 0.2rem !important;
+}
+
 .table-container {
   position: relative;
   min-height: 150px; 
