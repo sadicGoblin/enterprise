@@ -1,4 +1,17 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { animate, state, style, transition, trigger } from '@angular/animations';
+
+// Activity interface definition
+export interface Activity {
+  id: number;
+  name: string;
+  periodicity: 'SEMANAL' | 'MENSUAL' | 'QUINCENAL'; // Weekly, Monthly, Bi-weekly
+  assigned: number;
+  realized: number;
+  compliance: number; // Percentage
+  scheduledDays: number[]; // An array of the days in the month, e.g., [4, 5, 11, 15]
+  dailyChecks?: boolean[]; // For backward compatibility
+}
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -36,16 +49,33 @@ import { ProxyService } from '../../../../core/services/proxy.service';
   ],
   templateUrl: './activity-planning.component.html',
   styleUrls: ['./activity-planning.component.scss'],
+  animations: [
+    trigger('detailExpand', [
+      state('collapsed', style({ height: '0px', minHeight: '0' })),
+      state('expanded', style({ height: '*' })),
+      transition('expanded <=> collapsed', animate('225ms cubic-bezier(0.4, 0.0, 0.2, 1)')),
+    ]),
+  ],
 })
 export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   @ViewChild('collaboratorSelect') collaboratorSelect!: CustomSelectComponent;
   constructor(private proxyService: ProxyService) {
     // Initialize with current date
     this.selectedPeriod = new Date();
-    this.formatPeriodString(this.selectedPeriod);
   }
   
   ngOnInit(): void {
+    this.formatPeriodString(this.selectedPeriod);
+    console.log('Current period:', this.formattedPeriod);
+    
+    // Generate the calendar grid for the current month
+    if (this.selectedPeriod) {
+      this.generateCalendarGrid(this.selectedPeriod);
+    }
+    
+    // Mock data initialization
+    this.initMockData();
+    
     // Get user ID from localStorage
     const userId = localStorage.getItem('userId');
     
@@ -87,13 +117,70 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
    * @param datepicker The datepicker instance
    */
   setMonthAndYear(date: Date, datepicker: any): void {
-    // Always set the day to 1 to ensure we're just using month/year
     const normalizedDate = new Date(date);
     normalizedDate.setDate(1);
-    
     this.selectedPeriod = normalizedDate;
     this.formatPeriodString(normalizedDate);
+    this.generateCalendarGrid(normalizedDate);
     datepicker.close();
+  }
+  
+  /**
+   * Initialize mock data for activities
+   */
+  initMockData(): void {
+    // This replaces the loadActivityData function that didn't exist
+    // Activities mock data should already be initialized in the component
+    console.log('Mock data initialized');
+  }
+
+  /**
+   * Generates a calendar grid for the selected month
+   * This arranges days in weeks, with proper weekday alignment
+   */
+  generateCalendarGrid(date: Date): void {
+    this.calendarWeeks = [];
+    
+    // Create a new date object for the first day of the month
+    const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
+    
+    // Get the number of days in the month (0 gives last day of previous month)
+    const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    
+    // Get the day of the week for the first day (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+    // Convert to Monday-based indexing (0 = Monday, ..., 6 = Sunday)
+    let firstDayIndex = firstDayOfMonth.getDay() - 1;
+    if (firstDayIndex < 0) firstDayIndex = 6; // Sunday becomes index 6
+    
+    // Initialize the first week with empty slots for days from previous month
+    const firstWeek: (number | null)[] = Array(firstDayIndex).fill(null);
+    
+    // Fill the first week with actual days
+    for (let i = 1; i <= 7 - firstDayIndex; i++) {
+      firstWeek.push(i);
+    }
+    
+    this.calendarWeeks.push(firstWeek);
+    
+    // Fill subsequent weeks
+    let dayCounter = 7 - firstDayIndex + 1;
+    
+    while (dayCounter <= daysInMonth) {
+      const week: (number | null)[] = [];
+      
+      for (let i = 0; i < 7 && dayCounter <= daysInMonth; i++) {
+        week.push(dayCounter++);
+      }
+      
+      // Fill the rest of the last week with null
+      while (week.length < 7) {
+        week.push(null);
+      }
+      
+      this.calendarWeeks.push(week);
+    }
+    
+    console.log('Calendar grid generated:', this.calendarWeeks);
   }
   
   /**
@@ -142,23 +229,19 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   }
   
   /**
-   * Check if a day is a weekend (Saturday or Sunday)
-   * @param day The day of the month (1-31)
-   * @returns True if the day falls on a weekend for the current month
+   * Check if a day is a weekend day
+   * In our calendar structure, the 5th and 6th columns (index 5 and 6) are weekends
    */
   isWeekend(day: number): boolean {
-    // Create a date for the current month and the specified day
-    const date = new Date();
-    if (this.selectedPeriod) {
-      date.setTime(this.selectedPeriod.getTime());
+    // Find the day in our calendar grid
+    for (let week of this.calendarWeeks) {
+      const dayIndex = week.indexOf(day);
+      if (dayIndex !== -1) {
+        // Check if it's in the weekend columns (5 = Saturday, 6 = Sunday)
+        return dayIndex === 5 || dayIndex === 6;
+      }
     }
-    date.setDate(day);
-    
-    // Get day of week (0 = Sunday, 6 = Saturday)
-    const dayOfWeek = date.getDay();
-    
-    // Return true if Saturday or Sunday
-    return dayOfWeek === 0 || dayOfWeek === 6;
+    return false;
   }
   
   // Project selection using custom select component
@@ -198,33 +281,153 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   // projects = ['Proyecto 1', 'Proyecto 2'];
   collaborators = ['Felipe Gallardo', 'Germán Medina', 'Patricio Baeza'];
 
-  days = Array.from({ length: 31 }, (_, i) => i + 1);
+  /**
+   * Array of days 1-31
+   */
+  days: number[] = Array.from({ length: 31 }, (_, i) => i + 1);
   
+  /**
+   * Calendar days arranged in weeks
+   */
+  calendarWeeks: (number | null)[][] = [];
+  
+  /**
+   * Day names for the calendar header
+   */
+  dayNames: string[] = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+  
+  // Columns for the master view
   displayedColumns = [
-    'activity',
+    'expand',
+    'name',
     'periodicity',
-    ...this.days.map(d => 'day' + d),
-    'assign',
+    'assigned',
     'realized',
     'compliance'
   ];
   
-  activities = [
+  // All columns including detail view
+  allColumns = [
+    'expand',
+    'name',
+    'periodicity',
+    'assigned',
+    'realized',
+    'compliance'
+  ];
+  
+  // Define Activity interface
+  activities: Activity[] = [
     {
-      activity: 'Check List Seguridad',
-      periodicity: 'Semanal',
-      dailyChecks: Array(31).fill(false),
-      assign: 1,
+      id: 1,
+      name: 'Check List Seguridad',
+      periodicity: 'SEMANAL',
+      assigned: 1,
       realized: 0,
       compliance: 0,
+      scheduledDays: [1, 8, 15, 22, 29], // Weekly on Mondays
+      dailyChecks: Array(31).fill(false)
     },
     {
-      activity: 'Inspección SSTMA',
-      periodicity: 'Quincenal',
-      dailyChecks: Array(31).fill(false),
-      assign: 1,
+      id: 2,
+      name: 'Inspección SSTMA',
+      periodicity: 'QUINCENAL',
+      assigned: 1,
       realized: 1,
       compliance: 100,
+      scheduledDays: [1, 15], // Bi-weekly
+      dailyChecks: Array(31).fill(false)
     },
+    {
+      id: 3,
+      name: 'Charla de Seguridad',
+      periodicity: 'MENSUAL',
+      assigned: 1,
+      realized: 0,
+      compliance: 0,
+      scheduledDays: [5], // Monthly
+      dailyChecks: Array(31).fill(false)
+    }
   ];
+  
+  /**
+   * Track expanded activities
+   */
+  expandedRows: Activity[] = [];
+  
+  /**
+   * Check if a row is expanded
+   */
+  isExpanded(row: Activity): boolean {
+    return this.expandedRows.includes(row);
+  }
+  
+  /**
+   * Predicate function that determines if a row is an expansion detail row
+   */
+  isExpansionDetailRow = (_: number, row: any): boolean => row.element === undefined;
+  
+  /**
+   * Predicate function that determines if a row is an expanded row
+   */
+  isExpandedRow = (_: number, row: any): boolean => row.element !== undefined;
+  
+  /**
+   * Toggle row expansion
+   */
+  toggleRow(element: Activity, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    const index = this.expandedRows.indexOf(element);
+    if (index === -1) {
+      this.expandedRows.push(element);
+    } else {
+      this.expandedRows.splice(index, 1);
+    }
+    console.log('Toggled row:', element.name, 'Expanded:', this.expandedRows.includes(element));
+  }
+  
+  /**
+   * Toggles a scheduled day for an activity
+   */
+  toggleScheduledDay(activity: Activity, day: number, checked: boolean): void {
+    if (checked) {
+      // Add the day if it's not already in the array
+      if (!activity.scheduledDays.includes(day)) {
+        activity.scheduledDays.push(day);
+        // Sort the array to keep days in order
+        activity.scheduledDays.sort((a, b) => a - b);
+      }
+    } else {
+      // Remove the day from the array
+      const index = activity.scheduledDays.indexOf(day);
+      if (index !== -1) {
+        activity.scheduledDays.splice(index, 1);
+      }
+    }
+    
+    // Update dailyChecks for backward compatibility
+    if (activity.dailyChecks) {
+      activity.dailyChecks[day - 1] = checked;
+    }
+    
+    console.log(`Activity ${activity.name} day ${day} set to ${checked}`, activity.scheduledDays);
+  }
+  
+  /**
+   * Saves changes to an activity
+   */
+  saveActivityChanges(activity: Activity): void {
+    // Here you would typically call an API to save the changes
+    console.log('Saving activity changes:', activity);
+    
+    // For demo purposes, update the realized and compliance values
+    const totalScheduled = activity.scheduledDays.length;
+    const realized = Math.floor(Math.random() * (totalScheduled + 1)); // Random number between 0 and totalScheduled
+    activity.realized = realized;
+    
+    // Calculate compliance percentage
+    activity.compliance = totalScheduled > 0 ? Math.round((realized / totalScheduled) * 100) : 0;
+  }
 }

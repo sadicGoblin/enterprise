@@ -61,6 +61,128 @@ $compact-scale: 0.9;
   }
 }
 
+// Styles for expandable rows
+.activity-row {
+  cursor: pointer;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  
+  &.expanded-row {
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+}
+
+.detail-row {
+  height: 0;
+}
+
+.activity-detail-container {
+  overflow: hidden;
+  padding: 16px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: calc(14px * var(--scale-factor, 0.9));
+  width: 100%;
+  
+  h4 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: calc(16px * var(--scale-factor, 0.9));
+    color: #3f51b5;
+  }
+}
+
+// Calendar grid styles
+.calendar-grid {
+  margin: 16px 0;
+  font-size: calc(13px * var(--scale-factor, 0.9));
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.weekday-name {
+  text-align: center;
+  font-weight: 500;
+  padding: 4px;
+  font-size: calc(12px * var(--scale-factor, 0.9));
+  color: #666;
+}
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  min-height: 45px;
+  
+  &.day-scheduled {
+    background-color: rgba(63, 81, 181, 0.1);
+    border-color: #3f51b5;
+  }
+  
+  &.day-weekend {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  
+  &.day-empty {
+    background-color: #f8f8f8;
+    border: 1px dashed #ddd;
+  }
+  
+  .day-number {
+    font-size: calc(12px * var(--scale-factor, 0.9));
+    margin-top: 4px;
+  }
+  
+  .check-cell {
+    transform: scale(0.9);
+    &.day-scheduled {
+      background-color: rgba(63, 81, 181, 0.1);
+      border-color: #3f51b5;
+    }
+    
+    &.day-weekend {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+    
+    .day-number {
+      font-size: calc(12px * var(--scale-factor, 0.9));
+      margin-top: 4px;
+    }
+    
+    .check-cell {
+      transform: scale(0.9);
+    }
+  }
+}
+
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  
+  button {
+    font-size: calc(14px * var(--scale-factor, 0.9));
+  }
+}
+
 .button-container {
   display: flex;
   align-items: center;
@@ -119,43 +241,36 @@ $compact-scale: 0.9;
   
   .small-header, .small-cell {
     width: 60px;
-    min-width: 60px;
-    max-width: 60px;
     text-align: center;
   }
   
-  .day-header {
-    width: 30px;
-    min-width: 30px;
-    max-width: 30px;
-    padding: 0 !important;
+  .day-cell, .day-header {
+    width: 40px;
     text-align: center;
+    padding: 0 4px;
   }
   
-  .day-cell {
-    width: 30px;
-    min-width: 30px;
-    max-width: 30px;
-    padding: 0 !important;
-    text-align: center;
-    
-    &.day-weekend {
-      background-color: rgba(0, 0, 0, 0.04);
-    }
-    
-    &.day-checked {
-      background-color: rgba(63, 81, 181, 0.1);
-    }
+  .day-checked {
+    background-color: rgba(63, 81, 181, 0.1);
+  }
+  
+  .day-weekend {
+    background-color: rgba(0, 0, 0, 0.04);
   }
   
   .numeric-cell {
     text-align: center;
-    width: 50px;
-    min-width: 50px;
+    width: 60px;
   }
   
   .compliance-cell {
-    font-weight: 500;
+    font-weight: bold;
+  }
+  
+  // Fix column widths
+  th.mat-header-cell:first-of-type, td.mat-cell:first-of-type {
+    width: 40px;
+    padding-right: 0;
   }
 }
 
@@ -184,4 +299,12 @@ $compact-scale: 0.9;
 .custom-table td {
   text-align: center;
   border: 1px solid #ddd;
+}
+
+.activity-detail-container + .activity-detail-container {
+  margin-top: 16px;
+}
+
+.full-width {
+  width: 100%;
 }
