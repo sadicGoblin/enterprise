@@ -2,85 +2,115 @@
   <mat-card class="mat-container">
     <h2 class="title">Planificación Actividades</h2>
 
-    <div class="form-grid">
-      <mat-form-field appearance="fill">
-        <mat-label>Proyecto</mat-label>
-        <mat-select [(ngModel)]="selectedProject">
-          <mat-option value="">Seleccione...</mat-option>
-          <mat-option *ngFor="let p of projects" [value]="p">{{
-            p
-          }}</mat-option>
-        </mat-select>
-      </mat-form-field>
+    <div class="filters-container">
+      <app-custom-select
+        label="Proyecto"
+        [formControl]="projectControl"
+        [parameterType]="projectParameterType"
+        [loadFromApi]="true"
+        [customApiEndpoint]="projectApiEndpoint"
+        [customApiRequestBody]="projectApiRequestBody"
+        [customOptionValueKey]="projectOptionValue"
+        [customOptionLabelKey]="projectOptionLabel"
+        (selectionChange)="onProjectSelectionChange($event)"
+        placeholder="Seleccionar Proyecto"
+        [required]="true"
+        appearance="fill"
+      ></app-custom-select>
 
-      <mat-form-field appearance="fill">
-        <mat-label>Colaborador</mat-label>
-        <mat-select [(ngModel)]="selectedUser">
-          <mat-option value="">Seleccione...</mat-option>
-          <mat-option *ngFor="let user of collaborators" [value]="user">{{
-            user
-          }}</mat-option>
-        </mat-select>
-      </mat-form-field>
+      <app-custom-select
+        #collaboratorSelect
+        label="Colaborador"
+        [formControl]="collaboratorControl"
+        [parameterType]="collaboratorParameterType"
+        [loadFromApi]="true"
+        [customApiEndpoint]="collaboratorApiEndpoint"
+        [customApiRequestBody]="collaboratorApiRequestBody"
+        [customOptionValueKey]="collaboratorOptionValue"
+        [customOptionLabelKey]="collaboratorOptionLabel"
+        (selectionChange)="onCollaboratorSelectionChange($event)"
+        placeholder="Seleccionar Colaborador"
+        appearance="fill"
+      ></app-custom-select>
 
       <mat-form-field appearance="fill">
         <mat-label>Periodo</mat-label>
-        <input matInput [matDatepicker]="picker" [(ngModel)]="selectedPeriod" />
+        <input 
+          matInput 
+          [matDatepicker]="picker" 
+          [(ngModel)]="selectedPeriod" 
+          [value]="selectedPeriod"
+          (dateChange)="onPeriodChange($event)"
+          [placeholder]="formattedPeriod || 'MM/YYYY'"
+          readonly
+        />
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker
           #picker
           startView="multi-year"
           [startAt]="selectedPeriod"
+          (monthSelected)="setMonthAndYear($event, picker)"
           panelClass="month-picker"
         ></mat-datepicker>
       </mat-form-field>
 
-      <div class="button-row">
-        <button mat-raised-button color="primary">Consultar</button>
+      <div class="button-container">
+        <button mat-raised-button color="primary" class="consultar-btn">
+          <mat-icon>search</mat-icon>
+          Consultar
+        </button>
       </div>
     </div>
 
+    <div class="cronograma-header">
+      <h3>CRONOGRAMA MENSUAL</h3>
+    </div>
+    
     <div class="table-scroll">
       <table
         mat-table
         [dataSource]="activities"
-        class="mat-elevation-z2 custom-table"
+        class="mat-elevation-z2 custom-table compact-table"
       >
         <ng-container matColumnDef="activity">
           <th mat-header-cell *matHeaderCellDef>Actividad</th>
-          <td mat-cell *matCellDef="let element">{{ element.activity }}</td>
+          <td mat-cell *matCellDef="let element" class="activity-cell">{{ element.activity }}</td>
         </ng-container>
 
         <ng-container matColumnDef="periodicity">
-          <th mat-header-cell *matHeaderCellDef>Peri.</th>
-          <td mat-cell *matCellDef="let element">{{ element.periodicity }}</td>
+          <th mat-header-cell *matHeaderCellDef class="small-header">Peri.</th>
+          <td mat-cell *matCellDef="let element" class="small-cell">{{ element.periodicity }}</td>
         </ng-container>
 
         <ng-container *ngFor="let day of days" [matColumnDef]="'day' + day">
-          <th mat-header-cell *matHeaderCellDef>
+          <th mat-header-cell *matHeaderCellDef class="day-header">
             {{ day < 10 ? "0" + day : day }}
           </th>
-          <td mat-cell *matCellDef="let element">
+          <td mat-cell *matCellDef="let element" class="day-cell" [ngClass]="{
+            'day-checked': element.dailyChecks[day - 1],
+            'day-weekend': isWeekend(day)
+          }">
             <mat-checkbox
               [(ngModel)]="element.dailyChecks[day - 1]"
               class="check-cell"
+              [color]="'primary'"
             ></mat-checkbox>
           </td>
         </ng-container>
 
         <ng-container matColumnDef="assign">
-          <th mat-header-cell *matHeaderCellDef>Asig.</th>
-          <td mat-cell *matCellDef="let element">{{ element.assign }}</td>
+          <th mat-header-cell *matHeaderCellDef class="small-header">Asigna.</th>
+          <td mat-cell *matCellDef="let element" class="numeric-cell">{{ element.assign }}</td>
         </ng-container>
 
         <ng-container matColumnDef="realized">
-          <th mat-header-cell *matHeaderCellDef>Realiz.</th>
-          <td mat-cell *matCellDef="let element">{{ element.realized }}</td>
+          <th mat-header-cell *matHeaderCellDef class="small-header">Realiz.</th>
+          <td mat-cell *matCellDef="let element" class="numeric-cell">{{ element.realized }}</td>
         </ng-container>
 
         <ng-container matColumnDef="compliance">
-          <th mat-header-cell *matHeaderCellDef>%Cump.</th>
-          <td mat-cell *matCellDef="let element">{{ element.compliance }}%</td>
+          <th mat-header-cell *matHeaderCellDef class="small-header">% Cump.</th>
+          <td mat-cell *matCellDef="let element" class="numeric-cell compliance-cell">{{ element.compliance }}%</td>
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>

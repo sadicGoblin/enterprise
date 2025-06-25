@@ -1,53 +1,183 @@
+// Use the global scale factor for consistent sizing
+$compact-scale: 0.9;
+
 .container {
   display: flex;
   justify-content: center;
-  padding: 2rem;
+  padding: 0.5rem;
   width: 100% !important;
+  overflow-x: hidden;
 }
 
 .mat-container {
   width: 100%;
   max-width: 100%;
-  padding: 2rem;
+  padding: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .title {
-  text-align: center;
-  font-size: 1.5rem;
+  text-align: left;
+  font-size: 1.3rem * $compact-scale;
   font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #3f51b5;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.button-row {
-  margin-top: -20px !important;
+.filters-container {
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+  
+  app-custom-select, mat-form-field {
+    flex: 1;
+    min-width: 200px;
+    max-width: 250px;
+    font-size: 0.9rem * $compact-scale;
+  }
+}
+
+// Custom styles for month-year picker
+::ng-deep .month-picker {
+  .mat-calendar-period-button {
+    font-size: calc(14px * var(--scale-factor, 0.9));
+  }
+  
+  .mat-calendar-table {
+    font-size: calc(13px * var(--scale-factor, 0.9));
+  }
+  
+  .mat-calendar-body-cell-content {
+    &.mat-calendar-body-selected {
+      background-color: #3f51b5;
+      color: white;
+    }
+  }
+  
+  // Hide day view elements that we don't need
+  .mat-calendar-body-cell.mat-calendar-body-disabled {
+    visibility: hidden;
+  }
+}
+
+.button-container {
+  display: flex;
   align-items: center;
+  justify-content: center;
+  height: 100%;
+  
+  .consultar-btn {
+    height: 36px * $compact-scale;
+    font-size: 0.9rem * $compact-scale;
+    line-height: 36px * $compact-scale;
+    padding: 0 16px;
+    
+    mat-icon {
+      font-size: 18px * $compact-scale;
+      height: 18px * $compact-scale;
+      width: 18px * $compact-scale;
+      margin-right: 4px;
+    }
+  }
+}
+
+.cronograma-header {
+  background-color: #f5f5f5;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  
+  h3 {
+    font-size: 1rem * $compact-scale;
+    margin: 0;
+    font-weight: 500;
+    color: #333;
+  }
 }
 
 .table-scroll {
   overflow-x: auto;
+  margin-bottom: 1rem;
 }
 
 .custom-table {
   min-width: 1200px;
+  
+  // Make the table more compact
+  .mat-header-cell, .mat-cell {
+    padding: 2px 4px !important;
+    font-size: 0.8rem * $compact-scale !important;
+  }
+  
+  .activity-cell {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .small-header, .small-cell {
+    width: 60px;
+    min-width: 60px;
+    max-width: 60px;
+    text-align: center;
+  }
+  
+  .day-header {
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
+    padding: 0 !important;
+    text-align: center;
+  }
+  
+  .day-cell {
+    width: 30px;
+    min-width: 30px;
+    max-width: 30px;
+    padding: 0 !important;
+    text-align: center;
+    
+    &.day-weekend {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+    
+    &.day-checked {
+      background-color: rgba(63, 81, 181, 0.1);
+    }
+  }
+  
+  .numeric-cell {
+    text-align: center;
+    width: 50px;
+    min-width: 50px;
+  }
+  
+  .compliance-cell {
+    font-weight: 500;
+  }
 }
 
 .check-cell {
-  width: 20px;
-  height: 20px;
+  width: 20px * $compact-scale;
+  height: 20px * $compact-scale;
   padding: 0;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  transform: scale($compact-scale);
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .filters-container {
+    app-custom-select, mat-form-field {
+      min-width: 100%;
+      max-width: 100%;
+    }
+  }
 }
 
 .custom-table th,
