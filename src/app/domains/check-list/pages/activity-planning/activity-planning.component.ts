@@ -1,21 +1,22 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { animate, state, style, transition, trigger } from '@angular/animations';
+import { CommonModule } from '@angular/common';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
 
 // Activity interface definition
 export interface Activity {
   id: number;
   name: string;
-  periodicity: 'SEMANAL' | 'MENSUAL' | 'QUINCENAL'; // Weekly, Monthly, Bi-weekly
+  periodicity: string;
   assigned: number;
   realized: number;
-  compliance: number; // Percentage
-  scheduledDays: number[]; // An array of the days in the month, e.g., [4, 5, 11, 15]
+  compliance: number;
+  scheduledDays: number[];
+  completedDays?: number[];
   dailyChecks?: boolean[]; // For backward compatibility
 }
-import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatCardModule } from '@angular/material/card';
-import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatButtonModule } from '@angular/material/button';
@@ -359,6 +360,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
       realized: 0,
       compliance: 0,
       scheduledDays: [1, 8, 15, 22, 29], // Weekly on Mondays
+      completedDays: [],
       dailyChecks: Array(31).fill(false)
     },
     {
@@ -369,6 +371,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
       realized: 1,
       compliance: 100,
       scheduledDays: [1, 15], // Bi-weekly
+      completedDays: [1], // First one is completed
       dailyChecks: Array(31).fill(false)
     },
     {
@@ -378,7 +381,8 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
       assigned: 1,
       realized: 0,
       compliance: 0,
-      scheduledDays: [5], // Monthly
+      scheduledDays: [5, 6, 25], // Monthly, with a few more for testing
+      completedDays: [5],
       dailyChecks: Array(31).fill(false)
     }
   ];
@@ -426,31 +430,62 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
    */
   toggleScheduledDay(activity: Activity, day: number, checked: boolean): void {
     if (checked) {
-      // Add the day if it's not already in the array
       if (!activity.scheduledDays.includes(day)) {
         activity.scheduledDays.push(day);
-        // Sort the array to keep days in order
         activity.scheduledDays.sort((a, b) => a - b);
       }
     } else {
-      // Remove the day from the array
-      const index = activity.scheduledDays.indexOf(day);
-      if (index !== -1) {
-        activity.scheduledDays.splice(index, 1);
-      }
+      activity.scheduledDays = activity.scheduledDays.filter(d => d !== day);
     }
     
     // Update dailyChecks for backward compatibility
     if (activity.dailyChecks) {
       activity.dailyChecks[day - 1] = checked;
     }
-    
-    console.log(`Activity ${activity.name} day ${day} set to ${checked}`, activity.scheduledDays);
   }
   
   /**
-   * Save changes to the activity scheduling
-   * @param activity The activity to save changes for
+   * Cycles through the activity status for a given day
+   * States: not scheduled -> scheduled (not completed) -> completed -> not scheduled
+   * @param activity The activity to update
+   * @param day The day to update the status for
+   */
+  cycleActivityStatus(activity: Activity, day: number): void {
+    // Initialize completedDays array if it doesn't exist
+    if (!activity.completedDays) {
+      activity.completedDays = [];
+    }
+    
+    // Check current status and cycle to next status
+    if (!activity.scheduledDays.includes(day)) {
+      // Not scheduled -> Scheduled (not completed)
+      activity.scheduledDays.push(day);
+      activity.scheduledDays.sort((a, b) => a - b);
+    } else if (activity.scheduledDays.includes(day) && !activity.completedDays.includes(day)) {
+      // Scheduled (not completed) -> Completed
+      activity.completedDays.push(day);
+      activity.completedDays.sort((a, b) => a - b);
+    } else {
+      // Completed -> Not scheduled
+      activity.scheduledDays = activity.scheduledDays.filter(d => d !== day);
+      activity.completedDays = activity.completedDays.filter(d => d !== day);
+    }
+    
+    // Update realized and compliance metrics
+    this.updateActivityMetrics(activity);
+  }
+  
+  /**
+   * Updates the metrics for an activity based on scheduled and completed days
+   */
+  updateActivityMetrics(activity: Activity): void {
+    activity.assigned = activity.scheduledDays.length;
+    activity.realized = activity.completedDays?.length || 0;
+    activity.compliance = activity.assigned > 0 ? Math.round((activity.realized / activity.assigned) * 100) : 0;
+  }
+  
+  /**
+   * Save changes for a specific activity
    */
   saveActivityChanges(activity: Activity): void {
     // In a real app, this would save to backend

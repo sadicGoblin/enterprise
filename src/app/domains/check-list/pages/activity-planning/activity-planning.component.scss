@@ -402,6 +402,44 @@ $compact-scale: 0.9;
     background-color: rgba(0, 0, 0, 0.04);
   }
   
+  .status-cell {
+    padding: 2px;
+    text-align: center;
+    
+    &.day-assigned {
+      background-color: rgba(255, 193, 7, 0.1);
+    }
+    
+    &.day-completed {
+      background-color: rgba(76, 175, 80, 0.1);
+    }
+  }
+  
+  .status-icon-button {
+    width: calc(30px * var(--scale-factor, 0.9));
+    height: calc(30px * var(--scale-factor, 0.9));
+    line-height: calc(30px * var(--scale-factor, 0.9));
+    padding: 0;
+    margin-top: 5px;
+  }
+  
+  .status-icon {
+    font-size: calc(20px * var(--scale-factor, 1.0));
+    
+    &.status-disabled {
+      color: #d0d0d0;
+      opacity: 0.5;
+    }
+    
+    &.status-assigned {
+      color: #FFC107; // Amber for assigned but not completed
+    }
+    
+    &.status-completed {
+      color: #4CAF50; // Green for completed
+    }
+  }
+  
   .checkbox-cell {
     padding: 4px;
     text-align: center;
