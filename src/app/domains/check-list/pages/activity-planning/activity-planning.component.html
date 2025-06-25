@@ -62,8 +62,54 @@
       </div>
     </div>
 
+    <!-- New horizontal calendar implementation -->
+    <div class="section-separator"></div>
     <div class="cronograma-header">
-      <h3>CRONOGRAMA MENSUAL</h3>
+      <h3>PLANIFICACIÓN MENSUAL</h3>
+    </div>
+    
+    <div class="horizontal-calendar-container">
+      
+      <div class="horizontal-calendar-wrapper">
+        <table class="horizontal-calendar-table mat-elevation-z2">
+          <!-- Header Row -->
+          <tr class="calendar-header-row weekday-row">
+            <th class="sticky-column activity-column">Actividad</th>
+            <th class="sticky-column periodicity-column">Período</th>
+            <th *ngFor="let day of days" class="day-column" [ngClass]="{'weekend-column': isWeekend(day)}">
+              <div class="weekday-label">{{ getDayOfWeekAbbr(day) }}</div>
+              <div class="day-number">{{ day < 10 ? '0' + day : day }}</div>
+            </th>
+          </tr>
+          
+          <!-- Activity Rows -->
+          <tr *ngFor="let activity of activities" class="calendar-row">
+            <td class="sticky-column activity-column">{{ activity.name }}</td>
+            <td class="sticky-column periodicity-column">
+              {{ activity.periodicity === 'SEMANAL' ? 'Semanal' : 
+                 activity.periodicity === 'QUINCENAL' ? 'Quincenal' : 'Mensual' }}
+            </td>
+            <td *ngFor="let day of days" class="day-column checkbox-cell" 
+                [ngClass]="{'day-scheduled': activity.scheduledDays.includes(day), 'weekend-column': isWeekend(day)}">
+              <mat-checkbox
+                [checked]="activity.scheduledDays.includes(day)"
+                (change)="toggleScheduledDay(activity, day, $event.checked)"
+                [color]="'primary'"
+              ></mat-checkbox>
+            </td>
+          </tr>
+        </table>
+      </div>
+      
+      <div class="table-actions">
+        <button mat-raised-button color="primary" (click)="saveAllChanges()">
+          <mat-icon>save</mat-icon> Guardar Cambios
+        </button>
+      </div>
+    </div>
+
+    <div class="cronograma-header">
+      <h3>DETALLE CRONOGRAMA MENSUAL</h3>
     </div>
     
     <!-- Original expandable rows implementation -->
@@ -160,52 +206,6 @@
             <mat-icon>save</mat-icon> Guardar Cambios
           </button>
         </div>
-      </div>
-    </div>
-    
-    <!-- New horizontal calendar implementation -->
-    <div class="section-separator"></div>
-    <div class="cronograma-header">
-      <h3>PLANIFICACIÓN MENSUAL</h3>
-    </div>
-    
-    <div class="horizontal-calendar-container">
-      
-      <div class="horizontal-calendar-wrapper">
-        <table class="horizontal-calendar-table mat-elevation-z2">
-          <!-- Header Row -->
-          <tr class="calendar-header-row weekday-row">
-            <th class="sticky-column activity-column">Actividad</th>
-            <th class="sticky-column periodicity-column">Período</th>
-            <th *ngFor="let day of days" class="day-column" [ngClass]="{'weekend-column': isWeekend(day)}">
-              <div class="weekday-label">{{ getDayOfWeekAbbr(day) }}</div>
-              <div class="day-number">{{ day < 10 ? '0' + day : day }}</div>
-            </th>
-          </tr>
-          
-          <!-- Activity Rows -->
-          <tr *ngFor="let activity of activities" class="calendar-row">
-            <td class="sticky-column activity-column">{{ activity.name }}</td>
-            <td class="sticky-column periodicity-column">
-              {{ activity.periodicity === 'SEMANAL' ? 'Semanal' : 
-                 activity.periodicity === 'QUINCENAL' ? 'Quincenal' : 'Mensual' }}
-            </td>
-            <td *ngFor="let day of days" class="day-column checkbox-cell" 
-                [ngClass]="{'day-scheduled': activity.scheduledDays.includes(day), 'weekend-column': isWeekend(day)}">
-              <mat-checkbox
-                [checked]="activity.scheduledDays.includes(day)"
-                (change)="toggleScheduledDay(activity, day, $event.checked)"
-                [color]="'primary'"
-              ></mat-checkbox>
-            </td>
-          </tr>
-        </table>
-      </div>
-      
-      <div class="table-actions">
-        <button mat-raised-button color="primary" (click)="saveAllChanges()">
-          <mat-icon>save</mat-icon> Guardar Cambios
-        </button>
       </div>
     </div>
   </mat-card>
