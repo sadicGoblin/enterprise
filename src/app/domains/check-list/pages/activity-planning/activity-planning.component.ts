@@ -58,6 +58,10 @@ import { ProxyService } from '../../../../core/services/proxy.service';
   ],
 })
 export class ActivityPlanningComponent implements OnInit, AfterViewInit {
+  // Toast notification properties
+  showToast = false;
+  toastMessage = '';
+
   @ViewChild('collaboratorSelect') collaboratorSelect!: CustomSelectComponent;
   constructor(private proxyService: ProxyService) {
     // Initialize with current date
@@ -244,6 +248,26 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     return false;
   }
   
+  /**
+   * Gets the abbreviated day of week in Spanish (Lun, Mar, Mié, etc.) for a given day of month
+   * @param day The day of the month (1-31)
+   * @returns Abbreviated day name in Spanish (first 3 letters)
+   */
+  getDayOfWeekAbbr(day: number): string {
+    if (!this.selectedPeriod) return '';
+    
+    // Create a date object for this day in the selected month/year
+    const date = new Date(this.selectedPeriod.getFullYear(), this.selectedPeriod.getMonth(), day);
+    
+    // Get day of week (0 = Sunday, 1 = Monday, ..., 6 = Saturday)
+    const dayOfWeek = date.getDay();
+    
+    // Spanish day abbreviations
+    const dayAbbreviations = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+    
+    return dayAbbreviations[dayOfWeek];
+  }
+  
   // Project selection using custom select component
   projectControl = new FormControl();
   projectParameterType = ParameterType.OBRA;
@@ -299,6 +323,15 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   // Columns for the master view
   displayedColumns = [
     'expand',
+    'name',
+    'periodicity',
+    'assigned',
+    'realized',
+    'compliance'
+  ];
+  
+  // Columns for the stats table
+  statsColumns = [
     'name',
     'periodicity',
     'assigned',
@@ -416,13 +449,49 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   }
   
   /**
-   * Saves changes to an activity
+   * Save changes to the activity scheduling
+   * @param activity The activity to save changes for
    */
   saveActivityChanges(activity: Activity): void {
-    // Here you would typically call an API to save the changes
-    console.log('Saving activity changes:', activity);
+    // In a real app, this would save to backend
+    console.log('Saved changes for activity:', activity);
     
-    // For demo purposes, update the realized and compliance values
+    // Update compliance metrics
+    this.updateCompliance(activity);
+    
+    // Toast notification
+    this.toastMessage = 'Cambios guardados correctamente';
+    this.showToast = true;
+    setTimeout(() => {
+      this.showToast = false;
+    }, 3000);
+  }
+  
+  /**
+   * Save changes for all activities
+   */
+  saveAllChanges(): void {
+    // In a real app, this would batch save all activities to backend
+    console.log('Saving all activities');
+    
+    // Update compliance for all activities
+    this.activities.forEach(activity => {
+      this.updateCompliance(activity);
+    });
+    
+    // Toast notification
+    this.toastMessage = 'Todos los cambios guardados correctamente';
+    this.showToast = true;
+    setTimeout(() => {
+      this.showToast = false;
+    }, 3000);
+  }
+  
+  /**
+   * Update compliance metrics for an activity
+   * @param activity The activity to update compliance for
+   */
+  updateCompliance(activity: Activity): void {
     const totalScheduled = activity.scheduledDays.length;
     const realized = Math.floor(Math.random() * (totalScheduled + 1)); // Random number between 0 and totalScheduled
     activity.realized = realized;
