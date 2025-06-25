@@ -1,0 +1,60 @@
+<div class="horizontal-calendar-container">
+  <div class="horizontal-calendar-wrapper">
+    <table class="horizontal-calendar-table mat-elevation-z2">
+      <!-- Header Row -->
+      <tr class="calendar-header-row weekday-row">
+        <th class="sticky-column activity-column">Actividad</th>
+        <th class="sticky-column periodicity-column">Período</th>
+        <th *ngFor="let day of days" class="day-column" [ngClass]="{'weekend-column': isWeekend(day)}">
+          <div class="weekday-label">{{ getDayOfWeekAbbr(day) }}</div>
+          <div class="day-number">{{ day < 10 ? '0' + day : day }}</div>
+        </th>
+      </tr>
+      
+      <!-- Group by ámbito and show activities -->
+      <ng-container *ngFor="let group of groupedActivities">
+        <!-- Group Header Row -->
+        <tr class="ambito-header-row">
+          <td class="sticky-column ambito-header" colspan="2">
+            <mat-icon class="ambito-icon">arrow_right</mat-icon>
+            Ámbito: {{ group.ambito }}
+          </td>
+          <td *ngFor="let day of days" class="day-column ambito-header-cell" [ngClass]="{'weekend-column': isWeekend(day)}"></td>
+        </tr>
+        
+        <!-- Activities in this group -->
+        <tr *ngFor="let activity of group.activities" class="calendar-row">
+          <td class="sticky-column activity-column"><div class="activity-name-container">{{ activity.name }}</div></td>
+          <td class="sticky-column periodicity-column">
+            {{ activity.periodicity === 'SEMANAL' ? 'Semanal' : 
+               activity.periodicity === 'QUINCENAL' ? 'Quincenal' : 
+               activity.periodicity === 'DIARIAS' ? 'Diarias' : 'Mensual' }}
+          </td>
+          <td *ngFor="let day of days" class="day-column status-cell" 
+              [ngClass]="{'day-assigned': activity.scheduledDays.includes(day) && !activity.completedDays?.includes(day), 
+                         'day-completed': activity.completedDays?.includes(day),
+                         'weekend-column': isWeekend(day)}">
+            <button mat-icon-button class="status-icon-button" 
+                    (click)="cycleActivityStatus(activity, day)">
+              <span class="material-symbols-outlined status-icon"
+                    [ngClass]="{
+                      'status-disabled': !activity.scheduledDays.includes(day),
+                      'status-assigned': activity.scheduledDays.includes(day) && !activity.completedDays?.includes(day),
+                      'status-completed': activity.completedDays?.includes(day)
+                    }">
+                {{ activity.scheduledDays.includes(day) && !activity.completedDays?.includes(day) ? 'check_circle_unread' : 'check_circle' }}
+              </span>
+            </button>
+          </td>
+        </tr>
+      </ng-container>
+    </table>
+    
+    <!-- Save button at bottom of table -->
+    <div class="table-actions">
+      <button mat-raised-button color="primary" (click)="saveAllChanges()">
+        <mat-icon>save</mat-icon> Guardar Cambios
+      </button>
+    </div>
+  </div>
+</div>

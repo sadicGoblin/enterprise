@@ -1,0 +1,169 @@
+// Horizontal Calendar Styles
+.horizontal-calendar-container {
+  width: 100%;
+  margin-bottom: 20px;
+  font-size: calc(14px * var(--scale-factor, 0.9));
+}
+
+.horizontal-calendar-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.horizontal-calendar-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 1200px; // Ensures table is wider than viewport for scrolling
+  background-color: white;
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .calendar-header-row th {
+    position: sticky;
+    top: 0;
+    background-color: #f5f5f5;
+    z-index: 10;
+    font-weight: 500;
+    font-size: calc(13px * var(--scale-factor, 0.9));
+  }
+  
+  .sticky-column {
+    position: sticky;
+    left: 0;
+    background-color: white;
+    z-index: 5;
+    
+    &:nth-child(2) {
+      left: calc(200px * var(--scale-factor, 0.9));
+    }
+  }
+  
+  .activity-column {
+    min-width: calc(200px * var(--scale-factor, 0.9));
+    max-width: calc(250px * var(--scale-factor, 0.9));
+    text-align: left;
+    padding: 4px 8px 4px 16px;
+    z-index: 5;
+  }
+  
+  .activity-name-container {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
+    font-size: calc(13px * var(--scale-factor, 0.9));
+  }
+  
+  .periodicity-column {
+    min-width: calc(80px * var(--scale-factor, 0.9));
+    max-width: calc(80px * var(--scale-factor, 0.9));
+    z-index: 5;
+  }
+  
+  .day-column {
+    min-width: calc(40px * var(--scale-factor, 0.9));
+    max-width: calc(40px * var(--scale-factor, 0.9));
+    padding: 4px 2px;
+  }
+  
+  .weekday-row th {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  
+  .weekday-label {
+    font-size: calc(11px * var(--scale-factor, 0.9));
+    font-weight: 500;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    color: #555;
+  }
+  
+  .day-number {
+    font-size: calc(12px * var(--scale-factor, 0.9));
+    font-weight: bold;
+  }
+  
+  .weekend-column {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  
+  .day-column, .activity-column, .periodicity-column {
+    text-align: center;
+    vertical-align: middle;
+  }
+  
+  .ambito-header-row {
+    background-color: #eaeaea;
+  }
+  
+  .ambito-header {
+    font-weight: 500;
+    font-size: 0.9em;
+    color: #444;
+    padding: 8px 16px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+  
+  .ambito-icon {
+    margin-right: 8px;
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    flex-shrink: 0;
+  }
+  
+  .ambito-header-cell {
+    padding: 0;
+    height: 36px;
+    background-color: #eaeaea; /* Same as ambito-header-row */
+  }
+  
+  .status-cell {
+    padding: 2px;
+    text-align: center;
+    
+    &.day-assigned {
+      background-color: rgba(255, 193, 7, 0.1);
+    }
+    
+    &.day-completed {
+      background-color: rgba(76, 175, 80, 0.1);
+    }
+  }
+  
+  .status-icon-button {
+    width: calc(30px * var(--scale-factor, 0.9));
+    height: calc(30px * var(--scale-factor, 0.9));
+    line-height: calc(30px * var(--scale-factor, 0.9));
+    padding: 0;
+    margin-top: 5px;
+  }
+  
+  .status-icon {
+    font-size: calc(20px * var(--scale-factor, 1.0));
+    
+    &.status-disabled {
+      color: #d0d0d0;
+      opacity: 0.5;
+    }
+    
+    &.status-assigned {
+      color: #FFC107; // Amber for assigned but not completed
+    }
+    
+    &.status-completed {
+      color: #4CAF50; // Green for completed
+    }
+  }
+}
