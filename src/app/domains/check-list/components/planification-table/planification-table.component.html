@@ -51,7 +51,6 @@
                 {{ activity.scheduledDays.includes(day) && !(activity.idControl | activityCompleted:day:completedActivities) ? 'check_circle_unread' : 'check_circle' }}
               </span>
             </button>
-            <!-- Ya estamos usando el pipe para determinar el estado visual -->
           </td>
           <td class="sticky-end-column numeric-cell">{{ activity.assigned }}</td>
           <td class="sticky-end-column numeric-cell">{{ activity.realized }}</td>
@@ -60,6 +59,12 @@
       </ng-container>
     </table>
     
+    <div class="action-buttons">
+      <button mat-raised-button color="primary" class="inspection-button" (click)="openInspectionModal()">
+        <mat-icon>assignment</mat-icon> Abrir Inspección SSTMA
+      </button>
+    </div>
+      
     <!-- Save button at bottom of table -->
     <div class="table-actions">
       <button mat-raised-button color="primary" (click)="saveAllChanges()">

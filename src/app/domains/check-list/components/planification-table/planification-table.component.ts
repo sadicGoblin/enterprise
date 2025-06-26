@@ -2,11 +2,14 @@ import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChange
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialogModule } from '@angular/material/dialog';
 import { ProxyService } from '../../../../core/services/proxy.service';
 import { CompletionApiRequest, CompletionApiResponse, CompletedActivity } from '../../models/control-api.models';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { ActivityCompletedPipe } from '../../pipes/activity-completed.pipe';
+import { MatDialog } from '@angular/material/dialog';
+import { InspectionModalComponent } from './components/inspection-modal/inspection-modal.component';
 
 // Interface for Activity
 export interface Activity {
@@ -25,7 +28,7 @@ export interface Activity {
 @Component({
   selector: 'app-planification-table',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, ActivityCompletedPipe],
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatDialogModule, ActivityCompletedPipe],
   templateUrl: './planification-table.component.html',
   styleUrls: ['./planification-table.component.scss'],
   changeDetection: ChangeDetectionStrategy.Default
@@ -33,7 +36,8 @@ export interface Activity {
 export class PlanificationTableComponent implements OnInit, OnChanges {
   constructor(
     private cdr: ChangeDetectorRef,
-    private proxyService: ProxyService
+    private proxyService: ProxyService,
+    private dialog: MatDialog
   ) {}
   
   // API endpoint for fetching completed activities
@@ -336,5 +340,30 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     activity.realized = activity.completedDays?.length || 0;
     activity.compliance = activity.assigned > 0 ? 
       Math.round((activity.realized / activity.assigned) * 100) : 0;
+  }
+
+  /**
+   * Abre el modal de inspección SSTMA
+   * @param activityId ID de la actividad seleccionada (opcional)
+   */
+  openInspectionModal(activityId?: number): void {
+    const dialogRef = this.dialog.open(InspectionModalComponent, {
+      width: '90vw',
+      maxWidth: '1200px',
+      disableClose: true,
+      autoFocus: false,
+      data: { 
+        activityId: activityId,
+        inspectionData: null
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Inspección guardada:', result);
+        // Aquí iría la lógica para guardar la inspección en el backend
+        // y actualizar las actividades completadas si es necesario
+      }
+    });
   }
 }

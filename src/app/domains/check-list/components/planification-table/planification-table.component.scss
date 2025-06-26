@@ -149,6 +149,27 @@
     white-space: nowrap;
   }
   
+.action-buttons {
+  margin: 1rem 0;
+  display: flex;
+  gap: 0.5rem;
+  
+  .inspection-button {
+    font-size: 0.9rem;
+  }
+}
+
+.table-actions {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: flex-end;
+  
+  button {
+    margin-left: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+  
   .ambito-icon {
     margin-right: 8px;
     font-size: 18px;
