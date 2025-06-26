@@ -45,4 +45,16 @@ export class UsuarioService {
     // Use Angular's proxy system to avoid CORS issues
     return this.proxyService.post<any>(this.apiEndpoint, request);
   }
+  
+  /**
+   * Save user works to API
+   * @param requestBody Object containing case, userId, and data array with works to update
+   * @returns Observable with API response
+   */
+  saveUserWorks(requestBody: any): Observable<any> {
+    console.log('Saving user works:', requestBody);
+    
+    // El endpoint es el mismo que para getUserWorks
+    return this.proxyService.post<any>(this.apiEndpoint, requestBody);
+  }
 }
