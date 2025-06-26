@@ -43,6 +43,48 @@ export class ObraService {
     return this.proxyService.post<ObrasSimpleResponse>(this.apiUrl, request);
   }
 
-  // Additional methods for CRUD operations can be added here
-  // createObra, updateObra, deleteObra, etc.
+  /**
+   * Create a new obra
+   * @param obraData Data for the new obra
+   * @returns Observable with the creation response
+   */
+  createObra(obraData: any): Observable<ObrasFullResponse> {
+    // Ensure the case parameter is set correctly
+    const request = {
+      caso: 'Crea',
+      obra: obraData.obra,
+      codigo: obraData.codigo,
+      direccion: obraData.direccion,
+      idComuna: obraData.idComuna,
+      fechaInicio: obraData.fechaInicio,
+      fechaTermino: obraData.fechaTermino,
+      observaciones: obraData.observaciones
+    };
+    
+    console.log('[ObraService] Creating obra with request:', request);
+    return this.proxyService.post<ObrasFullResponse>(this.apiUrl, request);
+  }
+  
+  /**
+   * Update an existing obra
+   * @param obraData Data for the obra to update
+   * @returns Observable with the update response
+   */
+  updateObra(obraData: any): Observable<ObrasFullResponse> {
+    // Ensure the case parameter is set correctly
+    const request = {
+      caso: 'Actualiza',
+      idObra: obraData.idObra,
+      obra: obraData.obra,
+      codigo: obraData.codigo,
+      direccion: obraData.direccion,
+      idComuna: obraData.idComuna,
+      fechaInicio: obraData.fechaInicio,
+      fechaTermino: obraData.fechaTermino,
+      observaciones: obraData.observaciones
+    };
+    
+    console.log('[ObraService] Updating obra with request:', request);
+    return this.proxyService.post<ObrasFullResponse>(this.apiUrl, request);
+  }
 }

@@ -5,24 +5,24 @@
     <mat-card-header>
       <mat-card-title>{{ isEditing ? 'Editar Obra' : 'Agregar Nueva Obra' }}</mat-card-title>
     </mat-card-header>
-    <form (ngSubmit)="save()">
+    <form [formGroup]="workForm" (ngSubmit)="save()">
       <div class="row">
         <div class="col-md-6">
           <mat-form-field class="w-100" appearance="fill">
             <mat-label>Nombre Obra</mat-label>
-            <input matInput [(ngModel)]="workForm.name" name="name" required />
+            <input matInput formControlName="Obra" required />
           </mat-form-field>
         </div>
         <div class="col-md-3">
           <mat-form-field class="w-100" appearance="fill">
             <mat-label>Código Obra</mat-label>
-            <input matInput [(ngModel)]="workForm.code" name="code" required />
+            <input matInput formControlName="Codigo" required />
           </mat-form-field>
         </div>
         <div class="col-md-3">
           <mat-form-field class="w-100" appearance="fill">
             <mat-label>Dirección</mat-label>
-            <input matInput [(ngModel)]="workForm.address" name="address" />
+            <input matInput formControlName="Direccion" />
           </mat-form-field>
         </div>
       </div>
@@ -31,7 +31,7 @@
         <div class="col-md-3">
           <mat-form-field class="w-100" appearance="fill">
             <mat-label>Fecha Inicio</mat-label>
-            <input matInput [matDatepicker]="picker1" [(ngModel)]="workForm.startDate" name="startDate" />
+            <input matInput [matDatepicker]="picker1" formControlName="FechaInicio" />
             <mat-datepicker-toggle matSuffix [for]="picker1"></mat-datepicker-toggle>
             <mat-datepicker #picker1></mat-datepicker>
           </mat-form-field>
@@ -40,19 +40,43 @@
         <div class="col-md-3">
           <mat-form-field class="w-100" appearance="fill">
             <mat-label>Fecha Término</mat-label>
-            <input matInput [matDatepicker]="picker2" [(ngModel)]="workForm.endDate" name="endDate" />
+            <input matInput [matDatepicker]="picker2" formControlName="FechaTermino" />
             <mat-datepicker-toggle matSuffix [for]="picker2"></mat-datepicker-toggle>
             <mat-datepicker #picker2></mat-datepicker>
           </mat-form-field>
         </div>
 
-        <div class="col-md-6">
-          <mat-form-field class="w-100" appearance="fill">
-            <mat-label>Comuna</mat-label>
-            <mat-select [(ngModel)]="workForm.commune" name="commune">
-              <mat-option *ngFor="let commune of communes" [value]="commune.name">{{ commune.name }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+        <div class="col-md-3">
+          <app-custom-select
+            #regionSelect
+            [label]="'Región'"
+            [loadFromApi]="true"
+            [parameterType]="ParameterType.CUSTOM_API"
+            [customApiEndpoint]="'/ws/RegionesSvcImpl.php'"
+            [customApiRequestBody]="regionRequestBody"
+            [customOptionValueKey]="'IdRegion'"
+            [customOptionLabelKey]="'Region'"
+            [placeholder]="'Seleccione Región'"
+            formControlName="IdRegion"
+            (selectionChange)="onRegionSelectionChange($event)"
+          ></app-custom-select>
+        </div>
+        
+        <div class="col-md-3">
+          <app-custom-select
+            #communeSelect
+            [label]="'Comuna'"
+            [loadFromApi]="true"
+            [parameterType]="ParameterType.CUSTOM_API"
+            [customApiEndpoint]="'/ws/RegionesSvcImpl.php'"
+            [customApiRequestBody]="communeRequestBody"
+            [customOptionValueKey]="'IdComuna'"
+            [customOptionLabelKey]="'Comuna'"
+            [placeholder]="'Seleccione Comuna'"
+            formControlName="IdComuna"
+            (selectionChange)="onCommuneSelectionChange($event)"
+            [disabled]="!workForm.get('IdRegion')?.value"
+          ></app-custom-select>
         </div>
       </div>
   
@@ -60,14 +84,14 @@
         <div class="col-md-12">
           <mat-form-field class="w-100" appearance="fill">
             <mat-label>Observaciones</mat-label>
-            <textarea matInput rows="2" [(ngModel)]="workForm.observations" name="observations"></textarea>
+            <textarea matInput rows="2" formControlName="Observaciones"></textarea>
           </mat-form-field>
         </div>
       </div>
   
       <div class="d-flex justify-content-end gap-2">
         <button mat-raised-button color="primary" type="submit">
-          {{ isEditing ? 'Actualizar' : 'Guardar' }}
+          {{ isEditing ? 'Actualizar' : 'Crear' }}
         </button>
         <button mat-raised-button color="warn" type="button" (click)="cancel()">Cancelar</button>
       </div>
@@ -88,27 +112,27 @@
       <table mat-table [dataSource]="dataSource" class="w-100">
         <ng-container matColumnDef="code">
           <th mat-header-cell *matHeaderCellDef>Código</th>
-          <td mat-cell *matCellDef="let w">{{ w.code }}</td>
+          <td mat-cell *matCellDef="let w">{{ w.Codigo }}</td>
         </ng-container>
   
         <ng-container matColumnDef="name">
           <th mat-header-cell *matHeaderCellDef>Obra</th>
-          <td mat-cell *matCellDef="let w">{{ w.name }}</td>
+          <td mat-cell *matCellDef="let w">{{ w.Obra }}</td>
         </ng-container>
   
         <ng-container matColumnDef="commune">
           <th mat-header-cell *matHeaderCellDef>Comuna</th>
-          <td mat-cell *matCellDef="let w">{{ w.commune }}</td>
+          <td mat-cell *matCellDef="let w">{{ w.Comuna }}</td>
         </ng-container>
   
         <ng-container matColumnDef="startDate">
           <th mat-header-cell *matHeaderCellDef>Inicio</th>
-          <td mat-cell *matCellDef="let w">{{ formatDate(w.startDate) }}</td>
+          <td mat-cell *matCellDef="let w">{{ formatDate(w.FechaInicio) }}</td>
         </ng-container>
   
         <ng-container matColumnDef="endDate">
           <th mat-header-cell *matHeaderCellDef>Término</th>
-          <td mat-cell *matCellDef="let w">{{ formatDate(w.endDate) }}</td>
+          <td mat-cell *matCellDef="let w">{{ formatDate(w.FechaTermino) }}</td>
         </ng-container>
   
         <ng-container matColumnDef="actions">
