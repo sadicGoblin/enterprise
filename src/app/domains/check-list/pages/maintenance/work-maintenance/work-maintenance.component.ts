@@ -177,17 +177,17 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
   }
 
   initForm() {
-    // Initialize form with FormBuilder
+    // Initialize form with FormBuilder and validation rules
     this.workForm = this.fb.group({
       IdObra: [''],
-      Codigo: [''],
-      Obra: [''],
-      Direccion: [''],
-      FechaInicio: [''],
-      FechaTermino: [''],
-      IdComuna: [''],
+      Codigo: ['', [Validators.required]],
+      Obra: ['', [Validators.required]],
+      Direccion: ['', [Validators.required]],
+      FechaInicio: ['', [Validators.required]],
+      FechaTermino: ['', [Validators.required]],
+      IdComuna: ['', [Validators.required]],
       Comuna: [''],
-      IdRegion: [''],
+      IdRegion: ['', [Validators.required]],
       Region: [''],
       Observaciones: [''],
     });
@@ -254,6 +254,28 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
   }
 
   save(): void {
+    // First validate the form
+    if (this.workForm.invalid) {
+      // Mark all fields as touched to trigger validation messages
+      Object.keys(this.workForm.controls).forEach(key => {
+        const control = this.workForm.get(key);
+        control?.markAsTouched();
+      });
+      
+      this.showMessage('Por favor complete todos los campos requeridos');
+      return;
+    }
+    
+    // Perform date validation
+    const startDate = this.workForm.get('FechaInicio')?.value;
+    const endDate = this.workForm.get('FechaTermino')?.value;
+    
+    if (startDate && endDate && new Date(startDate) > new Date(endDate)) {
+      this.showMessage('La fecha de término debe ser posterior a la fecha de inicio');
+      return;
+    }
+    
+    // Form is valid, proceed with save/update
     if (this.isEditing && this.editingIndex !== null) {
       // Si estamos editando, actualizar la obra existente
       this.updateWork();
@@ -264,21 +286,94 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
   }
   
   addWork(): void {
-    // Aquí implementarías la lógica para añadir una nueva obra
-    // usando los datos del formulario workForm
-    console.log('Añadiendo obra:', this.workForm.value);
+    this.isLoading = true;
     
-    // Después de añadir exitosamente, resetea el formulario
-    this.resetForm();
+    // Format the dates as expected by the API (YYYY-MM-DD)
+    const formValue = this.workForm.value;
+    const startDate = formValue.FechaInicio ? new Date(formValue.FechaInicio) : null;
+    const endDate = formValue.FechaTermino ? new Date(formValue.FechaTermino) : null;
+    
+    // Prepare data for the API
+    const obraData = {
+      obra: formValue.Obra,
+      codigo: formValue.Codigo,
+      direccion: formValue.Direccion,
+      idComuna: formValue.IdComuna,
+      fechaInicio: startDate ? startDate.toISOString().split('T')[0] : '',
+      fechaTermino: endDate ? endDate.toISOString().split('T')[0] : '',
+      observaciones: formValue.Observaciones || ''
+    };
+    
+    console.log('Añadiendo obra:', obraData);
+    
+    this.obraService.createObra(obraData).subscribe({
+      next: (response) => {
+        console.log('Respuesta de creación:', response);
+        if (response.success === true || response.codigo === 0) {
+          this.showMessage('Obra creada correctamente');
+          this.resetForm();
+          this.fetchWorks(); // Refresh the list
+        } else {
+          const errorMsg = response.message || response.glosa || 'Error desconocido';
+          this.showMessage(`Error al crear obra: ${errorMsg}`);
+        }
+      },
+      error: (error) => {
+        console.error('Error al crear obra', error);
+        this.showMessage('Error al crear obra. Por favor, inténtelo de nuevo.');
+        this.isLoading = false;
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
   }
   
   updateWork(): void {
-    // Aquí implementarías la lógica para actualizar la obra
-    // usando los datos del formulario workForm
-    console.log('Actualizando obra:', this.workForm.value);
+    this.isLoading = true;
     
-    // Después de actualizar exitosamente, resetea el formulario
-    this.resetForm();
+    // Format the dates as expected by the API (YYYY-MM-DD)
+    const formValue = this.workForm.value;
+    const startDate = formValue.FechaInicio ? new Date(formValue.FechaInicio) : null;
+    const endDate = formValue.FechaTermino ? new Date(formValue.FechaTermino) : null;
+    
+    // Prepare data for the API
+    const obraData = {
+      idObra: formValue.IdObra,
+      obra: formValue.Obra,
+      codigo: formValue.Codigo,
+      direccion: formValue.Direccion,
+      idComuna: formValue.IdComuna,
+      fechaInicio: startDate ? startDate.toISOString().split('T')[0] : '',
+      fechaTermino: endDate ? endDate.toISOString().split('T')[0] : '',
+      observaciones: formValue.Observaciones || ''
+    };
+    
+    console.log('Actualizando obra:', obraData);
+    
+    this.obraService.updateObra(obraData).subscribe({
+      next: (response) => {
+        console.log('Respuesta de actualización:', response);
+        if (response.success === true || response.codigo === 0) {
+          this.showMessage('Obra actualizada correctamente');
+          this.resetForm();
+          this.isEditing = false;
+          this.editingIndex = null;
+          this.fetchWorks(); // Refresh the list
+        } else {
+          const errorMsg = response.message || response.glosa || 'Error desconocido';
+          this.showMessage(`Error al actualizar obra: ${errorMsg}`);
+        }
+      },
+      error: (error) => {
+        console.error('Error al actualizar obra', error);
+        this.showMessage('Error al actualizar obra. Por favor, inténtelo de nuevo.');
+        this.isLoading = false;
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
   }
 
   showMessage(message: string): void {
