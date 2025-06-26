@@ -29,7 +29,7 @@ import { UsuarioService } from '../../services/usuario.service';
     MatProgressSpinnerModule
   ],
   templateUrl: './work-maintenance-popup.component.html',
-  styleUrl: './work-maintenance-popup.component.scss',
+  styleUrls: ['./work-maintenance-popup.component.scss'],
 })
 export class WorkMaintenancePopupComponent implements OnInit {
   // User information
@@ -45,10 +45,20 @@ export class WorkMaintenancePopupComponent implements OnInit {
   // Loading and error states
   isLoading = false;
   hasError = false;
-  errorMessage = '';
+  errorMessage: string = '';
   
   // Track if changes have been made
   isDirty = false;
+
+  // Seguimiento de cambios
+  changesTracking: {
+    idObra: string;
+    work: string;
+    field: string;
+    oldValue: boolean;
+    newValue: boolean;
+    timestamp: Date;
+  }[] = [];
 
   constructor(
     private dialogRef: MatDialogRef<WorkMaintenancePopupComponent>,
@@ -190,31 +200,129 @@ export class WorkMaintenancePopupComponent implements OnInit {
   }
   
   /**
-   * Track changes in checkboxes
+   * Tracks checkbox changes
+   * @param row The row that was changed
+   * @param field The field that was changed (enable, validator, or reviewer)
+   * @param newValue The new value of the checkbox
    */
-  onCheckboxChange(): void {
+  onCheckboxChange(row: any, field: string): void {
     this.isDirty = true;
+    
+    // Encontrar el valor original en los datos de la API
+    const originalRow = this.originalApiData.find((item) => item.IdObra === row.idObra);
+    
+    if (originalRow) {
+      // Determinar el valor original según el campo
+      let originalFieldValue: boolean;
+      
+      switch(field) {
+        case 'enable':
+          originalFieldValue = originalRow.Habilita === '1' || originalRow.Habilita === 1;
+          break;
+        case 'validator':
+          originalFieldValue = originalRow.Validador === '1' || originalRow.Validador === 1;
+          break;
+        case 'reviewer':
+          originalFieldValue = originalRow.Revisor === '1' || originalRow.Revisor === 1;
+          break;
+        default:
+          originalFieldValue = false;
+      }
+      
+      // Solo registrar si el valor ha cambiado realmente
+      if (originalFieldValue !== row[field]) {
+        // Registrar el cambio
+        this.changesTracking.push({
+          idObra: row.idObra,
+          work: row.work,
+          field: field,
+          oldValue: originalFieldValue,
+          newValue: row[field],
+          timestamp: new Date()
+        });
+        
+        console.log(`Cambio registrado en ${row.work} - ${field}: ${originalFieldValue} -> ${row[field]}`);
+      }
+    }
   }
   
   /**
    * Save changes and close dialog
    */
   save(): void {
-    // Preparar datos para guardar - transformar checkbox booleanos de vuelta a '0'/'1' para la API
-    const dataToSave = this.dataSource.map(item => {
-      // Buscar el item original para conservar todos los datos
-      const originalItem = this.originalApiData.find(original => original.IdObra === item.idObra) || {};
-      
-      return {
-        ...originalItem,
-        Habilita: item.enable ? '1' : '0',
-        Validador: item.validator ? '1' : '0',
-        Revisor: item.reviewer ? '1' : '0'
-      };
+    // Activar indicador de carga
+    this.isLoading = true;
+    
+    // Obtener obras únicas que hayan sido modificadas
+    const modifiedWorks = new Set<string>();
+    this.changesTracking.forEach(change => {
+      modifiedWorks.add(change.idObra);
     });
     
-    console.log('Datos preparados para guardar:', dataToSave);
-    this.dialogRef.close(dataToSave);
+    // Generar la estructura de datos para la API
+    const dataItems: any[] = [];
+    
+    // Solo procesar las obras modificadas
+    modifiedWorks.forEach(idObra => {
+      // Encontrar la obra actual en el dataSource
+      const obra = this.dataSource.find(item => item.idObra === idObra);
+      
+      if (obra) {
+        // Agregar el item al array de data con el formato requerido
+        dataItems.push({
+          idObra: parseInt(obra.idObra, 10),  // Convertir a número
+          Habilita: obra.enable ? 1 : 0,      // Usar número en lugar de string
+          Validador: obra.validator ? 1 : 0,   // Usar número en lugar de string
+          Revisador: obra.reviewer ? 1 : 0     // Nota: aquí se usa "Revisador" en lugar de "Revisor"
+        });
+      }
+    });
+    
+    // Construir el objeto final para enviar a la API
+    const requestBody = {
+      caso: "ActualizaUserObraAll",
+      idUsuario: this.userId,
+      data: dataItems
+    };
+    
+    // Mostrar el objeto final en consola
+    console.log('Datos a enviar a la API:');
+    console.log(JSON.stringify(requestBody, null, 2));
+    
+    if (dataItems.length === 0) {
+      console.log('No hay cambios para guardar');
+      this.isLoading = false;
+      this.close();
+      return;
+    }
+    
+    console.log(`Se guardarán ${dataItems.length} obras modificadas`);
+    
+    // Realizar la llamada a la API para guardar los cambios
+    this.usuarioService.saveUserWorks(requestBody).subscribe({
+      next: (response) => {
+        console.log('Respuesta de la API tras guardar:', response);
+        this.isLoading = false;
+        
+        // Verificar si la respuesta indica éxito
+        if (response && (response.codigo === 0 || response.glosa === 'Ok')) {
+          console.log('Cambios guardados exitosamente');
+          // Cerrar el diálogo con resultado exitoso
+          this.dialogRef.close({ success: true, affectedWorks: dataItems.length });
+        } else {
+          // Mostrar error si la respuesta no es exitosa
+          this.errorMessage = 'Error al guardar cambios: ' + (response.glosa || 'Error desconocido');
+          this.hasError = true;
+          console.error('Error al guardar cambios:', response);
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage = 'Error de conexión al guardar los cambios';
+        this.hasError = true;
+        console.error('Error al llamar a la API:', err);
+      }
+    });
   }
 
   /**

@@ -29,21 +29,21 @@
         <ng-container matColumnDef="enable">
           <th mat-header-cell *matHeaderCellDef>Habilita</th>
           <td mat-cell *matCellDef="let row">
-            <mat-checkbox [(ngModel)]="row.enable" (change)="onCheckboxChange()"></mat-checkbox>
+            <mat-checkbox [(ngModel)]="row.enable" (change)="onCheckboxChange(row, 'enable')"></mat-checkbox>
           </td>
         </ng-container>
   
         <ng-container matColumnDef="validator">
           <th mat-header-cell *matHeaderCellDef>Validador</th>
           <td mat-cell *matCellDef="let row">
-            <mat-checkbox [(ngModel)]="row.validator" (change)="onCheckboxChange()"></mat-checkbox>
+            <mat-checkbox [(ngModel)]="row.validator" (change)="onCheckboxChange(row, 'validator')"></mat-checkbox>
           </td>
         </ng-container>
   
         <ng-container matColumnDef="reviewer">
           <th mat-header-cell *matHeaderCellDef>Revisor</th>
           <td mat-cell *matCellDef="let row">
-            <mat-checkbox [(ngModel)]="row.reviewer" (change)="onCheckboxChange()"></mat-checkbox>
+            <mat-checkbox [(ngModel)]="row.reviewer" (change)="onCheckboxChange(row, 'reviewer')"></mat-checkbox>
           </td>
         </ng-container>
   
