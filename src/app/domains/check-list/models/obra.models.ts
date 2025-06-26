@@ -23,6 +23,8 @@ export interface ObrasSimpleResponse extends ObraResponse<ObraSimple> {}
 
 // Obra (Work) model - Full version
 export interface Obra {
+  IdRegion?: string;
+  Region?: string;
   IdObra: string;
   Obra: string;
   Codigo: string;
