@@ -4,9 +4,25 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatTableModule } from '@angular/material/table';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { FormControl } from '@angular/forms';
+import { CustomSelectComponent, ParameterType, SelectOption } from '../../../../shared/controls/custom-select/custom-select.component';
+import { PlanificationTableComponent, Activity as PlanificationActivity } from '../../components/planification-table/planification-table.component';
+import { ProxyService } from '../../../../core/services/proxy.service';
+import { ControlApiRequest, ControlApiResponse } from '../../models/control-api.models';
+import { catchError, finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
 
-// Activity interface definition
-export interface Activity {
+// Activity interface definition - extended from the one used in PlanificationTableComponent
+export interface Activity extends PlanificationActivity {
   id: number;
   name: string;
   periodicity: string;
@@ -17,17 +33,6 @@ export interface Activity {
   completedDays?: number[];
   dailyChecks?: boolean[]; // For backward compatibility
 }
-import { MatInputModule } from '@angular/material/input';
-import { MatSelectModule } from '@angular/material/select';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
-import { FormControl } from '@angular/forms';
-import { CustomSelectComponent, ParameterType, SelectOption } from '../../../../shared/controls/custom-select/custom-select.component';
-import { ProxyService } from '../../../../core/services/proxy.service';
 
 @Component({
   selector: 'app-activity-planning',
@@ -46,7 +51,9 @@ import { ProxyService } from '../../../../core/services/proxy.service';
     MatInputModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatProgressSpinnerModule,
     CustomSelectComponent,
+    PlanificationTableComponent,
   ],
   templateUrl: './activity-planning.component.html',
   styleUrls: ['./activity-planning.component.scss'],
@@ -62,7 +69,16 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   // Toast notification properties
   showToast = false;
   toastMessage = '';
-
+  
+  // API related properties
+  isLoading = false;
+  selectedProjectId: string | null = null;
+  selectedCollaboratorId: string | null = null;
+  apiEndpoint = '/ws/ControlSvcImpl.php';
+  
+  // Flag to control table visibility
+  showPlanificationTable = false;
+  
   @ViewChild('collaboratorSelect') collaboratorSelect!: CustomSelectComponent;
   constructor(private proxyService: ProxyService) {
     // Initialize with current date
@@ -78,8 +94,8 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
       this.generateCalendarGrid(this.selectedPeriod);
     }
     
-    // Mock data initialization
-    this.initMockData();
+    // Table is hidden initially
+    this.showPlanificationTable = false;
     
     // Get user ID from localStorage
     const userId = localStorage.getItem('userId');
@@ -114,6 +130,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
    */
   onPeriodChange(event: any): void {
     this.formatPeriodString(event.value);
+    // Note: No longer triggering API call automatically
   }
   
   /**
@@ -122,17 +139,40 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
    * @param datepicker The datepicker instance
    */
   setMonthAndYear(date: Date, datepicker: any): void {
-    const normalizedDate = new Date(date);
-    normalizedDate.setDate(1);
-    this.selectedPeriod = normalizedDate;
-    this.formatPeriodString(normalizedDate);
-    this.generateCalendarGrid(normalizedDate);
+    console.log('setMonthAndYear called with date:', date);
+    this.selectedPeriod = new Date(date);
+    this.formatPeriodString(this.selectedPeriod);
+    
+    // Generate the calendar grid for the selected month
+    this.generateCalendarGrid(this.selectedPeriod);
+    
+    // Note: No longer triggering API call automatically
+    
     datepicker.close();
   }
   
   /**
    * Initialize mock data for activities
    */
+  /**
+   * Handler for the Consultar button
+   * Fetches activities from API based on selected parameters
+   */
+  onConsultarClick(): void {
+    console.log('Consultar button clicked');
+    
+    // Check if we have all required parameters
+    if (!this.selectedProjectId || !this.selectedCollaboratorId || !this.selectedPeriod) {
+      this.toastMessage = 'Por favor, seleccione proyecto, colaborador y periodo';
+      this.showToast = true;
+      setTimeout(() => this.showToast = false, 3000);
+      return;
+    }
+    
+    // Fetch activities from API
+    this.fetchActivitiesFromApi();
+  }
+  
   initMockData(): void {
     // This replaces the loadActivityData function that didn't exist
     // Activities mock data should already be initialized in the component
@@ -145,6 +185,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
    */
   generateCalendarGrid(date: Date): void {
     this.calendarWeeks = [];
+    this.days = [];
     
     // Create a new date object for the first day of the month
     const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
@@ -185,7 +226,11 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
       this.calendarWeeks.push(week);
     }
     
+    // Create flat days array (1 to daysInMonth)
+    this.days = Array.from({length: daysInMonth}, (_, i) => i + 1);
+    
     console.log('Calendar grid generated:', this.calendarWeeks);
+    console.log('Days array generated:', this.days);
   }
   
   /**
@@ -193,46 +238,185 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
    * @param selectedProject The selected project option
    */
   ngAfterViewInit(): void {
-    // Any initialization that requires ViewChild references
+    // Disable collaborator select on initialization until a project is selected
+    if (this.collaboratorSelect) {
+      this.collaboratorSelect.isDisabled = true;
+    }
   }
   
   onProjectSelectionChange(selectedProject: SelectOption | null): void {
-    if (selectedProject) {
-      console.log('Project selected:', selectedProject);
-      this.selectedProject = selectedProject.value;
+    console.log('Selected project:', selectedProject);
+    
+    // Store the selected project ID
+    this.selectedProjectId = selectedProject ? selectedProject.value : null;
+    
+    // Reset activities when project changes
+    this.activities = [];
+    
+    // Enable collaborator selection after project is selected
+    if (selectedProject && this.collaboratorSelect) {
+      // Configure and enable the collaborator select component
+      this.collaboratorSelect.isDisabled = false;
+      this.collaboratorSelect.customApiEndpoint = '/ws/UsuarioSvcImpl.php';
       
-      // Update collaborator API request body with selected project ID
-      this.collaboratorApiRequestBody = {
-        caso: 'ConsultaUsuariosObra',
-        idObra: parseInt(selectedProject.value) || 0,
-        idUsuario: 0
+      // Update API request body with the correct parameters
+      this.collaboratorSelect.customApiRequestBody = {
+        "caso": "ConsultaUsuariosObra",
+        "idObra": Number(selectedProject.value) || 0,
+        "idUsuario": 0
       };
       
-      // Reset collaborator selection when project changes
-      this.collaboratorControl.setValue(null);
+      // Update mapping to match API response fields
+      this.collaboratorSelect.customOptionValueKey = 'IdUsuario';
+      this.collaboratorSelect.customOptionLabelKey = 'nombre';
       
-      // Reload collaborator options with the new project ID
-      // Use a short timeout to ensure the UI updates before reloading
+      // Clear the selection
+      this.collaboratorSelect.writeValue(null);
+      console.log('Collaborator select enabled with project:', selectedProject.value);
+      
+      // Update component properties to match actual API settings
+      this.collaboratorApiRequestBody = this.collaboratorSelect.customApiRequestBody;
+      this.collaboratorOptionValue = this.collaboratorSelect.customOptionValueKey;
+      this.collaboratorOptionLabel = this.collaboratorSelect.customOptionLabelKey;
+      
+      // Force the component to reload options with the new settings
       setTimeout(() => {
         if (this.collaboratorSelect) {
-          console.log('Reloading collaborator options with new project ID:', this.selectedProject);
+          console.log('Triggering reload of collaborator options with project ID:', selectedProject.value);
           this.collaboratorSelect.reloadOptions();
-        } else {
-          console.warn('Collaborator select component reference not available');
         }
       }, 100);
+    } else if (this.collaboratorSelect) {
+      // Disable if no project selected
+      this.collaboratorSelect.isDisabled = true;
+      this.collaboratorSelect.writeValue(null);
+      this.selectedCollaboratorId = null;
     }
   }
   
   onCollaboratorSelectionChange(selectedCollaborator: SelectOption | null): void {
+    console.log('Selected collaborator:', selectedCollaborator);
+    
     if (selectedCollaborator) {
-      console.log('Collaborator selected:', selectedCollaborator);
-      this.selectedUser = selectedCollaborator.value.toString();
-      this.selectedUserName = selectedCollaborator.label;
-      // Additional logic when collaborator changes can go here
+      this.selectedCollaboratorId = selectedCollaborator.value;
+      // Note: No longer triggering API call automatically
+    } else {
+      this.selectedCollaboratorId = null;
     }
   }
-  
+
+  /**
+   * Fetch activity data from Control API
+   */
+  fetchActivitiesFromApi(): void {
+    // Ensure we have all required parameters
+    if (!this.selectedProjectId || !this.selectedCollaboratorId || !this.selectedPeriod) {
+      console.warn('Cannot fetch activities: missing required parameters');
+      return;
+    }
+
+    console.log('Starting API fetch with:', {
+      projectId: this.selectedProjectId,
+      collaboratorId: this.selectedCollaboratorId,
+      period: this.selectedPeriod
+    });
+
+    // Format period as YYYYMM
+    const year = this.selectedPeriod.getFullYear();
+    const month = this.selectedPeriod.getMonth() + 1; // JavaScript months are 0-indexed
+    this.formattedPeriod = `${year}${month.toString().padStart(2, '0')}`;
+
+    // Prepare request body
+    const requestBody = {
+      caso: 'Consulta',
+      idObra: Number(this.selectedProjectId),
+      idUsuario: Number(this.selectedCollaboratorId),
+      periodo: Number(this.formattedPeriod)
+    };
+
+    console.log('Fetching activities with params:', requestBody);
+    
+    // Clear any existing activities
+    this.activities = [];
+    
+    // Hide table while loading
+    this.showPlanificationTable = false;
+    console.log('Setting showPlanificationTable to FALSE before API call');
+    
+    // Show loading indicator
+    this.isLoading = true;
+    
+    // Define the expected response interface
+    interface ApiResponseWrapper {
+      success?: boolean;
+      code?: number;
+      message?: string;
+      data?: ControlApiResponse[];
+    }
+
+    // Make API call
+    this.proxyService.post<ApiResponseWrapper>(this.apiEndpoint, requestBody)
+      .pipe(
+        catchError(error => {
+          console.error('Error fetching activities:', error);
+          this.toastMessage = 'Error al cargar actividades';
+          this.showToast = true;
+          setTimeout(() => this.showToast = false, 3000);
+          
+          // Return empty wrapped response as fallback
+          return of({ data: [] });
+        }),
+        finalize(() => {
+          // Hide loading indicator when done
+          this.isLoading = false;
+          console.log('API call completed, loading indicator hidden');
+        })
+      )
+      .subscribe(response => {
+        console.log('API Response received:', response);
+        
+        // Check if the response is an object with a data property containing an array
+        const activitiesData = response.data || [];
+        console.log('Activities data extracted:', activitiesData);
+        
+        if (Array.isArray(activitiesData) && activitiesData.length > 0) {
+          console.log(`Processing ${activitiesData.length} activities from API response`);
+          this.processApiResponse(activitiesData);
+          
+          // Debug the activities array after processing
+          console.log(`After processing: ${this.activities.length} activities mapped`);
+          
+          // Force generate the days array for the selected month
+          if (this.selectedPeriod) {
+            const daysInMonth = new Date(this.selectedPeriod.getFullYear(), this.selectedPeriod.getMonth() + 1, 0).getDate();
+            this.days = Array.from({length: daysInMonth}, (_, i) => i + 1);
+            console.log(`Generated ${this.days.length} days for the month`);
+          }
+          
+          // IMPORTANT: Show the table after data is loaded
+          this.showPlanificationTable = true;
+          console.log('✅ showPlanificationTable set to TRUE - table should be visible');
+          
+          // Force Angular change detection after a short delay
+          setTimeout(() => {
+            console.log('Current state before timeout:', {
+              activitiesLength: this.activities.length,
+              daysLength: this.days.length,
+              showTable: this.showPlanificationTable
+            });
+          }, 200);
+        } else {
+          // No activities found
+          console.warn('No activities found in API response');
+          this.activities = [];
+          this.showPlanificationTable = false;
+          this.toastMessage = 'No se encontraron actividades para el período seleccionado';
+          this.showToast = true;
+          setTimeout(() => this.showToast = false, 3000);
+        }
+      });
+  }
+
   /**
    * Check if a day is a weekend day
    * In our calendar structure, the 5th and 6th columns (index 5 and 6) are weekends
@@ -307,14 +491,15 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   collaborators = ['Felipe Gallardo', 'Germán Medina', 'Patricio Baeza'];
 
   /**
-   * Array of days 1-31
-   */
-  days: number[] = Array.from({ length: 31 }, (_, i) => i + 1);
-  
-  /**
-   * Calendar days arranged in weeks
+   * Calendar grid with weeks for the UI display
    */
   calendarWeeks: (number | null)[][] = [];
+  
+  /**
+   * Array of day numbers for the monthly calendar (1-31)
+   * Used by the planification table component
+   */
+  days: number[] = Array.from({ length: 31 }, (_, i) => i + 1);
   
   /**
    * Day names for the calendar header
@@ -350,43 +535,106 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     'compliance'
   ];
   
-  // Define Activity interface
+  // Mock data for now - would come from an API in real app
   activities: Activity[] = [
     {
       id: 1,
-      name: 'Check List Seguridad',
+      name: 'PARTICIPAR EN CHARLA INTEGRAL',
       periodicity: 'SEMANAL',
-      assigned: 1,
-      realized: 0,
-      compliance: 0,
-      scheduledDays: [1, 8, 15, 22, 29], // Weekly on Mondays
-      completedDays: [],
-      dailyChecks: Array(31).fill(false)
+      assigned: 3,
+      realized: 2,
+      compliance: 67,
+      scheduledDays: [3, 10, 17, 24], // Every Monday
+      completedDays: [3, 10],
+      dailyChecks: Array(31).fill(false),
+      ambito: 'INTEGRADO'
     },
     {
       id: 2,
-      name: 'Inspección SSTMA',
-      periodicity: 'QUINCENAL',
-      assigned: 1,
+      name: 'PARTICIPAR EN REUNION DE COORDINACION',
+      periodicity: 'SEMANAL',
+      assigned: 2,
       realized: 1,
-      compliance: 100,
-      scheduledDays: [1, 15], // Bi-weekly
-      completedDays: [1], // First one is completed
-      dailyChecks: Array(31).fill(false)
+      compliance: 50,
+      scheduledDays: [5, 20], // Twice a month
+      completedDays: [5],
+      dailyChecks: Array(31).fill(false),
+      ambito: 'INTEGRADO'
     },
     {
       id: 3,
-      name: 'Charla de Seguridad',
+      name: 'REALIZAR CONTACTO PERSONAL',
       periodicity: 'MENSUAL',
       assigned: 1,
       realized: 0,
       compliance: 0,
       scheduledDays: [5, 6, 25], // Monthly, with a few more for testing
       completedDays: [5],
-      dailyChecks: Array(31).fill(false)
+      dailyChecks: Array(31).fill(false),
+      ambito: 'INTEGRADO'
+    },
+    {
+      id: 4,
+      name: 'CHECK LIST BODEGA DE GASES',
+      periodicity: 'MENSUAL',
+      assigned: 2,
+      realized: 1,
+      compliance: 50,
+      scheduledDays: [8, 22],
+      completedDays: [8],
+      dailyChecks: Array(31).fill(false),
+      ambito: 'MEDIO AMBIENTE'
+    },
+    {
+      id: 5,
+      name: 'CHECK LIST BODEGA DE SUSTANCIAS PELIGROSAS',
+      periodicity: 'MENSUAL',
+      assigned: 1,
+      realized: 0,
+      compliance: 0,
+      scheduledDays: [12],
+      completedDays: [],
+      dailyChecks: Array(31).fill(false),
+      ambito: 'MEDIO AMBIENTE'
+    },
+    {
+      id: 6,
+      name: 'CHECK LIST BAÑOS Y DUCHAS',
+      periodicity: 'QUINCENAL',
+      assigned: 2,
+      realized: 2,
+      compliance: 100,
+      scheduledDays: [5, 19],
+      completedDays: [5, 19],
+      dailyChecks: Array(31).fill(false),
+      ambito: 'SEGURIDAD'
+    },
+    {
+      id: 7,
+      name: 'PERMISO DE EXCAVACIONES',
+      periodicity: 'DIARIAS',
+      assigned: 1,
+      realized: 1,
+      compliance: 100,
+      scheduledDays: [2],
+      completedDays: [2],
+      dailyChecks: Array(31).fill(false),
+      ambito: 'SEGURIDAD'
+    },
+    {
+      id: 8,
+      name: 'INSPECCION SSOMA',
+      periodicity: 'QUINCENAL',
+      assigned: 2,
+      realized: 1,
+      compliance: 50,
+      scheduledDays: [7, 21],
+      completedDays: [7],
+      dailyChecks: Array(31).fill(false),
+      ambito: 'SEGURIDAD'
     }
   ];
-  
+
   /**
    * Track expanded activities
    */
@@ -503,7 +751,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   }
   
   /**
-   * Save changes for all activities
+   * Save all activity changes
    */
   saveAllChanges(): void {
     // In a real app, this would batch save all activities to backend
@@ -523,15 +771,79 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   }
   
   /**
+   * Handle activity status changes from the planification table component
+   */
+  handleActivityStatusChanged(event: {activity: Activity, day: number}): void {
+    // Call the cycle activity status method to update the activity
+    this.cycleActivityStatus(event.activity, event.day);
+  }
+  
+  /**
    * Update compliance metrics for an activity
    * @param activity The activity to update compliance for
    */
   updateCompliance(activity: Activity): void {
     const totalScheduled = activity.scheduledDays.length;
-    const realized = Math.floor(Math.random() * (totalScheduled + 1)); // Random number between 0 and totalScheduled
+    const realized = activity.completedDays?.length || 0;
     activity.realized = realized;
     
     // Calculate compliance percentage
     activity.compliance = totalScheduled > 0 ? Math.round((realized / totalScheduled) * 100) : 0;
+  }
+  
+  /**
+   * Process API response and transform to our Activity model
+   */
+  processApiResponse(apiData: ControlApiResponse[]): void {
+    console.log('Processing API response:', JSON.stringify(apiData.slice(0, 2)));
+    console.log('First API item Ambito field:', apiData[0]?.Ambito);
+    
+    const activitiesMap = new Map<string, Activity>();
+
+    apiData.forEach(item => {
+      const activityId = item.IdActividad;
+      
+      if (!activitiesMap.has(activityId)) {
+        console.log(`Creating new activity with ID ${activityId}:`, {
+          name: item.Actividad,
+          periodicity: item.Periocidad,
+          ambito: item.Ambito || 'MISSING AMBITO'
+        });
+        
+        const activity: Activity = {
+          id: Number(activityId),
+          name: item.Actividad,
+          periodicity: item.Periocidad,
+          ambito: item.Ambito || 'SIN CLASIFICAR', // Provide a default value if Ambito is missing
+          scheduledDays: [],
+          completedDays: [],
+          assigned: 0,
+          realized: 0,
+          compliance: 0
+        };
+        activitiesMap.set(activityId, activity);
+      }
+
+      const activity = activitiesMap.get(activityId)!;
+      const scheduledDay = Number(item.dias);
+      if (!isNaN(scheduledDay) && scheduledDay > 0 && !activity.scheduledDays.includes(scheduledDay)) {
+        activity.scheduledDays.push(scheduledDay);
+      }
+    });
+
+    this.activities = Array.from(activitiesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
+
+    // Log unique ámbitos found in the response
+    const uniqueAmbitos = new Set(this.activities.map(a => a.ambito));
+    console.log('Unique ámbitos found:', Array.from(uniqueAmbitos));
+    
+    this.activities.forEach(activity => {
+      activity.scheduledDays.sort((a, b) => a - b);
+      this.updateActivityMetrics(activity);
+    });
+    
+    // Log first two processed activities for debugging
+    console.log('Processed activities (first 2):', JSON.stringify(this.activities.slice(0, 2)));
+    console.log('Total processed activities:', this.activities.length);
   }
 }
