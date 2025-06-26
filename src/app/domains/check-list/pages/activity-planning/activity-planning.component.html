@@ -2,90 +2,185 @@
   <mat-card class="mat-container">
     <h2 class="title">Planificación Actividades</h2>
 
-    <div class="form-grid">
-      <mat-form-field appearance="fill">
-        <mat-label>Proyecto</mat-label>
-        <mat-select [(ngModel)]="selectedProject">
-          <mat-option value="">Seleccione...</mat-option>
-          <mat-option *ngFor="let p of projects" [value]="p">{{
-            p
-          }}</mat-option>
-        </mat-select>
-      </mat-form-field>
+    <div class="filters-container">
 
-      <mat-form-field appearance="fill">
-        <mat-label>Colaborador</mat-label>
-        <mat-select [(ngModel)]="selectedUser">
-          <mat-option value="">Seleccione...</mat-option>
-          <mat-option *ngFor="let user of collaborators" [value]="user">{{
-            user
-          }}</mat-option>
-        </mat-select>
-      </mat-form-field>
+      <app-custom-select
+        label="Proyecto"
+        [formControl]="projectControl"
+        [parameterType]="projectParameterType"
+        [loadFromApi]="true"
+        [customApiEndpoint]="projectApiEndpoint"
+        [customApiRequestBody]="projectApiRequestBody"
+        [customOptionValueKey]="projectOptionValue"
+        [customOptionLabelKey]="projectOptionLabel"
+        (selectionChange)="onProjectSelectionChange($event)"
+        placeholder="Seleccionar Proyecto"
+        [required]="true"
+        appearance="fill"
+      ></app-custom-select>
+
+      <app-custom-select
+        #collaboratorSelect
+        label="Colaborador"
+        [formControl]="collaboratorControl"
+        [parameterType]="collaboratorParameterType"
+        [loadFromApi]="true"
+        [customApiEndpoint]="collaboratorApiEndpoint"
+        [customApiRequestBody]="collaboratorApiRequestBody"
+        [customOptionValueKey]="collaboratorOptionValue"
+        [customOptionLabelKey]="collaboratorOptionLabel"
+        (selectionChange)="onCollaboratorSelectionChange($event)"
+        placeholder="Seleccionar Colaborador"
+        appearance="fill"
+      ></app-custom-select>
 
       <mat-form-field appearance="fill">
         <mat-label>Periodo</mat-label>
-        <input matInput [matDatepicker]="picker" [(ngModel)]="selectedPeriod" />
+        <input 
+          matInput 
+          [matDatepicker]="picker" 
+          [(ngModel)]="selectedPeriod" 
+          [value]="selectedPeriod"
+          (dateChange)="onPeriodChange($event)"
+          [placeholder]="formattedPeriod || 'MM/YYYY'"
+          readonly
+        />
         <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
         <mat-datepicker
           #picker
           startView="multi-year"
           [startAt]="selectedPeriod"
+          (monthSelected)="setMonthAndYear($event, picker)"
           panelClass="month-picker"
         ></mat-datepicker>
       </mat-form-field>
 
-      <div class="button-row">
-        <button mat-raised-button color="primary">Consultar</button>
+      <div class="button-container">
+        <button mat-raised-button color="primary" class="consultar-btn" (click)="onConsultarClick()">
+          <mat-icon>search</mat-icon>
+          Consultar
+        </button>
       </div>
     </div>
 
-    <div class="table-scroll">
-      <table
-        mat-table
-        [dataSource]="activities"
-        class="mat-elevation-z2 custom-table"
-      >
-        <ng-container matColumnDef="activity">
-          <th mat-header-cell *matHeaderCellDef>Actividad</th>
-          <td mat-cell *matCellDef="let element">{{ element.activity }}</td>
-        </ng-container>
+    <div class="section-separator"></div>
 
-        <ng-container matColumnDef="periodicity">
-          <th mat-header-cell *matHeaderCellDef>Peri.</th>
-          <td mat-cell *matCellDef="let element">{{ element.periodicity }}</td>
-        </ng-container>
+    <!-- Loading indicator -->
+    <div class="loading-container" *ngIf="isLoading">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p>Cargando actividades...</p>
+    </div>
 
-        <ng-container *ngFor="let day of days" [matColumnDef]="'day' + day">
-          <th mat-header-cell *matHeaderCellDef>
-            {{ day < 10 ? "0" + day : day }}
-          </th>
-          <td mat-cell *matCellDef="let element">
-            <mat-checkbox
-              [(ngModel)]="element.dailyChecks[day - 1]"
-              class="check-cell"
-            ></mat-checkbox>
+    <!-- Using the new planification-table component -->
+    <div *ngIf="showPlanificationTable">
+      <div class="cronograma-header">
+        <h3>DETALLE CRONOGRAMA MENSUAL</h3>
+      </div>
+
+      <app-planification-table
+          [activities]="activities"
+          [days]="days"
+          [selectedPeriod]="selectedPeriod"
+          (activityStatusChanged)="handleActivityStatusChanged($event)"
+          (saveChanges)="saveAllChanges()"
+      ></app-planification-table>
+    </div>
+
+    <!-- Original expandable rows implementation - only show if planification table is hidden -->
+    <div class="table-scroll" *ngIf="isLoading">
+      <table mat-table [dataSource]="activities" class="mat-elevation-z2 custom-table compact-table full-width">
+        <!-- Expand/collapse column -->
+        <ng-container matColumnDef="expand">
+          <th mat-header-cell *matHeaderCellDef style="width: 40px;"></th>
+          <td mat-cell *matCellDef="let element" style="width: 40px;">
+            <button mat-icon-button (click)="toggleRow(element, $event)">
+              <mat-icon>
+                {{expandedRows.includes(element) ? 'keyboard_arrow_down' : 'keyboard_arrow_right'}}
+              </mat-icon>
+            </button>
           </td>
         </ng-container>
 
-        <ng-container matColumnDef="assign">
-          <th mat-header-cell *matHeaderCellDef>Asig.</th>
-          <td mat-cell *matCellDef="let element">{{ element.assign }}</td>
+        <!-- Name Column -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Actividad</th>
+          <td mat-cell *matCellDef="let element" class="activity-cell">{{ element.name }}</td>
         </ng-container>
 
+        <!-- Periodicity Column -->
+        <ng-container matColumnDef="periodicity">
+          <th mat-header-cell *matHeaderCellDef class="small-header">Peri.</th>
+          <td mat-cell *matCellDef="let element" class="small-cell">
+            {{ element.periodicity === 'SEMANAL' ? 'Semanal' : 
+               element.periodicity === 'QUINCENAL' ? 'Quincenal' : 'Mensual' }}
+          </td>
+        </ng-container>
+
+        <!-- Assigned Column -->
+        <ng-container matColumnDef="assigned">
+          <th mat-header-cell *matHeaderCellDef class="small-header">Asigna.</th>
+          <td mat-cell *matCellDef="let element" class="numeric-cell">{{ element.assigned }}</td>
+        </ng-container>
+
+        <!-- Realized Column -->
         <ng-container matColumnDef="realized">
-          <th mat-header-cell *matHeaderCellDef>Realiz.</th>
-          <td mat-cell *matCellDef="let element">{{ element.realized }}</td>
+          <th mat-header-cell *matHeaderCellDef class="small-header">Realiz.</th>
+          <td mat-cell *matCellDef="let element" class="numeric-cell">{{ element.realized }}</td>
         </ng-container>
 
+        <!-- Compliance Column -->
         <ng-container matColumnDef="compliance">
-          <th mat-header-cell *matHeaderCellDef>%Cump.</th>
-          <td mat-cell *matCellDef="let element">{{ element.compliance }}%</td>
+          <th mat-header-cell *matHeaderCellDef class="small-header">% Cump.</th>
+          <td mat-cell *matCellDef="let element" class="numeric-cell compliance-cell">{{ element.compliance }}%</td>
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        <tr mat-row *matRowDef="let element; columns: displayedColumns;"
+            class="activity-row"
+            [class.expanded-row]="expandedRows.includes(element)"></tr>
       </table>
+      
+      <!-- Expanded detail sections - one for each expanded activity -->
+      <div *ngFor="let activity of expandedRows" class="activity-detail-container mat-elevation-z1" [@detailExpand]="'expanded'">
+        <h4>Calendario Mensual: {{ activity.name }}</h4>
+        
+        <div class="calendar-grid">
+          <!-- Calendar header with weekday names -->
+          <div class="calendar-header">
+            <div *ngFor="let dayName of dayNames" class="weekday-name">
+              <span>{{ dayName }}</span>
+            </div>
+          </div>
+          
+          <!-- Calendar body with weeks -->
+          <div class="calendar-body">
+            <ng-container *ngFor="let week of calendarWeeks">
+              <div *ngFor="let day of week" class="calendar-day" 
+                   [ngClass]="{
+                     'day-scheduled': day && activity.scheduledDays.includes(day),
+                     'day-weekend': day && isWeekend(day),
+                     'day-empty': day === null
+                   }">
+                <ng-container *ngIf="day !== null">
+                  <mat-checkbox
+                    [checked]="activity.scheduledDays.includes(day)"
+                    (change)="toggleScheduledDay(activity, day, $event.checked)"
+                    class="check-cell"
+                    [color]="'primary'"
+                  ></mat-checkbox>
+                  <span class="day-number">{{ day < 10 ? '0' + day : day }}</span>
+                </ng-container>
+              </div>
+            </ng-container>
+          </div>
+        </div>
+        
+        <div class="detail-actions">
+          <button mat-raised-button color="primary" (click)="saveActivityChanges(activity)">
+            <mat-icon>save</mat-icon> Guardar Cambios
+          </button>
+        </div>
+      </div>
     </div>
   </mat-card>
 </div>

@@ -1,57 +1,486 @@
+// Use the global scale factor for consistent sizing
+$compact-scale: 0.9;
+
 .container {
   display: flex;
   justify-content: center;
-  padding: 2rem;
+  padding: 0.5rem;
   width: 100% !important;
+  overflow-x: hidden;
 }
 
 .mat-container {
   width: 100%;
   max-width: 100%;
-  padding: 2rem;
+  padding: 1rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .title {
-  text-align: center;
-  font-size: 1.5rem;
+  text-align: left;
+  font-size: 1.3rem * $compact-scale;
   font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #3f51b5;
 }
 
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.button-row {
-  margin-top: -20px !important;
+.filters-container {
   display: flex;
-  justify-content: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+  
+  app-custom-select, mat-form-field {
+    flex: 1;
+    min-width: 200px;
+    max-width: 250px;
+    font-size: 0.9rem * $compact-scale;
+  }
+}
+
+// Custom styles for month-year picker
+::ng-deep .month-picker {
+  .mat-calendar-period-button {
+    font-size: calc(14px * var(--scale-factor, 0.9));
+  }
+  
+  .mat-calendar-table {
+    font-size: calc(13px * var(--scale-factor, 0.9));
+  }
+  
+  .mat-calendar-body-cell-content {
+    &.mat-calendar-body-selected {
+      background-color: #3f51b5;
+      color: white;
+    }
+  }
+  
+  // Hide day view elements that we don't need
+  .mat-calendar-body-cell.mat-calendar-body-disabled {
+    visibility: hidden;
+  }
+}
+
+// Styles for expandable rows
+.activity-row {
+  cursor: pointer;
+  
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  
+  &.expanded-row {
+    background-color: rgba(0, 0, 0, 0.08);
+  }
+}
+
+.detail-row {
+  height: 0;
+}
+
+.activity-detail-container {
+  overflow: hidden;
+  padding: 16px;
+  margin-top: 8px;
+  margin-bottom: 16px;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  font-size: calc(14px * var(--scale-factor, 0.9));
+  width: 100%;
+  
+  h4 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: calc(16px * var(--scale-factor, 0.9));
+    color: #3f51b5;
+  }
+}
+
+// Calendar grid styles
+.calendar-grid {
+  margin: 16px 0;
+  font-size: calc(13px * var(--scale-factor, 0.9));
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.weekday-name {
+  text-align: center;
+  font-weight: 500;
+  padding: 4px;
+  font-size: calc(12px * var(--scale-factor, 0.9));
+  color: #666;
+}
+
+.calendar-body {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+
+.calendar-day {
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+  min-height: 45px;
+  
+  &.day-scheduled {
+    background-color: rgba(63, 81, 181, 0.1);
+    border-color: #3f51b5;
+  }
+  
+  &.day-weekend {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  
+  &.day-empty {
+    background-color: #f8f8f8;
+    border: 1px dashed #ddd;
+  }
+  
+  .day-number {
+    font-size: calc(12px * var(--scale-factor, 0.9));
+    margin-top: 4px;
+  }
+  
+  .check-cell {
+    transform: scale(0.9);
+    &.day-scheduled {
+      background-color: rgba(63, 81, 181, 0.1);
+      border-color: #3f51b5;
+    }
+    
+    &.day-weekend {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+    
+    .day-number {
+      font-size: calc(12px * var(--scale-factor, 0.9));
+      margin-top: 4px;
+    }
+    
+    .check-cell {
+      transform: scale(0.9);
+    }
+  }
+}
+
+.detail-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 16px;
+  
+  button {
+    font-size: calc(14px * var(--scale-factor, 0.9));
+  }
+}
+
+.button-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  
+  .consultar-btn {
+    height: 36px * $compact-scale;
+    font-size: 0.9rem * $compact-scale;
+    line-height: 36px * $compact-scale;
+    padding: 0 16px;
+    
+    mat-icon {
+      font-size: 18px * $compact-scale;
+      height: 18px * $compact-scale;
+      width: 18px * $compact-scale;
+      margin-right: 4px;
+    }
+  }
+}
+
+.cronograma-header {
+  background-color: #f5f5f5;
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-radius: 4px;
+  
+  h3 {
+    font-size: 0.5rem * $compact-scale;
+    margin: 0;
+    font-weight: 500;
+    color: #333;
+  }
 }
 
 .table-scroll {
   overflow-x: auto;
+  margin-bottom: 1rem;
 }
 
 .custom-table {
   min-width: 1200px;
+  
+  // Make the table more compact
+  .mat-header-cell, .mat-cell {
+    padding: 2px 4px !important;
+    font-size: 0.8rem * $compact-scale !important;
+  }
+  
+  .activity-cell {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .small-header, .small-cell {
+    width: 60px;
+    text-align: center;
+  }
+  
+  .day-cell, .day-header {
+    width: 40px;
+    text-align: center;
+    padding: 0 4px;
+  }
+  
+  .day-checked {
+    background-color: rgba(63, 81, 181, 0.1);
+  }
+  
+  .day-weekend {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  
+  .numeric-cell {
+    text-align: center;
+    width: 60px;
+  }
+  
+  .compliance-cell {
+    font-weight: bold;
+  }
+  
+  // Fix column widths
+  th.mat-header-cell:first-of-type, td.mat-cell:first-of-type {
+    width: 40px;
+    padding-right: 0;
+  }
 }
 
 .check-cell {
-  width: 20px;
-  height: 20px;
+  width: 20px * $compact-scale;
+  height: 20px * $compact-scale;
   padding: 0;
   margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
+  transform: scale($compact-scale);
+}
+
+// Responsive adjustments
+@media (max-width: 768px) {
+  .filters-container {
+    app-custom-select, mat-form-field {
+      min-width: 100%;
+      max-width: 100%;
+    }
+  }
 }
 
 .custom-table th,
 .custom-table td {
   text-align: center;
   border: 1px solid #ddd;
+}
+
+.activity-detail-container + .activity-detail-container {
+  margin-top: 16px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+// Horizontal Calendar Styles
+.horizontal-calendar-container {
+  width: 100%;
+  margin-bottom: 20px;
+  font-size: calc(14px * var(--scale-factor, 0.9));
+  
+  h3 {
+    margin-bottom: 16px;
+    font-size: calc(14px * var(--scale-factor, 0.7));
+  }
+}
+
+.horizontal-calendar-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  max-height: 600px;
+  overflow-y: auto;
+}
+
+.horizontal-calendar-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 1200px; // Ensures table is wider than viewport for scrolling
+  background-color: white;
+  
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+  }
+  
+  .calendar-header-row th {
+    position: sticky;
+    top: 0;
+    background-color: #f5f5f5;
+    z-index: 10;
+    font-weight: 500;
+    font-size: calc(13px * var(--scale-factor, 0.9));
+  }
+  
+  .sticky-column {
+    position: sticky;
+    left: 0;
+    background-color: white;
+    z-index: 5;
+    
+    &:nth-child(2) {
+      left: calc(200px * var(--scale-factor, 0.9));
+    }
+  }
+  
+  .activity-column {
+    min-width: calc(200px * var(--scale-factor, 0.9));
+    max-width: calc(200px * var(--scale-factor, 0.9));
+    text-align: left;
+    padding-left: 16px;
+    z-index: 5;
+  }
+  
+  .periodicity-column {
+    min-width: calc(80px * var(--scale-factor, 0.9));
+    max-width: calc(80px * var(--scale-factor, 0.9));
+    z-index: 5;
+  }
+  
+  .day-column {
+    min-width: calc(40px * var(--scale-factor, 0.9));
+    max-width: calc(40px * var(--scale-factor, 0.9));
+    padding: 4px 2px;
+  }
+  
+  .weekday-row th {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+  
+  .weekday-label {
+    font-size: calc(11px * var(--scale-factor, 0.9));
+    font-weight: 500;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    color: #555;
+  }
+  
+  .day-number {
+    font-size: calc(12px * var(--scale-factor, 0.9));
+    font-weight: bold;
+  }
+  
+  .weekend-column {
+    background-color: rgba(0, 0, 0, 0.04);
+  }
+  
+  .status-cell {
+    padding: 2px;
+    text-align: center;
+    
+    &.day-assigned {
+      background-color: rgba(255, 193, 7, 0.1);
+    }
+    
+    &.day-completed {
+      background-color: rgba(76, 175, 80, 0.1);
+    }
+  }
+  
+  .status-icon-button {
+    width: calc(30px * var(--scale-factor, 0.9));
+    height: calc(30px * var(--scale-factor, 0.9));
+    line-height: calc(30px * var(--scale-factor, 0.9));
+    padding: 0;
+    margin-top: 5px;
+  }
+  
+  .status-icon {
+    font-size: calc(20px * var(--scale-factor, 1.0));
+    
+    &.status-disabled {
+      color: #d0d0d0;
+      opacity: 0.5;
+    }
+    
+    &.status-assigned {
+      color: #FFC107; // Amber for assigned but not completed
+    }
+    
+    &.status-completed {
+      color: #4CAF50; // Green for completed
+    }
+  }
+  
+  .checkbox-cell {
+    padding: 4px;
+    text-align: center;
+    
+    &.day-scheduled {
+      background-color: rgba(63, 81, 181, 0.1);
+    }
+    
+    mat-checkbox {
+      transform: scale(0.7);
+      margin-left: -6px;
+    }
+  }
+  
+  .calendar-row:hover {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+}
+
+.table-actions {
+  margin: 16px 0;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.stats-table {
+  margin-top: 24px;
+}
+
+// Section separator
+.section-separator {
+  height: 2px;
+  background-color: #e0e0e0;
+  margin: 30px 0;
+  width: 100%;
+}
+
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
 }

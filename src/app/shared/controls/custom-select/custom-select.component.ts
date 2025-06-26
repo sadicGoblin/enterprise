@@ -226,4 +226,20 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
     }
     return option1 === option2;
   }
+  
+  /**
+   * Public method to reload options from API
+   * This is useful when the request body changes and we need to refresh the data
+   */
+  reloadOptions(): void {
+    if (this.loadFromApi && this.parameterType !== ParameterType.NONE) {
+      console.log(`[CustomSelect] Reloading options for ${this.label} with request body:`, this.customApiRequestBody);
+      // Reset any previous data to ensure loading state is visible
+      this.options = [];
+      this.isLoading = true;
+      this.hasError = false;
+      // Load new options
+      this.loadOptionsFromApi();
+    }
+  }
 }
