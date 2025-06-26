@@ -66,6 +66,10 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
   /**
    * Group activities by ambito
    */
+  /**
+   * Updates the groupedActivities array by extracting unique ámbitos first 
+   * and then grouping activities accordingly
+   */
   updateGroupedActivities(): void {
     console.log('Updating grouped activities with:', this._activities);
     
@@ -81,35 +85,56 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
       return;
     }
     
-    // Process each activity
+    // STEP 1: Extract all unique ámbitos from the activities
+    const uniqueAmbitos = new Set<string>();
+    
     this._activities.forEach(activity => {
-      console.log('Processing activity:', JSON.stringify(activity));
-      
-      // Use default ambito if missing
       const ambito = activity.ambito || defaultAmbito;
-      console.log(`Activity ${activity.id} assigned to ambito: "${ambito}"`);
-      
-      // Find existing group or create new one
-      let group = this.groupedActivities.find(g => g.ambito === ambito);
-      if (!group) {
-        group = { ambito: ambito, activities: [] };
-        this.groupedActivities.push(group);
-        console.log(`Created new group for ambito: "${ambito}"`);
-      }
-      
-      // Add activity to group
-      group.activities.push(activity);
+      uniqueAmbitos.add(ambito);
     });
     
-    // Sort groups alphabetically by ambito
+    console.log('Found unique ámbitos:', Array.from(uniqueAmbitos));
+    
+    // STEP 2: Create a group for each unique ámbito
+    Array.from(uniqueAmbitos).forEach(ambito => {
+      this.groupedActivities.push({ 
+        ambito: ambito, 
+        activities: [] 
+      });
+      console.log(`Created group for ámbito: "${ambito}"`);
+    });
+    
+    // STEP 3: Assign activities to their corresponding groups
+    this._activities.forEach(activity => {
+      const ambito = activity.ambito || defaultAmbito;
+      const group = this.groupedActivities.find(g => g.ambito === ambito);
+      
+      if (group) {
+        group.activities.push(activity);
+        console.log(`Added activity ${activity.id} (${activity.name}) to group "${ambito}"`);
+      } else {
+        console.warn(`Could not find group for ámbito "${ambito}"`);
+      }
+    });
+    
+    // STEP 4: Sort groups alphabetically by ambito
     this.groupedActivities.sort((a, b) => a.ambito.localeCompare(b.ambito));
     
-    console.log('Final groupedActivities structure:', this.groupedActivities);
-    console.log('Number of ambito groups:', this.groupedActivities.length);
+    // STEP 5: Sort activities within each group by name
+    this.groupedActivities.forEach(group => {
+      group.activities.sort((a, b) => a.name.localeCompare(b.name));
+    });
+    
+    // Log summary information
+    console.log(`Total activities: ${this._activities.length}, Total groups: ${this.groupedActivities.length}`);
     
     // Verify the data in each group
     this.groupedActivities.forEach((group, index) => {
       console.log(`Group ${index + 1}: ${group.ambito} - ${group.activities.length} activities`);
+      if (group.activities.length > 0) {
+        console.log(`  First activity: ${group.activities[0].name}`);
+        console.log(`  Last activity: ${group.activities[group.activities.length - 1].name}`);
+      }
     });
     
     // Force change detection

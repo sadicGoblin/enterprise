@@ -536,104 +536,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   ];
   
   // Mock data for now - would come from an API in real app
-  activities: Activity[] = [
-    {
-      id: 1,
-      name: 'PARTICIPAR EN CHARLA INTEGRAL',
-      periodicity: 'SEMANAL',
-      assigned: 3,
-      realized: 2,
-      compliance: 67,
-      scheduledDays: [3, 10, 17, 24], // Every Monday
-      completedDays: [3, 10],
-      dailyChecks: Array(31).fill(false),
-      ambito: 'INTEGRADO'
-    },
-    {
-      id: 2,
-      name: 'PARTICIPAR EN REUNION DE COORDINACION',
-      periodicity: 'SEMANAL',
-      assigned: 2,
-      realized: 1,
-      compliance: 50,
-      scheduledDays: [5, 20], // Twice a month
-      completedDays: [5],
-      dailyChecks: Array(31).fill(false),
-      ambito: 'INTEGRADO'
-    },
-    {
-      id: 3,
-      name: 'REALIZAR CONTACTO PERSONAL',
-      periodicity: 'MENSUAL',
-      assigned: 1,
-      realized: 0,
-      compliance: 0,
-      scheduledDays: [5, 6, 25], // Monthly, with a few more for testing
-      completedDays: [5],
-      dailyChecks: Array(31).fill(false),
-      ambito: 'INTEGRADO'
-    },
-    {
-      id: 4,
-      name: 'CHECK LIST BODEGA DE GASES',
-      periodicity: 'MENSUAL',
-      assigned: 2,
-      realized: 1,
-      compliance: 50,
-      scheduledDays: [8, 22],
-      completedDays: [8],
-      dailyChecks: Array(31).fill(false),
-      ambito: 'MEDIO AMBIENTE'
-    },
-    {
-      id: 5,
-      name: 'CHECK LIST BODEGA DE SUSTANCIAS PELIGROSAS',
-      periodicity: 'MENSUAL',
-      assigned: 1,
-      realized: 0,
-      compliance: 0,
-      scheduledDays: [12],
-      completedDays: [],
-      dailyChecks: Array(31).fill(false),
-      ambito: 'MEDIO AMBIENTE'
-    },
-    {
-      id: 6,
-      name: 'CHECK LIST BAÑOS Y DUCHAS',
-      periodicity: 'QUINCENAL',
-      assigned: 2,
-      realized: 2,
-      compliance: 100,
-      scheduledDays: [5, 19],
-      completedDays: [5, 19],
-      dailyChecks: Array(31).fill(false),
-      ambito: 'SEGURIDAD'
-    },
-    {
-      id: 7,
-      name: 'PERMISO DE EXCAVACIONES',
-      periodicity: 'DIARIAS',
-      assigned: 1,
-      realized: 1,
-      compliance: 100,
-      scheduledDays: [2],
-      completedDays: [2],
-      dailyChecks: Array(31).fill(false),
-      ambito: 'SEGURIDAD'
-    },
-    {
-      id: 8,
-      name: 'INSPECCION SSOMA',
-      periodicity: 'QUINCENAL',
-      assigned: 2,
-      realized: 1,
-      compliance: 50,
-      scheduledDays: [7, 21],
-      completedDays: [7],
-      dailyChecks: Array(31).fill(false),
-      ambito: 'SEGURIDAD'
-    }
-  ];
+  activities: Activity[] = [];
 
   /**
    * Track expanded activities
@@ -791,59 +694,85 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     activity.compliance = totalScheduled > 0 ? Math.round((realized / totalScheduled) * 100) : 0;
   }
   
+
+
   /**
-   * Process API response and transform to our Activity model
+   * Process API response into our model
    */
   processApiResponse(apiData: ControlApiResponse[]): void {
-    console.log('Processing API response:', JSON.stringify(apiData.slice(0, 2)));
-    console.log('First API item Ambito field:', apiData[0]?.Ambito);
-    
+    console.log('Processing API response with', apiData.length, 'items');
+    console.log('First API item:', apiData[0]);
+  
+    // Group activities by both ID and SubProceso to keep subprocesses distinct
     const activitiesMap = new Map<string, Activity>();
-
+  
     apiData.forEach(item => {
       const activityId = item.IdActividad;
+      const subProceso = item.SubProceso || 'SIN SUBPROCESO';
       
-      if (!activitiesMap.has(activityId)) {
-        console.log(`Creating new activity with ID ${activityId}:`, {
-          name: item.Actividad,
-          periodicity: item.Periocidad,
-          ambito: item.Ambito || 'MISSING AMBITO'
-        });
-        
+      // Create a unique key combining activity ID and subprocess
+      const uniqueKey = `${activityId}_${item.IdSubProceso}`;
+      
+      // Create a formatted display name that includes the subprocess
+      const displayName = `${subProceso} :: ${item.Actividad}`;
+      
+      // Create new activity if we haven't seen this combination before
+      if (!activitiesMap.has(uniqueKey)) {
         const activity: Activity = {
           id: Number(activityId),
-          name: item.Actividad,
+          name: displayName, // Use the combined name format
           periodicity: item.Periocidad,
-          ambito: item.Ambito || 'SIN CLASIFICAR', // Provide a default value if Ambito is missing
+          ambito: item.Ambito || 'SIN CLASIFICAR',
           scheduledDays: [],
           completedDays: [],
           assigned: 0,
           realized: 0,
-          compliance: 0
+          compliance: 0,
+          dailyChecks: Array(31).fill(false) // Initialize dailyChecks array
         };
-        activitiesMap.set(activityId, activity);
+        activitiesMap.set(uniqueKey, activity);
+        console.log(`Created activity: ID=${uniqueKey}, Name="${displayName}", SubProceso="${subProceso}", Ambito="${item.Ambito}"`);
       }
-
-      const activity = activitiesMap.get(activityId)!;
+  
+      // Add scheduled day to the activity
+      const activity = activitiesMap.get(uniqueKey)!;
       const scheduledDay = Number(item.dias);
+  
       if (!isNaN(scheduledDay) && scheduledDay > 0 && !activity.scheduledDays.includes(scheduledDay)) {
         activity.scheduledDays.push(scheduledDay);
+        console.log(`Added day ${scheduledDay} to activity "${activity.name}"`);
       }
     });
-
-    this.activities = Array.from(activitiesMap.values()).sort((a, b) => a.name.localeCompare(b.name));
-
-    // Log unique ámbitos found in the response
+  
+    // Convert the map to an array
+    this.activities = Array.from(activitiesMap.values());
+    console.log(`Extracted ${this.activities.length} unique activities from ${apiData.length} API data items`);
+  
+    // Get unique ámbitos for reporting
     const uniqueAmbitos = new Set(this.activities.map(a => a.ambito));
     console.log('Unique ámbitos found:', Array.from(uniqueAmbitos));
-    
+  
+    // Process each activity
     this.activities.forEach(activity => {
+      // Sort scheduled days numerically
       activity.scheduledDays.sort((a, b) => a - b);
+  
+      // Update metrics
       this.updateActivityMetrics(activity);
     });
+  
+    // Sort activities by name
+    this.activities.sort((a, b) => a.name.localeCompare(b.name));
+  
+    // Final logging
+    console.log(`Processed ${this.activities.length} activities with ${Array.from(uniqueAmbitos).length} ámbitos`);
     
-    // Log first two processed activities for debugging
-    console.log('Processed activities (first 2):', JSON.stringify(this.activities.slice(0, 2)));
-    console.log('Total processed activities:', this.activities.length);
+    // Log the first few activities to see the new name format
+    if (this.activities.length > 0) {
+      console.log('Sample activity names:');
+      this.activities.slice(0, Math.min(5, this.activities.length)).forEach(a => {
+        console.log(`- ${a.name}`);
+      });
+    }
   }
 }

@@ -71,13 +71,6 @@
       <p>Cargando actividades...</p>
     </div>
 
-    <!-- Debug info -->
-    <div class="debug-info" style="margin: 10px; padding: 10px; border: 1px solid #ddd;">
-      <p>showPlanificationTable: {{ showPlanificationTable }}</p>
-      <p>activities.length: {{ activities.length }}</p>
-      <p>days.length: {{ days.length }}</p>
-    </div>
-
     <!-- Using the new planification-table component -->
     <div *ngIf="showPlanificationTable">
       <div class="cronograma-header">
@@ -94,7 +87,7 @@
     </div>
 
     <!-- Original expandable rows implementation - only show if planification table is hidden -->
-    <div class="table-scroll">
+    <div class="table-scroll" *ngIf="isLoading">
       <table mat-table [dataSource]="activities" class="mat-elevation-z2 custom-table compact-table full-width">
         <!-- Expand/collapse column -->
         <ng-container matColumnDef="expand">
