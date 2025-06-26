@@ -9,6 +9,9 @@
           <div class="weekday-label">{{ getDayOfWeekAbbr(day) }}</div>
           <div class="day-number">{{ day < 10 ? '0' + day : day }}</div>
         </th>
+        <th class="sticky-end-column">Asigna.</th>
+        <th class="sticky-end-column">Realiz.</th>
+        <th class="sticky-end-column">% Cump.</th>
       </tr>
       
       <!-- Group by ámbito and show activities -->
@@ -20,6 +23,9 @@
             Ámbito: {{ group.ambito }}
           </td>
           <td *ngFor="let day of days" class="day-column ambito-header-cell" [ngClass]="{'weekend-column': isWeekend(day)}"></td>
+          <td class="sticky-end-column ambito-header-cell"></td>
+          <td class="sticky-end-column ambito-header-cell"></td>
+          <td class="sticky-end-column ambito-header-cell"></td>
         </tr>
         
         <!-- Activities in this group -->
@@ -46,6 +52,9 @@
               </span>
             </button>
           </td>
+          <td class="sticky-end-column numeric-cell">{{ activity.assigned }}</td>
+          <td class="sticky-end-column numeric-cell">{{ activity.realized }}</td>
+          <td class="sticky-end-column numeric-cell compliance-cell">{{ activity.compliance }}%</td>
         </tr>
       </ng-container>
     </table>

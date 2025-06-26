@@ -44,6 +44,36 @@
     }
   }
   
+  .sticky-end-column {
+    position: sticky;
+    right: 0;
+    background-color: white;
+    z-index: 10;
+    font-size: calc(13px * var(--scale-factor, 0.9));
+    min-width: calc(70px * var(--scale-factor, 0.9));
+    box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+    border-left: 1px solid #e0e0e0;
+    
+    &:nth-last-child(3) {
+      right: calc(140px * var(--scale-factor, 0.9));
+      border-right: none;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.05);
+    }
+    
+    &:nth-last-child(2) {
+      right: calc(70px * var(--scale-factor, 0.9));
+      border-right: none;
+      border-left: 1px solid #e0e0e0;
+      box-shadow: none;
+    }
+  }
+  
+  .ambito-header-cell.sticky-end-column {
+    background-color: #eaeaea;
+    border-left: 1px solid #d0d0d0;
+    z-index: 11;
+  }
+  
   .activity-column {
     min-width: calc(200px * var(--scale-factor, 0.9));
     max-width: calc(250px * var(--scale-factor, 0.9));
@@ -140,6 +170,17 @@
     &.day-completed {
       background-color: rgba(76, 175, 80, 0.1);
     }
+  }
+  
+  .numeric-cell {
+    text-align: center;
+    font-weight: 500;
+    font-size: calc(13px * var(--scale-factor, 0.9));
+  }
+  
+  .compliance-cell {
+    color: #1565C0;
+    font-weight: 600;
   }
   
   .status-icon-button {

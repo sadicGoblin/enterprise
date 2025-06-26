@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
@@ -21,12 +21,39 @@ export interface Activity {
   standalone: true,
   imports: [CommonModule, MatIconModule, MatButtonModule],
   templateUrl: './planification-table.component.html',
-  styleUrl: './planification-table.component.scss'
+  styleUrls: ['./planification-table.component.scss'],
+  changeDetection: ChangeDetectionStrategy.Default
 })
-export class PlanificationTableComponent {
-  @Input() activities: Activity[] = [];
-  @Input() days: number[] = [];
-  @Input() selectedPeriod: Date | null = null;
+export class PlanificationTableComponent implements OnInit, OnChanges {
+  constructor(private cdr: ChangeDetectorRef) {}
+  @Input() set activities(data: Activity[]) {
+    console.log('Planification Table received activities:', data);
+    this._activities = data;
+    this.updateGroupedActivities();
+  }
+  get activities(): Activity[] {
+    return this._activities;
+  }
+
+  @Input() set days(data: number[]) {
+    console.log('Planification Table received days:', data);
+    this._days = data;
+  }
+  get days(): number[] {
+    return this._days;
+  }
+
+  @Input() set selectedPeriod(data: Date | null) {
+    console.log('Planification Table received selectedPeriod:', data);
+    this._selectedPeriod = data;
+  }
+  get selectedPeriod(): Date | null {
+    return this._selectedPeriod;
+  }
+
+  private _activities: Activity[] = [];
+  private _days: number[] = [];
+  private _selectedPeriod: Date | null = null;
   
   @Output() activityStatusChanged = new EventEmitter<{activity: Activity, day: number}>();
   @Output() saveChanges = new EventEmitter<void>();
@@ -34,25 +61,86 @@ export class PlanificationTableComponent {
   /**
    * Group activities by ámbito/scope
    */
-  get groupedActivities(): {ambito: string, activities: Activity[]}[] {
-    const groupedMap = new Map<string, Activity[]>();
+  groupedActivities: {ambito: string, activities: Activity[]}[] = [];
+
+  /**
+   * Group activities by ambito
+   */
+  updateGroupedActivities(): void {
+    console.log('Updating grouped activities with:', this._activities);
     
-    // Ensure every activity has an ámbito, default to 'SIN CLASIFICAR' if not present
-    this.activities.forEach(activity => {
-      const ambito = activity.ambito || 'SIN CLASIFICAR';
-      if (!groupedMap.has(ambito)) {
-        groupedMap.set(ambito, []);
+    // Reset the grouped activities
+    this.groupedActivities = [];
+    
+    // Default ambito for activities without one
+    const defaultAmbito = 'SIN CLASIFICAR';
+    
+    // Handle possible undefined activities array
+    if (!this._activities || this._activities.length === 0) {
+      console.warn('No activities to group!');
+      return;
+    }
+    
+    // Process each activity
+    this._activities.forEach(activity => {
+      console.log('Processing activity:', JSON.stringify(activity));
+      
+      // Use default ambito if missing
+      const ambito = activity.ambito || defaultAmbito;
+      console.log(`Activity ${activity.id} assigned to ambito: "${ambito}"`);
+      
+      // Find existing group or create new one
+      let group = this.groupedActivities.find(g => g.ambito === ambito);
+      if (!group) {
+        group = { ambito: ambito, activities: [] };
+        this.groupedActivities.push(group);
+        console.log(`Created new group for ambito: "${ambito}"`);
       }
-      groupedMap.get(ambito)!.push(activity);
+      
+      // Add activity to group
+      group.activities.push(activity);
     });
     
-    // Convert map to array for template iteration
-    return Array.from(groupedMap).map(([ambito, activities]) => ({ 
-      ambito: ambito, 
-      activities: activities 
-    }));
+    // Sort groups alphabetically by ambito
+    this.groupedActivities.sort((a, b) => a.ambito.localeCompare(b.ambito));
+    
+    console.log('Final groupedActivities structure:', this.groupedActivities);
+    console.log('Number of ambito groups:', this.groupedActivities.length);
+    
+    // Verify the data in each group
+    this.groupedActivities.forEach((group, index) => {
+      console.log(`Group ${index + 1}: ${group.ambito} - ${group.activities.length} activities`);
+    });
+    
+    // Force change detection
+    this.cdr.detectChanges();
   }
-  
+
+  /**
+   * Angular lifecycle hooks
+   */
+  ngOnInit() {
+    console.log('PlanificationTable component initialized');
+    console.log('Initial activities:', this._activities);
+    console.log('Initial days:', this._days);
+    console.log('Initial selectedPeriod:', this._selectedPeriod);
+    this.updateGroupedActivities();
+  }
+
+  ngOnChanges(changes: SimpleChanges) {
+    console.log('PlanificationTable detected changes:', Object.keys(changes));
+    if (changes['activities']) {
+      console.log('Activities changed:', changes['activities'].currentValue);
+      // The setter will handle updating grouped activities
+    }
+    if (changes['days']) {
+      console.log('Days changed:', changes['days'].currentValue);
+    }
+    if (changes['selectedPeriod']) {
+      console.log('SelectedPeriod changed:', changes['selectedPeriod'].currentValue);
+    }
+  }
+
   /**
    * Check if a day is a weekend day
    */
