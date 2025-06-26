@@ -32,6 +32,7 @@ export interface Activity extends PlanificationActivity {
   scheduledDays: number[];
   completedDays?: number[];
   dailyChecks?: boolean[]; // For backward compatibility
+  idControl?: string;
 }
 
 @Component({
@@ -76,10 +77,14 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   selectedCollaboratorId: string | null = null;
   apiEndpoint = '/ws/ControlSvcImpl.php';
   
+  // Store the formatted period for API calls
+  formattedPeriod: string = '';
+  
   // Flag to control table visibility
   showPlanificationTable = false;
   
   @ViewChild('collaboratorSelect') collaboratorSelect!: CustomSelectComponent;
+  @ViewChild(PlanificationTableComponent) planificationTable!: PlanificationTableComponent;
   constructor(private proxyService: ProxyService) {
     // Initialize with current date
     this.selectedPeriod = new Date();
@@ -397,6 +402,23 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
           this.showPlanificationTable = true;
           console.log('✅ showPlanificationTable set to TRUE - table should be visible');
           
+          // After showing the table, fetch completed activities
+          // Using a delay to ensure the ViewChild is properly initialized
+          setTimeout(() => {
+            if (this.planificationTable && this.selectedCollaboratorId) {
+              console.log('Calling fetchCompletedActivities with:', {
+                user: Number(this.selectedCollaboratorId),
+                period: Number(this.formattedPeriod)
+              });
+              this.planificationTable.fetchCompletedActivities(
+                Number(this.selectedCollaboratorId), 
+                Number(this.formattedPeriod)
+              );
+            } else {
+              console.warn('Could not call fetchCompletedActivities - table not initialized or user not selected');
+            }
+          }, 1000);
+          
           // Force Angular change detection after a short delay
           setTimeout(() => {
             console.log('Current state before timeout:', {
@@ -478,7 +500,6 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   selectedUser: string = '';
   selectedUserName: string = '';
   selectedPeriod: Date | null = null;
-  formattedPeriod: string = '';
   
   // Spanish month names for formatting
   spanishMonths = [
@@ -630,9 +651,11 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
    * Updates the metrics for an activity based on scheduled and completed days
    */
   updateActivityMetrics(activity: Activity): void {
+    console.log("id controol ", activity);
     activity.assigned = activity.scheduledDays.length;
     activity.realized = activity.completedDays?.length || 0;
     activity.compliance = activity.assigned > 0 ? Math.round((activity.realized / activity.assigned) * 100) : 0;
+    activity.idControl = activity.idControl || '';
   }
   
   /**
@@ -728,7 +751,8 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
           assigned: 0,
           realized: 0,
           compliance: 0,
-          dailyChecks: Array(31).fill(false) // Initialize dailyChecks array
+          dailyChecks: Array(31).fill(false), // Initialize dailyChecks array
+          idControl: item.IdControl || ''
         };
         activitiesMap.set(uniqueKey, activity);
         console.log(`Created activity: ID=${uniqueKey}, Name="${displayName}", SubProceso="${subProceso}", Ambito="${item.Ambito}"`);

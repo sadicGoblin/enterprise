@@ -37,20 +37,21 @@
                activity.periodicity === 'DIARIAS' ? 'Diarias' : 'Mensual' }}
           </td>
           <td *ngFor="let day of days" class="day-column status-cell" 
-              [ngClass]="{'day-assigned': activity.scheduledDays.includes(day) && !activity.completedDays?.includes(day), 
-                         'day-completed': activity.completedDays?.includes(day),
+              [ngClass]="{'day-assigned': activity.scheduledDays.includes(day) && !(activity.idControl | activityCompleted:day:completedActivities), 
+                         'day-completed': (activity.idControl | activityCompleted:day:completedActivities),
                          'weekend-column': isWeekend(day)}">
             <button mat-icon-button class="status-icon-button" 
                     (click)="cycleActivityStatus(activity, day)">
               <span class="material-symbols-outlined status-icon"
                     [ngClass]="{
                       'status-disabled': !activity.scheduledDays.includes(day),
-                      'status-assigned': activity.scheduledDays.includes(day) && !activity.completedDays?.includes(day),
-                      'status-completed': activity.completedDays?.includes(day)
+                      'status-assigned': activity.scheduledDays.includes(day) && !(activity.idControl | activityCompleted:day:completedActivities),
+                      'status-completed': (activity.idControl | activityCompleted:day:completedActivities)
                     }">
-                {{ activity.scheduledDays.includes(day) && !activity.completedDays?.includes(day) ? 'check_circle_unread' : 'check_circle' }}
+                {{ activity.scheduledDays.includes(day) && !(activity.idControl | activityCompleted:day:completedActivities) ? 'check_circle_unread' : 'check_circle' }}
               </span>
             </button>
+            <!-- Ya estamos usando el pipe para determinar el estado visual -->
           </td>
           <td class="sticky-end-column numeric-cell">{{ activity.assigned }}</td>
           <td class="sticky-end-column numeric-cell">{{ activity.realized }}</td>

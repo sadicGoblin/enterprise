@@ -26,3 +26,21 @@ export interface ControlApiResponse {
   idParam: string;
   dias: string;
 }
+
+export interface CompletionApiRequest {
+  caso: string;
+  IdUsuario: number;
+  Periodo: number;
+}
+
+export interface CompletedActivity {
+  IdControl: string;
+  Dia: string;
+}
+
+export interface CompletionApiResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  data: CompletedActivity[];
+}
