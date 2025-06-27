@@ -1,27 +1,62 @@
-<div class="container">
-    <mat-card class="mat-container">
+<div class="map-container">
+  <mat-card class="map-card">
+    <div *ngIf="isLoading" class="spinner-overlay">
+      <mat-spinner></mat-spinner>
+    </div>
+    
+    <div class="map-card-header">
       <h2 class="title">Ingreso Reporte</h2>
-      <div class="tab-content">
+      <button 
+        mat-flat-button 
+        color="primary" 
+        class="add-user-button" 
+        (click)="crearNuevoReporte()"
+        *ngIf="!isFormVisible">
+        <mat-icon>add_circle</mat-icon> Crear Reporte
+      </button>
+    </div>
+    
+    <div class="map-card-content" [class.form-collapsed]="!isFormVisible">
+      <div class="form-container" *ngIf="isFormVisible">
+        <div class="form-header">
+          <h3>Datos del Reporte</h3>
+          <button mat-icon-button color="primary" (click)="toggleFormVisibility()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        <mat-divider></mat-divider>
         <div class="form-grid">
-          <mat-form-field appearance="fill">
-            <mat-label>Proyecto</mat-label>
-            <mat-select [(ngModel)]="project">
-              <mat-option value="">Seleccione...</mat-option>
-              <mat-option value="Proyecto A">Proyecto A</mat-option>
-              <mat-option value="Proyecto B">Proyecto B</mat-option>
-              <mat-option value="Proyecto C">Proyecto C</mat-option>
-            </mat-select>
-          </mat-form-field>
+          <app-custom-select
+            label="Proyecto"
+            [formControl]="projectControl"
+            [parameterType]="projectParameterType"
+            [loadFromApi]="true"
+            [customApiEndpoint]="projectApiEndpoint"
+            [customApiRequestBody]="projectApiRequestBody"
+            [customOptionValueKey]="projectOptionValue"
+            [customOptionLabelKey]="projectOptionLabel"
+            (selectionChange)="onProjectSelectionChange($event)"
+            placeholder="Seleccionar Proyecto"
+            [required]="true"
+            [appearance]="'outline'"
+            class="compact-field"
+          ></app-custom-select>
   
-          <mat-form-field appearance="fill">
-            <mat-label>Tipo</mat-label>
-            <mat-select [(ngModel)]="type">
-              <mat-option value="">Seleccione...</mat-option>
-              <mat-option *ngFor="let t of types" [value]="t">{{ t }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+          <app-custom-select
+            label="Tipo"
+            [formControl]="typeControl"
+            [parameterType]="typeParameterType"
+            [options]="typesOptions"
+            (selectionChange)="onTypeSelectionChange($event)"
+            placeholder="Seleccionar Tipo"
+            [required]="true"
+            [appearance]="'outline'"
+            class="compact-field"
+          ></app-custom-select>
+        </div>
 
-          <mat-form-field appearance="fill">
+        <div class="select-grid">
+          <mat-form-field appearance="outline" class="compact-field">
             <mat-label>Fecha desde</mat-label>
             <input matInput [matDatepicker]="picker" [(ngModel)]="period" />
             <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
@@ -30,11 +65,20 @@
         </div>
   
         <div class="button-row">
-          <button mat-raised-button color="primary">Crear Reporte</button>
+          <button mat-stroked-button type="button" (click)="limpiarForm()">
+            <mat-icon>refresh</mat-icon> Limpiar
+          </button>
+          <button mat-raised-button color="primary" (click)="buscarReportes()">
+            <mat-icon>search</mat-icon> Buscar
+          </button>
         </div>
-  
-        <hr>
+      </div>
+    </div>
+
+      <hr />
+      <div class="map-card-header">
         <h2 class="title">Reportes Ingresados</h2>
+      </div>
         <mat-tab-group>
           <mat-tab label="Ingresados por Escritorio">
             <table mat-table [dataSource]="tableData1" class="mat-elevation-z2 full-width">
@@ -102,7 +146,5 @@
             </table>
           </mat-tab>
         </mat-tab-group>
-      </div>
-    </mat-card>
-  </div>
-  
+  </mat-card>
+</div>

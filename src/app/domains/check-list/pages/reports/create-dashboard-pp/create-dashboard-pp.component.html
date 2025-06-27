@@ -1,24 +1,44 @@
-<div class="container">
-    <mat-card class="mat-container">
+<div class="map-container">
+  <mat-card class="map-card">
+    <div *ngIf="isLoading" class="spinner-overlay">
+      <mat-spinner></mat-spinner>
+    </div>
+    
+    <div class="map-card-header">
       <h2 class="title">Dashboard PP</h2>
-      <div class="tab-content">
+    </div>
+    
+    <div class="map-card-content">
+      <div class="form-container">
+        <div class="form-header">
+          <h3>Filtros de Búsqueda</h3>
+        </div>
+        <mat-divider></mat-divider>
+        
         <div class="form-grid">
-          <mat-form-field appearance="fill">
-            <mat-label>Proyecto</mat-label>
-            <mat-select [(ngModel)]="selectedProject">
-              <mat-option value="">Seleccione...</mat-option>
-              <mat-option *ngFor="let project of projects" [value]="project">{{ project }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+          <app-custom-select
+            [formControl]="projectControl"
+            [customApiEndpoint]="projectApiEndpoint"
+            [customApiRequestBody]="projectApiRequestBody"
+            [customOptionValueKey]="projectOptionValueKey"
+            [customOptionLabelKey]="projectOptionLabelKey"
+            [parameterType]="parameterTypeCustomApi"
+            [loadFromApi]="true"
+            (selectionChange)="onProjectSelectionChange($event)"
+            [label]="'Obra'"
+            [placeholder]="'Seleccione una obra'"
+            [appearance]="'outline'"
+            class="compact-field"
+          ></app-custom-select>
   
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="outline" class="compact-field">
             <mat-label>Periodo Inicio</mat-label>
             <input matInput [matDatepicker]="startPicker" [(ngModel)]="startPeriod" />
             <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
             <mat-datepicker #startPicker></mat-datepicker>
           </mat-form-field>
   
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="outline" class="compact-field">
             <mat-label>Periodo Fin</mat-label>
             <input matInput [matDatepicker]="endPicker" [(ngModel)]="endPeriod" />
             <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
@@ -27,9 +47,15 @@
         </div>
   
         <div class="button-row">
-          <button mat-raised-button color="primary">Generar</button>
+          <button mat-stroked-button type="button" (click)="resetForm()">
+            <mat-icon>refresh</mat-icon> Limpiar
+          </button>
+          <button mat-raised-button color="primary" (click)="generateDashboard()">
+            <mat-icon>bar_chart</mat-icon> Generar
+          </button>
         </div>
       </div>
-    </mat-card>
-  </div>
+    </div>
+  </mat-card>
+</div>
   

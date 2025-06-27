@@ -1,36 +1,55 @@
-<div class="container">
-    <mat-card class="mat-container">
+<div class="map-container">
+  <mat-card class="map-card">
+    <!-- Spinner overlay para carga -->
+    <div *ngIf="isLoading" class="spinner-overlay">
+      <mat-spinner diameter="40"></mat-spinner>
+    </div>
+    
+    <div class="map-card-header">
       <h2 class="title">Reporte de Incidentes</h2>
-      <div class="tab-content">
+    </div>
+    
+    <div class="map-card-content">
+      <div class="form-container">
+        <div class="form-header">
+          <h3>Filtros de Reporte</h3>
+        </div>
+        <mat-divider></mat-divider>
+        
         <div class="form-grid">
-          <mat-form-field appearance="fill">
-            <mat-label>Obra</mat-label>
-            <mat-select [(ngModel)]="selectedWorksite">
-              <mat-option value="">Seleccione...</mat-option>
-              <mat-option value="Obra 1">Obra 1</mat-option>
-              <mat-option value="Obra 2">Obra 2</mat-option>
-              <mat-option value="Obra 3">Obra 3</mat-option>
-            </mat-select>
-          </mat-form-field>
+          <app-custom-select
+            [formControl]="projectControl"
+            [customApiEndpoint]="projectApiEndpoint"
+            [customApiRequestBody]="projectApiRequestBody"
+            [customOptionValueKey]="projectOptionValueKey"
+            [customOptionLabelKey]="projectOptionLabelKey"
+            [parameterType]="parameterTypeCustomApi"
+            [loadFromApi]="true"
+            (selectionChange)="onProjectSelectionChange($event)"
+            [label]="'Obra'"
+            [placeholder]="'Seleccione una obra'"
+            [appearance]="'outline'"
+            class="compact-field"
+          ></app-custom-select>
   
-          <mat-form-field appearance="fill">
-            <mat-label>Indicador</mat-label>
-            <mat-select [(ngModel)]="selectedIndicator">
-              <mat-option value="">Seleccione...</mat-option>
-              <mat-option *ngFor="let indicator of indicators" [value]="indicator">
-                {{ indicator }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
+          <app-custom-select
+            [formControl]="indicatorControl"
+            [options]="indicatorOptions"
+            (selectionChange)="onIndicatorSelectionChange($event)"
+            [label]="'Indicador'"
+            [placeholder]="'Seleccione un indicador'"
+            [appearance]="'outline'"
+            class="compact-field"
+          ></app-custom-select>
   
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="outline" class="compact-field">
             <mat-label>Fecha Desde</mat-label>
             <input matInput [matDatepicker]="startPicker" [(ngModel)]="startDate" />
             <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
             <mat-datepicker #startPicker></mat-datepicker>
           </mat-form-field>
   
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="outline" class="compact-field">
             <mat-label>Fecha Hasta</mat-label>
             <input matInput [matDatepicker]="endPicker" [(ngModel)]="endDate" />
             <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
@@ -39,9 +58,21 @@
         </div>
   
         <div class="button-row">
-          <button mat-raised-button color="primary">Generar</button>
+          <button mat-stroked-button type="button" (click)="resetForm()">
+            <mat-icon>refresh</mat-icon> Limpiar
+          </button>
+          <button mat-raised-button color="primary" (click)="generateReport()">
+            <mat-icon>assessment</mat-icon> Generar
+          </button>
         </div>
       </div>
-    </mat-card>
-  </div>
-  
+
+      <!-- Área para resultados del reporte -->
+      <div class="results-container" *ngIf="projectControl.value">
+        <h3>Resultados</h3>
+        <p>Reporte para la obra: {{ projectControl.value }}</p>
+        <!-- Aquí podría ir una tabla o gráficos con los datos del reporte -->
+      </div>
+    </div>
+  </mat-card>
+</div>

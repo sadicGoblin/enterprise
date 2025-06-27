@@ -121,7 +121,7 @@ export class OrganizationalMapComponent implements OnInit {
     if (isDevMode()) {
       // Esperar a que se carguen los datos de los selects
       setTimeout(() => {
-        this.fillDebugData();
+        // this.fillDebugData();
       }, 1000);
     }
   }
