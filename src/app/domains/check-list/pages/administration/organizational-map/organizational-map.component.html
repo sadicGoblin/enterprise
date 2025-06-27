@@ -10,7 +10,7 @@
         mat-flat-button 
         color="primary" 
         class="add-user-button" 
-        (click)="toggleFormVisibility()" 
+        (click)="toggleFormVisibility(); isEditMode = false; resetForm();" 
         *ngIf="!isFormVisible">
         <mat-icon>person_add</mat-icon> Agregar usuario
       </button>
@@ -29,62 +29,71 @@
         <div class="form-grid">
           <mat-form-field appearance="outline" class="compact-field">
             <mat-label>Nombre</mat-label>
-            <input matInput formControlName="nombre" />
+            <input matInput formControlName="nombre" placeholder="Ingrese nombre completo" required />
+            <mat-error *ngIf="editForm.get('nombre')?.hasError('required')">Nombre es requerido</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="compact-field">
             <mat-label>Usuario</mat-label>
-            <input matInput formControlName="usuario" />
+            <input matInput formControlName="usuario" placeholder="Ingrese nombre de usuario" required />
+            <mat-error *ngIf="editForm.get('usuario')?.hasError('required')">Usuario es requerido</mat-error>
           </mat-form-field>
-
         </div>
         
-        <div class="select-grid">  <!-- Using select-grid class for the smaller layout -->
+        <div class="select-grid"> <!-- Using select-grid class for the smaller layout -->
           <mat-form-field appearance="outline" class="compact-field">
             <mat-label>Contraseña</mat-label>
-            <input matInput formControlName="clave" type="password" />
+            <input matInput formControlName="clave" type="password" placeholder="Ingrese contraseña" [required]="!isEditMode" />
+            <mat-icon matSuffix>lock</mat-icon>
+            <mat-error *ngIf="!isEditMode && editForm.get('clave')?.hasError('required')">Contraseña es requerida</mat-error>
+            <mat-hint *ngIf="isEditMode">Deje en blanco para mantener actual</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="compact-field">
             <mat-label>eMail</mat-label>
-            <input matInput formControlName="email" />
+            <input matInput formControlName="eMail" placeholder="ejemplo@dominio.com" />
+            <mat-icon matSuffix>email</mat-icon>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="compact-field">
             <mat-label>Nº Celular</mat-label>
-            <input matInput formControlName="celular" />
+            <input matInput formControlName="celular" placeholder="+569XXXXXXXX" />
+            <mat-icon matSuffix>phone</mat-icon>
           </mat-form-field>
         </div>
 
         <div class="select-grid">
           <app-custom-select
-            formControlName="cargo"
+            formControlName="idCargo"
             [loadFromApi]="true"
             [parameterType]="parameterTypes.CARGO"
             label="Cargo"
             [appearance]="'outline'"
             [required]="true"
             class="compact-field"
+            placeholder="Seleccione cargo"
           ></app-custom-select>
 
           <app-custom-select
-            formControlName="tipoAcceso"
+            formControlName="idTipoAcceso"
             [loadFromApi]="true"
             [parameterType]="parameterTypes.TIPO_ACCESO"
             label="Tipo Acceso"
             [appearance]="'outline'"
             [required]="true"
             class="compact-field"
+            placeholder="Seleccione tipo acceso"
           ></app-custom-select>
 
           <app-custom-select
-            formControlName="empresa"
+            formControlName="idEmpresaContratista"
             [loadFromApi]="true"
             [parameterType]="parameterTypes.EMPRESA"
             label="Empresa Contratista"
             [appearance]="'outline'"
             [required]="true"
             class="compact-field"
+            placeholder="Seleccione empresa"
           ></app-custom-select>
         </div>
 

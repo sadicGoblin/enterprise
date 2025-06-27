@@ -65,6 +65,7 @@ export class UsuarioService {
    */
   createUpdateUser(userData: {
     caso: string,
+    idUsuario?: number, // Opcional para crear, requerido para modificar
     usuario: string,
     nombre: string,
     idCargo: number | string,
@@ -73,27 +74,86 @@ export class UsuarioService {
     idEmpresaContratista: number | string,
     eMail: string,
     celular: string,
-    clave: string
+    clave?: string // Opcional (solo para crear)
   }): Observable<any> {
-    // Construir el request siguiendo el patrón de obra.service.ts
-    const request = {
-      caso: userData.caso,
-      usuario: userData.usuario,
-      nombre: userData.nombre,
-      idCargo: userData.idCargo,
-      idPerfil: userData.idPerfil,
-      idTipoAcceso: userData.idTipoAcceso,
-      idEmpresaContratista: userData.idEmpresaContratista,
-      eMail: userData.eMail,
-      celular: userData.celular,
-      clave: userData.clave
+    // Construir el request siguiendo el formato exacto especificado
+    const request: any = {
+      "caso": userData.caso === 'Modifica' ? "Modifica" : "Crea",
+      "usuario": userData.usuario,
+      "nombre": userData.nombre,
+      "idCargo": userData.idCargo,
+      "idPerfil": userData.idPerfil,
+      "idTipoAcceso": userData.idTipoAcceso,
+      "idEmpresaContratista": userData.idEmpresaContratista,
+      "eMail": userData.eMail,
+      "celular": userData.celular
     };
     
-    console.log('[UsuarioService] Creando/actualizando usuario con endpoint:', this.apiEndpoint);
-    console.log('[UsuarioService] Request:', request);
+    // Agregar idUsuario solo para Modifica
+    if (userData.caso === 'Modifica' && userData.idUsuario) {
+      request.idUsuario = userData.idUsuario;
+    }
     
-    // Asegurarse de utilizar proxyService para que se aplique la configuración de proxy de Angular
-    // y use el puerto correcto (8080)
+    // Agregar clave solo si está presente
+    if (userData.clave) {
+      request.clave = userData.clave;
+    }
+    
+    console.log('Sending user create/update request:', request);
+    return this.proxyService.post<any>(this.apiEndpoint, request);
+  }
+  
+  /**
+   * Crea un nuevo control de actividad
+   * @param controlData Datos del control a crear
+   * @returns Observable con la respuesta del API
+   */
+  createControl(controlData: {
+    caso: string,
+    IdControl: number,
+    idObra: number,
+    obra: null,
+    idUsuario: number,
+    usuario: null,
+    periodo: number,
+    idEtapaConst: number,
+    etapaConst: null,
+    idSubProceso: number,
+    subProceso: null,
+    idAmbito: number,
+    ambito: null,
+    idActividad: number,
+    actividad: null,
+    idPeriocidad: number,
+    periocidad: null,
+    idCategoria: number,
+    idParam: number,
+    dias: null,
+    fechaControl: string
+  }): Observable<any> {
+    // El endpoint para la creación de controles
+    const controlEndpoint = '/ws/ControlSvcImpl.php';
+    
+    console.log('Creando nuevo control:', controlData);
+    return this.proxyService.post<any>(controlEndpoint, controlData);
+  }
+  
+  /**
+   * Elimina un usuario del sistema
+   * @param userId ID del usuario a eliminar
+   * @returns Observable con la respuesta del API
+   */
+  deleteUser(userId: number): Observable<any> {
+    // Construir el request siguiendo el formato exacto especificado
+    const request = {
+      "caso": "Elimina",
+      "idUsuario": userId
+    };
+    
+    console.log('[UsuarioService] Eliminando usuario con ID:', userId);
+    console.log('[UsuarioService] Request body:', JSON.stringify(request));
+    
+    // Usar proxyService para aplicar la configuración de proxy de Angular
     return this.proxyService.post<any>(this.apiEndpoint, request);
   }
 }

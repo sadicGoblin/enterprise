@@ -136,11 +136,11 @@
     
     // Contenedor del campo de formulario
     .mat-mdc-text-field-wrapper {
-      height: 40px;
-      padding: 0 12px;
+      height: 36px; // Reduced from 40px
+      padding: 0 10px;
       border-radius: 4px;
       background-color: white;
-      border: 1px solid rgba(0, 0, 0, 0.12);
+      border: 1px solid rgba(0, 0, 0, 0.15); // Slightly thicker border
       display: flex;
       align-items: center;
       position: relative;
@@ -153,12 +153,12 @@
       height: 100%;
       padding: 0;
       border-top: 0;
-      min-height: 40px;
+      min-height: 36px; // Reduced from 40px
     }
     
     // Centrado vertical del texto del input
     input.mat-mdc-input-element {
-      font-size: 12px;
+      font-size: 11px; // Even smaller text
       line-height: normal;
       margin: 0;
       vertical-align: middle;
@@ -167,23 +167,26 @@
       top: 0;
     }
     
-    // Centrado del placeholder
+    // Improved placeholder centering
     .mdc-floating-label:not(.mdc-floating-label--float-above) {
-      transform: translateY(0);
+      transform: translateY(-50%);
       top: 50%;
       height: auto;
       display: flex;
       align-items: center;
-      font-size: 12px;
+      font-size: 11px;
+      margin: 0;
     }
     
-    // Centrado para los select
+    // Improved select field centering
     .mat-mdc-select {
       display: flex;
       align-items: center;
-      font-size: 12px;
+      font-size: 11px;
       height: 100%;
       width: 100%;
+      padding: 0;
+      margin: 0;
     }
     
     .mat-mdc-select-value {
@@ -192,7 +195,41 @@
       height: 100%;
       padding-top: 0;
       padding-bottom: 0;
-      font-size: 12px;
+      font-size: 11px;
+      line-height: 1;
+    }
+    
+    // Improved vertical alignment for select text
+    .mat-mdc-select-value-text {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      padding: 0;
+      margin-top: 1px; // Fine adjustment for perfect centering
+    }
+    
+    // Fix select arrow positioning
+    .mat-mdc-select-arrow-wrapper {
+      display: flex;
+      align-items: center;
+      height: 100%;
+    }
+    
+    // Make hint text smaller
+    .mat-mdc-form-field-hint {
+      font-size: 10px;
+    }
+    
+    // Make error text smaller
+    .mat-mdc-form-field-error {
+      font-size: 10px;
+    }
+    
+    // Iconos de color gris claro
+    .mat-icon[matSuffix] {
+      color: #9e9e9e; // Color gris claro
+      font-size: 18px;
+      opacity: 0.7;
     }
     
     // Ajustes para bordes cuando hay error o focus
@@ -224,13 +261,16 @@
   display: flex;
   justify-content: flex-end;
   gap: 12px;
-  margin-top: 16px;
+  margin-top: 20px;
   padding-top: 16px;
   border-top: 1px solid #eaeaea;
   
   button {
-    min-width: 110px;
-    padding: 0 16px;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
     height: 36px;
     border-radius: 4px;
     font-weight: 500;

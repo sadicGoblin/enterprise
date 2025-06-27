@@ -1,6 +1,6 @@
 import { Component, ViewChild, OnInit, isDevMode } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -48,9 +48,11 @@ export class OrganizationalMapComponent implements OnInit {
   // Expose ParameterType enum to the template
   parameterTypes = ParameterType;
   editForm: FormGroup;
-  selectedIndex: number | null = null;
+  selectedIndex: number = -1; // Estado de edición
   currentEditIndex: number | null = null;
-  isLoading: boolean = false;
+  isEditMode = false;
+  currentUserId: number | null = null;
+  isLoading = false;
   // Show search bar in the data table
   showSearchBar: boolean = true;
   // Flag to control form visibility (collapsed by default)
@@ -100,12 +102,13 @@ export class OrganizationalMapComponent implements OnInit {
     private snackBar: MatSnackBar
   ) {
     this.editForm = this.fb.group({
-      usuario: [''],
-      nombre: [''],
-      cargo: [''],
-      tipoAcceso: [''],
-      empresa: [''],
-      email: [''],
+      usuario: ['', [Validators.required]],
+      nombre: ['', [Validators.required]],
+      idCargo: ['', [Validators.required]],
+      idPerfil: ['15'], // Using default value as this isn't directly editable in the UI
+      idTipoAcceso: ['', [Validators.required]],
+      idEmpresaContratista: ['', [Validators.required]],
+      eMail: [''],
       clave: [''],
       celular: [''],
     });
@@ -140,12 +143,13 @@ export class OrganizationalMapComponent implements OnInit {
       this.editForm.patchValue({
         usuario: 'JMARQUEZL',
         nombre: 'JORGE MARQUEZ',
-        email: 'JMARQUEZ82@GMAIL.COM',
+        eMail: 'JMARQUEZ82@GMAIL.COM',
         clave: 'Password123', // Contraseña de prueba para desarrollo
         celular: '979773457',
-        cargo: '15',           // ID especificado por el usuario
-        tipoAcceso: '1033',       // Asumiendo un valor por defecto para el tipo de acceso
-        empresa: '18'          // ID especificado por el usuario
+        idCargo: '15',           // ID especificado por el usuario
+        idPerfil: '15',          // ID de perfil por defecto
+        idTipoAcceso: '1033',    // Asumiendo un valor por defecto para el tipo de acceso
+        idEmpresaContratista: '18'  // ID especificado por el usuario
       });
       
       console.log('DEBUG: Formulario rellenado con datos de prueba');
@@ -163,20 +167,39 @@ export class OrganizationalMapComponent implements OnInit {
    * Reset the form to its initial state and mark fields as pristine and untouched
    * to avoid validation styling on empty fields
    */
+  /**
+   * Reset form to its initial state and clear validation states
+   */
   resetForm() {
+    // Reset form values
     this.editForm.reset();
-    this.selectedIndex = null;
-    this.currentEditIndex = null;
     
-    // Mark the form and all controls as pristine and untouched
-    // to avoid validation error messages on empty fields
-    Object.keys(this.editForm.controls).forEach(key => {
-      const control = this.editForm.get(key);
-      control?.markAsPristine();
-      control?.markAsUntouched();
-    });
+    // Reset edit state
+    this.isEditMode = false;
+    this.currentEditIndex = null;
+    this.currentUserId = null;
+    
+    // Mark the entire form as pristine and untouched
     this.editForm.markAsPristine();
     this.editForm.markAsUntouched();
+    
+    // Also reset each control individually to ensure proper state reset
+    Object.keys(this.editForm.controls).forEach(key => {
+      const control = this.editForm.get(key);
+      if (control) {
+        control.markAsPristine();
+        control.markAsUntouched();
+        control.setErrors(null);
+      }
+    });
+    
+    // Initialize form validation state after a slight delay
+    setTimeout(() => {
+      // Re-apply validators if needed
+      if (this.editForm.get('usuario')) {
+        this.editForm.get('usuario')!.updateValueAndValidity();
+      }
+    }, 100);
   }
   
   /**
@@ -244,65 +267,66 @@ export class OrganizationalMapComponent implements OnInit {
       });
   }
 
+  /**
+   * Set up the form for editing an existing user
+   * @param element User data object
+   * @param index Index in tableData array
+   */
   editar(element: any, index: number): void {
-    this.editForm.patchValue(element);
+    // Asegurar que el formulario sea visible cuando se inicia edición
+    this.isFormVisible = true;
+    
+    // Set edit mode flags
+    this.isEditMode = true;
     this.currentEditIndex = index;
+    this.currentUserId = element.userId;
+    
+    // Llenar el formulario con los datos del elemento seleccionado
+    this.editForm.patchValue({
+      usuario: element.usuario,
+      nombre: element.nombre,
+      idCargo: element.idCargo || '',  // Usar ID para el valor del control, no el texto
+      idTipoAcceso: element.idTipoAcceso || '',
+      idEmpresaContratista: element.idEmpresaContratista || '',
+      eMail: element.email,  // Mantener consistente con la API (eMail)
+      celular: element.celular,
+      // No incluimos clave ya que no queremos modificarla automáticamente
+    });
+    
+    console.log('Editing user:', element);
   }
 
-  onSubmit(): void {
-    if (this.editForm.valid) {
+  /**
+   * Elimina un usuario del sistema
+   * @param item El usuario a eliminar
+   * @param index La posición en el array tableData
+   */
+  eliminarUsuario(item: any, index: number): void {
+    const userId = item?.userId;
+    if (userId) {
+      // Implementar funcionalidad de eliminación
       this.isLoading = true;
-      
-      // Obtener los valores del formulario
-      const formValues = this.editForm.value;
-      
-      // Codificar la contraseña en base64 si existe
-      const claveBase64 = formValues.clave ? btoa(formValues.clave) : '';
-      
-      // Crear el body para el servicio según la estructura solicitada
-      const requestBody = {
-        caso: 'Crea',
-        usuario: formValues.usuario,
-        nombre: formValues.nombre,
-        idCargo: formValues.cargo,
-        idPerfil: formValues.cargo, // Asumiendo que idPerfil es igual a idCargo
-        idTipoAcceso: formValues.tipoAcceso,
-        idEmpresaContratista: formValues.empresa,
-        eMail: formValues.email,
-        celular: formValues.celular,
-        clave: claveBase64 // Contraseña codificada en base64
-      };
-      
-      console.log('Enviando solicitud para crear/actualizar usuario:', requestBody);
-      
-      // Llamar al servicio
-      this.usuarioService.createUpdateUser(requestBody)
+      this.usuarioService.deleteUser(userId)
         .pipe(finalize(() => this.isLoading = false))
         .subscribe({
           next: (response) => {
             if (response && response.success) {
-              console.log('Usuario creado/actualizado correctamente:', response);
-              // Mostrar mensaje de éxito
-              this.snackBar.open('Usuario guardado exitosamente', 'Cerrar', {
+              this.snackBar.open('Usuario eliminado correctamente', 'Cerrar', {
                 duration: 3000,
                 panelClass: ['success-snackbar']
               });
-              // Recargar la lista de usuarios
-              this.loadUsers();
-              // Resetear el formulario
-              this.resetForm();
-              // Ocultar el formulario
-              this.isFormVisible = false;
+              // Actualizar la tabla eliminando el registro
+              this.tableData.splice(index, 1);
+              this.tableData = [...this.tableData]; // Create new array reference to trigger change detection
             } else {
-              console.error('Error al crear/actualizar usuario:', response);
-              this.snackBar.open('Error al guardar: ' + (response.message || 'Error desconocido'), 'Cerrar', {
+              this.snackBar.open('Error al eliminar: ' + (response.message || 'Error desconocido'), 'Cerrar', {
                 duration: 5000,
                 panelClass: ['error-snackbar']
               });
             }
           },
           error: (error) => {
-            console.error('Error en la llamada al servicio:', error);
+            console.error('Error al eliminar usuario:', error);
             this.snackBar.open('Error en la comunicación con el servidor', 'Cerrar', {
               duration: 5000,
               panelClass: ['error-snackbar']
@@ -310,12 +334,100 @@ export class OrganizationalMapComponent implements OnInit {
           }
         });
     } else {
-      // Marcar todos los campos como touched para mostrar los errores
-      Object.keys(this.editForm.controls).forEach(key => {
-        const control = this.editForm.get(key);
-        control?.markAsTouched();
+      this.snackBar.open('No se puede eliminar: ID de usuario no válido', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
       });
-      alert('Por favor complete todos los campos requeridos correctamente.');
+    }
+  }
+  
+  // This method is replaced with the complete implementation at the end of the class
+
+  /**
+   * Process form submission for creating or updating a user
+   */
+  onSubmit(): void {
+    if (this.editForm.valid) {
+      this.isLoading = true;
+      
+      // Obtener valores del formulario
+      const formValue = this.editForm.value;
+      
+      // Codificar la contraseña en base64
+      const passwordBase64 = formValue.clave ? btoa(formValue.clave) : '';
+      
+      // Construir el objeto para enviar
+      const userData: any = {
+        caso: this.isEditMode ? 'Modifica' : 'Crea',
+        usuario: formValue.usuario,
+        nombre: formValue.nombre,
+        idCargo: formValue.idCargo,
+        idPerfil: formValue.idPerfil || '15', // Default value if not present
+        idTipoAcceso: formValue.idTipoAcceso,
+        idEmpresaContratista: formValue.idEmpresaContratista,
+        eMail: formValue.eMail || '',
+        celular: formValue.celular || ''
+      };
+      
+      // Agregar idUsuario solo para edición (Modifica)
+      if (this.isEditMode && this.currentUserId) {
+        userData.idUsuario = this.currentUserId;
+      }
+      
+      // Agregar contraseña (solo para creación o si se cambió en edición)
+      if (passwordBase64) {
+        userData.clave = passwordBase64;
+      }
+
+      console.log('Creating/updating user with data:', userData);
+      
+      this.usuarioService.createUpdateUser(userData)
+        .pipe(finalize(() => this.isLoading = false))
+        .subscribe({
+          next: (response) => {
+            console.log('Create/update user response:', response);
+            
+            if (response && response.success) {
+              this.snackBar.open(
+                this.isEditMode ? 'Usuario actualizado correctamente' : 'Usuario creado correctamente', 
+                'Cerrar', 
+                {
+                  duration: 3000,
+                  panelClass: ['success-snackbar']
+                }
+              );
+
+              // Hide form after successful submission
+              this.isFormVisible = false;
+              
+              // Restore form
+              this.resetForm();
+              
+              // Update user list
+              this.loadUsers();
+            } else {
+              this.snackBar.open(`Error: ${response?.message || 'Error desconocido'}`, 'Cerrar', {
+                duration: 5000, 
+                panelClass: ['error-snackbar']
+              });
+            }
+          },
+          error: (error) => {
+            console.error('Error creating/updating user:', error);
+            this.snackBar.open('Error en la comunicación con el servidor', 'Cerrar', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+          }
+        });
+    } else {
+      // Mark all fields as touched to display validation errors
+      this.markFormGroupTouched(this.editForm);
+      
+      this.snackBar.open('Por favor complete todos los campos requeridos', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['warning-snackbar']
+      });
     }
   }
   
@@ -350,6 +462,24 @@ export class OrganizationalMapComponent implements OnInit {
       // Handle any post-dialog actions if needed
     });
   }
+  
+  /**
+   * Mark all controls in a form group as touched to trigger validation display
+   * @param formGroup The FormGroup to mark as touched
+   */
+  markFormGroupTouched(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      if (control) {
+        control.markAsTouched();
+        
+        // If control is a nested form group, recursively mark its controls
+        if (control instanceof FormGroup) {
+          this.markFormGroupTouched(control);
+        }
+      }
+    });
+  }
 
   /**
    * Handle actions from the data table
@@ -362,11 +492,8 @@ export class OrganizationalMapComponent implements OnInit {
         this.editar(event.item, event.index);
         break;
       case 'delete':
-        // Implement delete functionality
-        if (confirm('¿Está seguro que desea eliminar este elemento?')) {
-          this.tableData.splice(event.index, 1);
-          this.tableData = [...this.tableData]; // Create new array reference to trigger change detection
-        }
+        // Llamar a la función para eliminar usuario
+        this.eliminarUsuario(event.item, event.index);
         break;
       case 'obras':
         if (event.item && event.item.userId) {
