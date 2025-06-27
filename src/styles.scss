@@ -5,9 +5,9 @@
   --font-size-xs: 0.75rem;    // 12px
   --font-size-sm: 0.875rem;   // 14px
   --font-size-base: 0.9375rem; // 15px (reduced from standard 16px)
-  --font-size-md: 1rem;      // 16px
-  --font-size-lg: 1.125rem;   // 18px
-  --font-size-xl: 1.25rem;    // 20px
+  --font-size-md: 0.9rem;      // 14px
+  --font-size-lg: 1.100rem;   // 18px
+  --font-size-xl: 1.100rem;    // 20px
   
   // Line height variables
   --line-height-tight: 1.2;
@@ -17,7 +17,7 @@
 
 html, body { 
   height: 100%; 
-  font-size: 15px; // Base font size reduced from default 16px
+  font-size: 14px; // Base font size reduced from default 14px
 }
 
 body { 
@@ -48,6 +48,17 @@ body {
 .mat-button, .mat-raised-button, .mat-icon-button, .mat-stroked-button,
 .mat-flat-button, .mat-fab, .mat-mini-fab {
   font-size: var(--font-size-sm) !important;
+}
+
+// Snackbar styling
+.success-snackbar {
+  background-color: #4caf50;
+  color: white;
+}
+
+.error-snackbar {
+  background-color: #f44336;
+  color: white;
 }
 
 .mat-form-field {

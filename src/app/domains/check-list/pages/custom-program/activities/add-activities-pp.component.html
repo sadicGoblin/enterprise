@@ -92,9 +92,23 @@
           <mat-form-field appearance="fill" class="full-width">
             <mat-label>Colaborador</mat-label>
             <mat-select [(ngModel)]="selectedUser">
-              <mat-option *ngFor="let u of users" [value]="u">{{
-                u
-              }}</mat-option>
+              <!-- Mostrar spinner cuando se están cargando usuarios -->
+              <div *ngIf="loadingUsers" class="loading-spinner-container">
+                <mat-spinner diameter="20"></mat-spinner>
+                <span class="loading-text">Cargando colaboradores...</span>
+              </div>
+              <!-- Mostrar opciones de usuarios -->
+              <mat-option *ngFor="let user of users" [value]="user.IdUsuario">
+                {{ user.nombre }}
+              </mat-option>
+              <!-- Mensaje cuando no hay usuarios -->
+              <mat-option *ngIf="users.length === 0 && !loadingUsers && projectSelectedId" disabled>
+                No hay colaboradores disponibles para esta obra
+              </mat-option>
+              <!-- Mensaje cuando no se ha seleccionado obra -->
+              <mat-option *ngIf="!projectSelectedId && !loadingUsers" disabled>
+                Seleccione una obra primero
+              </mat-option>
             </mat-select>
           </mat-form-field>
 

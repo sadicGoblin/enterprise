@@ -3,6 +3,50 @@
   overflow-x: auto;
 }
 
+.search-container {
+  padding: 16px 0 8px 0;
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: flex-start;
+  
+  .custom-search-field {
+    width: 400px;
+    height: 36px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    border: 2px solid #cccccc;
+    border-radius: 4px;
+    background-color: #fcfcfc;
+    overflow: hidden;
+    
+    input {
+      width: 100%;
+      height: 100%;
+      border: none;
+      outline: none;
+      background: transparent;
+      padding: 0 40px 0 10px;
+      font-size: 14px;
+      color: #333;
+      
+      &:focus {
+        border-color: #aaaaaa;
+      }
+    }
+    
+    mat-icon {
+      position: absolute;
+      right: 10px;
+      color: #777;
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+    }
+  }
+}
+
 .full-width {
   width: 100%;
 }
@@ -38,12 +82,17 @@
 /* Table cell styling for consistent height */
 ::ng-deep .mat-mdc-row {
   height: 40px !important; /* Enforce consistent row height */
+  min-height: 40px !important;
+  max-height: 40px !important;
 }
 
 ::ng-deep .mat-mdc-cell {
   padding: 0 16px !important;
   font-size: 0.9rem !important;
   line-height: 40px !important;
+  height: 40px !important;
+  overflow: hidden !important;
+  white-space: nowrap !important;
 }
 
 /* Text truncation for all cells */

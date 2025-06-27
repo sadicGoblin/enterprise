@@ -18,6 +18,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatCardModule } from '@angular/material/card';
+import { UsuarioService } from '../../../services/usuario.service';
 
 // Interface for project API request body
 interface ProjectApiRequestBody {
@@ -56,6 +57,21 @@ interface SubprocessApiRequestBody {
   idSubProceso: number;
   codigo: number;
   nombre: string | null;
+}
+
+// Interface for user API request body
+interface UserApiRequestBody {
+  caso: string;
+  idObra: number;
+}
+
+// Interface for user data
+interface User {
+  IdUsuario: string;
+  Usuario: string;
+  nombre: string;
+  IdCargo: string;
+  EMail: string;
 }
 
 // Interface for activities API request body
@@ -167,7 +183,9 @@ export class AddActivitiesPpComponent implements OnInit {
   
   // Keep the original arrays for other dropdowns
   periods = ['may.-2025', 'jun.-2025'];
-  users = ['FELIPE GALLARDO', 'CARLA MUÑOZ'];
+  // Lista de usuarios cargada desde la API
+  users: User[] = [];
+  loadingUsers = false;
   stages = ['OBRA GRUESA', 'TERMINACIONES'];
   periodicities = ['DIARIA', 'SEMANAL', 'MENSUAL'];
   categories = ['ALTA', 'MEDIA', 'BAJA'];
@@ -206,7 +224,11 @@ export class AddActivitiesPpComponent implements OnInit {
   
   userId: number | null = null;
   
-  constructor(private proxyService: ProxyService, private dateAdapter: DateAdapter<Date>) {
+  constructor(
+    private proxyService: ProxyService, 
+    private dateAdapter: DateAdapter<Date>,
+    private usuarioService: UsuarioService
+  ) {
     // Set locale to Spanish
     this.dateAdapter.setLocale('es');
     
@@ -263,10 +285,52 @@ export class AddActivitiesPpComponent implements OnInit {
       // Reset stage selection when project changes
       this.stageControl.reset();
       this.stageSelectedId = null;
+      
+      // Load users for the selected project
+      this.loadUsersForProject(Number(this.projectSelectedId));
     } else {
       console.log('Project selection cleared');
       this.projectSelectedId = null;
+      // Clear users when no project is selected
+      this.users = [];
     }
+  }
+  
+  /**
+   * Load users for the selected project from the API
+   * @param projectId The ID of the selected project
+   */
+  loadUsersForProject(projectId: number): void {
+    if (!projectId) return;
+    
+    this.loadingUsers = true;
+    
+    // Prepare the request body
+    const requestBody: UserApiRequestBody = {
+      caso: 'ConsultaUsuariosObra',
+      idObra: projectId
+    };
+    
+    // Call the API to get users for the selected project
+    this.proxyService.post('ws/UsuarioSvcImpl.php', requestBody)
+      .pipe(
+        catchError(error => {
+          console.error('Error loading users:', error);
+          this.loadingUsers = false;
+          return of({ success: false, data: [] });
+        })
+      )
+      .subscribe((response: any) => {
+        this.loadingUsers = false;
+        
+        if (response && response.success && response.data) {
+          this.users = response.data as User[];
+          console.log('Users loaded:', this.users);
+        } else {
+          this.users = [];
+          console.warn('No users found or error in response:', response);
+        }
+      });
   }
   
   /**
@@ -453,6 +517,60 @@ export class AddActivitiesPpComponent implements OnInit {
   tableData: any[] = [];
 
   addActivity() {
+    // Verificar si hay actividades seleccionadas
+    if (!this.selectedActivities || this.selectedActivities.length === 0) {
+      console.error('No hay actividades seleccionadas');
+      return;
+    }
+    
+    // Extraer el periodo en formato YYYYMM a partir de la fecha seleccionada
+    const periodoFormateado = this.selectedDate ? 
+      (this.selectedDate.getFullYear() * 100 + (this.selectedDate.getMonth() + 1)) : 
+      202506;
+    
+    // Para cada actividad seleccionada, enviar una solicitud
+    this.selectedActivities.forEach((actividad, index) => {
+      // Crear el objeto de control utilizando los valores del formulario
+      // y la actividad actual del bucle
+      const controlBody = {
+        "caso": "Crea",
+        "IdControl": 0,
+        "idObra": this.projectSelectedId ? Number(this.projectSelectedId) : 7,
+        "obra": null,
+        "idUsuario": this.selectedUser ? Number(this.selectedUser) : 478,
+        "usuario": null,
+        "periodo": periodoFormateado,
+        "idEtapaConst": this.stageSelectedId ? Number(this.stageSelectedId) : 100,
+        "etapaConst": null,
+        "idSubProceso": this.selectedSubprocesses.length > 0 ? Number(this.selectedSubprocesses[0].idSubproceso) : 616,
+        "subProceso": null,
+        "idAmbito": this.scopeSelectedId ? Number(this.scopeSelectedId) : 1,
+        "ambito": null,
+        "idActividad": Number(actividad.idActividades), // Usa la actividad actual
+        "actividad": null,
+        "idPeriocidad": this.selectedPeriodicity ? (this.selectedPeriodicity === 'DIARIA' ? 7 : (this.selectedPeriodicity === 'SEMANAL' ? 8 : 6)) : 6,
+        "periocidad": null,
+        "idCategoria": this.selectedCategory ? (this.selectedCategory === 'ALTA' ? 2 : (this.selectedCategory === 'MEDIA' ? 1 : 0)) : 0,
+        "idParam": this.riskParameterSelectedId ? Number(this.riskParameterSelectedId) : 0,
+        "dias": null,
+        "fechaControl": "0001-01-01T00:00:00"
+      };
+      
+      // Mostrar objeto en consola
+      console.log(`Control para actividad ${index + 1}/${this.selectedActivities.length}:`, controlBody);
+      
+      // Enviar objeto al servicio POST usando usuarioService
+      this.usuarioService.createControl(controlBody).subscribe({
+        next: (response: any) => {
+          console.log(`Respuesta del servicio para actividad ${actividad.nombre} (${actividad.idActividades}):`, response);
+        },
+        error: (error: any) => {
+          console.error(`Error al enviar la solicitud para actividad ${actividad.nombre} (${actividad.idActividades}):`, error);
+        }
+      });
+    });
+    
+    // Continuar con la lógica existente si todos los campos requeridos están completos
     if (
       this.projectSelectedId &&
       this.selectedUser &&
@@ -487,6 +605,8 @@ export class AddActivitiesPpComponent implements OnInit {
 
       this.tableData.push(activity);
       this.resetFields();
+    } else {
+      console.warn('Algunos campos requeridos están incompletos');
     }
   }
 
