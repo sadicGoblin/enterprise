@@ -1,4 +1,11 @@
 <div class="data-table-container">
+  <!-- Search Bar -->
+  <div *ngIf="showSearchBar" class="search-container">
+    <div class="custom-search-field">
+      <input type="text" placeholder="Buscar..." (keyup)="applyFilter($event)" [(ngModel)]="searchText">
+      <mat-icon>search</mat-icon>
+    </div>
+  </div>
   <table 
     mat-table 
     [dataSource]="dataSource" 

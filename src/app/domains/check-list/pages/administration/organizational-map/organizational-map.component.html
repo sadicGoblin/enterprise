@@ -4,27 +4,53 @@
       <mat-spinner></mat-spinner>
     </div>
     
-    <div class="map-card-content">
+    <div class="map-card-header">
       <h2 class="title">Mapa Organizacional</h2>
+      <button 
+        mat-flat-button 
+        color="primary" 
+        class="add-user-button" 
+        (click)="toggleFormVisibility()" 
+        *ngIf="!isFormVisible">
+        <mat-icon>person_add</mat-icon> Agregar usuario
+      </button>
+    </div>
 
-      <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+    <div class="map-card-content" [class.form-collapsed]="!isFormVisible">
+      <div class="form-container" *ngIf="isFormVisible">
+        <div class="form-header">
+          <h3>Datos de usuario</h3>
+          <button mat-icon-button color="primary" (click)="toggleFormVisibility()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+        <mat-divider></mat-divider>
+        <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
         <div class="form-grid">
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="outline" class="compact-field">
             <mat-label>Nombre</mat-label>
             <input matInput formControlName="nombre" />
           </mat-form-field>
 
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="outline" class="compact-field">
             <mat-label>Usuario</mat-label>
             <input matInput formControlName="usuario" />
           </mat-form-field>
 
-          <mat-form-field appearance="fill">
+        </div>
+        
+        <div class="select-grid">  <!-- Using select-grid class for the smaller layout -->
+          <mat-form-field appearance="outline" class="compact-field">
+            <mat-label>Contraseña</mat-label>
+            <input matInput formControlName="clave" type="password" />
+          </mat-form-field>
+
+          <mat-form-field appearance="outline" class="compact-field">
             <mat-label>eMail</mat-label>
             <input matInput formControlName="email" />
           </mat-form-field>
 
-          <mat-form-field appearance="fill">
+          <mat-form-field appearance="outline" class="compact-field">
             <mat-label>Nº Celular</mat-label>
             <input matInput formControlName="celular" />
           </mat-form-field>
@@ -36,8 +62,9 @@
             [loadFromApi]="true"
             [parameterType]="parameterTypes.CARGO"
             label="Cargo"
-            [appearance]="'fill'"
+            [appearance]="'outline'"
             [required]="true"
+            class="compact-field"
           ></app-custom-select>
 
           <app-custom-select
@@ -45,8 +72,9 @@
             [loadFromApi]="true"
             [parameterType]="parameterTypes.TIPO_ACCESO"
             label="Tipo Acceso"
-            [appearance]="'fill'"
+            [appearance]="'outline'"
             [required]="true"
+            class="compact-field"
           ></app-custom-select>
 
           <app-custom-select
@@ -54,15 +82,22 @@
             [loadFromApi]="true"
             [parameterType]="parameterTypes.EMPRESA"
             label="Empresa Contratista"
-            [appearance]="'fill'"
+            [appearance]="'outline'"
             [required]="true"
+            class="compact-field"
           ></app-custom-select>
         </div>
 
-        <button mat-raised-button color="primary" class="full-width custom-btn">
-          Grabar
-        </button>
+        <div class="button-row">
+          <button mat-stroked-button type="button" (click)="resetForm()">
+            <mat-icon>refresh</mat-icon> Limpiar
+          </button>
+          <button mat-raised-button color="primary" type="submit">
+            <mat-icon>save</mat-icon> Grabar
+          </button>
+        </div>
       </form>
+      </div>
     </div>
 
     <hr />
@@ -74,6 +109,7 @@
       [pageSize]="25"
       [striped]="true"
       (rowAction)="handleTableAction($event)"
+      [showSearchBar]="true"
     ></app-data-table>
   </mat-card>
 </div>

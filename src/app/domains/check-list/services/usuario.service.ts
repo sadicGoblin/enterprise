@@ -57,4 +57,43 @@ export class UsuarioService {
     // El endpoint es el mismo que para getUserWorks
     return this.proxyService.post<any>(this.apiEndpoint, requestBody);
   }
+  
+  /**
+   * Crea o actualiza un usuario en el sistema
+   * @param userData Datos del usuario a crear/actualizar
+   * @returns Observable con la respuesta del API
+   */
+  createUpdateUser(userData: {
+    caso: string,
+    usuario: string,
+    nombre: string,
+    idCargo: number | string,
+    idPerfil: number | string,
+    idTipoAcceso: number | string,
+    idEmpresaContratista: number | string,
+    eMail: string,
+    celular: string,
+    clave: string
+  }): Observable<any> {
+    // Construir el request siguiendo el patrón de obra.service.ts
+    const request = {
+      caso: userData.caso,
+      usuario: userData.usuario,
+      nombre: userData.nombre,
+      idCargo: userData.idCargo,
+      idPerfil: userData.idPerfil,
+      idTipoAcceso: userData.idTipoAcceso,
+      idEmpresaContratista: userData.idEmpresaContratista,
+      eMail: userData.eMail,
+      celular: userData.celular,
+      clave: userData.clave
+    };
+    
+    console.log('[UsuarioService] Creando/actualizando usuario con endpoint:', this.apiEndpoint);
+    console.log('[UsuarioService] Request:', request);
+    
+    // Asegurarse de utilizar proxyService para que se aplique la configuración de proxy de Angular
+    // y use el puerto correcto (8080)
+    return this.proxyService.post<any>(this.apiEndpoint, request);
+  }
 }

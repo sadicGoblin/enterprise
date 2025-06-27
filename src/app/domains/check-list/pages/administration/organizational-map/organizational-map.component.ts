@@ -1,4 +1,4 @@
-import { Component, ViewChild, OnInit } from '@angular/core';
+import { Component, ViewChild, OnInit, isDevMode } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -8,7 +8,10 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { MatDialog } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { WorkMaintenancePopupComponent } from '../../../components/work-maintenance-popup/work-maintenance-popup.component';
 import { AreaMaintenancePopupComponent } from '../../../components/area-maintenance-popup/area-maintenance-popup.component';
 import { CustomSelectComponent, SelectOption, ParameterType } from '../../../../../shared/controls/custom-select/custom-select.component';
@@ -31,7 +34,10 @@ import { forkJoin } from 'rxjs';
     MatButtonModule,
     MatSelectModule,
     MatOptionModule,
+    MatIconModule,
+    MatDividerModule,
     MatProgressSpinnerModule,
+    MatSnackBarModule,
     CustomSelectComponent,
     DataTableComponent,
   ],
@@ -45,6 +51,10 @@ export class OrganizationalMapComponent implements OnInit {
   selectedIndex: number | null = null;
   currentEditIndex: number | null = null;
   isLoading: boolean = false;
+  // Show search bar in the data table
+  showSearchBar: boolean = true;
+  // Flag to control form visibility (collapsed by default)
+  isFormVisible: boolean = false;
   
   // Options for the custom-select components
   cargosOptions: SelectOption[] = [];
@@ -86,7 +96,8 @@ export class OrganizationalMapComponent implements OnInit {
     private fb: FormBuilder, 
     private dialog: MatDialog,
     private subParametroService: SubParametroService,
-    private usuarioService: UsuarioService
+    private usuarioService: UsuarioService,
+    private snackBar: MatSnackBar
   ) {
     this.editForm = this.fb.group({
       usuario: [''],
@@ -95,12 +106,77 @@ export class OrganizationalMapComponent implements OnInit {
       tipoAcceso: [''],
       empresa: [''],
       email: [''],
+      clave: [''],
       celular: [''],
     });
   }
 
   ngOnInit() {
     this.loadData();
+    
+    // Si estamos en modo desarrollo, autollenar el formulario después de cargar los datos
+    if (isDevMode()) {
+      // Esperar a que se carguen los datos de los selects
+      setTimeout(() => {
+        this.fillDebugData();
+      }, 1000);
+    }
+  }
+  
+  /**
+   * SOLO PARA DEBUG: Rellena el formulario con datos de ejemplo
+   */
+  fillDebugData() {
+    if (!isDevMode()) return;
+    
+    console.log('DEBUG: Rellenando formulario con datos de prueba');
+    
+    // Mostrar el formulario si está oculto
+    this.isFormVisible = true;
+    
+    // Esperar un poco para que se inicialicen los controles
+    setTimeout(() => {
+      // Rellenar con los datos del ejemplo usando los IDs específicos
+      this.editForm.patchValue({
+        usuario: 'JMARQUEZL',
+        nombre: 'JORGE MARQUEZ',
+        email: 'JMARQUEZ82@GMAIL.COM',
+        clave: 'Password123', // Contraseña de prueba para desarrollo
+        celular: '979773457',
+        cargo: '15',           // ID especificado por el usuario
+        tipoAcceso: '1033',       // Asumiendo un valor por defecto para el tipo de acceso
+        empresa: '18'          // ID especificado por el usuario
+      });
+      
+      console.log('DEBUG: Formulario rellenado con datos de prueba');
+    }, 500);
+  }
+  
+  /**
+   * Toggle the visibility of the form
+   */
+  toggleFormVisibility() {
+    this.isFormVisible = !this.isFormVisible;
+  }
+  
+  /**
+   * Reset the form to its initial state and mark fields as pristine and untouched
+   * to avoid validation styling on empty fields
+   */
+  resetForm() {
+    this.editForm.reset();
+    this.selectedIndex = null;
+    this.currentEditIndex = null;
+    
+    // Mark the form and all controls as pristine and untouched
+    // to avoid validation error messages on empty fields
+    Object.keys(this.editForm.controls).forEach(key => {
+      const control = this.editForm.get(key);
+      control?.markAsPristine();
+      control?.markAsUntouched();
+    });
+    this.editForm.markAsPristine();
+    this.editForm.markAsUntouched();
   }
   
   /**
@@ -175,9 +251,71 @@ export class OrganizationalMapComponent implements OnInit {
 
   onSubmit(): void {
     if (this.editForm.valid) {
-      if (this.currentEditIndex !== null) {
-        this.tableData[this.currentEditIndex] = this.editForm.value;
-      }
+      this.isLoading = true;
+      
+      // Obtener los valores del formulario
+      const formValues = this.editForm.value;
+      
+      // Codificar la contraseña en base64 si existe
+      const claveBase64 = formValues.clave ? btoa(formValues.clave) : '';
+      
+      // Crear el body para el servicio según la estructura solicitada
+      const requestBody = {
+        caso: 'Crea',
+        usuario: formValues.usuario,
+        nombre: formValues.nombre,
+        idCargo: formValues.cargo,
+        idPerfil: formValues.cargo, // Asumiendo que idPerfil es igual a idCargo
+        idTipoAcceso: formValues.tipoAcceso,
+        idEmpresaContratista: formValues.empresa,
+        eMail: formValues.email,
+        celular: formValues.celular,
+        clave: claveBase64 // Contraseña codificada en base64
+      };
+      
+      console.log('Enviando solicitud para crear/actualizar usuario:', requestBody);
+      
+      // Llamar al servicio
+      this.usuarioService.createUpdateUser(requestBody)
+        .pipe(finalize(() => this.isLoading = false))
+        .subscribe({
+          next: (response) => {
+            if (response && response.success) {
+              console.log('Usuario creado/actualizado correctamente:', response);
+              // Mostrar mensaje de éxito
+              this.snackBar.open('Usuario guardado exitosamente', 'Cerrar', {
+                duration: 3000,
+                panelClass: ['success-snackbar']
+              });
+              // Recargar la lista de usuarios
+              this.loadUsers();
+              // Resetear el formulario
+              this.resetForm();
+              // Ocultar el formulario
+              this.isFormVisible = false;
+            } else {
+              console.error('Error al crear/actualizar usuario:', response);
+              this.snackBar.open('Error al guardar: ' + (response.message || 'Error desconocido'), 'Cerrar', {
+                duration: 5000,
+                panelClass: ['error-snackbar']
+              });
+            }
+          },
+          error: (error) => {
+            console.error('Error en la llamada al servicio:', error);
+            this.snackBar.open('Error en la comunicación con el servidor', 'Cerrar', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+          }
+        });
+    } else {
+      // Marcar todos los campos como touched para mostrar los errores
+      Object.keys(this.editForm.controls).forEach(key => {
+        const control = this.editForm.get(key);
+        control?.markAsTouched();
+      });
+      alert('Por favor complete todos los campos requeridos correctamente.');
     }
   }
   

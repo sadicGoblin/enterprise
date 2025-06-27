@@ -305,13 +305,13 @@ export class WorkMaintenancePopupComponent implements OnInit {
         this.isLoading = false;
         
         // Verificar si la respuesta indica éxito
-        if (response && (response.codigo === 0 || response.glosa === 'Ok')) {
+        if (response && response.success) {
           console.log('Cambios guardados exitosamente');
           // Cerrar el diálogo con resultado exitoso
           this.dialogRef.close({ success: true, affectedWorks: dataItems.length });
         } else {
           // Mostrar error si la respuesta no es exitosa
-          this.errorMessage = 'Error al guardar cambios: ' + (response.glosa || 'Error desconocido');
+          this.errorMessage = 'Error al guardar cambios: ' + (response.message || 'Error desconocido');
           this.hasError = true;
           console.error('Error al guardar cambios:', response);
         }
@@ -329,12 +329,13 @@ export class WorkMaintenancePopupComponent implements OnInit {
    * Close dialog without saving
    */
   close(): void {
-    if (this.isDirty) {
-      if (confirm('¿Está seguro que desea salir sin guardar los cambios?')) {
-        this.dialogRef.close();
-      }
-    } else {
-      this.dialogRef.close();
-    }
+    this.dialogRef.close();
+    // if (this.isDirty) {
+    //   if (confirm('¿Está seguro que desea salir sin guardar los cambios?')) {
+    //     this.dialogRef.close();
+    //   }
+    // } else {
+    //   this.dialogRef.close();
+    // }
   }
 }
