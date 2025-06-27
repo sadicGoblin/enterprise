@@ -1,6 +1,6 @@
 {
   "/ws": {
-    "target": "http://localhost:8080/",
+    "target": "https://inarco-ssoma.favric.cl",
     "secure": false,
     "changeOrigin": true,
     "logLevel": "debug"
