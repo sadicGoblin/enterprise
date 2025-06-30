@@ -2,28 +2,7 @@
 
 <div mat-dialog-content class="inspection-dialog-content">
   <form [formGroup]="inspectionForm">
-    <!-- Tabs para tipo de inspección -->
-    <mat-tab-group (selectedTabChange)="onTabChange($event)" [selectedIndex]="selectedTabIndex">
-      <mat-tab label="Programada">
-        <div class="tab-content">
-          <!-- Contenido específico para Programada -->
-        </div>
-      </mat-tab>
-      <mat-tab label="Informal">
-        <div class="tab-content">
-          <!-- Contenido específico para Informal -->
-        </div>
-      </mat-tab>
-      <mat-tab label="Observación">
-        <div class="tab-content observation-tab">
-          <mat-form-field appearance="outline" class="full-width">
-            <textarea matInput rows="6" formControlName="observation" placeholder="Ingrese su observación aquí"></textarea>
-          </mat-form-field>
-        </div>
-      </mat-tab>
-    </mat-tab-group>
 
-    <!-- Sección de datos principales (común para los tipos de inspección) -->
     <div class="main-form-section">
       <div class="form-row">
         <mat-form-field appearance="outline" class="date-field">
@@ -40,165 +19,112 @@
           </mat-select>
         </mat-form-field>
 
-        <mat-form-field appearance="outline" class="select-field">
-          <mat-label>Asignación Responsable</mat-label>
-          <mat-select formControlName="responsableAsignado">
-            <mat-option *ngFor="let user of userOptions" [value]="user.name">{{ user.name }}</mat-option>
-          </mat-select>
-        </mat-form-field>
+        <app-custom-select
+          label="Asignación Responsable"
+          [formControl]="responsableAsignadoControl"
+          [loadFromApi]="true"
+          [customApiEndpoint]="'/ws/UsuarioSvcImpl.php'"
+          [customApiRequestBody]="usuariosObraRequestBody"
+          [customOptionValueKey]="'idUsuario'"
+          [customOptionLabelKey]="'nombre'"
+          placeholder="Seleccionar Responsable"
+          appearance="outline"
+          class="select-field"
+        ></app-custom-select>
+      </div>
+    </div>
+
+    <div class="inspection-type-selector">
+      <mat-radio-group formControlName="inspectionType" class="inspection-type-radio-group">
+        <mat-radio-button value="programada" color="primary">Programada</mat-radio-button>
+        <mat-radio-button value="informal" color="primary">Informal</mat-radio-button>
+      </mat-radio-group>
+      
+      <mat-form-field appearance="outline" class="full-width observation-field" *ngIf="inspectionForm.get('inspectionType')?.value === 'informal'">
+        <textarea matInput rows="4" formControlName="observation" placeholder="Ingrese su observación aquí"></textarea>
+      </mat-form-field>
+    </div>
+
+    <section class="items-table-section">
+      <h3>Inspección SSTMA</h3>
+      
+      <!-- Indicador de carga -->
+      <div *ngIf="isLoadingInspeccion" class="spinner-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Cargando datos de inspección...</p>
+      </div>
+      
+      <!-- Mensaje de error -->
+      <div *ngIf="errorLoadingInspeccion" class="error-message">
+        <mat-icon color="warn">error</mat-icon>
+        <span>{{ errorLoadingInspeccion }}</span>
+      </div>
+      
+      <div class="inspection-table-container">
+        <table mat-table [dataSource]="items.controls" class="inspection-table">
+          <!-- Columna para botón de ver -->
+          <ng-container matColumnDef="view">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let item; let i = index" class="view-cell">
+              <button mat-icon-button color="primary" type="button" matTooltip="Ver documento">
+                <mat-icon>visibility</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+          
+          <!-- Columna para Condición de Riesgo -->
+          <ng-container matColumnDef="condicionRiesgo">
+            <th mat-header-cell *matHeaderCellDef>Condición Riesgo</th>
+            <td mat-cell *matCellDef="let item; let i = index">{{item.value.condicionRiesgo}}</td>
+          </ng-container>
+          
+          <!-- Columna para Incidencia -->
+          <ng-container matColumnDef="incidencia">
+            <th mat-header-cell *matHeaderCellDef>Incidencia</th>
+            <td mat-cell *matCellDef="let item; let i = index">{{item.value.incidencia}}</td>
+          </ng-container>
+
+          <!-- Columna para Potencial Riesgo -->
+          <ng-container matColumnDef="potencialRiesgo">
+            <th mat-header-cell *matHeaderCellDef>Potencial Riesgo</th>
+            <td mat-cell *matCellDef="let item; let i = index">{{item.value.potencialRiesgo}}</td>
+          </ng-container>
+          
+          <!-- Columna para Clasificación de Hallazgo -->
+          <ng-container matColumnDef="clasificacionHallazgo">
+            <th mat-header-cell *matHeaderCellDef>Clasificación Hallazgo</th>
+            <td mat-cell *matCellDef="let item; let i = index">{{item.value.clasificacionHallazgo}}</td>
+          </ng-container>
+          
+          <!-- Columna para Medida Correctiva -->
+          <ng-container matColumnDef="medidaCorrectiva">
+            <th mat-header-cell *matHeaderCellDef>Medida Correctiva</th>
+            <td mat-cell *matCellDef="let item; let i = index">{{item.value.medidaCorrectiva}}</td>
+          </ng-container>
+          
+          <!-- Columna para Responsable -->
+          <ng-container matColumnDef="responsable">
+            <th mat-header-cell *matHeaderCellDef>Responsable</th>
+            <td mat-cell *matCellDef="let item; let i = index">{{item.value.responsable}}</td>
+          </ng-container>
+          
+          <!-- Columna para Fecha Compromiso -->
+          <ng-container matColumnDef="fechaCompromiso">
+            <th mat-header-cell *matHeaderCellDef>Fecha Compromiso</th>
+            <td mat-cell *matCellDef="let item; let i = index">{{item.value.fechaCompromiso | date:'dd/MM/yyyy'}}</td>
+          </ng-container>
+          
+          <!-- Columna para Fecha Cierre -->
+          <ng-container matColumnDef="fechaCierre">
+            <th mat-header-cell *matHeaderCellDef>Fecha Cierre</th>
+            <td mat-cell *matCellDef="let item; let i = index">{{item.value.fechaCierre | date:'dd/MM/yyyy'}}</td>
+          </ng-container>
         
-        <!-- Botón de imagen/adjunto -->
-        <button mat-icon-button color="primary" class="attach-button" type="button">
-          <mat-icon>attach_file</mat-icon>
-        </button>
-      </div>
-    </div>
-
-    <!-- Navegación y contador de registros -->
-    <div class="record-navigation">
-      <div class="nav-buttons">
-        <button mat-icon-button type="button">
-          <mat-icon>first_page</mat-icon>
-        </button>
-        <button mat-icon-button type="button">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
-        <span class="record-counter">Record 0 of 0</span>
-        <button mat-icon-button type="button">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
-        <button mat-icon-button type="button">
-          <mat-icon>last_page</mat-icon>
-        </button>
-      </div>
-    </div>
-
-    <!-- Tabla de inspecciones -->
-    <div class="inspection-table-container">
-      <table mat-table [dataSource]="items.controls" class="inspection-table">
-        <!-- Columnas de la tabla -->
-        <ng-container matColumnDef="condicionRiesgo">
-          <th mat-header-cell *matHeaderCellDef>Condición Riesgo</th>
-          <td mat-cell *matCellDef="let item; let i = index">
-            <div [formGroup]="item">
-              <input matInput formControlName="condicionRiesgo">
-            </div>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="incidencia">
-          <th mat-header-cell *matHeaderCellDef>Incidencia</th>
-          <td mat-cell *matCellDef="let item; let i = index">
-            <div [formGroup]="item">
-              <mat-select formControlName="incidencia">
-                <mat-option *ngFor="let option of riskOptions" [value]="option">{{ option }}</mat-option>
-              </mat-select>
-            </div>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="potencialRiesgo">
-          <th mat-header-cell *matHeaderCellDef>Potencial Riesgo</th>
-          <td mat-cell *matCellDef="let item; let i = index">
-            <div [formGroup]="item">
-              <mat-select formControlName="potencialRiesgo">
-                <mat-option *ngFor="let option of potentialRiskOptions" [value]="option">{{ option }}</mat-option>
-              </mat-select>
-            </div>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="clasificacionHallazgo">
-          <th mat-header-cell *matHeaderCellDef>Clasificación Hallazgo</th>
-          <td mat-cell *matCellDef="let item; let i = index">
-            <div [formGroup]="item">
-              <mat-select formControlName="clasificacionHallazgo">
-                <mat-option *ngFor="let option of classificationOptions" [value]="option">{{ option }}</mat-option>
-              </mat-select>
-            </div>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="medidaCorrectiva">
-          <th mat-header-cell *matHeaderCellDef>Medida Correctiva</th>
-          <td mat-cell *matCellDef="let item; let i = index">
-            <div [formGroup]="item">
-              <input matInput formControlName="medidaCorrectiva">
-            </div>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="responsable">
-          <th mat-header-cell *matHeaderCellDef>Responsable</th>
-          <td mat-cell *matCellDef="let item; let i = index">
-            <div [formGroup]="item">
-              <mat-select formControlName="responsable">
-                <mat-option *ngFor="let user of userOptions" [value]="user.name">{{ user.name }}</mat-option>
-              </mat-select>
-            </div>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="fechaCompromiso">
-          <th mat-header-cell *matHeaderCellDef>Fec.Comp.</th>
-          <td mat-cell *matCellDef="let item; let i = index">
-            <div [formGroup]="item">
-              <input matInput [matDatepicker]="fcPicker" formControlName="fechaCompromiso">
-              <mat-datepicker-toggle matSuffix [for]="fcPicker"></mat-datepicker-toggle>
-              <mat-datepicker #fcPicker></mat-datepicker>
-            </div>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="fechaCierre">
-          <th mat-header-cell *matHeaderCellDef>Cierre, Fecha y Firma</th>
-          <td mat-cell *matCellDef="let item; let i = index">
-            <div [formGroup]="item">
-              <input matInput [matDatepicker]="fcClosePicker" formControlName="fechaCierre">
-              <mat-datepicker-toggle matSuffix [for]="fcClosePicker"></mat-datepicker-toggle>
-              <mat-datepicker #fcClosePicker></mat-datepicker>
-            </div>
-          </td>
-        </ng-container>
-
-        <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef></th>
-          <td mat-cell *matCellDef="let item; let i = index">
-            <button mat-icon-button color="warn" (click)="removeItem(i)" *ngIf="i > 0">
-              <mat-icon>delete</mat-icon>
-            </button>
-          </td>
-        </ng-container>
-
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
       </table>
-
-      <div class="add-item-button">
-        <button mat-button color="primary" type="button" (click)="addItem()">
-          <mat-icon>add</mat-icon> Agregar ítem
-        </button>
-      </div>
     </div>
-    
-    <!-- Barra de navegación de tabla inferior -->
-    <div class="record-navigation bottom">
-      <div class="nav-buttons">
-        <button mat-icon-button type="button">
-          <mat-icon>first_page</mat-icon>
-        </button>
-        <button mat-icon-button type="button">
-          <mat-icon>chevron_left</mat-icon>
-        </button>
-        <span class="record-counter">Record 1 of 1</span>
-        <button mat-icon-button type="button">
-          <mat-icon>chevron_right</mat-icon>
-        </button>
-        <button mat-icon-button type="button">
-          <mat-icon>last_page</mat-icon>
-        </button>
-      </div>
-    </div>
+    </section>
   </form>
 </div>
 

@@ -1,6 +1,8 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
+import { InspectionModalComponent } from '../../components/planification-table/components/inspection-modal/inspection-modal.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -85,9 +87,12 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   
   @ViewChild('collaboratorSelect') collaboratorSelect!: CustomSelectComponent;
   @ViewChild(PlanificationTableComponent) planificationTable!: PlanificationTableComponent;
-  constructor(private proxyService: ProxyService) {
-    // Initialize with current date
-    this.selectedPeriod = new Date();
+  constructor(
+    private proxyService: ProxyService,
+    private dialog: MatDialog
+  ) {
+    // Initialize with April 1, 2025 as default date
+    this.selectedPeriod = new Date(2025, 3, 1); // Month is 0-indexed (3 = April)
   }
   
   ngOnInit(): void {
@@ -715,6 +720,35 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     
     // Calculate compliance percentage
     activity.compliance = totalScheduled > 0 ? Math.round((realized / totalScheduled) * 100) : 0;
+  }
+  
+  /**
+   * Abre el modal de inspección SSTMA
+   * @param activityId ID opcional de la actividad seleccionada
+   */
+  openInspectionModal(activityId?: number): void {
+    const dialogRef = this.dialog.open(InspectionModalComponent, {
+      width: '90vw',
+      maxWidth: '1400px', // Aumentado a 1400px para mejor visualización
+      disableClose: true,
+      autoFocus: false,
+      data: { 
+        activityId: activityId,
+        projectId: this.selectedProjectId,  // Agregar el ID del proyecto seleccionado
+        inspectionData: null
+      }
+    });
+
+    // Registrar para depuración
+    console.log('Abriendo modal de inspección con projectId:', this.selectedProjectId);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Inspección guardada:', result);
+        // Aquí iría la lógica para guardar la inspección en el backend
+        // y actualizar las actividades completadas si es necesario
+      }
+    });
   }
   
 

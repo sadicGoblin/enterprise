@@ -8,8 +8,9 @@
 .horizontal-calendar-wrapper {
   width: 100%;
   overflow-x: auto;
-  max-height: 600px;
-  overflow-y: auto;
+  height: auto;
+  max-height: none;
+  overflow-y: visible;
 }
 
 .horizontal-calendar-table {
