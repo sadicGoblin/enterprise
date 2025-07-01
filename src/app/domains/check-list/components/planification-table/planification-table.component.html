@@ -40,8 +40,11 @@
               [ngClass]="{'day-assigned': activity.scheduledDays.includes(day) && !(activity.idControl | activityCompleted:day:completedActivities), 
                          'day-completed': (activity.idControl | activityCompleted:day:completedActivities),
                          'weekend-column': isWeekend(day)}">
+            <!-- Condicional: si está completada es clickeable, si no es solo visualización -->
             <button mat-icon-button class="status-icon-button" 
-                    (click)="cycleActivityStatus(activity, day)">
+                    [disabled]="!isActivityCompleted(activity, day)" 
+                    (click)="onStatusClick(activity, day)"
+                    [matTooltip]="isActivityCompleted(activity, day) ? 'Ver detalles de la actividad completada' : ''">
               <span class="material-symbols-outlined status-icon"
                     [ngClass]="{
                       'status-disabled': !activity.scheduledDays.includes(day),
@@ -59,11 +62,6 @@
       </ng-container>
     </table>
     
-    <div class="action-buttons">
-      <button mat-raised-button color="primary" class="inspection-button" (click)="openInspectionModal()">
-        <mat-icon>assignment</mat-icon> Abrir Inspección SSTMA
-      </button>
-    </div>
       
     <!-- Save button at bottom of table -->
     <div class="table-actions">

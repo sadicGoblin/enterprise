@@ -4,6 +4,34 @@ $border-color: #ccc;
 $background-color: #f9f9f9;
 $scale-factor: 0.9; // User prefiere texto más pequeño
 
+// Estilos para el encabezado del diálogo con botón de cierre
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: $primary-color;
+  color: white;
+  padding: 0;
+  margin: 0 !important;
+  position: relative;
+  
+  h2 {
+    margin: 0;
+    padding: 10px 16px;
+    font-size: calc(18px * $scale-factor);
+    font-weight: 500;
+  }
+  
+  .close-button {
+    color: white;
+    margin-right: 8px;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
 // Estilos generales del diálogo
 :host {
   display: block;
@@ -28,39 +56,152 @@ $scale-factor: 0.9; // User prefiere texto más pequeño
 }
 
 // Contenido del diálogo
+::ng-deep .mat-mdc-dialog-container {
+  .mdc-dialog__surface {
+    width: 90vw !important;
+    max-width: 1400px !important; /* Aumentado para pantallas grandes */
+  }
+}
+
 .inspection-dialog-content {
   padding: 0 16px;
   max-height: 80vh;
-  max-width: 95vw;
-  width: 95vw;
   box-sizing: border-box;
   font-size: calc(14px * $scale-factor);
+  width: 100%;
+  overflow-x: hidden; /* Evita scroll horizontal */
 }
 
-// Tabs
-::ng-deep .mat-mdc-tab-group {
+// Estilos para el spinner de carga
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
   margin-bottom: 16px;
+  background-color: rgba(245, 245, 245, 0.8);
+  border-radius: 4px;
   
-  .mat-mdc-tab-header {
-    margin-bottom: 16px;
-    border-bottom: 1px solid $border-color;
+  p {
+    margin-top: 10px;
+    color: #555;
+    font-size: 14px;
+  }
+}
+
+// Estilos para el mensaje de error
+.error-message {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  margin-bottom: 16px;
+  background-color: #fff3f3;
+  border: 1px solid #ffcdd2;
+  border-radius: 4px;
+  
+  mat-icon {
+    margin-right: 8px;
+    color: #f44336;
   }
   
-  .mat-mdc-tab-label-content {
+  p {
+    color: #d32f2f;
+    font-size: calc(14px * $scale-factor);
+    margin: 0;
+  }
+}
+
+// Estilos para mensaje sin datos
+.no-data-message {
+  padding: 16px;
+  text-align: center;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  
+  p {
+    color: #757575;
+    font-style: italic;
+    margin: 0;
     font-size: calc(14px * $scale-factor);
   }
 }
 
-.tab-content {
-  padding: 8px 0;
+// Estilos para la tabla de inspección
+.inspection-table-wrapper {
+  margin: 10px 0 20px;
+  overflow-x: auto;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
-.observation-tab {
-  min-height: 100px;
+.inspection-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: calc(13px * $scale-factor);
+  background: white;
+  
+  th, td {
+    border: 1px solid #e0e0e0;
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: middle;
+  }
+  
+  th {
+    background-color: #f5f5f5;
+    font-weight: 500;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    color: #555;
+  }
+  
+  tbody tr {
+    &:nth-child(even) {
+      background-color: #fafafa;
+    }
+    
+    &:hover {
+      background-color: #f0f7ff;
+    }
+  }
+  
+  .action-column {
+    width: 48px;
+    text-align: center;
+    padding: 0;
+  }
 }
 
-// Sección principal del formulario
+// Estilos para los radio buttons de tipo inspección
+.inspection-type-selector {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background-color: $background-color;
+  border-radius: 4px;
+  border: 1px solid $border-color;
+}
+
+.inspection-type-radio-group {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 12px;
+  
+  ::ng-deep .mat-mdc-radio-button {
+    .mdc-form-field {
+      font-size: calc(14px * $scale-factor);
+    }
+  }
+}
+
+.observation-field {
+  margin-top: 8px;
+}
+
 .main-form-section {
+  margin-top: 15px;
   display: flex;
   flex-direction: column;
   margin-bottom: 16px;
@@ -68,6 +209,7 @@ $scale-factor: 0.9; // User prefiere texto más pequeño
   padding: 16px;
   border-radius: 4px;
   border: 1px solid $border-color;
+  width: 100%;
 }
 
 .form-row {
@@ -75,16 +217,11 @@ $scale-factor: 0.9; // User prefiere texto más pequeño
   flex-wrap: wrap;
   gap: 16px;
   align-items: center;
+  width: 100%;
   
   .date-field, .select-field {
     flex: 1;
-    min-width: 200px;
-    max-width: 300px;
-  }
-  
-  .attach-button {
-    height: 40px;
-    width: 40px;
+    min-width: 150px;
   }
 }
 
@@ -96,6 +233,19 @@ $scale-factor: 0.9; // User prefiere texto más pequeño
     min-height: auto;
     padding-top: 12px;
     padding-bottom: 12px;
+  }
+  
+  &.table-form-field {
+    margin: -0.5em 0;
+    
+    .mat-mdc-form-field-infix {
+      padding-top: 8px;
+      padding-bottom: 8px;
+    }
+    
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
   }
 }
 
@@ -130,35 +280,50 @@ $scale-factor: 0.9; // User prefiere texto más pequeño
 
 // Tabla de inspecciones
 .inspection-table-container {
-  margin-top: 16px;
+  margin-top: 20px;
   overflow-x: auto;
+  margin-bottom: 20px;
+}
+
+.inspection-table {
+  width: 100%;
+  min-width: 1000px; /* Para evitar que la tabla se comprima demasiado */
   
-  .inspection-table {
-    width: 100%;
-    border-collapse: collapse;
+  // Estilos para los encabezados de columna
+  th.mat-header-cell {
+    font-weight: 500;
+    padding: 8px 12px;
+    text-align: center;
+    white-space: nowrap;
+    background-color: #f5f5f5;
+    font-size: calc(13px * $scale-factor);
+    color: #555;
+    border-bottom: 2px solid #ddd;
+  }
+  
+  // Estilos para las celdas de datos
+  td.mat-cell {
+    padding: 8px 12px;
+    border-bottom: 1px solid #e0e0e0;
+    vertical-align: middle;
+    text-align: left; /* Alinear texto a la izquierda para mejor legibilidad */
+    color: #333;
     font-size: calc(12px * $scale-factor);
-    
-    th {
-      background-color: #f0f0f0;
-      padding: 8px;
-      text-align: left;
-      white-space: nowrap;
-      font-weight: 500;
-    }
-    
-    td {
-      padding: 4px 8px;
-      border-bottom: 1px solid #e0e0e0;
-      
-      input, mat-select {
-        width: 100%;
-        font-size: calc(13px * $scale-factor);
-      }
-    }
-    
-    .mat-mdc-form-field {
-      width: 100%;
-    }
+  }
+  
+  // Estilos específicos para celdas especiales
+  .view-cell {
+    width: 60px;
+    text-align: center;
+  }
+  
+  // Estilos para filas alternadas
+  tr.mat-row:nth-child(even) {
+    background-color: rgba(0, 0, 0, 0.02);
+  }
+  
+  tr.mat-row:hover {
+    background-color: rgba(0, 0, 0, 0.04);
   }
 }
 
@@ -172,6 +337,8 @@ $scale-factor: 0.9; // User prefiere texto más pequeño
   padding: 8px 16px 16px;
   display: flex;
   align-items: center;
+  width: 100%;
+  justify-content: space-between;
   
   .exit-button {
     background-color: #f44336;
@@ -222,6 +389,23 @@ $scale-factor: 0.9; // User prefiere texto más pequeño
   .mat-mdc-form-field-subscript-wrapper {
     display: none;
   }
+  
+  .mat-mdc-form-field-flex {
+    align-items: center;
+  }
+  
+  .table-form-field {
+    .mat-mdc-text-field-wrapper {
+      padding-left: 8px;
+      padding-right: 8px;
+    }
+    
+    .mdc-line-ripple {
+      display: none;
+    }
+  }
+  
+  /* Ya no necesitamos esto ya que la tabla es de sólo lectura */
 }
 
 /* Ajustes responsivos */

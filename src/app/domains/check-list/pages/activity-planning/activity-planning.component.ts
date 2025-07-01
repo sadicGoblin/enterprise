@@ -1,6 +1,9 @@
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
+import { MatDialog } from '@angular/material/dialog';
+import { InspectionModalComponent } from '../../components/planification-table/components/inspection-modal/inspection-modal.component';
+import { CheckListModalComponent } from '../../components/planification-table/components/checklist-modal/checklist-modal.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -20,6 +23,7 @@ import { ProxyService } from '../../../../core/services/proxy.service';
 import { ControlApiRequest, ControlApiResponse } from '../../models/control-api.models';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { ArtModalComponent } from '../../components/planification-table/components/art-modal/art-modal.component';
 
 // Activity interface definition - extended from the one used in PlanificationTableComponent
 export interface Activity extends PlanificationActivity {
@@ -75,6 +79,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   isLoading = false;
   selectedProjectId: string | null = null;
   selectedCollaboratorId: string | null = null;
+  selectedCollaboratorName: string | null = null;
   apiEndpoint = '/ws/ControlSvcImpl.php';
   
   // Store the formatted period for API calls
@@ -85,9 +90,12 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   
   @ViewChild('collaboratorSelect') collaboratorSelect!: CustomSelectComponent;
   @ViewChild(PlanificationTableComponent) planificationTable!: PlanificationTableComponent;
-  constructor(private proxyService: ProxyService) {
-    // Initialize with current date
-    this.selectedPeriod = new Date();
+  constructor(
+    private proxyService: ProxyService,
+    private dialog: MatDialog
+  ) {
+    // Initialize with April 1, 2025 as default date
+    this.selectedPeriod = new Date(2025, 3, 1); // Month is 0-indexed (3 = April)
   }
   
   ngOnInit(): void {
@@ -300,13 +308,17 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   }
   
   onCollaboratorSelectionChange(selectedCollaborator: SelectOption | null): void {
-    console.log('Selected collaborator:', selectedCollaborator);
+    console.log('Colaborador seleccionado:', selectedCollaborator);
     
     if (selectedCollaborator) {
       this.selectedCollaboratorId = selectedCollaborator.value;
-      // Note: No longer triggering API call automatically
+      this.selectedCollaboratorName = selectedCollaborator.label;
+      console.log('ID del colaborador seleccionado:', this.selectedCollaboratorId);
+      console.log('Nombre del colaborador seleccionado:', this.selectedCollaboratorName);
     } else {
       this.selectedCollaboratorId = null;
+      this.selectedCollaboratorName = null;
+      console.log('Colaborador deseleccionado');
     }
   }
 
@@ -378,6 +390,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
         })
       )
       .subscribe(response => {
+        console.log(this.apiEndpoint, requestBody)
         console.log('API Response received:', response);
         
         // Check if the response is an object with a data property containing an array
@@ -715,6 +728,85 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     
     // Calculate compliance percentage
     activity.compliance = totalScheduled > 0 ? Math.round((realized / totalScheduled) * 100) : 0;
+  }
+  
+  /**
+   * Abre el modal de inspección SSTMA
+   * @param activityId ID opcional de la actividad seleccionada
+   */
+  openInspectionModal(activityId?: number): void {
+    const dialogRef = this.dialog.open(InspectionModalComponent, {
+      width: '90vw',
+      maxWidth: '1400px', // Aumentado a 1400px para mejor visualización
+      disableClose: true,
+      autoFocus: false,
+      data: { 
+        activityId: activityId,
+        projectId: this.selectedProjectId,  // Agregar el ID del proyecto seleccionado
+        inspectionData: null
+      }
+    });
+
+    // Registrar para depuración
+    console.log('Abriendo modal de inspección con projectId:', this.selectedProjectId);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Inspección guardada:', result);
+        // Aquí iría la lógica para guardar la inspección en el backend
+        // y actualizar las actividades completadas si es necesario
+      }
+    });
+  }
+
+  openChecklistModal(activityId?: number): void {
+    const dialogRef = this.dialog.open(CheckListModalComponent, {
+      width: '90vw',
+      maxWidth: '1400px', // Aumentado a 1400px para mejor visualización
+      disableClose: true,
+      autoFocus: false,
+      data: { 
+        activityId: activityId,
+        projectId: this.selectedProjectId,  // Agregar el ID del proyecto seleccionado
+        checklistData: null
+      }
+    });
+
+    // Registrar para depuración
+    console.log('Abriendo modal de checklist con projectId:', this.selectedProjectId);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Checklist guardada:', result);
+        // Aquí iría la lógica para guardar la checklist en el backend
+        // y actualizar las actividades completadas si es necesario
+      }
+    });
+  }
+
+  openArtModal(activityId?: number): void {
+    const dialogRef = this.dialog.open(ArtModalComponent, {
+      width: '90vw',
+      maxWidth: '1400px', // Aumentado a 1400px para mejor visualización
+      disableClose: true,
+      autoFocus: false,
+      data: { 
+        activityId: activityId,
+        projectId: this.selectedProjectId,  // Agregar el ID del proyecto seleccionado
+        artData: null
+      }
+    });
+
+    // Registrar para depuración
+    console.log('Abriendo modal de art con projectId:', this.selectedProjectId);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Art guardada:', result);
+        // Aquí iría la lógica para guardar la art en el backend
+        // y actualizar las actividades completadas si es necesario
+      }
+    });
   }
   
 
