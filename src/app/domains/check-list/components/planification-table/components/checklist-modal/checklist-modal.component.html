@@ -1,0 +1,167 @@
+<div class="dialog-header">
+  <h2 mat-dialog-title>ZONAS COMUNES :: CHECK LIST BODEGA DE GASES</h2>
+  <button mat-icon-button class="close-button" (click)="onCancel()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<div mat-dialog-content class="check-list-dialog-content">
+  <form [formGroup]="checkListForm">
+
+    <div class="header-section">
+      <div class="top-row inspection-row">
+        <div class="form-group inspector">
+          <div class="label-field">Inspeccionada Por</div>
+          <app-custom-select
+            [formControl]="inspectionByControl"
+            [loadFromApi]="true"
+            [customApiEndpoint]="'/ws/UsuarioSvcImpl.php'"
+            [customApiRequestBody]="usuariosObraRequestBody"
+            [customOptionValueKey]="'idUsuario'"
+            [customOptionLabelKey]="'nombre'"
+            appearance="outline"
+            class="select-field"
+          ></app-custom-select>
+        </div>
+        <div class="form-group fecha-hora">
+          <div class="label-field">Fecha y Hora</div>
+          <div class="date-time-container">
+            <mat-form-field appearance="outline" class="date-field">
+              <input matInput [matDatepicker]="pickerInspection" formControlName="inspectionDate2" placeholder="DD/MM/YYYY">
+              <mat-datepicker-toggle matIconSuffix [for]="pickerInspection"></mat-datepicker-toggle>
+              <mat-datepicker #pickerInspection></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="time-field">
+              <input matInput type="time" formControlName="inspectionTime" placeholder="HH:MM">
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+      
+      <div class="top-row review-row">
+        <div class="form-group reviewer">
+          <div class="label-field">Revisado Por</div>
+          <app-custom-select
+            [formControl]="reviewedByControl"
+            [loadFromApi]="true"
+            [customApiEndpoint]="'/ws/UsuarioSvcImpl.php'"
+            [customApiRequestBody]="usuariosObraRequestBody"
+            [customOptionValueKey]="'idUsuario'"
+            [customOptionLabelKey]="'nombre'"
+            appearance="outline"
+            class="select-field"
+          ></app-custom-select>
+        </div>
+        <div class="form-group fecha-hora">
+          <div class="label-field">Fecha y Hora</div>
+          <div class="date-time-container">
+            <mat-form-field appearance="outline" class="date-field">
+              <input matInput [matDatepicker]="pickerReview" formControlName="reviewDate" placeholder="DD/MM/YYYY">
+              <mat-datepicker-toggle matIconSuffix [for]="pickerReview"></mat-datepicker-toggle>
+              <mat-datepicker #pickerReview></mat-datepicker>
+            </mat-form-field>
+            <mat-form-field appearance="outline" class="time-field">
+              <input matInput type="time" formControlName="reviewTime" placeholder="HH:MM">
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+      
+      <div class="review-status-bar" [class.reviewed]="isReviewed">
+        <mat-icon>check_circle</mat-icon>
+        <span>Revisado</span>
+      </div>
+      
+      <div class="attachments-bar">
+        <div class="attachments-label">Adjuntos:</div>
+        <div class="attachments-content">
+          <button mat-icon-button color="primary" type="button">
+            <mat-icon>attach_file</mat-icon>
+          </button>
+          <span class="attachment-count">0 archivos</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de elementos a inspeccionar -->
+    <div class="check-list-table-container">
+      <!-- Spinner de carga -->
+      <div *ngIf="isLoading" class="spinner-overlay">
+        <mat-spinner diameter="40"></mat-spinner>
+        <div class="loading-text">Cargando elementos a inspeccionar...</div>
+      </div>
+      
+      <!-- Mensaje de error -->
+      <div *ngIf="errorLoading" class="error-message">
+        <mat-icon color="warn">error</mat-icon>
+        <span>{{ errorLoading }}</span>
+        <button mat-button color="primary" (click)="loadCheckListData(data?.id)">Reintentar</button>
+      </div>
+
+      <!-- Tabla con datos -->
+      <table class="check-list-table" *ngIf="!isLoading && !errorLoading">
+        <thead>
+          <tr>
+            <th class="item-column">Elemento a Inspeccionar</th>
+            <th class="answer-column">Si</th>
+            <th class="answer-column">No</th>
+            <th class="answer-column">N.A.</th>
+            <th class="date-column">Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container formArrayName="checkItems">
+            <tr *ngFor="let item of checkItemsControls; let i = index" [formGroupName]="i">
+              <td class="item-description">
+                {{ item.value.description }}
+                <!-- Añadimos el ID oculto como un campo escondido para asegurar que se envíe correctamente -->
+                <input type="hidden" formControlName="id">
+              </td>
+              <td class="answer-cell">
+                <mat-checkbox formControlName="yes" (change)="updateCheckboxes(i, 'yes')"></mat-checkbox>
+              </td>
+              <td class="answer-cell">
+                <mat-checkbox formControlName="no" (change)="updateCheckboxes(i, 'no')"></mat-checkbox>
+              </td>
+              <td class="answer-cell">
+                <mat-checkbox formControlName="na" (change)="updateCheckboxes(i, 'na')"></mat-checkbox>
+              </td>
+              <td class="date-cell">
+                {{ item.value.date | date:'dd-MM-yyyy' }}
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+      
+      <!-- Mensaje cuando no hay elementos -->
+      <div *ngIf="!isLoading && !errorLoading && checkItemsControls.length === 0" class="no-items-message">
+        <mat-icon>info</mat-icon>
+        <span>No se encontraron elementos para inspeccionar.</span>
+      </div>
+    </div>
+
+    <div class="bottom-section">
+      <div class="observations-section">
+        <div class="observations-label">Observaciones</div>
+        <mat-form-field appearance="outline" class="observations-field">
+          <textarea matInput rows="2" formControlName="observations"></textarea>
+        </mat-form-field>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<div mat-dialog-actions class="dialog-actions">
+  <button mat-stroked-button class="exit-button" (click)="onCancel()">
+    <mat-icon>exit_to_app</mat-icon> Salir
+  </button>
+  <span class="spacer"></span>
+  <button mat-stroked-button class="pdf-button" (click)="saveAsPDF()">
+    <mat-icon class="pdf-icon">picture_as_pdf</mat-icon> Exportar PDF
+  </button>
+  <button mat-raised-button color="primary" class="save-button" (click)="onSave()">
+    <mat-icon>save</mat-icon> Guardar
+  </button>
+</div>

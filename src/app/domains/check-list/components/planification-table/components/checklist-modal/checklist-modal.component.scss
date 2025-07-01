@@ -1,0 +1,562 @@
+// Variables globales para el componente
+$scale-factor: 0.9; // Factor de escala global como se menciona en las memorias
+$primary-color: #3f51b5;
+$secondary-color: #f5f5f5;
+$border-color: #e0e0e0;
+$success-color: #4caf50;
+
+// Estilos para el encabezado del diálogo con botón de cierre
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px * $scale-factor;
+  
+  h2 {
+    margin: 0;
+    font-size: 18px * $scale-factor;
+  }
+  
+  .close-button {
+    
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+    
+    mat-icon {
+      font-size: 18px * $scale-factor;
+      height: 18px * $scale-factor;
+      width: 18px * $scale-factor;
+      line-height: 18px * $scale-factor;
+    }
+  }
+}
+
+// Estilos para el modal de check list
+.check-list-dialog-content {
+  min-height: 500px * $scale-factor;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 20px;
+  
+  // Ajustar todos los tamaños de texto según el factor de escala
+  font-size: 14px * $scale-factor;
+  
+  h2, h3, h4 {
+    font-size: inherit;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  // Hacer que los inputs sean más pequeños
+  ::ng-deep .mat-form-field-infix {
+    width: auto;
+    font-size: 14px * $scale-factor;
+  }
+
+  ::ng-deep .mat-form-field-wrapper {
+    padding-bottom: 0.8em * $scale-factor;
+  }
+}
+
+// Header section with compact layout
+.header-section {
+  margin-bottom: 16px * $scale-factor;
+  background-color: $secondary-color;
+  padding: 12px * $scale-factor;
+  border-radius: 4px;
+
+  // Top row with fields in a single row
+  .top-row {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 12px * $scale-factor;
+    margin-bottom: 12px * $scale-factor;
+    
+    &.inspection-row {
+      padding-bottom: 12px * $scale-factor;
+      border-bottom: 1px dashed $border-color;
+    }
+    
+    &.review-row {
+      padding-bottom: 12px * $scale-factor;
+      border-bottom: 1px dashed $border-color;
+    }
+    
+    .form-group {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .label-field {
+      font-size: 13px * $scale-factor;
+      font-weight: 500;
+      margin-bottom: 4px * $scale-factor;
+      color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .date-time-container {
+      display: flex;
+      gap: 8px * $scale-factor;
+      
+      .date-field {
+        flex: 3;
+      }
+      
+      .time-field {
+        flex: 2;
+      }
+    }
+    
+    .select-field, .date-field {
+      width: 100%;
+    }
+  }
+
+  // Barra de estado de revisión
+  .review-status-bar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px * $scale-factor;
+    margin: 10px * $scale-factor 0;
+    background-color: #4CAF50; // Color verde por defecto
+    border-radius: 4px;
+    color: white;
+    font-weight: 500;
+    font-size: 13px * $scale-factor;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    mat-icon {
+      margin-right: 8px * $scale-factor;
+      font-size: 18px * $scale-factor;
+      height: 18px * $scale-factor;
+      width: 18px * $scale-factor;
+    }
+    
+    span {
+      letter-spacing: 0.5px;
+    }
+  }
+  
+  // Attachments section
+  .attachments-bar {
+    display: flex;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.03);
+    padding: 6px * $scale-factor 12px * $scale-factor;
+    border-radius: 4px;
+    margin-top: 8px * $scale-factor;
+    
+    .attachments-label {
+      font-size: 12px * $scale-factor;
+      font-weight: 500;
+      margin-right: 8px * $scale-factor;
+    }
+    
+    .attachments-content {
+      display: flex;
+      align-items: center;
+    }
+    
+    .attachment-count {
+      font-size: 12px * $scale-factor;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    
+    button {
+      transform: scale($scale-factor);
+    }
+  }
+}
+
+// Sección principal superior
+.main-form-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px * $scale-factor;
+  margin-bottom: 20px * $scale-factor;
+  background-color: $secondary-color;
+  padding: 16px * $scale-factor;
+  border-radius: 4px;
+}
+
+// Estilos para la sección del inspector
+.inspector-section {
+  padding: 10px * $scale-factor;
+  border: 1px solid $border-color;
+  border-radius: 4px;
+}
+
+// Estilos para la sección del revisor
+.reviewer-section {
+  padding: 10px * $scale-factor;
+  border: 1px solid $border-color;
+  border-radius: 4px;
+  position: relative;
+  
+  .section-title {
+    background-color: $primary-color;
+    color: white;
+    padding: 6px * $scale-factor 12px * $scale-factor;
+    text-align: center;
+    font-weight: 500;
+    border-radius: 4px 4px 0 0;
+    margin: -10px * $scale-factor -10px * $scale-factor 10px * $scale-factor;
+  }
+  
+  .revisado-container {
+    position: absolute;
+    top: 10px * $scale-factor;
+    right: 10px * $scale-factor;
+  }
+  
+  .revisado-badge {
+    display: flex;
+    align-items: center;
+    background-color: $success-color;
+    color: white;
+    padding: 4px * $scale-factor 8px * $scale-factor;
+    border-radius: 4px;
+    font-size: 12px * $scale-factor;
+    
+    mat-icon {
+      font-size: 14px * $scale-factor;
+      height: 14px * $scale-factor;
+      width: 14px * $scale-factor;
+      margin-right: 4px * $scale-factor;
+    }
+  }
+}
+
+// Sección de adjuntos
+.adjuntos-section {
+  padding: 10px * $scale-factor;
+  border: 1px solid $border-color;
+  border-radius: 4px;
+  
+  .section-title {
+    font-weight: 500;
+    margin-bottom: 8px * $scale-factor;
+  }
+  
+  .adjuntos-content {
+    min-height: 100px * $scale-factor;
+  }
+}
+
+// Filas de formulario
+.form-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px * $scale-factor;
+  
+  .label-field {
+    min-width: 80px * $scale-factor;
+    font-weight: 500;
+    font-size: 13px * $scale-factor;
+  }
+  
+  // Reducir el tamaño de los campos de formulario
+  ::ng-deep .mat-form-field {
+    width: 100%;
+    font-size: 13px * $scale-factor;
+    
+    .mat-form-field-wrapper {
+      padding-bottom: 0.75em;
+    }
+    
+    .mat-form-field-infix {
+      padding: 0.5em 0;
+      border-top: 0.5em solid transparent;
+    }
+  }
+}
+
+// Tabla de check list
+.check-list-table-container {
+  margin-bottom: 20px * $scale-factor;
+  border: 1px solid $border-color;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative; // Para posicionar el spinner correctamente
+  min-height: 100px * $scale-factor;
+  
+  // Spinner de carga
+  .spinner-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.85);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 10;
+    
+    .loading-text {
+      margin-top: 16px * $scale-factor;
+      font-size: 14px * $scale-factor;
+      color: rgba(0, 0, 0, 0.7);
+    }
+  }
+  
+  // Mensaje de error
+  .error-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px * $scale-factor;
+    text-align: center;
+    background-color: #fff2f2;
+    color: #f44336;
+    
+    mat-icon {
+      font-size: 32px * $scale-factor;
+      height: 32px * $scale-factor;
+      width: 32px * $scale-factor;
+      margin-bottom: 10px * $scale-factor;
+    }
+    
+    span {
+      font-size: 14px * $scale-factor;
+      margin-bottom: 12px * $scale-factor;
+    }
+    
+    button {
+      font-size: 13px * $scale-factor;
+    }
+  }
+  
+  // Mensaje cuando no hay elementos
+  .no-items-message {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px * $scale-factor;
+    text-align: center;
+    color: rgba(0, 0, 0, 0.5);
+    
+    mat-icon {
+      font-size: 32px * $scale-factor;
+      height: 32px * $scale-factor;
+      width: 32px * $scale-factor;
+      margin-bottom: 10px * $scale-factor;
+    }
+    
+    span {
+      font-size: 14px * $scale-factor;
+    }
+  }
+}
+
+.check-list-table {
+  width: 100%;
+  border-collapse: collapse;
+  
+  th, td {
+    border: 1px solid $border-color;
+    padding-left: 5px;
+    font-size: 13px * $scale-factor;
+  }
+  
+  th {
+    background-color: #f0f0f0;
+    font-weight: 500;
+    text-align: center;
+  }
+  
+  .item-column {
+    width: 60%;
+    text-align: left;
+  }
+  
+  .answer-column {
+    width: 5%;
+  }
+  
+  .date-column {
+    width: 7%;
+  }
+  
+  .item-description {
+    font-size: 13px * $scale-factor;
+  }
+  
+  .answer-cell {
+    text-align: center;
+    
+    ::ng-deep .mat-checkbox {
+      .mat-checkbox-layout {
+        margin: 0;
+      }
+      
+      .mat-checkbox-inner-container {
+        height: 16px * $scale-factor;
+        width: 16px * $scale-factor;
+      }
+    }
+  }
+  
+  .date-cell {
+    text-align: center;
+    font-size: 12px * $scale-factor;
+  }
+}
+
+// Sección inferior con navegación y observaciones
+.bottom-section {
+  display: flex;
+  gap: 16px * $scale-factor;
+  margin-bottom: 16px * $scale-factor;
+  
+  @media (max-width: 768px) {
+    flex-direction: column;
+  }
+  
+  // Navegación de registros compacta
+  .record-navigation.compact {
+    display: flex;
+    align-items: center;
+    background-color: #f0f0f0;
+    padding: 8px * $scale-factor;
+    border-radius: 4px;
+    flex-shrink: 0;
+    border: 1px solid $border-color;
+    
+    button {
+      transform: scale($scale-factor);
+      line-height: 24px * $scale-factor;
+      
+      mat-icon {
+        font-size: 18px * $scale-factor;
+        height: 18px * $scale-factor;
+        width: 18px * $scale-factor;
+      }
+    }
+    
+    .record-indicator-text {
+      font-size: 12px * $scale-factor;
+      margin: 0 4px * $scale-factor;
+      color: rgba(0, 0, 0, 0.7);
+      min-width: 40px * $scale-factor;
+      text-align: center;
+    }
+  }
+  
+  // Sección de observaciones
+  .observations-section {
+    flex-grow: 1;
+    border: 1px solid $border-color;
+    border-radius: 4px;
+    padding: 8px * $scale-factor 12px * $scale-factor;
+    background-color: #f9f9f9;
+    
+    .observations-label {
+      font-weight: 500;
+      margin-bottom: 6px * $scale-factor;
+      font-size: 12px * $scale-factor;
+      color: rgba(0, 0, 0, 0.6);
+    }
+    
+    .observations-field {
+      width: 100%;
+      margin-bottom: 0;
+      
+      ::ng-deep .mat-form-field-wrapper {
+        padding-bottom: 0;
+      }
+      
+      ::ng-deep .mat-form-field-infix {
+        padding: 8px * $scale-factor 0;
+      }
+      
+      textarea {
+        font-size: 13px * $scale-factor;
+      }
+    }
+  }
+}
+
+.record-navigation-bottom {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 16px * $scale-factor;
+  
+  .record-indicators {
+    display: flex;
+    align-items: center;
+    font-size: 12px * $scale-factor;
+    
+    mat-icon {
+      font-size: 16px * $scale-factor;
+      height: 16px * $scale-factor;
+      width: 16px * $scale-factor;
+      cursor: pointer;
+      
+      &:hover {
+        color: $primary-color;
+      }
+    }
+  }
+}
+
+// Botones de acción en el pie del diálogo
+.dialog-actions {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px * $scale-factor 16px * $scale-factor;
+  
+  .exit-button {
+    display: flex;
+    align-items: center;
+    color: #f44336;
+    
+    mat-icon {
+      margin-right: 4px * $scale-factor;
+    }
+  }
+  
+  .spacer {
+    flex: 1;
+  }
+  
+  .pdf-button {
+    margin-right: 8px * $scale-factor;
+    background-color: #f0f0f0;
+    
+    .pdf-icon {
+      color: #f44336;
+      font-weight: bold;
+    }
+  }
+  
+  .save-button {
+    display: flex;
+    align-items: center;
+    
+    mat-icon {
+      margin-right: 4px * $scale-factor;
+    }
+  }
+  
+  ::ng-deep .mat-button, ::ng-deep .mat-raised-button {
+    font-size: 13px * $scale-factor;
+    padding: 0 12px * $scale-factor;
+    min-width: auto;
+    line-height: 34px * $scale-factor;
+  }
+}
+
+// Ajustes para visualización en dispositivos móviles
+@media (max-width: 768px) {
+  .main-form-section {
+    grid-template-columns: 1fr;
+  }
+}

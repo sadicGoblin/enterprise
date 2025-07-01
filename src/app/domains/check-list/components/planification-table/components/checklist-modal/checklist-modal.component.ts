@@ -1,0 +1,515 @@
+import { Component, OnInit, Inject, AfterViewInit, ViewChild } from '@angular/core';
+import { FormBuilder, FormGroup, FormArray, FormControl, Validators, AbstractControl } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { DateAdapter } from '@angular/material/core';
+import { CommonModule } from '@angular/common';
+import { MatButtonModule } from '@angular/material/button';
+import { MatCardModule } from '@angular/material/card';
+import { MatNativeDateModule } from '@angular/material/core';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MatTableModule } from '@angular/material/table';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { CustomSelectComponent } from '../../../../../../shared/controls/custom-select/custom-select.component';
+import { ProxyService } from '../../../../../../core/services/proxy.service';
+import { Observable, catchError, finalize, of } from 'rxjs';
+
+// Interfaces para las respuestas de API
+export interface ApiResponse<T> {
+  success: boolean;
+  code: number;
+  message: string;
+  data: T;
+}
+
+// Respuesta de la primera API (ConsultaDetalle)
+export interface ConsultaDetalleResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  data: ElementoInspeccionar[];
+}
+
+export interface ElementoInspeccionar {
+  idElementoInspeccionar: string;
+  idTrabajoAlturaDetalle: string;
+  idTrabajoAltura: string;
+  IdSubParam: string;
+  elementoInspeccionar: string; // Este es el texto descriptivo
+  si: string;
+  no: string;
+  na: string;
+  idResponsable: string;
+  fecha: string;
+}
+
+// Respuesta de la segunda API (ConsultaLista)
+export interface ConsultaListaResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  data: ElementoInspeccionarRespuesta[];
+}
+
+export interface ElementoInspeccionarRespuesta {
+  idTrabajoAlturaDetalle: string;
+  idTrabajoAltura: string;
+  idElementoInspeccionar: string;
+  si: string;
+  no: string;
+  na: string;
+  idResponsable: string;
+  fecha: string;
+}
+
+// Interface para usuarios
+export interface UserOption {
+  id: string;
+  name: string;
+}
+
+// Interface para los items del checklist en el formulario
+export interface CheckListItem {
+  id: number;
+  description: string;
+  yes: boolean;
+  no: boolean;
+  na: boolean;
+  date: string; // Siempre usar string para evitar problemas de tipo con el formulario
+}
+
+@Component({
+  selector: 'app-checklist-modal',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatDialogModule,
+    MatButtonModule,
+    MatIconModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    MatDatepickerModule,
+    MatNativeDateModule,
+    ReactiveFormsModule,
+    FormsModule,
+    MatCardModule,
+    MatTableModule,
+    MatCheckboxModule,
+    MatTooltipModule,
+    MatProgressSpinnerModule,
+    CustomSelectComponent
+  ],
+  templateUrl: './checklist-modal.component.html',
+  styleUrl: './checklist-modal.component.scss'
+})
+export class CheckListModalComponent implements OnInit, AfterViewInit {
+  checkListForm: FormGroup;
+  reviewedByControl = new FormControl('');
+  inspectionByControl = new FormControl(''); // Control para el inspector en la sección superior
+  currentRecord = 1;
+  totalRecords = 1;
+  isLoading = false;
+  errorLoading = '';
+  isReviewed = false; // Propiedad para controlar si el checklist ha sido revisado
+  
+  @ViewChild(CustomSelectComponent) reviewedBySelect!: CustomSelectComponent;
+
+  // Objeto de solicitud para cargar usuarios por obra
+  usuariosObraRequestBody = {
+    caso: 'ConsultaUsuariosObra',
+    idObra: 1, // ID predeterminado, actualizar según sea necesario
+    idUsuario: 0
+  };
+  
+  // Opciones para los selectores
+  userOptions: UserOption[] = [
+    { id: '1', name: 'FELIPE GALLARDO' },
+    { id: '2', name: 'GERMAN MEDINA' },
+    { id: '3', name: 'JUAN PÉREZ' },
+  ];
+  
+  positionOptions: string[] = [
+    'Jefe de Obra',
+    'Supervisor de Seguridad',
+    'Inspector de Calidad',
+    'Encargado de Bodega',
+    'Prevencionista',
+    'Ingeniero Residente'
+  ];
+
+  // Datos de muestra para los elementos del check list
+  defaultCheckItems: CheckListItem[] = [
+    { id: 1, description: '¿Los gases comprimidos se almacenan en una bodega exclusiva?', yes: true, no: false, na: false, date: '2023-09-15' },
+    { id: 2, description: '¿Los gases comprimidos se encuentran identificados de acuerdo a la norma?', yes: true, no: false, na: false, date: '2023-09-15' },
+    { id: 3, description: '¿La bodega de gases comprimidos se encuentra separada de las otras bodegas?', yes: false, no: false, na: true, date: '2023-09-15' },
+    { id: 4, description: '¿La bodega de gases comprimidos se encuentra señalizada?', yes: true, no: false, na: false, date: '2023-09-15' },
+    { id: 5, description: '¿La bodega de gases comprimidos, está construida de acuerdo al estándar?', yes: true, no: true, na: false, date: '2023-09-15' },
+    { id: 6, description: '¿Los gases comprimidos se encuentran almacenados en forma vertical?', yes: true, no: false, na: false, date: '2023-09-15' },
+    { id: 7, description: '¿Existe un encargado de la bodega?', yes: true, no: false, na: false, date: '2023-09-15' },
+    { id: 8, description: '¿Existe extintor en la bodega?', yes: true, no: false, na: false, date: '2023-09-15' },
+    { id: 9, description: '¿Existe un inventario de la bodega de gases comprimidos?', yes: true, no: false, na: false, date: '2023-09-15' },
+    { id: 10, description: '¿Los cilindros de gases comprimidos se encuentran en buen estado?', yes: true, no: false, na: false, date: '2023-09-15' },
+    { id: 11, description: 'SE ENCUENTRAN DISPONIBLES LAS HOJAS DE SEGURIDAD DE CADA UNO DE LOS CILINDROS DE GASES COMPRIMIDOS ALMACENADOS?', yes: true, no: false, na: false, date: '2023-09-15' }
+  ];
+
+  constructor(
+    private fb: FormBuilder,
+    public dialogRef: MatDialogRef<CheckListModalComponent>,
+    private dateAdapter: DateAdapter<Date>,
+    private proxyService: ProxyService,
+    @Inject(MAT_DIALOG_DATA) public data: any
+  ) {
+    // Inicializar el formulario
+    const defaultDate = this.formatDate(new Date('2025-04-22')); // Formatear como string YYYY-MM-DD
+
+    this.checkListForm = this.fb.group({
+      inspectedBy: [defaultDate, Validators.required],
+      inspectionDate: [defaultDate, Validators.required], // Usar string ya formateado
+      inspectionDate2: [defaultDate, Validators.required], // Usar string ya formateado
+      inspectionTime: ['12:00', Validators.required],
+      reviewedBy: ['', Validators.required],
+      reviewerPosition: ['', Validators.required],
+      reviewDate: [defaultDate, Validators.required], // Usar string ya formateado
+      reviewTime: ['12:00', Validators.required],
+      checkItems: this.fb.array([]),
+      observations: ['']
+    });
+    
+    // Configurar el formato de fecha en español
+    this.dateAdapter.setLocale('es');
+    
+    // Inicializar elementos del check list
+    this.loadDefaultData();
+  }
+
+  ngOnInit(): void {
+    // Configurar el formato de fecha
+    this.dateAdapter.setLocale('es');
+    
+    // Cargar datos iniciales
+    this.loadDefaultData();
+    
+    // Mostrar los datos recibidos por el modal para depuración
+    console.log('Datos recibidos por el modal:', this.data);
+    
+    // Cargar los elementos del checklist
+    if (this.data?.idTrabajoAltura || this.data?.idControl) {
+      // Si tenemos idControl y dia, o idTrabajoAltura, cargar desde API
+      this.loadCheckListData(this.data?.idTrabajoAltura || '');
+    } else {
+      console.warn('No se proporcionaron parámetros para cargar datos del checklist');
+      // Si no hay parámetros, cargar elementos de muestra
+      this.loadCheckListItems(this.defaultCheckItems);
+    }
+  }
+
+  ngAfterViewInit(): void {
+    // Acciones después de que la vista se inicializa
+    setTimeout(() => {
+      // Establecer valores iniciales si es necesario
+      if (this.data?.reviewedBy) {
+        this.reviewedByControl.setValue(this.data.reviewedBy);
+      }
+    });
+  }
+
+  // Getter para acceder a los elementos del FormArray
+  get checkItemsControls(): FormGroup[] {
+    return (this.checkListForm.get('checkItems') as FormArray).controls as FormGroup[];
+  }
+
+  // Actualizar checkboxes (solo permite seleccionar uno por fila)
+  updateCheckboxes(index: number, field: 'yes' | 'no' | 'na'): void {
+    const itemForm = (this.checkListForm.get('checkItems') as FormArray).at(index) as FormGroup;
+    
+    // Desmarcar las otras casillas
+    if (field === 'yes') {
+      itemForm.get('no')?.setValue(false);
+      itemForm.get('na')?.setValue(false);
+    } else if (field === 'no') {
+      itemForm.get('yes')?.setValue(false);
+      itemForm.get('na')?.setValue(false);
+    } else if (field === 'na') {
+      itemForm.get('yes')?.setValue(false);
+      itemForm.get('no')?.setValue(false);
+    }
+    
+    // Actualizar la fecha al marcar una casilla con el formato correcto (como string)
+    const fechaActual = this.formatDate(new Date());
+    itemForm.get('date')?.setValue(fechaActual);
+  }
+
+  // Cargar los elementos del checklist
+  loadCheckListItems(items: CheckListItem[]): void {
+    const itemsArray = this.checkListForm.get('checkItems') as FormArray;
+    
+    // Limpiar elementos existentes
+    while (itemsArray.length) {
+      itemsArray.removeAt(0);
+    }
+    
+    // Agregar nuevos elementos
+    items.forEach(item => {
+      itemsArray.push(
+        this.fb.group({
+          id: [item.id],
+          description: [item.description, Validators.required],
+          yes: [item.yes],
+          no: [item.no],
+          na: [item.na],
+          date: [item.date]
+        })
+      );
+    });
+  }
+
+  // Cargar datos del checklist desde la API
+  loadCheckListData(id: string): void {
+    this.isLoading = true;
+    this.errorLoading = '';
+    
+    // Obtener los parámetros necesarios de los datos pasados al modal
+    const idControl = this.data?.idControl || 0;
+    const dia = this.data?.dia || 0;
+    
+    // Cuerpo de solicitud para la API de ConsultaDetalle
+    const consultaDetalleBody = {
+      "caso": "ConsultaDetalle",
+      "idTrabajoAltura": 0,
+      "idControl": idControl,
+      "dia": dia,
+      "idArea": 0,
+      "fecha": "0001-01-01T00:00:00",
+      "idRealizadoPor": 0,
+      "idRealizadoPorCargo": 0,
+      "RealizadoPorfecha": "0001-01-01T00:00:00",
+      "idRevisadoPor": 0,
+      "idRevisadoPorCargo": 0,
+      "RevisadoPorFecha": "0001-01-01T00:00:00",
+      "observaciones": null,
+      "idSubParametro": 100,
+      "idInspeccionadoPor": 0
+    };
+    
+    console.log('Consultando elementos a inspeccionar:', consultaDetalleBody);
+    
+    // Primer paso: cargar los elementos a inspeccionar
+    this.proxyService.post<ConsultaDetalleResponse>('/ws/TrabajoAlturaSvcImpl.php', consultaDetalleBody)
+      .pipe(
+        catchError(error => {
+          console.error('Error al cargar elementos del checklist:', error);
+          this.errorLoading = 'Error al cargar los elementos. Intente nuevamente.';
+          this.isLoading = false;
+          return of(null);
+        })
+      )
+      .subscribe(response => {
+        console.log('Respuesta ConsultaDetalle:', response);
+        
+        if (response && response.success && response.code === 200 && response.data && response.data.length > 0) {
+          // Crear items de checklist con los datos de la API
+          const elementos = response.data;
+          const checklistItems: CheckListItem[] = elementos.map(elemento => ({
+            id: parseInt(elemento.idElementoInspeccionar),
+            description: elemento.elementoInspeccionar, // Usa elementoInspeccionar en lugar de descripcion
+            yes: false,
+            no: false,
+            na: false,
+            date: ''
+          }));
+          
+          console.log('Items de checklist creados:', checklistItems);
+          
+          // Cargar los items en el formulario
+          this.loadCheckListItems(checklistItems);
+          
+          // Segundo paso: cargar los valores de los checks (si/no/na) para cada elemento
+          // Pasamos el id de trabajo en altura que viene de los datos del modal
+          // this.loadCheckValues(this.data?.idTrabajoAltura || '');
+          this.loadCheckValues("11118");
+
+        } else {
+          this.errorLoading = 'No se pudieron cargar los elementos a inspeccionar';
+          this.isLoading = false;
+          console.error('Error en la respuesta:', response);
+        }
+      });
+  }
+
+  // Cargar los valores de los checks (si/no/na) desde la API
+  loadCheckValues(idTrabajoAltura: string): void {
+    if (!idTrabajoAltura || idTrabajoAltura === '') {
+      console.warn('ID de trabajo altura no proporcionado');
+      this.isLoading = false;
+      return;
+    }
+
+    const consultaListaBody = {
+      "caso": "ConsultaLista",
+      "idTrabajoAlturaDetalle": 0,
+      "idTrabajoAltura": idTrabajoAltura ? parseInt(idTrabajoAltura) : 0,
+      "idElementoInspeccionar": 0,
+      "elementoInspeccionar": null,
+      "si": false,
+      "no": false,
+      "na": false,
+      "idResponsable": 0,
+      "fecha": "0001-01-01T00:00:00"
+    };
+    
+    console.log('Consultando valores de checks:', consultaListaBody);
+    
+    this.proxyService.post<ConsultaListaResponse>('/ws/TrabajoAlturaSvcImpl.php', consultaListaBody)
+      .pipe(
+        finalize(() => this.isLoading = false),
+        catchError(error => {
+          console.error('Error al cargar valores de checks:', error);
+          this.errorLoading = 'Error al cargar los valores seleccionados. Intente nuevamente.';
+          return of(null);
+        })
+      )
+      .subscribe(response => {
+        console.log('Respuesta ConsultaLista:', response);
+        
+        if (response && response.success && response.code === 200 && response.data && response.data.length > 0) {
+          const respuestas = response.data;
+          console.log('Valores de checks obtenidos:', respuestas);
+          
+          // Actualizar los valores de los checks en el formulario según el idElementoInspeccionar
+          const checkItemsArray = this.checkListForm.get('checkItems') as FormArray;
+          
+          // Para cada respuesta, buscar el control correspondiente y actualizar sus valores
+          respuestas.forEach(respuesta => {
+            const idElemento = parseInt(respuesta.idElementoInspeccionar);
+            
+            // Buscar el índice del elemento en el FormArray
+            for (let i = 0; i < checkItemsArray.length; i++) {
+              const itemGroup = checkItemsArray.at(i) as FormGroup;
+              if (itemGroup.get('id')?.value === idElemento) {
+                console.log(`Actualizando elemento ${idElemento}:`, respuesta);
+                
+                // Actualizar los valores según la respuesta de la API
+                itemGroup.get('yes')?.setValue(respuesta.si === "1");
+                itemGroup.get('no')?.setValue(respuesta.no === "1");
+                itemGroup.get('na')?.setValue(respuesta.na === "1");
+                
+                // Actualizar la fecha si está disponible
+                if (respuesta.fecha && respuesta.fecha !== "0001-01-01T00:00:00") {
+                  try {
+                    // Actualizamos el valor de la fecha en el formulario como un string formateado
+                    const fechaObj = new Date(respuesta.fecha);
+                    // Verificamos que la fecha sea válida
+                    if (!isNaN(fechaObj.getTime())) {
+                      const fechaFormateada = this.formatDate(fechaObj);
+                      itemGroup.get('date')?.setValue(fechaFormateada);
+                    } else {
+                      console.warn('Fecha inválida recibida de la API:', respuesta.fecha);
+                      itemGroup.get('date')?.setValue('');
+                    }
+                  } catch (err) {
+                    console.error('Error al procesar la fecha:', err);
+                    itemGroup.get('date')?.setValue('');
+                  }
+                } else {
+                  // Si no hay fecha o es la fecha por defecto, establecer string vacío
+                  itemGroup.get('date')?.setValue('');
+                }
+                break; // Ya encontramos el elemento, salimos del bucle
+              }
+            }
+          });
+        } else {
+          console.log('No se encontraron valores de checks o hubo un error en la respuesta');
+        }
+      });
+  }
+
+  // Método para cargar datos iniciales y configuraciones por defecto
+  loadDefaultData(): void {
+    // Vincular el control de revisado con el formulario
+    this.reviewedByControl.valueChanges.subscribe(value => {
+      this.checkListForm.get('reviewedBy')?.setValue(value);
+    });
+    
+    // Vincular el control de inspeccionado con el formulario
+    this.inspectionByControl.valueChanges.subscribe(value => {
+      this.checkListForm.get('inspectedBy')?.setValue(value);
+    });
+  }
+  
+  // Método auxiliar para formatear fechas consistentemente
+  private formatDate(date: Date): string {
+    if (!date) return '';
+    return date.toISOString().split('T')[0]; // Formato YYYY-MM-DD
+  }
+  
+  // Método auxiliar para marcar todos los campos del formulario como tocados (para validación)
+  private markFormGroupTouched(formGroup: FormGroup): void {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      } else if (control instanceof FormArray) {
+        control.controls.forEach(ctrl => {
+          if (ctrl instanceof FormGroup) {
+            this.markFormGroupTouched(ctrl);
+          } else {
+            ctrl.markAsTouched();
+          }
+        });
+      }
+    });
+  }
+
+  // Acciones de los botones
+  onCancel(): void {
+    this.dialogRef.close(null);
+  }
+
+  saveAsPDF(): void {
+    console.log('Guardar como PDF', this.checkListForm.value);
+    // Implementar generación de PDF
+  }
+
+  onSave(): void {
+    if (this.checkListForm.valid) {
+      console.log('Formulario válido, enviando datos:', this.checkListForm.value);
+      
+      // Preparar datos para guardar
+      const checkItems = (this.checkListForm.get('checkItems') as FormArray).controls.map(
+        (control: AbstractControl) => {
+          const group = control as FormGroup;
+          return {
+            idElementoInspeccionar: group.get('id')?.value,
+            si: group.get('yes')?.value ? "1" : "0",
+            no: group.get('no')?.value ? "1" : "0",
+            na: group.get('na')?.value ? "1" : "0",
+            fecha: group.get('date')?.value || '',
+            idResponsable: this.checkListForm.get('inspectedBy')?.value || '0'
+          };
+        }
+      );
+      
+      // Aquí se implementaría la llamada para guardar los datos
+      // Por ahora solo cerramos el modal con los datos
+      this.dialogRef.close({
+        ...this.checkListForm.value,
+        checkItems: checkItems,
+        idTrabajoAltura: this.data?.idTrabajoAltura || '',
+        idControl: this.data?.idControl || ''
+      });
+    } else {
+      // Marcar todos los controles como tocados para mostrar errores
+      this.markFormGroupTouched(this.checkListForm);
+    }
+  }
+}

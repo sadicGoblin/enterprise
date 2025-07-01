@@ -1,0 +1,121 @@
+// Variables globales para el componente
+$scale-factor: 0.9; // Factor de escala global como se menciona en las memorias
+$primary-color: #3f51b5;
+$secondary-color: #f5f5f5;
+$border-color: #e0e0e0;
+$success-color: #4caf50;
+
+// Estilos para el encabezado del diálogo con botón de cierre
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px * $scale-factor;
+  padding-bottom: 10px * $scale-factor;
+  border-bottom: 1px solid $border-color;
+  padding: 16px * $scale-factor;
+  
+  h2 {
+    margin: 0;
+    font-size: 18px * $scale-factor;
+    font-weight: 500;
+  }
+  
+  .close-button {
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+    
+    mat-icon {
+      font-size: 18px * $scale-factor;
+      height: 18px * $scale-factor;
+      width: 18px * $scale-factor;
+      line-height: 18px * $scale-factor;
+    }
+  }
+}
+
+// Estilos para el contenido del modal
+.art-dialog-content {
+  min-height: 400px * $scale-factor;
+  max-height: 80vh;
+  overflow-y: auto;
+  font-size: 14px * $scale-factor;
+  
+  // Ajustar todos los tamaños de texto según el factor de escala
+  h3, h4 {
+    font-size: inherit;
+    margin: 0;
+    font-weight: 500;
+  }
+
+  // Hacer que los inputs sean más pequeños
+  ::ng-deep .mat-form-field-infix {
+    width: auto;
+    font-size: 14px * $scale-factor;
+  }
+  
+  // Secciones de formulario
+  .form-section {
+    margin-bottom: 20px * $scale-factor;
+    padding-bottom: 15px * $scale-factor;
+    border-bottom: 1px dashed $border-color;
+    padding: 20px * $scale-factor;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+    
+    .section-title {
+      font-size: 16px * $scale-factor;
+      font-weight: 500;
+      margin-bottom: 12px * $scale-factor;
+      color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .form-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px * $scale-factor;
+      margin-bottom: 12px * $scale-factor;
+      
+      .form-group {
+        flex: 1;
+        min-width: 200px * $scale-factor;
+        
+        mat-form-field, app-custom-select {
+          width: 100%;
+        }
+      }
+    }
+    
+    .checkbox-section {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px * $scale-factor;
+      margin-bottom: 12px * $scale-factor;
+      
+      .circle-checkbox {
+        margin-right: 16px * $scale-factor;
+        
+        ::ng-deep .mat-checkbox-inner-container {
+          border-radius: 50%;
+        }
+      }
+    }
+  }
+}
+
+// Ajustes para botones de acción
+::ng-deep .mat-dialog-actions {
+  padding: 12px * $scale-factor 0;
+  margin-bottom: 0;
+  
+  button {
+    font-size: 14px * $scale-factor;
+    
+    &:not(:last-child) {
+      margin-right: 8px * $scale-factor;
+    }
+  }
+}
