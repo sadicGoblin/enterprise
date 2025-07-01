@@ -4,6 +4,34 @@ $border-color: #ccc;
 $background-color: #f9f9f9;
 $scale-factor: 0.9; // User prefiere texto más pequeño
 
+// Estilos para el encabezado del diálogo con botón de cierre
+.dialog-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: $primary-color;
+  color: white;
+  padding: 0;
+  margin: 0 !important;
+  position: relative;
+  
+  h2 {
+    margin: 0;
+    padding: 10px 16px;
+    font-size: calc(18px * $scale-factor);
+    font-weight: 500;
+  }
+  
+  .close-button {
+    color: white;
+    margin-right: 8px;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
 // Estilos generales del diálogo
 :host {
   display: block;

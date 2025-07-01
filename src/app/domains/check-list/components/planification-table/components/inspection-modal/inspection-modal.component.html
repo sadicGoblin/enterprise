@@ -1,4 +1,9 @@
-<h2 mat-dialog-title>Inspección SSTMA</h2>
+<div class="dialog-header">
+  <h2 mat-dialog-title>Inspección SSTMA</h2>
+  <button mat-icon-button class="close-button" (click)="onCancel()" matTooltip="Cerrar">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
 
 <div mat-dialog-content class="inspection-dialog-content">
   <form [formGroup]="inspectionForm">
@@ -83,8 +88,10 @@
           <tbody>
             <tr *ngFor="let item of items.controls; let i = index">
               <td class="action-column">
-                <button mat-icon-button color="primary" type="button" matTooltip="Ver documento">
-                  <mat-icon>visibility</mat-icon>
+                <button mat-icon-button color="primary" type="button" matTooltip="Ver imagen" 
+                  (click)="mostrarImagenEnPopup(item.value.foto)" 
+                  [disabled]="!item.value.foto">
+                  <mat-icon>image</mat-icon>
                 </button>
               </td>
               <td>{{item.value.condicionRiesgo || 'No disponible'}}</td>

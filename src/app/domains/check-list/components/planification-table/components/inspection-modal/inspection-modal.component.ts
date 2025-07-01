@@ -1,6 +1,7 @@
 import { Component, OnInit, Inject, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, FormControl } from '@angular/forms';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
+import { ImagenDialogComponent } from './imagen-dialog.component';
 import { DateAdapter } from '@angular/material/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
@@ -88,7 +89,7 @@ interface UserOption {
     CustomSelectComponent
   ]
 })
-export class InspectionModalComponent implements OnInit, AfterViewInit {
+export class InspectionModalComponent implements OnInit {
   inspectionForm: FormGroup;
   selectedTabIndex = 0;
   // Control para el selector de responsable asignado
@@ -262,11 +263,12 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
   
   constructor(
     private fb: FormBuilder,
+    private dialogRef: MatDialogRef<InspectionModalComponent>,
     private dateAdapter: DateAdapter<Date>,
-    private proxyService: ProxyService,
     private cdRef: ChangeDetectorRef,
-    @Inject(MAT_DIALOG_DATA) public data: any,
-    public dialogRef: MatDialogRef<InspectionModalComponent>
+    private proxyService: ProxyService,
+    private dialog: MatDialog, // Añadir MatDialog para abrir el popup de imagen
+    @Inject(MAT_DIALOG_DATA) public data: any
   ) {
     this.dateAdapter.setLocale('es');
     
@@ -458,6 +460,10 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
         map(resultados => {
           console.log('Nombres descriptivos obtenidos:', resultados);
           
+          // Capturar la foto en base64 si existe
+          const foto = d['foto'] || null;
+          console.log('Foto en base64 encontrada:', foto ? 'Sí, longitud: ' + foto.length : 'No disponible');
+          
           // Crear un FormGroup para el item usando los campos formateados directamente
           const item = this.fb.group({
             condicionRiesgo: [condicionRiesgo || 'Sin condición de riesgo', Validators.required],
@@ -468,7 +474,9 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
             responsable: [resultados.responsable || 'Sin responsable asignado', Validators.required],
             // Usar directamente las fechas formateadas
             fechaCompromisoFormateada: [formatearFecha(fechaCompromiso), Validators.required],
-            fechaCierreFormateada: [formatearFecha(fechaCierre), Validators.required]
+            fechaCierreFormateada: [formatearFecha(fechaCierre), Validators.required],
+            // Guardar la foto en base64
+            foto: [foto]
           });
           
           console.log('FormGroup creado con datos traducidos:', item.value);
@@ -477,6 +485,9 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
         }),
         catchError(error => {
           console.error('Error al obtener nombres descriptivos:', error);
+          // Capturar la foto en base64 si existe incluso en caso de error
+          const foto = d['foto'] || null;
+          
           // En caso de error, crear el item con los IDs originales
           const item = this.fb.group({
             condicionRiesgo: [condicionRiesgo || 'Sin condición de riesgo', Validators.required],
@@ -486,7 +497,8 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
             medidaCorrectiva: [medidaCorrectiva || 'Sin medida correctiva', Validators.required],
             responsable: [responsableId || 'Sin responsable asignado', Validators.required],
             fechaCompromisoFormateada: [formatearFecha(fechaCompromiso), Validators.required],
-            fechaCierreFormateada: [formatearFecha(fechaCierre), Validators.required]
+            fechaCierreFormateada: [formatearFecha(fechaCierre), Validators.required],
+            foto: [foto] // Incluir la foto incluso en caso de error
           });
           
           console.log('FormGroup creado con IDs originales (debido a error):', item.value);
@@ -563,7 +575,8 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
       fechaCompromiso: [new Date(), Validators.required],
       fechaCierre: [new Date(), Validators.required],
       fechaCompromisoFormateada: ['', Validators.required],
-      fechaCierreFormateada: ['', Validators.required]
+      fechaCierreFormateada: ['', Validators.required],
+      foto: [null] // Agregar campo para foto en base64
     });
 
     this.items.push(item);
@@ -598,10 +611,38 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
   }
 
   /**
+   * Muestra una imagen en base64 en un popup
+   * @param imagenBase64 Imagen en formato base64
+   */
+  mostrarImagenEnPopup(imagenBase64: string | null): void {
+    if (!imagenBase64) {
+      console.warn('No hay imagen disponible para mostrar');
+      return;
+    }
+
+    // Validar que la imagen esté en formato base64
+    if (!imagenBase64.startsWith('data:image')) {
+      // Si no empieza con data:image, añadimos el prefijo para formato PNG
+      imagenBase64 = 'data:image/png;base64,' + imagenBase64;
+    }
+    
+    // Abrir diálogo con la imagen
+    this.dialog.open(ImagenDialogComponent, {
+      data: { imagenSrc: imagenBase64 },
+      panelClass: 'imagen-dialog-panel',
+      autoFocus: false,
+      disableClose: false,
+      // No especificamos ancho ni posición para permitir que los estilos CSS controlen el centrado
+      enterAnimationDuration: '300ms',
+      exitAnimationDuration: '200ms'
+    });
+  }
+  
+  /**
    * Cierra el diálogo sin guardar cambios
    */
   onCancel(): void {
-    this.dialogRef.close(null);
+    this.dialogRef.close();
   }
 
   /**
