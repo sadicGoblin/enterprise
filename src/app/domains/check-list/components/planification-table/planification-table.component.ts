@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { ProxyService } from '../../../../core/services/proxy.service';
 import { CompletionApiRequest, CompletionApiResponse, CompletedActivity } from '../../models/control-api.models';
 import { catchError, finalize } from 'rxjs/operators';
@@ -28,7 +29,7 @@ export interface Activity {
 @Component({
   selector: 'app-planification-table',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatButtonModule, MatDialogModule, ActivityCompletedPipe],
+  imports: [CommonModule, MatIconModule, MatButtonModule, MatDialogModule, MatTooltipModule, ActivityCompletedPipe],
   templateUrl: './planification-table.component.html',
   styleUrls: ['./planification-table.component.scss'],
   changeDetection: ChangeDetectionStrategy.Default
@@ -74,6 +75,8 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
   get selectedPeriod(): Date | null {
     return this._selectedPeriod;
   }
+
+  @Input() projectId: string | null = null;
 
   private _activities: Activity[] = [];
   private _days: number[] = [];
@@ -343,20 +346,70 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
   }
 
   /**
+   * Comprueba si una actividad está completada para un día específico
+   * @param activity La actividad a comprobar
+   * @param day El día a comprobar
+   * @returns true si la actividad está completada para ese día
+   */
+  isActivityCompleted(activity: Activity, day: number): boolean {
+    // Utilizamos el pipe ActivityCompletedPipe directamente
+    if (!activity.idControl) return false;
+    
+    // Revisamos si esta actividad/día está en completedActivities
+    return this.completedActivities.some(ca => 
+      ca.IdControl === activity.idControl && parseInt(ca.Dia) === day
+    );
+  }
+  
+  /**
+   * Maneja el clic en el icono de estado cuando la actividad está completada
+   * @param activity La actividad seleccionada
+   * @param day El día seleccionado
+   */
+  onStatusClick(activity: Activity, day: number): void {
+    // Solo permitir la acción si la actividad está completada
+    if (!this.isActivityCompleted(activity, day)) {
+      return;
+    }
+    
+    // Verificar si el nombre de la actividad contiene "SSOMA"
+    if (activity.name.includes('SSOMA')) {
+      console.log('Actividad SSOMA completada. Abriendo modal de inspección...');
+      console.log(`idControl: ${activity.idControl}, día: ${day}`);
+      this.openInspectionModal(activity.id, activity.idControl, day);
+    } else {
+      console.log('Actividad completada pero no es de tipo SSOMA');
+      // Aquí podría agregarse lógica para otros tipos de actividades en el futuro
+      // Por ejemplo:
+      // if (activity.name.includes('OTRO_TIPO')) {
+      //   this.openOtroTipoModal(activity.id);
+      // }
+    }
+  }
+
+  /**
    * Abre el modal de inspección SSTMA
    * @param activityId ID de la actividad seleccionada (opcional)
+   * @param idControl ID de control asociado a la actividad
+   * @param day Día seleccionado de la actividad
    */
-  openInspectionModal(activityId?: number): void {
+  openInspectionModal(activityId?: number, idControl?: string, day?: number): void {
     const dialogRef = this.dialog.open(InspectionModalComponent, {
       width: '90vw',
-      maxWidth: '1200px',
+      maxWidth: '1400px',
       disableClose: true,
       autoFocus: false,
       data: { 
         activityId: activityId,
+        projectId: this.projectId,
+        idControl: idControl,
+        day: day,
         inspectionData: null
       }
     });
+    
+    console.log('PlanificationTable: abriendo modal con projectId:', this.projectId);
+    console.log('PlanificationTable: idControl:', idControl, 'day:', day);
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
