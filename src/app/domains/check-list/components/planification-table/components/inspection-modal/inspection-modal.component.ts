@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, Inject, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, FormControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { DateAdapter } from '@angular/material/core';
@@ -19,7 +19,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CustomSelectComponent, ParameterType } from '../../../../../../shared/controls/custom-select/custom-select.component';
 import { ProxyService } from '../../../../../../core/services/proxy.service';
-import { Observable, catchError, finalize, of } from 'rxjs';
+import { Observable, catchError, finalize, of, map, throwError, forkJoin } from 'rxjs';
 
 interface InspectionItem {
   id?: number;
@@ -94,6 +94,11 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
   // Control para el selector de responsable asignado
   responsableAsignadoControl = new FormControl('');
   
+  // Propiedades para control de carga de datos
+  isLoadingInspeccion = false;
+  errorLoadingInspeccion: string | null = null;
+  errorLoadingMessage = '';
+  
   // Referencia al componente custom-select para poder recargar opciones
   @ViewChild(CustomSelectComponent) responsableSelect!: CustomSelectComponent;
 
@@ -107,41 +112,161 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
     idUsuario: 0
   };
 
-  // Columnas de la tabla de inspecciones
+  // Cache para subparámetros por tipo (idEnt)
+  private subParametrosCache: Map<number, any[]> = new Map<number, any[]>();
+  
+  // Cache para usuarios de la obra
+  private usuariosCache: Map<string, string> = new Map<string, string>();
+
+  // Constantes para los tipos de subparámetros (idEnt)
+  readonly INCIDENCIA_ID_ENT = 24;
+  readonly POTENCIAL_RIESGO_ID_ENT = 25; // Asumiendo que este es el correcto
+  readonly CLASIFICACION_HALLAZGO_ID_ENT = 26; // Asumiendo que este es el correcto
+
+  /**
+   * Obtiene los subparámetros para un idEnt específico
+   * @param idEnt ID del tipo de subparámetro
+   * @returns Observable con la lista de subparámetros
+   */
+  private getSubParametros(idEnt: number): Observable<any[]> {
+    // Si ya tenemos los datos en caché, los devolvemos
+    if (this.subParametrosCache.has(idEnt)) {
+      return of(this.subParametrosCache.get(idEnt) || []);
+    }
+
+    // Preparar el cuerpo de la solicitud
+    const requestBody = {
+      caso: 'SubParametroConsulta',
+      idEnt: idEnt
+    };
+
+    // Realizar la llamada a la API usando el método post
+    return this.proxyService.post<{success: boolean, data: any[]}>('/ws/SubParametrosSvcImpl.php', requestBody)
+      .pipe(
+        map((response: {success: boolean, data: any[]}) => {
+          if (response && response.success && response.data) {
+            // Guardar en caché para futuras referencias
+            this.subParametrosCache.set(idEnt, response.data);
+            return response.data;
+          }
+          return [];
+        }),
+        catchError(error => {
+          console.error(`Error al obtener subparámetros para idEnt ${idEnt}:`, error);
+          return of([]);
+        })
+      );
+  }
+
+  /**
+   * Obtiene el nombre de un subparámetro por su ID y tipo
+   * @param id ID del subparámetro
+   * @param idEnt Tipo de subparámetro
+   * @returns Observable con el nombre del subparámetro
+   */
+  private getSubParametroNombre(id: string, idEnt: number): Observable<string> {
+    return this.getSubParametros(idEnt).pipe(
+      map((subParametros: Array<{IdSubParam: string, Nombre: string}>) => {
+        const subParametro = subParametros.find((sp: {IdSubParam: string, Nombre: string}) => sp.IdSubParam === id);
+        return subParametro ? subParametro.Nombre : id; // Si no se encuentra, devolvemos el ID
+      })
+    );
+  }
+  
+  /**
+   * Obtiene el nombre del usuario por su ID
+   * @param idUsuario ID del usuario
+   * @returns Observable con el nombre del usuario
+   */
+  private getUserNombre(idUsuario: string): Observable<string> {
+    // Asegurar que idUsuario sea un string
+    const idUsuarioStr = idUsuario.toString().trim();
+    console.log(`Llamando a getUserNombre con idUsuario: ${idUsuarioStr} (tipo: ${typeof idUsuarioStr})`);
+    
+    // Si ya tenemos el usuario en caché, devolvemos su nombre
+    if (this.usuariosCache.has(idUsuarioStr)) {
+      const nombreCached = this.usuariosCache.get(idUsuarioStr);
+      console.log(`Usuario encontrado en caché para ID ${idUsuarioStr}: ${nombreCached}`);
+      return of(nombreCached || idUsuarioStr);
+    }
+    
+    // Preparar el cuerpo de la solicitud
+    const requestBody = {
+      caso: 'ConsultaUsuariosObra',
+      idObra: 7, // Usar ID de obra 7 según especificación
+      idUsuario: 0 // 0 para traer todos los usuarios
+    };
+    
+    console.log(`Obteniendo nombre para usuario con ID ${idUsuarioStr}, usando requestBody:`, requestBody);
+    console.log(`URL completa: /ws/UsuarioSvcImpl.php`);
+    
+    // Realizar la llamada a la API
+    return this.proxyService.post<{success: boolean, data: Array<{IdUsuario: string, nombre: string}>}>('/ws/UsuarioSvcImpl.php', requestBody)
+      .pipe(
+        map((response: {success: boolean, data: Array<{IdUsuario: string, nombre: string}>}) => {
+          console.log('Respuesta de ConsultaUsuariosObra:', response);
+          if (response && response.success && response.data) {
+            console.log(`Usuarios recibidos: ${response.data.length}`, response.data);
+            // Guardar todos los usuarios en caché para futuras referencias
+            response.data.forEach(user => {
+              // Asegurar que IdUsuario sea un string
+              const userId = user.IdUsuario.toString().trim();
+              console.log(`Cacheando usuario: ${userId} => ${user.nombre}`);
+              this.usuariosCache.set(userId, user.nombre);
+            });
+            
+            // Buscar el usuario por su ID - probándo con strings e integers
+            let usuario = response.data.find(u => u.IdUsuario === idUsuarioStr);
+            if (!usuario) {
+              // Intentar encontrarlo comparando como número
+              usuario = response.data.find(u => u.IdUsuario === idUsuarioStr || parseInt(u.IdUsuario) === parseInt(idUsuarioStr));
+            }
+            
+            console.log(`Usuario encontrado para ID ${idUsuarioStr}:`, usuario);
+            
+            if (usuario) {
+              // Guardar el resultado en caché para futuras referencias
+              this.usuariosCache.set(idUsuarioStr, usuario.nombre);
+              return usuario.nombre;
+            }
+            return idUsuarioStr; // Si no se encuentra, devolver el ID
+          }
+          return idUsuarioStr;
+        }),
+        catchError(error => {
+          console.error(`Error al obtener usuarios para idUsuario ${idUsuarioStr}:`, error);
+          return of(idUsuarioStr); // En caso de error, devolver el ID original
+        })
+      );
+    }
+  
+  // Columnas a mostrar en la tabla
   displayedColumns: string[] = [
     'view',
-    'condicionRiesgo', 
-    'incidencia', 
-    'potencialRiesgo', 
-    'clasificacionHallazgo', 
-    'medidaCorrectiva', 
-    'responsable', 
-    'fechaCompromiso', 
-    'fechaCierre'
-  ];
-  
-  // Opciones ficticias para los selects, normalmente vendrían de un servicio
-  userOptions: UserOption[] = [
-    { id: '1', name: 'FELIPE GALLARDO' },
-    { id: '2', name: 'GERMAN MEDINA' },
-    { id: '3', name: 'JUAN PÉREZ' },
+    'condicionRiesgo',
+    'incidencia',
+    'potencialRiesgo',
+    'clasificacionHallazgo',
+    'medidaCorrectiva',
+    'responsable',
+    'fechaCompromisoFormateada',
+    'fechaCierreFormateada'
   ];
   
   riskOptions: string[] = ['SEGURIDAD', 'SALUD', 'MEDIO AMBIENTE', 'OTRO'];
   potentialRiskOptions: string[] = ['LEVE', 'MEDIANAMENTE GRAVE', 'GRAVE', 'MUY GRAVE'];
   classificationOptions: string[] = ['OBSERVACIÓN', 'NO CONFORMIDAD', 'POTENCIAL NO CONFORMIDAD'];
 
-  // Datos de inspección SSOMA cargados desde la API
+  // Datos de inspección SSOMA
   inspeccionSSOMAData: InspeccionSSOMAData[] = [];
-  isLoadingInspeccion: boolean = false;
-  errorLoadingInspeccion: string | null = null;
   
   constructor(
     private fb: FormBuilder,
-    public dialogRef: MatDialogRef<InspectionModalComponent>,
     private dateAdapter: DateAdapter<Date>,
     private proxyService: ProxyService,
-    @Inject(MAT_DIALOG_DATA) public data: any
+    private cdRef: ChangeDetectorRef,
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    public dialogRef: MatDialogRef<InspectionModalComponent>
   ) {
     this.dateAdapter.setLocale('es');
     
@@ -255,186 +380,173 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
    * Rellena la tabla con los datos recibidos de la API
    */
   populateTableFromApiData(): void {
-    // Limpiar items existentes
+    console.log('Iniciando populateTableFromApiData');
+    // Asegurarse de que estamos en modo carga mientras transformamos los datos
+    this.isLoadingInspeccion = true;
+    
+    // Limpiar los elementos existentes
     while (this.items.length > 0) {
       this.items.removeAt(0);
     }
     
-    // Si no hay datos, agregar un item en blanco
+    // Si no hay datos, agregar un elemento vacío
     if (!this.inspeccionSSOMAData.length) {
       this.addEmptyItem();
+      this.isLoadingInspeccion = false;
       return;
     }
-    console.log('Datos de inspección SSOMA:', this.inspeccionSSOMAData);
     
-    // Iterar sobre los datos de la API y crear items en la tabla
+    // Formatear fechas en formato DD-MM-YYYY
+    const formatearFecha = (fecha: Date): string => {
+      if (!fecha) return '';
+      try {
+        const dia = fecha.getDate().toString().padStart(2, '0');
+        const mes = (fecha.getMonth() + 1).toString().padStart(2, '0');
+        const anio = fecha.getFullYear();
+        return `${dia}-${mes}-${anio}`;
+      } catch (error) {
+        console.error('Error al formatear fecha:', error);
+        return '';
+      }
+    };
+    
+    // Usaremos un array para recolectar todas las operaciones asincrónicas
+    const observables: Observable<any>[] = [];
+    
+    // Para cada item de inspección, creamos un observable que completa todos los pasos
     this.inspeccionSSOMAData.forEach(data => {
-      console.log('Item de inspección:', data);
-      // Mostrar todas las propiedades del objeto
-      console.log('Propiedades disponibles en data:', Object.keys(data));
-      
-      // Tratar el objeto data como any para un acceso más flexible a propiedades
       const d = data as any;
       
-      // Variables para almacenar los datos extraídos - usando let para permitir reasignaciones
-      let condicionRiesgo = '';
-      let incidencia = '';
-      let potencialRiesgo = '';
-      let clasificacionHallazgo = '';
-      let medidaCorrectiva = '';
-      let responsable = '';
-      let fechaCompromiso = new Date();
-      let fechaCierre = new Date();
+      // Extraer datos básicos
+      const condicionRiesgo = d['CondicionRiesgo'] || '';
+      const incidenciaId = d['IdIncidencia'] || '';
+      const potencialRiesgoId = d['IdPotencialRiesgo'] || '';
+      const clasificacionHallazgoId = d['IdClasificacionHallazgo'] || '';
+      const medidaCorrectiva = d['MedidaCorrectiva'] || '';
       
-      // Mostrar todo el objeto para depuración
-      console.log('Objeto completo:', JSON.stringify(d));
+      // Obtener el ID del responsable, asegurándose de que sea un string
+      const responsableId = (d['IdRespondable'] || d['IdResponsable'] || '').toString();
+      console.log('ID del responsable extraído:', responsableId, typeof responsableId);
       
-      // Primera estrategia: intentar obtener los datos de campos con nombres específicos
-      condicionRiesgo = d['condicionRiesgo'] || d['CondicionRiesgo'] || 
-                       d['condicion_riesgo'] || d['CONDICIONRIESGO'] || '';
-      
-      incidencia = d['incidencia'] || d['Incidencia'] || 
-                 d['IdIncidencia'] || d['id_incidencia'] || '';
-      
-      potencialRiesgo = d['potencialRiesgo'] || d['PotencialRiesgo'] || 
-                      d['IdPotencialRiesgo'] || d['id_potencial_riesgo'] || '';
-      
-      clasificacionHallazgo = d['clasificacionHallazgo'] || d['ClasificacionHallazgo'] || 
-                             d['IdClasificacionHallazgo'] || d['id_clasificacion_hallazgo'] || '';
-      
-      medidaCorrectiva = d['medidaCorrectiva'] || d['MedidaCorrectiva'] || 
-                       d['medida_correctiva'] || d['MEDIDACORRECTIVA'] || '';
-      
-      responsable = d['responsable'] || d['Responsable'] || 
-                  d['IdResponsable'] || d['idResponsable'] || d['id_responsable'] || '';
-      
+      // Parsear las fechas
+      let fechaCompromiso: Date;
       try {
-        // Intentar diferentes formatos de nombres de propiedades para las fechas
-        const fechaCompromisoData = d['fechaCompromiso'] || d['FechaCompromiso'] || 
-                                  d['fecha_compromiso'] || d['FECHACOMPROMISO'];
-                                  
-        const fechaCierreData = d['fechaCierre'] || d['FechaCierre'] || 
-                             d['FechaCierreFirma'] || d['fecha_cierre'] || 
-                             d['FECHACIERRE'];
-        
-        if (fechaCompromisoData) {
-          fechaCompromiso = new Date(fechaCompromisoData);
-          console.log('Fecha compromiso encontrada:', fechaCompromisoData);
-        }
-        
-        if (fechaCierreData) {
-          fechaCierre = new Date(fechaCierreData);
-          console.log('Fecha cierre encontrada:', fechaCierreData);
-        }
+        fechaCompromiso = d['FechaCompromiso'] ? new Date(d['FechaCompromiso']) : new Date();
       } catch (error) {
-        console.error('Error al convertir fechas:', error);
+        console.error('Error al parsear FechaCompromiso:', error);
+        fechaCompromiso = new Date();
       }
       
-      // Segunda estrategia: si no se encontraron valores, intentar buscarlos en todas las propiedades
-      if (!condicionRiesgo && !incidencia && !potencialRiesgo && 
-          !clasificacionHallazgo && !medidaCorrectiva && !responsable) {
-        
-        console.log('No se encontraron valores con nombres específicos, buscando en todas las propiedades');
-        
-        // Arreglo para almacenar las propiedades no fechas encontradas
-        const propiedadesEncontradas: string[] = [];
-        
-        // Buscar en todas las propiedades
-        for (const key of Object.keys(d)) {
-          // Si es un string y no es una fecha
-          if (typeof d[key] === 'string' && d[key].trim() !== '' && 
-             !key.toLowerCase().includes('fecha') && !key.toLowerCase().includes('date') &&
-             !key.toLowerCase().includes('id')) {
-            
-            console.log(`Propiedad encontrada: ${key} = ${d[key]}`);
-            propiedadesEncontradas.push(d[key]);
-          }
-        }
-        
-        // Asignar las propiedades encontradas en orden
-        if (propiedadesEncontradas.length > 0) {
-          condicionRiesgo = propiedadesEncontradas[0] || '';
-          console.log('Asignando a condicionRiesgo:', condicionRiesgo);
-        }
-        
-        if (propiedadesEncontradas.length > 1) {
-          incidencia = propiedadesEncontradas[1] || '';
-          console.log('Asignando a incidencia:', incidencia);
-        }
-        
-        if (propiedadesEncontradas.length > 2) {
-          potencialRiesgo = propiedadesEncontradas[2] || '';
-          console.log('Asignando a potencialRiesgo:', potencialRiesgo);
-        }
-        
-        if (propiedadesEncontradas.length > 3) {
-          clasificacionHallazgo = propiedadesEncontradas[3] || '';
-          console.log('Asignando a clasificacionHallazgo:', clasificacionHallazgo);
-        }
-        
-        if (propiedadesEncontradas.length > 4) {
-          medidaCorrectiva = propiedadesEncontradas[4] || '';
-          console.log('Asignando a medidaCorrectiva:', medidaCorrectiva);
-        }
-        
-        if (propiedadesEncontradas.length > 5) {
-          responsable = propiedadesEncontradas[5] || '';
-          console.log('Asignando a responsable:', responsable);
-        }
+      let fechaCierre: Date;
+      try {
+        fechaCierre = d['FechaCierreFirma'] ? new Date(d['FechaCierreFirma']) : new Date();
+      } catch (error) {
+        console.error('Error al parsear FechaCierreFirma:', error);
+        fechaCierre = new Date();
       }
       
-      // Tercera estrategia: si aún no hay datos, usar valores por defecto para al menos mostrar algo
-      if (!condicionRiesgo) condicionRiesgo = 'Sin condición de riesgo';
-      if (!incidencia) incidencia = 'Sin incidencia';
-      if (!potencialRiesgo) potencialRiesgo = 'Sin potencial de riesgo';
-      if (!clasificacionHallazgo) clasificacionHallazgo = 'Sin clasificación';
-      if (!medidaCorrectiva) medidaCorrectiva = 'Sin medida correctiva';
-      if (!responsable) responsable = 'Sin responsable asignado';
+      // Crear un objeto con las observables para obtener los nombres descriptivos
+      const itemObservables = {
+        incidencia: this.getSubParametroNombre(incidenciaId, this.INCIDENCIA_ID_ENT),
+        potencialRiesgo: this.getSubParametroNombre(potencialRiesgoId, this.POTENCIAL_RIESGO_ID_ENT),
+        clasificacionHallazgo: this.getSubParametroNombre(clasificacionHallazgoId, this.CLASIFICACION_HALLAZGO_ID_ENT),
+        responsable: this.getUserNombre(responsableId)
+      };
       
-      // Crear un nuevo item con los datos mapeados correctamente
-      const item = this.fb.group({
-        condicionRiesgo: [condicionRiesgo, Validators.required],
-        incidencia: [incidencia, Validators.required],
-        potencialRiesgo: [potencialRiesgo, Validators.required],
-        clasificacionHallazgo: [clasificacionHallazgo, Validators.required],
-        medidaCorrectiva: [medidaCorrectiva, Validators.required],
-        responsable: [responsable, Validators.required],
-        fechaCompromiso: [fechaCompromiso, Validators.required],
-        fechaCierre: [fechaCierre, Validators.required]
-      });
+      // Crear un observable para procesar este item
+      const itemObservable = forkJoin(itemObservables).pipe(
+        map(resultados => {
+          console.log('Nombres descriptivos obtenidos:', resultados);
+          
+          // Crear un FormGroup para el item usando los campos formateados directamente
+          const item = this.fb.group({
+            condicionRiesgo: [condicionRiesgo || 'Sin condición de riesgo', Validators.required],
+            incidencia: [resultados.incidencia || 'Sin incidencia', Validators.required],
+            potencialRiesgo: [resultados.potencialRiesgo || 'Sin potencial de riesgo', Validators.required],
+            clasificacionHallazgo: [resultados.clasificacionHallazgo || 'Sin clasificación', Validators.required],
+            medidaCorrectiva: [medidaCorrectiva || 'Sin medida correctiva', Validators.required],
+            responsable: [resultados.responsable || 'Sin responsable asignado', Validators.required],
+            // Usar directamente las fechas formateadas
+            fechaCompromisoFormateada: [formatearFecha(fechaCompromiso), Validators.required],
+            fechaCierreFormateada: [formatearFecha(fechaCierre), Validators.required]
+          });
+          
+          console.log('FormGroup creado con datos traducidos:', item.value);
+          this.items.push(item);
+          return item; // Retornar el item para uso posterior si es necesario
+        }),
+        catchError(error => {
+          console.error('Error al obtener nombres descriptivos:', error);
+          // En caso de error, crear el item con los IDs originales
+          const item = this.fb.group({
+            condicionRiesgo: [condicionRiesgo || 'Sin condición de riesgo', Validators.required],
+            incidencia: [incidenciaId || 'Sin incidencia', Validators.required],
+            potencialRiesgo: [potencialRiesgoId || 'Sin potencial de riesgo', Validators.required],
+            clasificacionHallazgo: [clasificacionHallazgoId || 'Sin clasificación', Validators.required],
+            medidaCorrectiva: [medidaCorrectiva || 'Sin medida correctiva', Validators.required],
+            responsable: [responsableId || 'Sin responsable asignado', Validators.required],
+            fechaCompromisoFormateada: [formatearFecha(fechaCompromiso), Validators.required],
+            fechaCierreFormateada: [formatearFecha(fechaCierre), Validators.required]
+          });
+          
+          console.log('FormGroup creado con IDs originales (debido a error):', item.value);
+          this.items.push(item);
+          return of(item); // Convertir a observable para mantener la cadena
+        })
+      );
       
-      console.log('FormGroup creado:', item.value);
-      this.items.push(item);
+      observables.push(itemObservable);
     });
     
-    // Si no se agregaron elementos porque todos los campos estaban vacíos, agregar uno por defecto
-    if (this.items.length === 0) {
-      console.log('No se encontraron datos válidos en la respuesta de la API, agregando item por defecto');
-      this.addEmptyItem();
-    }
-    
-    // Verificar que la tabla se actualice
-    console.log('Número total de items creados:', this.items.length);
-    console.log('displayedColumns:', this.displayedColumns);
-    
-    // Actualizar otros campos del formulario si es necesario
-    if (this.inspeccionSSOMAData.length > 0) {
-      const firstItem = this.inspeccionSSOMAData[0] as any;
-      
-      try {
-        // Asignar valores al formulario principal si están disponibles usando notación de corchetes
-        // SÓLO actualizamos el tipo de inspección, manteniemos la fecha actual y el nombre del colaborador
-        // que ya se inicializaron correctamente en el constructor
-        this.inspectionForm.patchValue({
-          inspectionType: firstItem['Programada'] === '1' ? 'programmed' : 'informal',
-          // NO actualizamos la fecha ni el realizadoPor aquí para mantener los valores iniciales
-        });
-        
-        console.log('Formulario principal actualizado:', this.inspectionForm.value);
-      } catch (error) {
-        console.error('Error al actualizar el formulario principal:', error);
-      }
-    }
+    // Procesar todos los items en paralelo
+    forkJoin(observables.length ? observables : [of(null)])
+      .pipe(
+        finalize(() => {
+          // Comprobar si hay items cargados, si no, agregar uno vacío
+          if (this.items.length === 0) {
+            console.log('No se encontraron datos válidos en la respuesta de la API, agregando item por defecto');
+            this.addEmptyItem();
+          }
+          
+          // Actualizar otros campos del formulario principal si es necesario
+          if (this.inspeccionSSOMAData.length > 0) {
+            const firstItem = this.inspeccionSSOMAData[0] as any;
+            try {
+              // Sólo actualizamos el tipo de inspección, mantenemos otros valores iniciales
+              this.inspectionForm.patchValue({
+                inspectionType: firstItem['Programada'] === '1' ? 'programmed' : 'informal'
+              });
+              console.log('Formulario principal actualizado:', this.inspectionForm.value);
+            } catch (error) {
+              console.error('Error al actualizar el formulario principal:', error);
+            }
+          }
+          
+          // Finalizar carga y mostrar tabla
+          this.isLoadingInspeccion = false;
+          console.log('isLoadingInspeccion establecido a false, la tabla debería ser visible ahora');
+          // Forzar la detección de cambios para asegurar que la tabla se muestre
+          this.cdRef.detectChanges();
+        })
+      )
+      .subscribe({
+        next: (results) => {
+          console.log('Todos los items procesados exitosamente:', results ? results.length : 0);
+        },
+        error: (error) => {
+          console.error('Error general al procesar items:', error);
+          // Asegurar que la tabla se muestre incluso en caso de error
+          this.isLoadingInspeccion = false;
+          
+          // Si no hay items, agregar uno vacío
+          if (this.items.length === 0) {
+            this.addEmptyItem();
+          }
+          
+          // Forzar la detección de cambios para asegurar que la tabla se muestre incluso en caso de error
+          this.cdRef.detectChanges();
+        }
+      });
   }
   
   /**
@@ -449,7 +561,9 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
       medidaCorrectiva: ['', Validators.required],
       responsable: ['', Validators.required],
       fechaCompromiso: [new Date(), Validators.required],
-      fechaCierre: [new Date(), Validators.required]
+      fechaCierre: [new Date(), Validators.required],
+      fechaCompromisoFormateada: ['', Validators.required],
+      fechaCierreFormateada: ['', Validators.required]
     });
 
     this.items.push(item);
@@ -467,25 +581,40 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
       medidaCorrectiva: ['', Validators.required],
       responsable: ['', Validators.required],
       fechaCompromiso: [new Date(), Validators.required],
-      fechaCierre: [new Date(), Validators.required]
+      fechaCierre: [new Date(), Validators.required],
+      fechaCompromisoFormateada: ['', Validators.required],
+      fechaCierreFormateada: ['', Validators.required]
     });
 
     this.items.push(item);
   }
 
+  /**
+   * Elimina un ítem de la tabla
+   * @param index Índice del ítem a eliminar
+   */
   removeItem(index: number): void {
     this.items.removeAt(index);
   }
 
+  /**
+   * Cierra el diálogo sin guardar cambios
+   */
   onCancel(): void {
     this.dialogRef.close(null);
   }
 
+  /**
+   * Genera un PDF con los datos del formulario
+   */
   saveAsPDF(): void {
     // En producción, implementar la lógica de guardar como PDF
     console.log('Guardar como PDF', this.inspectionForm.value);
   }
 
+  /**
+   * Guarda los cambios y cierra el diálogo
+   */
   onSave(): void {
     if (this.inspectionForm.valid) {
       this.dialogRef.close(this.inspectionForm.value);
@@ -495,6 +624,10 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
     }
   }
 
+  /**
+   * Marca todos los controles de un FormGroup como tocados para mostrar errores
+   * @param formGroup FormGroup cuyos controles se marcarán como tocados
+   */
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.values(formGroup.controls).forEach(control => {
       control.markAsTouched();

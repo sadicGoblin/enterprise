@@ -77,9 +77,73 @@ $scale-factor: 0.9; // User prefiere texto más pequeño
     color: #f44336;
   }
   
-  span {
+  p {
     color: #d32f2f;
-    font-size: 14px;
+    font-size: calc(14px * $scale-factor);
+    margin: 0;
+  }
+}
+
+// Estilos para mensaje sin datos
+.no-data-message {
+  padding: 16px;
+  text-align: center;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  
+  p {
+    color: #757575;
+    font-style: italic;
+    margin: 0;
+    font-size: calc(14px * $scale-factor);
+  }
+}
+
+// Estilos para la tabla de inspección
+.inspection-table-wrapper {
+  margin: 10px 0 20px;
+  overflow-x: auto;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.inspection-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: calc(13px * $scale-factor);
+  background: white;
+  
+  th, td {
+    border: 1px solid #e0e0e0;
+    padding: 8px 12px;
+    text-align: left;
+    vertical-align: middle;
+  }
+  
+  th {
+    background-color: #f5f5f5;
+    font-weight: 500;
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    color: #555;
+  }
+  
+  tbody tr {
+    &:nth-child(even) {
+      background-color: #fafafa;
+    }
+    
+    &:hover {
+      background-color: #f0f7ff;
+    }
+  }
+  
+  .action-column {
+    width: 48px;
+    text-align: center;
+    padding: 0;
   }
 }
 

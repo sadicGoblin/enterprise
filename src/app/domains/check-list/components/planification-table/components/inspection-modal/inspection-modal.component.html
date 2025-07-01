@@ -54,75 +54,51 @@
       </div>
       
       <!-- Mensaje de error -->
-      <div *ngIf="errorLoadingInspeccion" class="error-message">
+      <div *ngIf="!isLoadingInspeccion && errorLoadingInspeccion" class="error-message">
         <mat-icon color="warn">error</mat-icon>
-        <span>{{ errorLoadingInspeccion }}</span>
+        <p>{{errorLoadingInspeccion}}</p>
       </div>
-      
-      <div class="inspection-table-container">
-        <table mat-table [dataSource]="items.controls" class="inspection-table">
-          <!-- Columna para botón de ver -->
-          <ng-container matColumnDef="view">
-            <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let item; let i = index" class="view-cell">
-              <button mat-icon-button color="primary" type="button" matTooltip="Ver documento">
-                <mat-icon>visibility</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-          
-          <!-- Columna para Condición de Riesgo -->
-          <ng-container matColumnDef="condicionRiesgo">
-            <th mat-header-cell *matHeaderCellDef>Condición Riesgo</th>
-            <td mat-cell *matCellDef="let item; let i = index">{{item.value.condicionRiesgo}}</td>
-          </ng-container>
-          
-          <!-- Columna para Incidencia -->
-          <ng-container matColumnDef="incidencia">
-            <th mat-header-cell *matHeaderCellDef>Incidencia</th>
-            <td mat-cell *matCellDef="let item; let i = index">{{item.value.incidencia}}</td>
-          </ng-container>
 
-          <!-- Columna para Potencial Riesgo -->
-          <ng-container matColumnDef="potencialRiesgo">
-            <th mat-header-cell *matHeaderCellDef>Potencial Riesgo</th>
-            <td mat-cell *matCellDef="let item; let i = index">{{item.value.potencialRiesgo}}</td>
-          </ng-container>
-          
-          <!-- Columna para Clasificación de Hallazgo -->
-          <ng-container matColumnDef="clasificacionHallazgo">
-            <th mat-header-cell *matHeaderCellDef>Clasificación Hallazgo</th>
-            <td mat-cell *matCellDef="let item; let i = index">{{item.value.clasificacionHallazgo}}</td>
-          </ng-container>
-          
-          <!-- Columna para Medida Correctiva -->
-          <ng-container matColumnDef="medidaCorrectiva">
-            <th mat-header-cell *matHeaderCellDef>Medida Correctiva</th>
-            <td mat-cell *matCellDef="let item; let i = index">{{item.value.medidaCorrectiva}}</td>
-          </ng-container>
-          
-          <!-- Columna para Responsable -->
-          <ng-container matColumnDef="responsable">
-            <th mat-header-cell *matHeaderCellDef>Responsable</th>
-            <td mat-cell *matCellDef="let item; let i = index">{{item.value.responsable}}</td>
-          </ng-container>
-          
-          <!-- Columna para Fecha Compromiso -->
-          <ng-container matColumnDef="fechaCompromiso">
-            <th mat-header-cell *matHeaderCellDef>Fecha Compromiso</th>
-            <td mat-cell *matCellDef="let item; let i = index">{{item.value.fechaCompromiso | date:'dd/MM/yyyy'}}</td>
-          </ng-container>
-          
-          <!-- Columna para Fecha Cierre -->
-          <ng-container matColumnDef="fechaCierre">
-            <th mat-header-cell *matHeaderCellDef>Fecha Cierre</th>
-            <td mat-cell *matCellDef="let item; let i = index">{{item.value.fechaCierre | date:'dd/MM/yyyy'}}</td>
-          </ng-container>
-        
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
-    </div>
+      <!-- Sin datos -->
+      <div *ngIf="!isLoadingInspeccion && !errorLoadingInspeccion && items.controls.length === 0" class="no-data-message">
+        <p>No hay datos de inspección disponibles.</p>
+      </div>
+
+      <!-- Tabla HTML Estándar -->
+      <div *ngIf="!isLoadingInspeccion && items.controls.length > 0" class="inspection-table-wrapper">
+        <table class="inspection-table">
+          <thead>
+            <tr>
+              <th class="action-column"></th>
+              <th>Condición Riesgo</th>
+              <th>Incidencia</th>
+              <th>Potencial Riesgo</th>
+              <th>Clasificación Hallazgo</th>
+              <th>Medida Correctiva</th>
+              <th>Responsable</th>
+              <th>Fecha Compromiso</th>
+              <th>Fecha Cierre</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of items.controls; let i = index">
+              <td class="action-column">
+                <button mat-icon-button color="primary" type="button" matTooltip="Ver documento">
+                  <mat-icon>visibility</mat-icon>
+                </button>
+              </td>
+              <td>{{item.value.condicionRiesgo || 'No disponible'}}</td>
+              <td>{{item.value.incidencia || 'No disponible'}}</td>
+              <td>{{item.value.potencialRiesgo || 'No disponible'}}</td>
+              <td>{{item.value.clasificacionHallazgo || 'No disponible'}}</td>
+              <td>{{item.value.medidaCorrectiva || 'No disponible'}}</td>
+              <td>{{item.value.responsable || 'No disponible'}}</td>
+              <td>{{item.value.fechaCompromisoFormateada || 'No disponible'}}</td>
+              <td>{{item.value.fechaCierreFormateada || 'No disponible'}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </section>
   </form>
 </div>
