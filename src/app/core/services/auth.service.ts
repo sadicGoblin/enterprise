@@ -43,8 +43,8 @@ export class AuthService {
           // Check for success in either the new format (success) or legacy format (glosa)
           const isSuccess = (response.success === true)
           
-          if (isSuccess && response.data && Array.isArray(response.data) && response.data.length > 0) {
-            const userData = response.data[0];
+          if (isSuccess && response.data) {
+            const userData = response.data;
             console.log('[AuthService] User data:', userData);
             
             // Extract user ID from the response data array
