@@ -11,6 +11,7 @@ import { of } from 'rxjs';
 import { ActivityCompletedPipe } from '../../pipes/activity-completed.pipe';
 import { MatDialog } from '@angular/material/dialog';
 import { InspectionModalComponent } from './components/inspection-modal/inspection-modal.component';
+import { CheckListModalComponent } from './components/checklist-modal/checklist-modal.component';
 
 // Interface for Activity
 export interface Activity {
@@ -284,6 +285,9 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
         console.log('%c Completed activities API response saved:', 'color: blue; font-weight: bold', this.completedActivitiesApiResponse);
         console.log('%c Completed activities data saved:', 'color: green; font-weight: bold', this.completedActivities);
         console.table(this.completedActivities);
+        
+        // Update activities with completion status
+        this.updateActivitiesCompletionStatus();
       });
   }
   
@@ -291,58 +295,99 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
    * Updates the activities with completion status
    */
   updateActivitiesCompletionStatus(): void {
-    if (this.completedActivities.length === 0 || this._activities.length === 0) {
-      console.log('No completed activities or no activities to update');
+    console.log('Actualizando estado de actividades completadas');
+    console.log('Actividades completadas disponibles:', this.completedActivities);
+
+    if (!this._activities || this._activities.length === 0) {
+      console.warn('No hay actividades para actualizar estado de completado');
       return;
     }
+
+    if (!this.completedActivities || this.completedActivities.length === 0) {
+      console.warn('No hay datos de actividades completadas');
+      // Even with no completions, we still update metrics
+      this._activities.forEach(activity => {
+        // Initialize completedDays if not already initialized
+        if (!activity.completedDays) activity.completedDays = [];
+        this.updateActivityMetrics(activity);
+      });
+      
+      // Actualizar agrupaciones
+      this.groupedActivities.forEach(group => {
+        group.activities.forEach(activity => {
+          this.updateActivityMetrics(activity);
+        });
+      });
+      
+      return;
+    }
+
+    // Map completions to activity IDs for easier lookup
+    const completionsByControlId: {[key: string]: number[]} = {};
     
-    // Create a map of IdControl to day for quick lookups
-    const completionsMap = new Map<string, number[]>();
-    
-    // Group completed days by IdControl
+    // Group completions by control ID
     this.completedActivities.forEach(completion => {
-      const day = Number(completion.Dia);
-      if (!isNaN(day)) {
-        const days = completionsMap.get(completion.IdControl) || [];
-        days.push(day);
-        completionsMap.set(completion.IdControl, days);
+      const controlId = completion.IdControl;
+      const day = parseInt(completion.Dia);
+      
+      if (!completionsByControlId[controlId]) {
+        completionsByControlId[controlId] = [];
+      }
+      
+      if (!isNaN(day) && !completionsByControlId[controlId].includes(day)) {
+        completionsByControlId[controlId].push(day);
       }
     });
     
-    console.log('Completions map created:', Array.from(completionsMap.entries()));
-    
-    // For each activity, check if we have any completions
+    // Update activities with completion data
     this._activities.forEach(activity => {
-      // Reset completedDays array
-      activity.completedDays = [];
+      // Initialize completedDays if not already initialized
+      if (!activity.completedDays) activity.completedDays = [];
       
-      // Check if this activity has any completions
-      // We need to match by IdControl which is not directly available in our activity object
-      // This would require additional data mapping in a real implementation
-      // For demonstration, we'll just use the first matching completion
-      for (const [controlId, days] of completionsMap.entries()) {
-        // In a real implementation, we would need a way to map from activity to IdControl
-        // For now, we'll just add the days to the first activity as a demo
-        activity.completedDays = [...days];
-        break;
+      // If the activity has a control ID and there are completions for it
+      if (activity.idControl && completionsByControlId[activity.idControl]) {
+        activity.completedDays = completionsByControlId[activity.idControl];
       }
       
-      // Update activity metrics
+      // Update metrics for this activity
       this.updateActivityMetrics(activity);
     });
     
-    // Force change detection
+    // También actualizar las métricas para las actividades agrupadas
+    this.groupedActivities.forEach(group => {
+      group.activities.forEach(activity => {
+        this.updateActivityMetrics(activity);
+      });
+    });
+    
+    // Forzar detección de cambios para actualizar la vista
     this.cdr.detectChanges();
+    
+    console.log('Métricas actualizadas para todas las actividades');
   }
   
   /**
    * Updates metrics for an activity
    */
   updateActivityMetrics(activity: Activity): void {
+    // Total de días programados (amarillos + verdes)
     activity.assigned = activity.scheduledDays.length;
-    activity.realized = activity.completedDays?.length || 0;
+    
+    // Contar días realizados (solo verdes)
+    activity.realized = 0;
+    
+    // Recorremos todos los días programados y contamos los completados
+    for (const day of activity.scheduledDays) {
+      if (this.isActivityCompleted(activity, day)) {
+        activity.realized++;
+      }
+    }
+    
+    // Calculate compliance percentage (verdes / total asignados)
     activity.compliance = activity.assigned > 0 ? 
       Math.round((activity.realized / activity.assigned) * 100) : 0;
+    
+    console.log(`Actividad ${activity.name}: asignadas=${activity.assigned} (total programados), realizadas=${activity.realized} (verdes), cumplimiento=${activity.compliance}%`);
   }
 
   /**
@@ -377,13 +422,15 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
       console.log('Actividad SSOMA completada. Abriendo modal de inspección...');
       console.log(`idControl: ${activity.idControl}, día: ${day}`);
       this.openInspectionModal(activity.id, activity.idControl, day);
+    } 
+    // Verificar si el nombre de la actividad contiene "CHECK LIST"
+    else if (activity.name.includes('CHECK LIST')) {
+      console.log('Actividad CHECK LIST completada. Abriendo modal de checklist...');
+      console.log(`idControl: ${activity.idControl}, día: ${day}`);
+      this.openChecklistModal(activity.id, activity.idControl, day);
     } else {
-      console.log('Actividad completada pero no es de tipo SSOMA');
+      console.log('Actividad completada pero no es de tipo SSOMA ni CHECK LIST');
       // Aquí podría agregarse lógica para otros tipos de actividades en el futuro
-      // Por ejemplo:
-      // if (activity.name.includes('OTRO_TIPO')) {
-      //   this.openOtroTipoModal(activity.id);
-      // }
     }
   }
 
@@ -415,6 +462,39 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
       if (result) {
         console.log('Inspección guardada:', result);
         // Aquí iría la lógica para guardar la inspección en el backend
+        // y actualizar las actividades completadas si es necesario
+      }
+    });
+  }
+
+  /**
+   * Abre el modal de checklist para bodega de gases u otras zonas comunes
+   * @param activityId ID de la actividad seleccionada (opcional)
+   * @param idControl ID de control asociado a la actividad
+   * @param day Día seleccionado de la actividad
+   */
+  openChecklistModal(activityId?: number, idControl?: string, day?: number): void {
+    const dialogRef = this.dialog.open(CheckListModalComponent, {
+      width: '90vw',
+      maxWidth: '1400px',
+      disableClose: true,
+      autoFocus: false,
+      data: { 
+        activityId: activityId,
+        projectId: this.projectId,
+        idControl: idControl,
+        day: day,
+        checklistData: null
+      }
+    });
+    
+    console.log('PlanificationTable: abriendo modal checklist con projectId:', this.projectId);
+    console.log('PlanificationTable: idControl:', idControl, 'day:', day);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Checklist guardado:', result);
+        // Aquí iría la lógica para guardar el checklist en el backend
         // y actualizar las actividades completadas si es necesario
       }
     });
