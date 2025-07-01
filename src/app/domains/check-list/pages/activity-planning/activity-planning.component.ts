@@ -383,6 +383,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
         })
       )
       .subscribe(response => {
+        console.log(this.apiEndpoint, requestBody)
         console.log('API Response received:', response);
         
         // Check if the response is an object with a data property containing an array
