@@ -103,40 +103,7 @@ export class UsuarioService {
     return this.proxyService.post<any>(this.apiEndpoint, request);
   }
   
-  /**
-   * Crea un nuevo control de actividad
-   * @param controlData Datos del control a crear
-   * @returns Observable con la respuesta del API
-   */
-  createControl(controlData: {
-    caso: string,
-    IdControl: number,
-    idObra: number,
-    obra: null,
-    idUsuario: number,
-    usuario: null,
-    periodo: number,
-    idEtapaConst: number,
-    etapaConst: null,
-    idSubProceso: number,
-    subProceso: null,
-    idAmbito: number,
-    ambito: null,
-    idActividad: number,
-    actividad: null,
-    idPeriocidad: number,
-    periocidad: null,
-    idCategoria: number,
-    idParam: number,
-    dias: null,
-    fechaControl: string
-  }): Observable<any> {
-    // El endpoint para la creación de controles
-    const controlEndpoint = '/ws/ControlSvcImpl.php';
-    
-    console.log('Creando nuevo control:', controlData);
-    return this.proxyService.post<any>(controlEndpoint, controlData);
-  }
+  // El método createControl ha sido movido a control.service.ts
   
   /**
    * Elimina un usuario del sistema
