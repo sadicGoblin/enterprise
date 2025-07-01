@@ -42,4 +42,19 @@ export class ControlService {
     console.log('Creando nuevo control:', controlData);
     return this.proxyService.post<any>(this.apiEndpoint, controlData);
   }
+
+  /**
+   * Consulta los controles existentes según filtros
+   * @param queryParams Datos para filtrar la consulta
+   * @returns Observable con la respuesta del API
+   */
+  getControls(queryParams: {
+    caso: string,
+    idObra: number,
+    idUsuario: number,
+    periodo: number
+  }): Observable<any> {
+    console.log('Consultando controles con parámetros:', queryParams);
+    return this.proxyService.post<any>(this.apiEndpoint, queryParams);
+  }
 }

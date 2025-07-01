@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, ViewEncapsulation } from '@angular/core';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { CommonModule } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
@@ -21,13 +21,40 @@ import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { UsuarioService } from '../../../services/usuario.service';
 import { ControlService } from '../../../services/control.service';
+// Componente usado programáticamente para mostrar diálogo de confirmación
 import { ConfirmationDialogComponent } from './confirmation-dialog.component';
 
-// Interface for project API request body
+// Interfaces para los diferentes tipos de objetos usados en el componente
 interface ProjectApiRequestBody {
   caso: string;
   idObra: number;
   idUsuario: number;
+  obra?: string | null;
+  supervisor?: string | null;
+}
+
+interface StageOption {
+  idEtapaConstructiva: number;
+  nombre: string;
+  [key: string]: any; // Para propiedades adicionales
+}
+
+interface SubprocessOption {
+  idSubproceso: number;
+  nombre: string;
+  [key: string]: any; // Para propiedades adicionales
+}
+
+interface ActivityOption {
+  idActividades: number;
+  nombre: string;
+  [key: string]: any; // Para propiedades adicionales
+}
+
+interface ScopeOption {
+  IdAmbito: number;
+  nombre: string;
+  [key: string]: any; // Para propiedades adicionales
 }
 
 // Interface for construction stage API request body
@@ -105,23 +132,24 @@ interface ActivityApiRequestBody {
     MatIconModule,
     MatCardModule,
     MatDialogModule,
-    ConfirmationDialogComponent,
-    CustomSelectComponent,
     MatProgressSpinnerModule,
     MatCheckboxModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    ConfirmationDialogComponent,
+    CustomSelectComponent
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' }
   ],
   templateUrl: './add-activities-pp.component.html',
-  styleUrl: './add-activities-pp.component.scss',
+  styleUrls: ['./add-activities-pp.component.scss'],
+  encapsulation: ViewEncapsulation.None
 })
 export class AddActivitiesPpComponent implements OnInit {
   // Parameter types enum for custom-select
   parameterTypes = ParameterType;
-  
+
   // Properties for Project app-custom-select
   projectControl = new FormControl(null, [Validators.required]);
   projectSelectedId: string | null = null;
@@ -131,7 +159,7 @@ export class AddActivitiesPpComponent implements OnInit {
   projectOptionValue = 'IdObra';
   projectOptionLabel = 'Obra';
   projectParameterType = ParameterType.OBRA;
-  
+
   // Properties for Stage select
   stageControl = new FormControl(null, [Validators.required]);
   stageSelectedId: string | null = null;
@@ -143,9 +171,9 @@ export class AddActivitiesPpComponent implements OnInit {
     codigo: 0,
     nombre: null
   };
-  stageOptions: any[] = [];
+  stageOptions: Array<StageOption> = [];
   loadingStages = false;
-  
+
   // Properties for Scope (Ámbito) app-custom-select
   scopeControl = new FormControl(null, [Validators.required]);
   scopeSelectedId: string | null = null;
@@ -159,7 +187,7 @@ export class AddActivitiesPpComponent implements OnInit {
   scopeOptionValue = 'IdAmbito';
   scopeOptionLabel = 'nombre';
   scopeParameterType = ParameterType.OBRA; // Using OBRA type for custom API
-  
+
   // Properties for Risk Parameter app-custom-select
   riskParameterControl = new FormControl(null, [Validators.required]);
   riskParameterSelectedId: string | null = null;
@@ -171,10 +199,11 @@ export class AddActivitiesPpComponent implements OnInit {
   riskParameterOptionValue = 'IdSubParam';
   riskParameterOptionLabel = 'Nombre';
   riskParameterType = ParameterType.OBRA; // Using OBRA type for custom API
-  
+
   // Properties for subprocess multi-select
   subprocessOptions: any[] = [];
-  selectedSubprocesses: any[] = [];
+  // Definición explícita con tipado adecuado para evitar errores 'never'
+  selectedSubprocesses: Array<SubprocessOption> = [];
   subprocessApiEndpoint = '/ws/EtapaConstructivaSvcImpl.php';
   subprocessApiRequestBody: SubprocessApiRequestBody = {
     caso: 'ConsultaSubProcesos',
@@ -184,7 +213,10 @@ export class AddActivitiesPpComponent implements OnInit {
     nombre: null
   };
   loadingSubprocesses = false;
-  
+
+  // Bandera para indicar si se están cargando controles existentes
+  loadingExistingControls = false;
+
   // Keep the original arrays for other dropdowns
   periods = ['may.-2025', 'jun.-2025'];
   // Lista de usuarios cargada desde la API
@@ -195,10 +227,11 @@ export class AddActivitiesPpComponent implements OnInit {
   categories = ['ALTA', 'MEDIA', 'BAJA'];
   parameters = ['CAÍDA MISMO NIVEL', 'CAÍDA DISTINTO NIVEL'];
   documents = ['PROCEDIMIENTO', 'INSTRUCTIVO', 'MANUAL'];
-  
+
   // Properties for activity multi-select
-  activityOptions: any[] = [];
-  selectedActivities: any[] = [];
+  activityOptions: Array<ActivityOption> = [];
+  // Definición con tipado explícito para selectedActivities
+  selectedActivities: Array<ActivityOption> = [];
   activityApiEndpoint = '/ws/AmbitosSvcImpl.php';
   activityApiRequestBody: ActivityApiRequestBody = {
     caso: 'ConsultaActividades',
@@ -212,7 +245,7 @@ export class AddActivitiesPpComponent implements OnInit {
     idBiblioteca: 0
   };
   loadingActivities = false;
-  
+
   // Date picker for period
   selectedDate = new Date();
   spanishMonths = [
@@ -221,15 +254,15 @@ export class AddActivitiesPpComponent implements OnInit {
   ];
   selectedPeriod = '';
   selectedUser = '';
-  selectedPeriodicity = '';
+  selectedPeriodicity = 'MENSUAL';
   selectedCategory = '';
   selectedParameter = '';
   selectedDocument = '';
-  
+
   userId: number | null = null;
-  
+
   constructor(
-    private proxyService: ProxyService, 
+    private proxyService: ProxyService,
     private dateAdapter: DateAdapter<Date>,
     private usuarioService: UsuarioService,
     private controlService: ControlService,
@@ -237,11 +270,11 @@ export class AddActivitiesPpComponent implements OnInit {
   ) {
     // Set locale to Spanish
     this.dateAdapter.setLocale('es');
-    
+
     // Initialize period with current date in Spanish format
     this.formatSelectedDate();
   }
-  
+
   /**
    * Format the selected date as Spanish month and year (e.g., "junio 2025")
    */
@@ -250,14 +283,20 @@ export class AddActivitiesPpComponent implements OnInit {
     const year = this.selectedDate.getFullYear();
     this.selectedPeriod = `${this.spanishMonths[month]} ${year}`;
   }
-  
+
   /**
    * Handle date change from the datepicker
    */
   onDateChange(): void {
     this.formatSelectedDate();
+    
+    // Verificar si tenemos todos los datos para cargar controles existentes
+    if (this.projectSelectedId && this.stageSelectedId && this.selectedUser && this.selectedDate) {
+      console.log('Tenemos obra, etapa y colaborador - cargando controles existentes al cambiar fecha...');
+      this.loadExistingControls();
+    }
   }
-  
+
   ngOnInit(): void {
     try {
       const userData = localStorage.getItem('userData');
@@ -271,7 +310,7 @@ export class AddActivitiesPpComponent implements OnInit {
     } catch (error) {
       console.error('Error parsing userData from localStorage:', error);
     }
-    
+
     // Initialize project API request body with the current user ID
     this.projectApiRequestBody = {
       caso: this.projectApiCaso,
@@ -279,23 +318,24 @@ export class AddActivitiesPpComponent implements OnInit {
       idUsuario: this.userId || 1
     };
   }
-  
+
   /**
    * Handles project selection change from custom select component
    */
   onProjectSelectionChange(selectedProject: any): void {
     console.log('Project selection changed to:', selectedProject);
-    
+
     if (selectedProject) {
-      this.projectSelectedId = selectedProject.IdObra;
-      
+      this.projectSelectedId = selectedProject.value;
+
       // Reset stage selection when project changes
       this.stageControl.reset();
       this.stageSelectedId = null;
-      
+
       // Load stages for the selected project
+      console.log('Loading stages for project 0:', this.projectSelectedId);
       this.loadStages();
-      
+
       // Load users for the selected project
       this.loadUsersForProject(Number(this.projectSelectedId));
     } else {
@@ -303,60 +343,74 @@ export class AddActivitiesPpComponent implements OnInit {
       this.stageOptions = [];
     }
   }
-  
+
   /**
    * Handles stage selection change from custom select component
    */
   onStageSelectionChange(selectedStageId: any): void {
     console.log('Stage selection changed to:', selectedStageId);
-    
+
     if (selectedStageId) {
       this.stageSelectedId = selectedStageId.toString();
-      
+
       // Reset current subprocess selections
       this.selectedSubprocesses = [];
-      
+
       // Load subprocesses for the selected stage
       this.loadSubprocesses();
     } else {
       console.log('Stage selection cleared');
       this.stageSelectedId = null;
-      
+
       // Clear subprocesses when stage is cleared
       this.subprocessOptions = [];
       this.selectedSubprocesses = [];
     }
   }
-  
+
   /**
    * Handles scope (ámbito) selection change from custom select component
    */
+  /**
+   * Maneja el cambio de selección del ámbito desde el componente custom-select
+   * @param selectedScope La opción seleccionada del componente custom-select
+   */
   onScopeSelectionChange(selectedScope: SelectOption | null): void {
+    console.log('onScopeSelectionChange recibió:', selectedScope);
+
     if (selectedScope && selectedScope.value) {
+      // Convertir el valor a string para asegurar compatibilidad
       this.scopeSelectedId = String(selectedScope.value);
-      console.log('Scope selected:', this.scopeSelectedId);
-      
+      console.log('Ámbito seleccionado:', this.scopeSelectedId, typeof this.scopeSelectedId);
+
+      // Verificar si el valor es un objeto y extraer el ID correcto si es necesario
+      if (typeof selectedScope.value === 'object' && selectedScope.value !== null) {
+        if ('IdAmbito' in selectedScope.value) {
+          this.scopeSelectedId = String(selectedScope.value.IdAmbito);
+        }
+      }
+
       // Update activity API request body with the selected scope ID
       this.activityApiRequestBody = {
         ...this.activityApiRequestBody,
         idAmbito: Number(this.scopeSelectedId)
       };
-      
+
       // Reset current activity selections
       this.selectedActivities = [];
-      
+
       // Load activities for the selected scope
       this.loadActivities();
     } else {
-      console.log('Scope selection cleared');
+      console.log('Se limpió la selección de ámbito');
       this.scopeSelectedId = null;
-      
+
       // Clear activities when scope is cleared
       this.activityOptions = [];
       this.selectedActivities = [];
     }
   }
-  
+
   /**
    * Handles risk parameter selection change from custom select component
    */
@@ -374,13 +428,18 @@ export class AddActivitiesPpComponent implements OnInit {
    * Loads construction stages based on the selected project
    */
   loadStages(): void {
+    console.log('Loading stages for project:', this.projectSelectedId);
     if (!this.projectSelectedId) {
       this.stageOptions = [];
       return;
     }
-    
+    console.log('Loading stages for project2:', this.projectSelectedId);
+
     this.loadingStages = true;
-    
+
+    this.stageApiRequestBody.idObra = Number(this.projectSelectedId);
+    console.log('Loading stages for service2:', this.stageApiRequestBody);
+
     this.proxyService.post(this.stageApiEndpoint, this.stageApiRequestBody)
       .pipe(
         catchError(error => {
@@ -391,7 +450,7 @@ export class AddActivitiesPpComponent implements OnInit {
       )
       .subscribe((response: any) => {
         this.loadingStages = false;
-        
+
         if (response && response.success && response.data) {
           this.stageOptions = response.data;
           console.log('Stages loaded:', this.stageOptions);
@@ -401,22 +460,22 @@ export class AddActivitiesPpComponent implements OnInit {
         }
       });
   }
-  
+
   /**
    * Load users for the selected project from the API
    * @param projectId The ID of the selected project
    */
   loadUsersForProject(projectId: number): void {
     if (!projectId) return;
-    
+
     this.loadingUsers = true;
-    
+
     // Prepare the request body
     const requestBody: UserApiRequestBody = {
       caso: 'ConsultaUsuariosObra',
       idObra: projectId
     };
-    
+
     // Call the API to get users for the selected project
     this.proxyService.post('ws/UsuarioSvcImpl.php', requestBody)
       .pipe(
@@ -428,7 +487,7 @@ export class AddActivitiesPpComponent implements OnInit {
       )
       .subscribe((response: any) => {
         this.loadingUsers = false;
-        
+
         if (response && response.success && response.data) {
           this.users = response.data as User[];
           console.log('Users loaded:', this.users);
@@ -438,7 +497,7 @@ export class AddActivitiesPpComponent implements OnInit {
         }
       });
   }
-  
+
   /**
    * Loads subprocesses based on the selected construction stage
    */
@@ -446,9 +505,10 @@ export class AddActivitiesPpComponent implements OnInit {
     if (!this.stageSelectedId) {
       return;
     }
-    
+
     this.loadingSubprocesses = true;
-    
+    this.subprocessApiRequestBody.idEtapaConstructiva = Number(this.stageSelectedId);
+    console.log('Loading subprocesses for stage:', this.subprocessApiEndpoint, this.subprocessApiRequestBody);
     this.proxyService.post(this.subprocessApiEndpoint, this.subprocessApiRequestBody)
       .pipe(
         catchError(error => {
@@ -459,7 +519,7 @@ export class AddActivitiesPpComponent implements OnInit {
       )
       .subscribe((response: any) => {
         this.loadingSubprocesses = false;
-        
+
         if (response && response.success && response.data) {
           this.subprocessOptions = response.data;
           console.log('Subprocesses loaded:', this.subprocessOptions);
@@ -469,7 +529,7 @@ export class AddActivitiesPpComponent implements OnInit {
         }
       });
   }
-  
+
   /**
    * Loads activities based on the selected scope
    */
@@ -477,9 +537,9 @@ export class AddActivitiesPpComponent implements OnInit {
     if (!this.scopeSelectedId) {
       return;
     }
-    
+
     this.loadingActivities = true;
-    
+
     this.proxyService.post(this.activityApiEndpoint, this.activityApiRequestBody)
       .pipe(
         catchError(error => {
@@ -490,7 +550,7 @@ export class AddActivitiesPpComponent implements OnInit {
       )
       .subscribe((response: any) => {
         this.loadingActivities = false;
-        
+
         if (response && response.success && response.data) {
           this.activityOptions = response.data;
           console.log('Activities loaded:', this.activityOptions);
@@ -500,269 +560,265 @@ export class AddActivitiesPpComponent implements OnInit {
         }
       });
   }
-  
+
   /**
    * Toggles selection of a subprocess
    */
-  toggleSubprocessSelection(subprocess: any): void {
-    const index = this.selectedSubprocesses.findIndex(sp => sp.idSubproceso === subprocess.idSubproceso);
-    
-    if (index === -1) {
-      // Add to selection
-      this.selectedSubprocesses.push(subprocess);
+  toggleSubprocessSelection(subprocess: SubprocessOption): void {
+    // Verificar primero si ya está seleccionado
+    if (this.isSubprocessSelected(subprocess)) {
+      // Si ya está seleccionado, lo quitamos
+      this.selectedSubprocesses = this.selectedSubprocesses.filter((sp: SubprocessOption) => sp.idSubproceso !== subprocess.idSubproceso);
     } else {
-      // Remove from selection
-      this.selectedSubprocesses.splice(index, 1);
+      // Si no está seleccionado, lo añadimos
+      this.selectedSubprocesses.push(subprocess);
     }
-    
     console.log('Selected subprocesses:', this.selectedSubprocesses);
   }
-  
+
   /**
    * Checks if a subprocess is selected
    */
   isSubprocessSelected(subprocess: any): boolean {
-    return this.selectedSubprocesses.some(sp => sp.idSubproceso === subprocess.idSubproceso);
+    return this.selectedSubprocesses.some((sp: any) => sp.idSubproceso === subprocess.idSubproceso);
   }
   
+  /**
+   * Función para comparar objetos de subproceso en selección múltiple
+   * Necesaria para que ngModel funcione correctamente con objetos
+   */
+  compareSubprocesses(sp1: SubprocessOption, sp2: SubprocessOption): boolean {
+    return sp1 && sp2 ? sp1.idSubproceso === sp2.idSubproceso : sp1 === sp2;
+  }
+
   /**
    * Toggles selection of an activity
    */
-  toggleActivitySelection(activity: any): void {
-    const index = this.selectedActivities.findIndex(act => act.idActividades === activity.idActividades);
-    
-    if (index === -1) {
-      // Add to selection
-      this.selectedActivities.push(activity);
+  toggleActivitySelection(activity: ActivityOption): void {
+    // Verificar primero si ya está seleccionado
+    if (this.isActivitySelected(activity)) {
+      // Si ya está seleccionado, lo quitamos
+      this.selectedActivities = this.selectedActivities.filter((act: ActivityOption) => act.idActividades !== activity.idActividades);
     } else {
-      // Remove from selection
-      this.selectedActivities.splice(index, 1);
+      // Si no está seleccionado, lo añadimos
+      this.selectedActivities.push(activity);
     }
-    
+
     console.log('Selected activities:', this.selectedActivities);
   }
-  
+
   /**
    * Checks if an activity is selected
    */
-  isActivitySelected(activity: any): boolean {
-    return this.selectedActivities.some(act => act.idActividades === activity.idActividades);
+  isActivitySelected(activity: ActivityOption): boolean {
+    // Usar 'as any' para evitar errores de tipo 'never'
+    return this.selectedActivities.some((act: any) => act.idActividades === activity.idActividades);
   }
 
-  tableData: any[] = [];
+  // Columnas a mostrar en la tabla
+  displayedColumns: string[] = [
+    'project',
+    'user',
+    'period',
+    'stage',
+    'subprocess',
+    'scope',
+    'activity',
+    'days',
+    'periodicity',
+    'edit',
+    'delete',
+  ];
+  
+  /**
+   * Aplica estilo a filas alternadas
+   * @param index índice de la fila
+   * @param row datos de la fila
+   */
+  getRowStyle(index: number): object {
+    return {
+      'background-color': index % 2 === 0 ? 'white' : '#fafafa',
+      'height': '52px', 
+      'transition': 'background-color 0.2s ease'
+    };
+  }
 
-  addActivity() {
-    // Verificar si hay actividades seleccionadas
-    if (!this.selectedActivities || this.selectedActivities.length === 0) {
-      console.error('No hay actividades seleccionadas');
-      return;
-    }
-    
-    // Extraer el periodo en formato YYYYMM a partir de la fecha seleccionada
-    const periodoFormateado = this.selectedDate ? 
-      (this.selectedDate.getFullYear() * 100 + (this.selectedDate.getMonth() + 1)) : 
-      202506;
-    
-    // Para cada actividad seleccionada, enviar una solicitud
-    this.selectedActivities.forEach((actividad, index) => {
-      // Crear el objeto de control utilizando los valores del formulario
-      // y la actividad actual del bucle
-      const controlBody = {
-        "caso": "Crea",
-        "IdControl": 0,
-        "idObra": this.projectSelectedId ? Number(this.projectSelectedId) : 7,
-        "obra": null,
-        "idUsuario": this.selectedUser ? Number(this.selectedUser) : 478,
-        "usuario": null,
-        "periodo": periodoFormateado,
-        "idEtapaConst": this.stageSelectedId ? Number(this.stageSelectedId) : 100,
-        "etapaConst": null,
-        "idSubProceso": this.selectedSubprocesses.length > 0 ? Number(this.selectedSubprocesses[0].idSubproceso) : 616,
-        "subProceso": null,
-        "idAmbito": this.scopeSelectedId ? Number(this.scopeSelectedId) : 1,
-        "ambito": null,
-        "idActividad": Number(actividad.idActividades), // Usa la actividad actual
-        "actividad": null,
-        "idPeriocidad": this.selectedPeriodicity ? (this.selectedPeriodicity === 'DIARIA' ? 7 : (this.selectedPeriodicity === 'SEMANAL' ? 8 : 6)) : 6,
-        "periocidad": null,
-        "idCategoria": this.selectedCategory ? (this.selectedCategory === 'ALTA' ? 2 : (this.selectedCategory === 'MEDIA' ? 1 : 0)) : 0,
-        "idParam": this.riskParameterSelectedId ? Number(this.riskParameterSelectedId) : 0,
-        "dias": null,
-        "fechaControl": "0001-01-01T00:00:00"
-      };
-      
-      // Mostrar objeto en consola
-      console.log(`Control para actividad ${index + 1}/${this.selectedActivities.length}:`, controlBody);
-      
-      // Enviar objeto al servicio POST usando controlService
-      this.controlService.createControl(controlBody).subscribe({
-        next: (response: any) => {
-          console.log(`Respuesta del servicio para actividad ${actividad.nombre} (${actividad.idActividades}):`, response);
-        },
-        error: (error: any) => {
-          console.error(`Error al enviar la solicitud para actividad ${actividad.nombre} (${actividad.idActividades}):`, error);
+  // Array para almacenar los datos de la tabla con tipado explícito para evitar errores
+  tableData: Array<{
+    id: number;
+    project: string | number;
+    user?: string | number;
+    period?: string | number;
+    stage: string | number;
+    subprocess: string;
+    scope: string | number;
+    name: string;
+    days: string; // Campo para los días/íconos
+    periodicity: string;
+    category: string;
+    parameter: string | number | null;
+    document: string;
+    activities: Array<ActivityOption>;
+    subprocesses?: Array<SubprocessOption>;
+    // Campos adicionales para editar/recargar la actividad
+  }> = [];
+
+  /**
+   * Agrega actividades seleccionadas a la tabla y muestra dialogo de confirmación
+   */
+  addActivity(): void {
+    // Validar que se hayan seleccionado los campos requeridos
+    console.log('Validando campos requeridos...');
+    console.log('projectSelectedId:', this.projectSelectedId, typeof this.projectSelectedId);
+    console.log('stageSelectedId:', this.stageSelectedId, typeof this.stageSelectedId);
+    console.log('scopeSelectedId:', this.scopeSelectedId, typeof this.scopeSelectedId);
+    console.log('selectedSubprocesses:', this.selectedSubprocesses.length, this.selectedSubprocesses);
+    console.log('selectedActivities:', this.selectedActivities.length, this.selectedActivities);
+
+    // Verificar el valor actual del control de ámbito
+    console.log('scopeControl.value:', this.scopeControl.value);
+
+    // Si el scopeSelectedId es null pero el control tiene un valor, intentar extraerlo
+    if (!this.scopeSelectedId && this.scopeControl.value) {
+      const scopeValue = this.scopeControl;
+      console.log('Intentando recuperar ámbito desde scopeControl.value:', scopeValue);
+
+      if (typeof scopeValue === 'object' && scopeValue !== null) {
+        // Intentar extraer el ID del ámbito del objeto
+        if ('value' in scopeValue) {
+          this.scopeSelectedId = String(scopeValue.value);
+          console.log('Ámbito recuperado de value:', this.scopeSelectedId);
+        } else if ('IdAmbito' in scopeValue) {
+          this.scopeSelectedId = String(scopeValue['']);
+          console.log('Ámbito recuperado de IdAmbito:', this.scopeSelectedId);
         }
-      });
-    });
-    
-    // Continuar con la lógica existente si todos los campos requeridos están completos
-    if (
-      this.projectSelectedId &&
-      this.selectedUser &&
-      this.selectedPeriod &&
-      this.stageSelectedId &&
-      this.selectedSubprocesses.length > 0 &&
-      this.scopeSelectedId &&
-      this.selectedActivities.length > 0 &&
-      this.selectedPeriodicity &&
-      this.selectedCategory &&
-      this.riskParameterSelectedId &&
-      this.selectedDocument
-    ) {
-      const activity = {
-        id: Math.floor(Math.random() * 1000),
-        code: Math.floor(Math.random() * 1000).toString(),
-        name: this.selectedActivities.map(act => act.nombre).join(', '),
-        project: this.projectSelectedId || '',
-        period: this.selectedPeriod,
-        user: this.selectedUser,
-        stage: this.stageSelectedId || '',
-        subprocesses: this.selectedSubprocesses,
-        subprocessNames: this.selectedSubprocesses.map(sp => sp.nombre).join(', '),
-        scope: this.scopeSelectedId || '',
-        activities: this.selectedActivities,
-        activityNames: this.selectedActivities.map(act => act.nombre).join(', '),
-        periodicity: this.selectedPeriodicity,
-        category: this.selectedCategory,
-        parameter: this.riskParameterSelectedId || '',
-        document: this.selectedDocument
-      };
-
-      this.tableData.push(activity);
-      this.resetFields();
-    } else {
-      console.warn('Algunos campos requeridos están incompletos');
+      } else if (typeof scopeValue === 'string' || typeof scopeValue === 'number') {
+        this.scopeSelectedId = String(scopeValue);
+        console.log('Ámbito recuperado directamente:', this.scopeSelectedId);
+      }
     }
-  }
 
-  resetFields() {
-    // Reset date to current date
-    this.selectedDate = new Date();
-    this.formatSelectedDate();
-    this.selectedPeriodicity = '';
-    this.selectedCategory = '';
-    this.selectedDocument = '';
-    this.projectControl.reset();
-    this.projectSelectedId = null;
-    this.stageControl.reset();
-    this.stageSelectedId = null;
-    this.scopeControl.reset();
-    this.scopeSelectedId = null;
-    this.riskParameterControl.reset();
-    this.riskParameterSelectedId = null;
-    this.selectedSubprocesses = [];
-    this.subprocessOptions = [];
-    this.selectedActivities = [];
-    this.activityOptions = [];
-    this.selectedPeriod = '';
-    this.selectedUser = '';
-  }
-
-  editActivity(activity: any) {
-    this.projectControl.setValue(activity.project);
-    this.projectSelectedId = activity.project;
-    this.selectedPeriod = activity.period;
-    this.selectedUser = activity.user;
-    
-    // Set stage first to trigger subprocess API update
-    this.stageControl.setValue(activity.stage);
-    this.stageSelectedId = activity.stage;
-    
-    // Update subprocess API request body with the selected stage ID
-    this.subprocessApiRequestBody = {
-      ...this.subprocessApiRequestBody,
-      idEtapaConstructiva: Number(activity.stage)
-    };
-    
-    // Load subprocesses and set selected ones after data is loaded
-    this.loadSubprocesses();
-    setTimeout(() => {
-      if (activity.subprocesses && Array.isArray(activity.subprocesses)) {
-        this.selectedSubprocesses = [...activity.subprocesses];
+    if (!this.projectSelectedId || !this.stageSelectedId || !this.scopeSelectedId ||
+      this.selectedSubprocesses.length === 0 || this.selectedActivities.length === 0) {
+      console.error('Error: Faltan campos requeridos');
+      if (!this.scopeSelectedId) {
+        console.error('El ámbito (scope) no está seleccionado. Por favor, seleccione un ámbito.');
       }
-    }, 500);
-    
-    // Set scope first to trigger activity API update
-    this.scopeControl.setValue(activity.scope);
-    this.scopeSelectedId = activity.scope;
-    
-    // Update activity API request body with the selected scope ID
-    this.activityApiRequestBody = {
-      ...this.activityApiRequestBody,
-      idAmbito: Number(activity.scope)
-    };
-    
-    // Load activities and set selected ones after data is loaded
-    this.loadActivities();
-    setTimeout(() => {
-      if (activity.activities && Array.isArray(activity.activities)) {
-        this.selectedActivities = [...activity.activities];
-      }
-    }, 700);
-    
-    this.selectedPeriodicity = activity.periodicity;
-    this.selectedCategory = activity.category;
-    this.riskParameterControl.setValue(activity.parameter);
-    this.riskParameterSelectedId = activity.parameter;
-    this.selectedDocument = activity.document;
-
-    this.deleteActivity(activity);
-  }
-
-  deleteActivity(activity: any) {
-    this.tableData = this.tableData.filter(item => item.id !== activity.id);
-  }
-
-  save() {
-    console.log('Datos a grabar:', this.tableData);
-    
-    if (this.tableData.length === 0) {
-      alert('No hay actividades para grabar');
+      // Mostrar mensaje de error al usuario
       return;
     }
-    
-    // Preparar información para el diálogo
-    const stageText = this.stageSelectedId ? 
-      `ETAPA CONSTRUCTIVA: ${this.tableData[0].stage || 'No especificado'}` : 
-      'ETAPA CONSTRUCTIVA: No especificada';
-    
-    // Obtener subprocesos únicos
-    const subprocesses = this.tableData
-      .map(item => item.subprocess)
-      .filter((value, index, self) => value && self.indexOf(value) === index);
-      
-    const subprocessText = `SUB PROCESO:${subprocesses.length > 0 ? 
-      '\n-' + subprocesses.join('\n-') : 
+
+    // Crear un nuevo ID único para cada fila de la tabla
+    const newId = Date.now();
+
+    // Preparar los items para la tabla antes de mostrar el diálogo
+    const tableItems = this.selectedActivities.map(actividad => {
+      // Crear objeto para la tabla con validaciones de tipo
+      const tableItem: {
+        id: number;
+        project: string | number;
+        stage: string | number;
+        subprocess: string;
+        scope: string | number;
+        scopeName: string; // Campo para mostrar el nombre del ámbito
+        name: string;
+        days: string; // Campo para los íconos de días
+        periodicity: string;
+        category: string;
+        parameter: string | number | null;
+        document: string;
+        activities: Array<any>;
+        user: string | number;
+        period: string;
+        subprocesses: Array<any>;
+      } = {
+        id: newId,
+        project: this.projectSelectedId || '',
+        stage: this.stageSelectedId || '',
+        subprocess: (() => {
+          if (this.selectedSubprocesses.length === 0) return '';
+          return this.selectedSubprocesses
+            .map(sp => typeof sp === 'object' && sp !== null && 'nombre' in sp ? sp.nombre : '')
+            .join(', ');
+        })(),
+        scope: this.scopeSelectedId || '',
+        // Para el scopeName usamos un valor más simple por ahora
+        scopeName: 'SEGURIDAD', // Valor estático para las nuevas filas agregadas
+        name: (() => {
+          // Usar 'any' temporalmente para acceder a la propiedad nombre
+          const act = actividad as any;
+
+          if ('nombre' in act && act.nombre !== undefined) {
+            return String(act.nombre);
+          }
+          return '';
+        })(),
+        periodicity: this.selectedPeriodicity || '',
+        category: this.selectedCategory || '',
+        parameter: this.riskParameterSelectedId || '',
+        document: this.selectedDocument || '',
+        // Campo para mostrar íconos de días en la tabla
+        days: '15',  // Valor por defecto para los íconos de calendario
+        // También almacenar los valores reales para recuperarlos después
+        activities: [actividad] as any[],
+        // Campos adicionales para recuperación
+        user: this.selectedUser || 0,
+        period: this.selectedPeriod || '',
+        subprocesses: [...this.selectedSubprocesses] as any[]
+      };
+
+      return tableItem;
+    });
+
+    // Preparar información para el diálogo con tipado explícito y validaciones
+    const stageText = `ETAPA CONSTRUCTIVA: ${this.stageSelectedId ?
+      (() => {
+        const foundStage = this.stageOptions.find((s: StageOption) => s.idEtapaConstructiva?.toString() === this.stageSelectedId);
+        return foundStage && typeof foundStage.nombre === 'string' ? foundStage.nombre : 'No especificado';
+      })() :
+      'No especificada'}`;
+
+    // Obtener subprocesos únicos con tipado seguro
+    const subprocessNames = this.selectedSubprocesses.length > 0 ?
+      this.selectedSubprocesses.map((sp: any) => {
+        if (sp && typeof sp === 'object' && 'nombre' in sp) {
+          return typeof sp.nombre === 'string' ? sp.nombre : '';
+        }
+        return '';
+      }) : [];
+
+    const subprocessText = `SUB PROCESO:${subprocessNames.length > 0 ?
+      '\n-' + subprocessNames.join('\n-') :
       '\n-No especificado'}`;
-    
-    // Obtener ámbitos únicos
-    const scopes = this.tableData
-      .map(item => item.scope)
-      .filter((value, index, self) => value && self.indexOf(value) === index);
-      
-    const scopeText = `AMBITO: ${scopes.join(', ') || 'No especificado'}`;
-    
-    // Obtener actividades
-    const activities = this.tableData.map(item => item.name);
-    const activitiesText = `ACTIVIDADES:${activities.length > 0 ? 
-      '\n-' + activities.join('\n-') : 
+
+    // Obtener ámbito con validación de tipo
+    const scopeText = `AMBITO: ${(() => {
+      if (!this.scopeControl.value) return 'No especificado';
+      const scopeValue = this.scopeControl.value as any;
+      if (scopeValue && typeof scopeValue === 'object' && 'nombre' in scopeValue) {
+        return typeof scopeValue.nombre === 'string' ? scopeValue.nombre : 'No especificado';
+      }
+      return 'No especificado';
+    })()}`;
+
+    // Obtener actividades con tipado seguro
+    const activityNames = this.selectedActivities.length > 0 ?
+      this.selectedActivities.map((act: any) => {
+        if (act && typeof act === 'object' && 'nombre' in act) {
+          return typeof act.nombre === 'string' ? act.nombre : '';
+        }
+        return '';
+      }) : [];
+
+    const activitiesText = `ACTIVIDADES:${activityNames.length > 0 ?
+      '\n-' + activityNames.join('\n-') :
       '\n-No hay actividades seleccionadas'}`;
-    
-    // Open confirmation dialog
+
+    // Abrir diálogo de confirmación
     const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
       width: '400px',
-      data: { 
-        title: 'RaaM :: SSOMA',
+      data: {
+        title: 'Confirmación',
         options: [
           stageText,
           subprocessText,
@@ -773,69 +829,326 @@ export class AddActivitiesPpComponent implements OnInit {
       }
     });
 
-    dialogRef.afterClosed().subscribe(result => {
+    dialogRef.afterClosed().subscribe((result: string) => {
       if (result === 'SÍ') {
-        // Proceed with saving
-        this.selectedActivities.forEach((actividad: any, index: number) => {
-          // Create control object solo con los campos del formulario
-          const controlBody = {
-            "caso": "ConsultaEquipo",
-            "IdControl": null,
-            "idObra": this.projectSelectedId ? Number(this.projectSelectedId) : null,
-            "obra": null,
-            "idUsuario": this.selectedUser ? Number(this.selectedUser) : null,
-            "usuario": null,
-            "periodo": this.selectedPeriod ? Number(this.selectedPeriod) : null,
-            "idEtapaConst": this.stageSelectedId ? Number(this.stageSelectedId) : null,
-            "etapaConst": null,
-            "idSubProceso": this.selectedSubprocesses.length > 0 ? Number(this.selectedSubprocesses[0].idSubProceso) : null,
-            "subProceso": null,
-            "idAmbito": this.scopeSelectedId ? Number(this.scopeSelectedId) : null,
-            "ambito": null,
-            "idActividad": actividad.idActividades ? Number(actividad.idActividades) : null,
-            "actividad": null,
-            "idPeriocidad": this.selectedPeriodicity ? 
-                          (this.selectedPeriodicity === 'DIARIA' ? 7 : 
-                           this.selectedPeriodicity === 'SEMANAL' ? 8 : 
-                           this.selectedPeriodicity === 'MENSUAL' ? 6 : null) : null,
-            "periocidad": null,
-            "idCategoria": this.selectedCategory ? 
-                          (this.selectedCategory === 'ALTA' ? 2 : 
-                           this.selectedCategory === 'MEDIA' ? 1 : 
-                           this.selectedCategory === 'BAJA' ? 0 : null) : null,
-            "idParam": this.riskParameterSelectedId ? Number(this.riskParameterSelectedId) : null,
-            "dias": null,
-            "fechaControl": null
-          };
-          
-          // Mostrar objeto en consola
-          console.log(`Control para actividad ${index + 1}/${this.selectedActivities.length}:`, controlBody);
-          
-          // Enviar objeto al servicio POST usando controlService
-          // this.controlService.createControl(controlBody).subscribe({
-          //   next: (response: any) => {
-          //     console.log(`Respuesta del servicio para actividad ${actividad.nombre} (${actividad.idActividades}):`, response);
-          //   },
-          //   error: (error: any) => {
-          //     console.error(`Error al enviar la solicitud para actividad ${actividad.nombre} (${actividad.idActividades}):`, error);
-          //   }
-          // });
+        // Proceder con el guardado
+        // Extraer el periodo en formato YYYYMM a partir de la fecha seleccionada
+        const periodoFormateado = this.selectedDate ?
+          (this.selectedDate.getFullYear() * 100 + (this.selectedDate.getMonth() + 1)) :
+          202506;
 
+        // Contador para un seguimiento más claro
+        let totalControles = 0;
+        const totalCombinaciones = this.selectedSubprocesses.length * this.selectedActivities.length;
+        
+        console.log(`Creando ${totalCombinaciones} controles para ${this.selectedSubprocesses.length} subprocesos y ${this.selectedActivities.length} actividades`);
+        
+        // Bucle anidado: para cada subproceso, crear controles para todas las actividades
+        this.selectedSubprocesses.forEach((subproceso: SubprocessOption) => {
+          this.selectedActivities.forEach((actividad: { idActividades?: number; nombre: string }) => {
+            totalControles++;
+            
+            // Crear objeto de control con la combinación actual de subproceso y actividad
+            const controlBody = {
+              "caso": "Crea",
+              "IdControl": 0,
+              "idObra": this.projectSelectedId ? Number(this.projectSelectedId) : 0,
+              "obra": null,
+              "idUsuario": this.selectedUser ? Number(this.selectedUser) : 0,
+              "usuario": null,
+              "periodo": periodoFormateado,
+              "idEtapaConst": this.stageSelectedId ? Number(this.stageSelectedId) : 0,
+              "etapaConst": null,
+              "idSubProceso": subproceso?.idSubproceso ? Number(subproceso.idSubproceso) : 0,
+              "subProceso": null,
+              "idAmbito": this.scopeSelectedId ? Number(this.scopeSelectedId) : 0,
+              "ambito": null,
+              "idActividad": actividad.idActividades ? Number(actividad.idActividades) : 0,
+              "actividad": null,
+              "idPeriocidad": this.selectedPeriodicity ?
+                (this.selectedPeriodicity === 'DIARIA' ? 7 :
+                  this.selectedPeriodicity === 'SEMANAL' ? 8 :
+                    this.selectedPeriodicity === 'MENSUAL' ? 6 : 0) : 0,
+              "periocidad": null,
+              "idCategoria": this.selectedCategory ?
+                (this.selectedCategory === 'ALTA' ? 2 :
+                  this.selectedCategory === 'MEDIA' ? 1 :
+                    this.selectedCategory === 'BAJA' ? 0 : 0) : 0,
+              "idParam": 0,
+              "dias": null,
+              "fechaControl": "0001-01-01T00:00:00"
+            };
+            
+            // Mostrar información en consola
+            console.log(`Control ${totalControles}/${totalCombinaciones}: Subproceso [${subproceso.nombre} (${subproceso.idSubproceso})] + Actividad [${actividad.nombre} (${actividad.idActividades})]`);
+            
+            // Enviar objeto al servicio POST usando controlService
+            this.controlService.createControl(controlBody).subscribe({
+              next: (response: any) => {
+                console.log(`Respuesta del servicio para control ${totalControles}/${totalCombinaciones}:`, response);
+                this.loadExistingControls();
+              },
+              error: (error: any) => {
+                console.error(`Error al enviar la solicitud para control ${totalControles}/${totalCombinaciones}:`, error);
+              }
+            });
+          });
         });
+
+        // Agregar los items a la tabla
+        tableItems.forEach(item => {
+          this.tableData.push(item);
+        });
+        
+        // Cargar los controles existentes después de guardar
+        console.log('Recargando controles existentes después de guardar...');
+        
+      } else {
+        // Si el usuario cancela, no hacer nada
+        console.log('Operación cancelada por el usuario');
       }
     });
   }
 
-  displayedColumns = [
-    'project',
-    'user',
-    'period',
-    'stage',
-    'subprocess',
-    'scope',
-    'activity',
-    'periodicity',
-    'edit',
-    'delete',
-  ];
+  /**
+   * Resetea los campos del formulario con opción de preservar el proyecto seleccionado
+   * @param preserveProject Si es true, mantiene el proyecto seleccionado
+   */
+  resetFields(preserveProject: boolean = false): void {
+    // Guardar el proyecto actual si se va a preservar
+    const currentProjectId = preserveProject ? this.projectSelectedId : null;
+    const currentProjectControl = preserveProject ? this.projectControl.value : null;
+
+    // Resetear controles de formulario
+    this.projectControl.reset();
+    this.stageControl.reset();
+    this.scopeControl.reset();
+    this.riskParameterControl.reset();
+
+    // Resetear IDs seleccionados
+    this.projectSelectedId = null;
+    this.stageSelectedId = null;
+    this.scopeSelectedId = null;
+    this.riskParameterSelectedId = null;
+
+    // Resetear arrays de selección
+    this.selectedSubprocesses = [];
+    this.selectedActivities = [];
+    this.subprocessOptions = [];
+    this.activityOptions = [];
+
+    // Resetear dropdowns
+    this.selectedPeriodicity = '';
+    this.selectedCategory = '';
+    this.selectedParameter = '';
+    this.selectedDocument = '';
+    this.selectedUser = '';
+
+    // Resetear tabla y estados de carga
+    if (!preserveProject) {
+      this.tableData = [];
+    }
+    this.loadingActivities = false;
+    this.loadingSubprocesses = false;
+
+    // Si se debe preservar el proyecto, restaurar sus valores
+    if (preserveProject && currentProjectId && currentProjectControl) {
+      this.projectSelectedId = currentProjectId;
+      this.projectControl.setValue(currentProjectControl);
+      console.log('Campos reseteados, manteniendo proyecto:', currentProjectId);
+    } else {
+      console.log('Todos los campos reseteados, incluido proyecto');
+    }
+  }
+
+  /**
+   * Edita una actividad existente en la tabla
+   */
+  editActivity(activity: {
+    id: number;
+    project: string | number;
+    stage: string | number;
+    period?: string | number;
+    user?: string | number;
+    subprocess?: string;
+    scope?: string | number;
+    name?: string;
+    periodicity?: string;
+    category?: string;
+    parameter?: string | number | null;
+    document?: string;
+    activities?: ActivityOption[];
+    subprocesses?: SubprocessOption[];
+  }): void {
+    console.log('Editing activity:', activity);
+
+    this.projectSelectedId = activity.project.toString();
+    this.selectedPeriod = activity.period ? activity.period.toString() : '';
+    this.selectedUser = activity.user ? activity.user.toString() : '';
+
+    // Set stage first to trigger subprocess API update
+    const stageValue = activity.stage;
+    // Forzar tipo para evitar errores de asignación
+    this.stageControl.setValue(String(stageValue) as any);
+    this.stageSelectedId = stageValue.toString();
+
+    // Update subprocess API request body with the selected stage ID
+    this.subprocessApiRequestBody = {
+      ...this.subprocessApiRequestBody,
+      idEtapaConstructiva: Number(stageValue)
+    };
+
+    // Load subprocesses and set selected ones after data is loaded
+    this.loadSubprocesses();
+    setTimeout(() => {
+      // Verificar que subprocesses es un array válido con objetos que tienen la propiedad requerida
+      if (activity.subprocesses && Array.isArray(activity.subprocesses)) {
+        // Asegurar que cada objeto tiene la estructura adecuada antes de asignarlo
+        const validSubprocesses = activity.subprocesses.filter((sp: any) =>
+          sp && typeof sp === 'object' && 'idSubproceso' in sp && 'nombre' in sp
+        ) as SubprocessOption[];
+        this.selectedSubprocesses = validSubprocesses;
+      }
+    }, 500);
+
+    // Set scope first to trigger activity API update
+    if (activity.scope) {
+      // Forzar tipo para evitar errores de asignación
+      this.scopeControl.setValue(String(activity.scope) as any);
+      this.scopeSelectedId = activity.scope.toString();
+
+      // Update activity API request body with the selected scope ID
+      this.activityApiRequestBody = {
+        ...this.activityApiRequestBody,
+        idAmbito: Number(activity.scope)
+      };
+    }
+
+    // Load activities and set selected ones after data is loaded
+    this.loadActivities();
+    setTimeout(() => {
+      // Verificar que activities es un array válido con objetos que tienen la propiedad requerida
+      if (activity.activities && Array.isArray(activity.activities)) {
+        // Asegurar que cada objeto tiene la estructura adecuada antes de asignarlo
+        const validActivities = activity.activities.filter((act: any) =>
+          act && typeof act === 'object' && 'idActividades' in act && 'nombre' in act
+        ) as ActivityOption[];
+        this.selectedActivities = validActivities;
+      }
+    }, 700);
+
+    // Establecer otros campos
+    this.selectedPeriodicity = activity.periodicity || '';
+    this.selectedCategory = activity.category || '';
+    this.selectedDocument = activity.document || '';
+
+    // Establecer parámetro de riesgo
+    if (activity.parameter) {
+      this.riskParameterControl.setValue(String(activity.parameter) as any);
+      this.riskParameterSelectedId = activity.parameter.toString();
+    }
+  }
+
+  /**
+   * Elimina una actividad de la tabla por su ID
+   */
+  deleteActivity(activity: { id: number }): void {
+    // Filtrar la tabla para eliminar la actividad con el ID dado
+    this.tableData = this.tableData.filter(item => item.id !== activity.id);
+    console.log(`Actividad ${activity.id} eliminada de la tabla`);
+  }
+
+  /**
+   * Maneja el cambio de selección de usuario
+   * @param event El evento de cambio de selección
+   */
+  onUserSelectionChange(event: any): void {
+    this.selectedUser = event?.value;
+    console.log('Usuario seleccionado:', this.selectedUser);
+    
+    // Si tenemos obra, etapa, usuario y periodo seleccionados, cargamos los controles existentes
+    this.loadExistingControls();
+  }
+
+  /**
+   * Carga los controles existentes para la combinación de obra, usuario y periodo
+   */
+  loadExistingControls(): void {
+    console.log('loadExistingControls: Cargando controles existentes...');
+    // Validar que tengamos los datos necesarios
+    if (!this.projectSelectedId || !this.selectedUser || !this.selectedDate) {
+      console.warn('Faltan datos necesarios para cargar controles existentes');
+      return;
+    }
+    
+    // Extraer el periodo en formato YYYYMM a partir de la fecha seleccionada
+    const periodoFormateado = this.selectedDate ?
+      (this.selectedDate.getFullYear() * 100 + (this.selectedDate.getMonth() + 1)) :
+      202507;
+    
+    // Preparar parámetros para la consulta
+    const queryParams = {
+      caso: "Consulta",
+      idObra: Number(this.projectSelectedId),
+      idUsuario: Number(this.selectedUser),
+      periodo: periodoFormateado
+    };
+    
+    console.log('Consultando controles existentes con parámetros:', queryParams);
+    this.loadingExistingControls = true;
+    
+    // Llamar al servicio para obtener los controles existentes
+    this.controlService.getControls(queryParams).subscribe({
+      next: (response: any) => {
+        this.loadingExistingControls = false;
+        
+        if (response && response.success && response.data && Array.isArray(response.data)) {
+          console.log(`Se encontraron ${response.data.length} controles existentes:`, response.data);
+          
+          // Convertir los datos recibidos al formato de la tabla
+          this.tableData = response.data.map((control: any) => {
+            return {
+              id: Number(control.IdControl),
+              project: control.IdObra,
+              projectName: control.Obra,
+              user: control.IdUsuario,
+              userName: control.Usuario,
+              period: control.Periodo,
+              stage: control.IdEtapaConst,
+              stageName: control.EtapaConst,
+              subprocess: control.SubProceso,
+              subprocessId: control.IdSubProceso,
+              scope: control.IdAmbito,
+              scopeName: control.Ambito, // El nombre del ámbito que se mostrará en la tabla
+              activity: control.IdActividad,
+              name: control.Actividad,
+              // Agregamos el campo days para mostrar íconos de calendario
+              days: control.dias || '15',  // Usamos dias en minúsculas según el objeto de ejemplo
+              periodicity: control.Periocidad,
+              periodicityId: control.IdPeriocidad,
+              category: control.idCategoria,
+              parameter: control.idParam,
+              // Campos necesarios para el componente
+              activities: [{
+                idActividades: Number(control.IdActividad),
+                nombre: control.Actividad
+              }],
+              subprocesses: [{
+                idSubProceso: Number(control.IdSubProceso),
+                nombre: control.SubProceso
+              }]
+            };
+          });
+          
+          console.log('Tabla actualizada con controles existentes:', this.tableData);
+        } else {
+          console.warn('No se encontraron controles o la respuesta no tiene el formato esperado');
+        }
+      },
+      error: (error: any) => {
+        this.loadingExistingControls = false;
+        console.error('Error al cargar controles existentes:', error);
+      }
+    });
+  }
 }

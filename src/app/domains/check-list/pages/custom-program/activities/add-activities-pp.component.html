@@ -1,6 +1,7 @@
 <div class="container">
-  <mat-card class="mat-container">
-    <h2 class="title">Mantenedor de Controles</h2>
+  <!-- Formulario en un card separado -->
+  <mat-card class="mat-container form-card">
+    <h2 class="title">Carga de Actividades</h2>
     <div class="tab-content">
       <div class="form-grid">
         <div class="column">
@@ -53,7 +54,7 @@
 
           <mat-form-field appearance="fill" class="full-width">
             <mat-label>Sub-proceso</mat-label>
-            <mat-select multiple>
+            <mat-select multiple [(ngModel)]="selectedSubprocesses" [compareWith]="compareSubprocesses">
               <div *ngIf="loadingSubprocesses" class="loading-spinner-container">
                 <mat-spinner diameter="20"></mat-spinner>
                 <span class="loading-text">Cargando sub-procesos...</span>
@@ -61,8 +62,6 @@
               <mat-option 
                 *ngFor="let subprocess of subprocessOptions" 
                 [value]="subprocess"
-                (click)="toggleSubprocessSelection(subprocess)"
-                [class.selected]="isSubprocessSelected(subprocess)"
               >
                 {{ subprocess.nombre }}
               </mat-option>
@@ -98,7 +97,7 @@
         <div class="column">
           <mat-form-field appearance="fill" class="full-width">
             <mat-label>Colaborador</mat-label>
-            <mat-select [(ngModel)]="selectedUser">
+            <mat-select [(ngModel)]="selectedUser" (selectionChange)="onUserSelectionChange($event)">
               <!-- Mostrar spinner cuando se están cargando usuarios -->
               <div *ngIf="loadingUsers" class="loading-spinner-container">
                 <mat-spinner diameter="20"></mat-spinner>
@@ -137,7 +136,7 @@
 
           <mat-form-field appearance="fill" class="full-width">
             <mat-label>Actividad</mat-label>
-            <mat-select multiple>
+            <mat-select multiple [(ngModel)]="selectedActivities">
               <div *ngIf="loadingActivities" class="loading-spinner-container">
                 <mat-spinner diameter="20"></mat-spinner>
                 <span class="loading-text">Cargando actividades...</span>
@@ -145,8 +144,6 @@
               <mat-option 
                 *ngFor="let activity of activityOptions" 
                 [value]="activity"
-                (click)="toggleActivitySelection(activity)"
-                [class.selected]="isActivitySelected(activity)"
               >
                 {{ activity.nombre }}
               </mat-option>
@@ -168,66 +165,78 @@
         <button mat-raised-button color="primary" (click)="addActivity()">
           Guardar
         </button>
-        <button mat-raised-button color="accent" (click)="save()">
-          Grabar
-        </button>
         <button mat-raised-button color="warn" (click)="resetFields()">
           Cancelar
         </button>
       </div>
+    </div>
+  </mat-card>
 
+  <!-- Tabla en un card separado -->
+  <mat-card class="mat-container table-card" style="margin-top: 2rem;">
+    <h2 class="title">Actividades Registradas</h2>
+    <div class="table-container" style="max-height: 70vh; overflow: auto; border-radius: 4px;">
       <table
         mat-table
         [dataSource]="tableData"
-        class="mat-elevation-z2 full-width"
+        class="mat-elevation-z2 full-width activities-table"
+        style="width: 100%; background-color: white; border-collapse: separate; border-spacing: 0;"
       >
         <ng-container matColumnDef="project">
-          <th mat-header-cell *matHeaderCellDef>Obra</th>
-          <td mat-cell *matCellDef="let element">{{ element.project }}</td>
+          <th mat-header-cell *matHeaderCellDef style="text-align: left; padding: 1rem 1.25rem; background-color: #f0f4f8; font-weight: 500; color: #333; font-size: 0.95rem; border-bottom: 2px solid #e0e0e0;">Obra</th>
+          <td mat-cell *matCellDef="let element" style="text-align: left; padding: 1rem 1.25rem; vertical-align: middle; font-size: 0.9rem; line-height: 1.5;">{{ element.project }}</td>
         </ng-container>
 
         <ng-container matColumnDef="user">
-          <th mat-header-cell *matHeaderCellDef>Usuario</th>
-          <td mat-cell *matCellDef="let element">{{ element.user }}</td>
+          <th mat-header-cell *matHeaderCellDef style="text-align: left; padding: 1rem 1.25rem; background-color: #f0f4f8; font-weight: 500; color: #333; font-size: 0.95rem; border-bottom: 2px solid #e0e0e0;">Usuario</th>
+          <td mat-cell *matCellDef="let element" style="text-align: left; padding: 1rem 1.25rem; vertical-align: middle; font-size: 0.9rem; line-height: 1.5;">{{ element.user }}</td>
         </ng-container>
 
         <ng-container matColumnDef="period">
-          <th mat-header-cell *matHeaderCellDef>Periodo</th>
-          <td mat-cell *matCellDef="let element">{{ element.period }}</td>
+          <th mat-header-cell *matHeaderCellDef style="text-align: left; padding: 1rem 1.25rem; background-color: #f0f4f8; font-weight: 500; color: #333; font-size: 0.95rem; border-bottom: 2px solid #e0e0e0;">Periodo</th>
+          <td mat-cell *matCellDef="let element" style="text-align: left; padding: 1rem 1.25rem; vertical-align: middle; font-size: 0.9rem; line-height: 1.5;">{{ element.period }}</td>
         </ng-container>
 
         <ng-container matColumnDef="stage">
-          <th mat-header-cell *matHeaderCellDef>Etapa Const.</th>
-          <td mat-cell *matCellDef="let element">{{ element.stage }}</td>
+          <th mat-header-cell *matHeaderCellDef style="text-align: left; padding: 1rem 1.25rem; background-color: #f0f4f8; font-weight: 500; color: #333; font-size: 0.95rem; border-bottom: 2px solid #e0e0e0;">Etapa Const.</th>
+          <td mat-cell *matCellDef="let element" style="text-align: left; padding: 1rem 1.25rem; vertical-align: middle; font-size: 0.9rem; line-height: 1.5;">{{ element.stage }}</td>
         </ng-container>
 
         <ng-container matColumnDef="subprocess">
-          <th mat-header-cell *matHeaderCellDef>Sub-proceso</th>
-          <td mat-cell *matCellDef="let element">{{ element.subprocess }}</td>
+          <th mat-header-cell *matHeaderCellDef style="text-align: left; padding: 1rem 1.25rem; background-color: #f0f4f8; font-weight: 500; color: #333; font-size: 0.95rem; border-bottom: 2px solid #e0e0e0;">Sub-proceso</th>
+          <td mat-cell *matCellDef="let element" style="text-align: left; padding: 1rem 1.25rem; vertical-align: middle; font-size: 0.9rem; line-height: 1.5;">{{ element.subprocess }}</td>
         </ng-container>
 
         <ng-container matColumnDef="scope">
-          <th mat-header-cell *matHeaderCellDef>Ámbito</th>
-          <td mat-cell *matCellDef="let element">{{ element.scope }}</td>
+          <th mat-header-cell *matHeaderCellDef style="text-align: left; padding: 1rem 1.25rem; background-color: #f0f4f8; font-weight: 500; color: #333; font-size: 0.95rem; border-bottom: 2px solid #e0e0e0;">Ámbito</th>
+          <td mat-cell *matCellDef="let element" style="text-align: left; padding: 1rem 1.25rem; vertical-align: middle; font-size: 0.9rem; line-height: 1.5;">{{ element.scopeName }}</td>
         </ng-container>
 
         <ng-container matColumnDef="activity">
-          <th mat-header-cell *matHeaderCellDef>Actividad</th>
-          <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+          <th mat-header-cell *matHeaderCellDef style="text-align: left; padding: 1rem 1.25rem; background-color: #f0f4f8; font-weight: 500; color: #333; font-size: 0.95rem; border-bottom: 2px solid #e0e0e0;">Actividad</th>
+          <td mat-cell *matCellDef="let element" style="text-align: left; padding: 1rem 1.25rem; vertical-align: middle; font-size: 0.9rem; line-height: 1.5;">{{ element.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="days">
+          <th mat-header-cell *matHeaderCellDef style="text-align: left; padding: 1rem 1.25rem; background-color: #f0f4f8; font-weight: 500; color: #333; font-size: 0.95rem; border-bottom: 2px solid #e0e0e0;">Días</th>
+          <td mat-cell *matCellDef="let element" style="text-align: center; padding: 1rem 1.25rem; vertical-align: middle; font-size: 0.9rem; line-height: 1.5;">
+            <mat-icon color="primary" style="font-size: 20px; height: 20px; width: 20px; line-height: 20px;">calendar_today</mat-icon>
+          </td>
         </ng-container>
 
         <ng-container matColumnDef="periodicity">
-          <th mat-header-cell *matHeaderCellDef>Días</th>
-          <td mat-cell *matCellDef="let element">{{ element.periodicity }}</td>
+          <th mat-header-cell *matHeaderCellDef style="text-align: left; padding: 1rem 1.25rem; background-color: #f0f4f8; font-weight: 500; color: #333; font-size: 0.95rem; border-bottom: 2px solid #e0e0e0;">Periodicidad</th>
+          <td mat-cell *matCellDef="let element" style="text-align: left; padding: 1rem 1.25rem; vertical-align: middle; font-size: 0.9rem; line-height: 1.5;">{{ element.periodicity }}</td>
         </ng-container>
 
         <ng-container matColumnDef="edit">
-          <th mat-header-cell *matHeaderCellDef class="action-cell">Editar</th>
-          <td mat-cell *matCellDef="let element" class="action-cell">
+          <th mat-header-cell *matHeaderCellDef style="text-align: center; padding: 0.5rem; background-color: #f0f4f8; font-weight: 500; color: #333; font-size: 0.95rem; border-bottom: 2px solid #e0e0e0; width: 60px;">Editar</th>
+          <td mat-cell *matCellDef="let element" style="text-align: center; padding: 0.5rem; width: 60px;">
             <button
               mat-icon-button
               color="primary"
               (click)="editActivity(element)"
+              style="width: 36px; height: 36px; line-height: 36px;"
             >
               <mat-icon>edit</mat-icon>
             </button>
@@ -235,22 +244,31 @@
         </ng-container>
 
         <ng-container matColumnDef="delete">
-          <th mat-header-cell *matHeaderCellDef class="action-cell">
+          <th mat-header-cell *matHeaderCellDef style="text-align: center; padding: 0.5rem; background-color: #f0f4f8; font-weight: 500; color: #333; font-size: 0.95rem; border-bottom: 2px solid #e0e0e0; width: 60px;">
             Eliminar
           </th>
-          <td mat-cell *matCellDef="let element" class="action-cell">
+          <td mat-cell *matCellDef="let element" style="text-align: center; padding: 0.5rem; width: 60px;">
             <button
               mat-icon-button
               color="warn"
               (click)="deleteActivity(element)"
+              style="width: 36px; height: 36px; line-height: 36px;"
             >
               <mat-icon>delete</mat-icon>
             </button>
           </td>
         </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true" style="background-color: #f0f4f8 !important; height: 56px;"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns; let i = index" class="table-row" [ngStyle]="getRowStyle(i)" style="border-bottom: 1px solid #f0f0f0;">
+        </tr>
+        
+        <!-- Mostrar mensaje cuando no hay datos -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align: center; padding: 2rem 1rem; font-style: italic; color: #777;">
+            No hay actividades registradas
+          </td>
+        </tr>
       </table>
     </div>
   </mat-card>
