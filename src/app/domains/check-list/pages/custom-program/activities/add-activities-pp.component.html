@@ -20,21 +20,28 @@
             class="full-width"
           ></app-custom-select>
 
-          <app-custom-select
-            label="Etapa Constructiva"
-            [formControl]="stageControl"
-            [parameterType]="stageParameterType"
-            [loadFromApi]="true"
-            [customApiEndpoint]="stageApiEndpoint"
-            [customApiRequestBody]="stageApiRequestBody"
-            [customOptionValueKey]="stageOptionValue"
-            [customOptionLabelKey]="stageOptionLabel"
-            (selectionChange)="onStageSelectionChange($event)"
-            placeholder="Seleccionar Etapa"
-            [required]="true"
-            appearance="fill"
-            class="full-width"
-          ></app-custom-select>
+          <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Etapa Constructiva</mat-label>
+            <mat-select [formControl]="stageControl" (selectionChange)="onStageSelectionChange($event.value)">
+              <!-- Mostrar spinner cuando se están cargando etapas -->
+              <div *ngIf="loadingStages" class="loading-spinner-container">
+                <mat-spinner diameter="20"></mat-spinner>
+                <span class="loading-text">Cargando etapas...</span>
+              </div>
+              <!-- Mostrar opciones de etapas -->
+              <mat-option *ngFor="let stage of stageOptions" [value]="stage.idEtapaConstructiva">
+                {{ stage.nombre }}
+              </mat-option>
+              <!-- Mensaje cuando no hay etapas -->
+              <mat-option *ngIf="stageOptions.length === 0 && !loadingStages && projectSelectedId" disabled>
+                No hay etapas disponibles para esta obra
+              </mat-option>
+              <!-- Mensaje cuando no se ha seleccionado obra -->
+              <mat-option *ngIf="!projectSelectedId && !loadingStages" disabled>
+                Seleccione una obra primero
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
 
           <mat-form-field appearance="fill" class="full-width">
             <mat-label>Período</mat-label>
@@ -160,6 +167,9 @@
       <div class="button-row">
         <button mat-raised-button color="primary" (click)="addActivity()">
           Guardar
+        </button>
+        <button mat-raised-button color="accent" (click)="save()">
+          Grabar
         </button>
         <button mat-raised-button color="warn" (click)="resetFields()">
           Cancelar

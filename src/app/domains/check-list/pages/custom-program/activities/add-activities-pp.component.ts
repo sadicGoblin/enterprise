@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Inject } from '@angular/core';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE } from '@angular/material/core';
 import { CommonModule } from '@angular/common';
 import { MatInputModule } from '@angular/material/input';
@@ -18,7 +18,10 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatCardModule } from '@angular/material/card';
+import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { UsuarioService } from '../../../services/usuario.service';
+import { ControlService } from '../../../services/control.service';
+import { ConfirmationDialogComponent } from './confirmation-dialog.component';
 
 // Interface for project API request body
 interface ProjectApiRequestBody {
@@ -92,15 +95,17 @@ interface ActivityApiRequestBody {
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
     ReactiveFormsModule,
+    FormsModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule,
     MatTableModule,
+    MatSelectModule,
     MatButtonModule,
     MatIconModule,
     MatCardModule,
+    MatDialogModule,
+    ConfirmationDialogComponent,
     CustomSelectComponent,
     MatProgressSpinnerModule,
     MatCheckboxModule,
@@ -127,20 +132,19 @@ export class AddActivitiesPpComponent implements OnInit {
   projectOptionLabel = 'Obra';
   projectParameterType = ParameterType.OBRA;
   
-  // Properties for Stage app-custom-select
+  // Properties for Stage select
   stageControl = new FormControl(null, [Validators.required]);
   stageSelectedId: string | null = null;
   stageApiEndpoint = '/ws/EtapaConstructivaSvcImpl.php';
   stageApiRequestBody: StageApiRequestBody = {
-    caso: 'ConsultaEtapaConstructiva',
+    caso: 'ConsultaEtapaConstructivaByObra',
     idEtapaConstructiva: 0,
     idObra: 0,
     codigo: 0,
     nombre: null
   };
-  stageOptionValue = 'idEtapaConstructiva';
-  stageOptionLabel = 'nombre';
-  stageParameterType = ParameterType.OBRA; // Using OBRA type for custom API
+  stageOptions: any[] = [];
+  loadingStages = false;
   
   // Properties for Scope (Ámbito) app-custom-select
   scopeControl = new FormControl(null, [Validators.required]);
@@ -227,7 +231,9 @@ export class AddActivitiesPpComponent implements OnInit {
   constructor(
     private proxyService: ProxyService, 
     private dateAdapter: DateAdapter<Date>,
-    private usuarioService: UsuarioService
+    private usuarioService: UsuarioService,
+    private controlService: ControlService,
+    private dialog: MatDialog
   ) {
     // Set locale to Spanish
     this.dateAdapter.setLocale('es');
@@ -277,75 +283,35 @@ export class AddActivitiesPpComponent implements OnInit {
   /**
    * Handles project selection change from custom select component
    */
-  onProjectSelectionChange(selectedProject: SelectOption | null): void {
-    if (selectedProject && selectedProject.value) {
-      this.projectSelectedId = String(selectedProject.value);
-      console.log('Project selected:', this.projectSelectedId);
+  onProjectSelectionChange(selectedProject: any): void {
+    console.log('Project selection changed to:', selectedProject);
+    
+    if (selectedProject) {
+      this.projectSelectedId = selectedProject.IdObra;
       
       // Reset stage selection when project changes
       this.stageControl.reset();
       this.stageSelectedId = null;
       
+      // Load stages for the selected project
+      this.loadStages();
+      
       // Load users for the selected project
       this.loadUsersForProject(Number(this.projectSelectedId));
     } else {
-      console.log('Project selection cleared');
       this.projectSelectedId = null;
-      // Clear users when no project is selected
-      this.users = [];
+      this.stageOptions = [];
     }
-  }
-  
-  /**
-   * Load users for the selected project from the API
-   * @param projectId The ID of the selected project
-   */
-  loadUsersForProject(projectId: number): void {
-    if (!projectId) return;
-    
-    this.loadingUsers = true;
-    
-    // Prepare the request body
-    const requestBody: UserApiRequestBody = {
-      caso: 'ConsultaUsuariosObra',
-      idObra: projectId
-    };
-    
-    // Call the API to get users for the selected project
-    this.proxyService.post('ws/UsuarioSvcImpl.php', requestBody)
-      .pipe(
-        catchError(error => {
-          console.error('Error loading users:', error);
-          this.loadingUsers = false;
-          return of({ success: false, data: [] });
-        })
-      )
-      .subscribe((response: any) => {
-        this.loadingUsers = false;
-        
-        if (response && response.success && response.data) {
-          this.users = response.data as User[];
-          console.log('Users loaded:', this.users);
-        } else {
-          this.users = [];
-          console.warn('No users found or error in response:', response);
-        }
-      });
   }
   
   /**
    * Handles stage selection change from custom select component
    */
-  onStageSelectionChange(selectedStage: SelectOption | null): void {
-    if (selectedStage && selectedStage.value) {
-      this.stageSelectedId = String(selectedStage.value);
-      console.log('Stage selected:', this.stageSelectedId);
-      
-      // Update subprocess API request body with the selected stage ID
-      this.subprocessApiRequestBody = {
-        ...this.subprocessApiRequestBody,
-        idEtapaConstructiva: Number(this.stageSelectedId)
-      };
+  onStageSelectionChange(selectedStageId: any): void {
+    console.log('Stage selection changed to:', selectedStageId);
+    
+    if (selectedStageId) {
+      this.stageSelectedId = selectedStageId.toString();
       
       // Reset current subprocess selections
       this.selectedSubprocesses = [];
@@ -402,6 +368,75 @@ export class AddActivitiesPpComponent implements OnInit {
       console.log('Risk parameter selection cleared');
       this.riskParameterSelectedId = null;
     }
+  }
+
+  /**
+   * Loads construction stages based on the selected project
+   */
+  loadStages(): void {
+    if (!this.projectSelectedId) {
+      this.stageOptions = [];
+      return;
+    }
+    
+    this.loadingStages = true;
+    
+    this.proxyService.post(this.stageApiEndpoint, this.stageApiRequestBody)
+      .pipe(
+        catchError(error => {
+          console.error('Error loading stages:', error);
+          this.loadingStages = false;
+          return of({ success: false, data: [] });
+        })
+      )
+      .subscribe((response: any) => {
+        this.loadingStages = false;
+        
+        if (response && response.success && response.data) {
+          this.stageOptions = response.data;
+          console.log('Stages loaded:', this.stageOptions);
+        } else {
+          this.stageOptions = [];
+          console.warn('No stages data available or request failed');
+        }
+      });
+  }
+  
+  /**
+   * Load users for the selected project from the API
+   * @param projectId The ID of the selected project
+   */
+  loadUsersForProject(projectId: number): void {
+    if (!projectId) return;
+    
+    this.loadingUsers = true;
+    
+    // Prepare the request body
+    const requestBody: UserApiRequestBody = {
+      caso: 'ConsultaUsuariosObra',
+      idObra: projectId
+    };
+    
+    // Call the API to get users for the selected project
+    this.proxyService.post('ws/UsuarioSvcImpl.php', requestBody)
+      .pipe(
+        catchError(error => {
+          console.error('Error loading users:', error);
+          this.loadingUsers = false;
+          return of({ success: false, data: [] });
+        })
+      )
+      .subscribe((response: any) => {
+        this.loadingUsers = false;
+        
+        if (response && response.success && response.data) {
+          this.users = response.data as User[];
+          console.log('Users loaded:', this.users);
+        } else {
+          this.users = [];
+          console.warn('No users found or error in response:', response);
+        }
+      });
   }
   
   /**
@@ -559,8 +594,8 @@ export class AddActivitiesPpComponent implements OnInit {
       // Mostrar objeto en consola
       console.log(`Control para actividad ${index + 1}/${this.selectedActivities.length}:`, controlBody);
       
-      // Enviar objeto al servicio POST usando usuarioService
-      this.usuarioService.createControl(controlBody).subscribe({
+      // Enviar objeto al servicio POST usando controlService
+      this.controlService.createControl(controlBody).subscribe({
         next: (response: any) => {
           console.log(`Respuesta del servicio para actividad ${actividad.nombre} (${actividad.idActividades}):`, response);
         },
@@ -689,7 +724,106 @@ export class AddActivitiesPpComponent implements OnInit {
   }
 
   save() {
-    console.log('Saved:', this.tableData);
+    console.log('Datos a grabar:', this.tableData);
+    
+    if (this.tableData.length === 0) {
+      alert('No hay actividades para grabar');
+      return;
+    }
+    
+    // Preparar información para el diálogo
+    const stageText = this.stageSelectedId ? 
+      `ETAPA CONSTRUCTIVA: ${this.tableData[0].stage || 'No especificado'}` : 
+      'ETAPA CONSTRUCTIVA: No especificada';
+    
+    // Obtener subprocesos únicos
+    const subprocesses = this.tableData
+      .map(item => item.subprocess)
+      .filter((value, index, self) => value && self.indexOf(value) === index);
+      
+    const subprocessText = `SUB PROCESO:${subprocesses.length > 0 ? 
+      '\n-' + subprocesses.join('\n-') : 
+      '\n-No especificado'}`;
+    
+    // Obtener ámbitos únicos
+    const scopes = this.tableData
+      .map(item => item.scope)
+      .filter((value, index, self) => value && self.indexOf(value) === index);
+      
+    const scopeText = `AMBITO: ${scopes.join(', ') || 'No especificado'}`;
+    
+    // Obtener actividades
+    const activities = this.tableData.map(item => item.name);
+    const activitiesText = `ACTIVIDADES:${activities.length > 0 ? 
+      '\n-' + activities.join('\n-') : 
+      '\n-No hay actividades seleccionadas'}`;
+    
+    // Open confirmation dialog
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: { 
+        title: 'RaaM :: SSOMA',
+        options: [
+          stageText,
+          subprocessText,
+          scopeText,
+          activitiesText
+        ],
+        question: 'DESEA CREAR LAS ACTIVIDADES?'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result === 'SÍ') {
+        // Proceed with saving
+        this.selectedActivities.forEach((actividad: any, index: number) => {
+          // Create control object solo con los campos del formulario
+          const controlBody = {
+            "caso": "ConsultaEquipo",
+            "IdControl": null,
+            "idObra": this.projectSelectedId ? Number(this.projectSelectedId) : null,
+            "obra": null,
+            "idUsuario": this.selectedUser ? Number(this.selectedUser) : null,
+            "usuario": null,
+            "periodo": this.selectedPeriod ? Number(this.selectedPeriod) : null,
+            "idEtapaConst": this.stageSelectedId ? Number(this.stageSelectedId) : null,
+            "etapaConst": null,
+            "idSubProceso": this.selectedSubprocesses.length > 0 ? Number(this.selectedSubprocesses[0].idSubProceso) : null,
+            "subProceso": null,
+            "idAmbito": this.scopeSelectedId ? Number(this.scopeSelectedId) : null,
+            "ambito": null,
+            "idActividad": actividad.idActividades ? Number(actividad.idActividades) : null,
+            "actividad": null,
+            "idPeriocidad": this.selectedPeriodicity ? 
+                          (this.selectedPeriodicity === 'DIARIA' ? 7 : 
+                           this.selectedPeriodicity === 'SEMANAL' ? 8 : 
+                           this.selectedPeriodicity === 'MENSUAL' ? 6 : null) : null,
+            "periocidad": null,
+            "idCategoria": this.selectedCategory ? 
+                          (this.selectedCategory === 'ALTA' ? 2 : 
+                           this.selectedCategory === 'MEDIA' ? 1 : 
+                           this.selectedCategory === 'BAJA' ? 0 : null) : null,
+            "idParam": this.riskParameterSelectedId ? Number(this.riskParameterSelectedId) : null,
+            "dias": null,
+            "fechaControl": null
+          };
+          
+          // Mostrar objeto en consola
+          console.log(`Control para actividad ${index + 1}/${this.selectedActivities.length}:`, controlBody);
+          
+          // Enviar objeto al servicio POST usando controlService
+          // this.controlService.createControl(controlBody).subscribe({
+          //   next: (response: any) => {
+          //     console.log(`Respuesta del servicio para actividad ${actividad.nombre} (${actividad.idActividades}):`, response);
+          //   },
+          //   error: (error: any) => {
+          //     console.error(`Error al enviar la solicitud para actividad ${actividad.nombre} (${actividad.idActividades}):`, error);
+          //   }
+          // });
+
+        });
+      }
+    });
   }
 
   displayedColumns = [
