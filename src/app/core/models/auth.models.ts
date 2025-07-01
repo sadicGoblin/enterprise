@@ -9,7 +9,7 @@ export interface LoginResponse {
   success: boolean;
   code: number;
   message: string;
-  data?: Array<{
+  data?: {
     IdUsuario: string;
     Usuario: string;
     Nombre: string;
@@ -26,7 +26,7 @@ export interface LoginResponse {
     Clave: string;
     Nueva: string;
     [key: string]: any; // For other potential fields
-  }>;
+  };
   
   // Keep legacy fields for backward compatibility
   glosa?: string;
