@@ -17,7 +17,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { CustomSelectComponent } from '../../../../../../shared/controls/custom-select/custom-select.component';
+import { CustomSelectComponent, ParameterType } from '../../../../../../shared/controls/custom-select/custom-select.component';
 import { ProxyService } from '../../../../../../core/services/proxy.service';
 import { Observable, catchError, finalize, of } from 'rxjs';
 
@@ -97,6 +97,9 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
   // Referencia al componente custom-select para poder recargar opciones
   @ViewChild(CustomSelectComponent) responsableSelect!: CustomSelectComponent;
 
+  // Parámetro para tipo de carga (API personalizada)
+  responsableParameterType = ParameterType.CUSTOM_API;
+
   // Objeto de solicitud para cargar usuarios por obra
   usuariosObraRequestBody = {
     caso: 'ConsultaUsuariosObra',
@@ -149,44 +152,29 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
     if (this.data && this.data.projectId) {
       this.usuariosObraRequestBody.idObra = this.data.projectId;
     }
-    
+
+    // Inicializar el formulario reactivo
     this.inspectionForm = this.fb.group({
-      inspectionType: ['informal', Validators.required], // Marcar 'informal' por defecto
       date: [new Date(), Validators.required],
-      realizadoPor: ['', Validators.required],
+      realizadoPor: [{value: this.data?.collaboratorName || '', disabled: true}, Validators.required],
+      responsableAsignado: ['', Validators.required],
+      inspectionType: ['programada', Validators.required],
       observation: [''],
-      responsableAsignado: this.responsableAsignadoControl,
       items: this.fb.array([])
     });
-    
-    // Agregar un item inicial a la tabla
-    this.addItem();
+
+    console.log('Collaborator name recibido:', this.data?.collaboratorName);
   }
 
   ngOnInit(): void {
-    // Si recibimos datos de inspección, rellenar el formulario
-    if (this.data && this.data.inspectionData) {
-      this.inspectionForm.patchValue(this.data.inspectionData);
-    }
-    
-    // Si recibimos el ID del proyecto después de la inicialización, actualizar
-    if (this.data && this.data.projectId) {
-      console.log('Modal recibió projectId:', this.data.projectId);
-      this.usuariosObraRequestBody = {
-        ...this.usuariosObraRequestBody,
-        idObra: this.data.projectId
-      };
-      console.log('RequestBody actualizado:', this.usuariosObraRequestBody);
-    } else {
-      console.warn('Modal no recibió projectId');
-    }
-    
-    // Verificar si tenemos idControl y día para cargar datos de inspección SSOMA
-    if (this.data && this.data.idControl && this.data.day) {
+    // Si hay datos de la actividad, cargar los detalles de inspección
+    if (this.data?.idControl && this.data?.day) {
       console.log('Cargando datos de inspección SSOMA para idControl:', this.data.idControl, 'día:', this.data.day);
       this.loadInspeccionSSOMAData(this.data.idControl, this.data.day);
     } else {
-      console.warn('No se recibieron idControl y/o day para cargar datos de inspección');
+      console.log('No se recibieron idControl y/o day, agregando item vacío');
+      // Si no hay datos, inicializar con un ítem vacío
+      this.addEmptyItem();
     }
   }
 
@@ -194,8 +182,20 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
     // Esperamos a que la vista esté lista para recargar las opciones
     setTimeout(() => {
       if (this.responsableSelect && this.data && this.data.projectId) {
+        // Aseguramos que el idObra esté actualizado con el projectId antes de recargar las opciones
+        this.usuariosObraRequestBody.idObra = parseInt(this.data.projectId, 10) || 0;
+        
         console.log('Recargando opciones de usuarios para la obra:', this.data.projectId);
+        console.log('Request body para consulta de usuarios:', this.usuariosObraRequestBody);
+        
+        // Forzamos la recarga de opciones del select
         this.responsableSelect.reloadOptions();
+      } else {
+        console.warn('No se puede cargar usuarios de obra:', {
+          responsableSelect: !!this.responsableSelect,
+          data: !!this.data,
+          projectId: this.data?.projectId
+        });
       }
     }, 1000);
   }
@@ -423,10 +423,11 @@ export class InspectionModalComponent implements OnInit, AfterViewInit {
       
       try {
         // Asignar valores al formulario principal si están disponibles usando notación de corchetes
+        // SÓLO actualizamos el tipo de inspección, manteniemos la fecha actual y el nombre del colaborador
+        // que ya se inicializaron correctamente en el constructor
         this.inspectionForm.patchValue({
           inspectionType: firstItem['Programada'] === '1' ? 'programmed' : 'informal',
-          date: firstItem['FechaHora'] ? new Date(firstItem['FechaHora']) : new Date(),
-          realizadoPor: firstItem['IdRealizadoPor'] || firstItem['idRealizadoPor'] || 'Usuario',
+          // NO actualizamos la fecha ni el realizadoPor aquí para mantener los valores iniciales
         });
         
         console.log('Formulario principal actualizado:', this.inspectionForm.value);

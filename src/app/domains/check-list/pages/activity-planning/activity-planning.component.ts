@@ -79,6 +79,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   isLoading = false;
   selectedProjectId: string | null = null;
   selectedCollaboratorId: string | null = null;
+  selectedCollaboratorName: string | null = null;
   apiEndpoint = '/ws/ControlSvcImpl.php';
   
   // Store the formatted period for API calls
@@ -307,13 +308,17 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   }
   
   onCollaboratorSelectionChange(selectedCollaborator: SelectOption | null): void {
-    console.log('Selected collaborator:', selectedCollaborator);
+    console.log('Colaborador seleccionado:', selectedCollaborator);
     
     if (selectedCollaborator) {
       this.selectedCollaboratorId = selectedCollaborator.value;
-      // Note: No longer triggering API call automatically
+      this.selectedCollaboratorName = selectedCollaborator.label;
+      console.log('ID del colaborador seleccionado:', this.selectedCollaboratorId);
+      console.log('Nombre del colaborador seleccionado:', this.selectedCollaboratorName);
     } else {
       this.selectedCollaboratorId = null;
+      this.selectedCollaboratorName = null;
+      console.log('Colaborador deseleccionado');
     }
   }
 

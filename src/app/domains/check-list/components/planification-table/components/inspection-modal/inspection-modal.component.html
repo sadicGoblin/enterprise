@@ -7,25 +7,24 @@
       <div class="form-row">
         <mat-form-field appearance="outline" class="date-field">
           <mat-label>Fecha/Hora</mat-label>
-          <input matInput [matDatepicker]="picker" formControlName="date">
+          <input matInput [matDatepicker]="picker" formControlName="date" placeholder="DD/MM/YYYY">
           <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
           <mat-datepicker #picker></mat-datepicker>
         </mat-form-field>
 
         <mat-form-field appearance="outline" class="select-field">
           <mat-label>Realizado Por</mat-label>
-          <mat-select formControlName="realizadoPor">
-            <mat-option *ngFor="let user of userOptions" [value]="user.name">{{ user.name }}</mat-option>
-          </mat-select>
+          <input matInput formControlName="realizadoPor" readonly>
         </mat-form-field>
 
         <app-custom-select
           label="Asignación Responsable"
           [formControl]="responsableAsignadoControl"
           [loadFromApi]="true"
+          [parameterType]="responsableParameterType"
           [customApiEndpoint]="'/ws/UsuarioSvcImpl.php'"
           [customApiRequestBody]="usuariosObraRequestBody"
-          [customOptionValueKey]="'idUsuario'"
+          [customOptionValueKey]="'IdUsuario'"
           [customOptionLabelKey]="'nombre'"
           placeholder="Seleccionar Responsable"
           appearance="outline"

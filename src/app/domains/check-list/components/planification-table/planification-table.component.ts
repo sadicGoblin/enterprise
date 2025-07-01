@@ -78,6 +78,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
   }
 
   @Input() projectId: string | null = null;
+  @Input() selectedCollaboratorName: string | null = null;
 
   private _activities: Activity[] = [];
   private _days: number[] = [];
@@ -451,12 +452,14 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
         projectId: this.projectId,
         idControl: idControl,
         day: day,
-        inspectionData: null
+        inspectionData: null,
+        collaboratorName: this.selectedCollaboratorName || ''
       }
     });
     
     console.log('PlanificationTable: abriendo modal con projectId:', this.projectId);
     console.log('PlanificationTable: idControl:', idControl, 'day:', day);
+    console.log('PlanificationTable: collaboratorName:', this.selectedCollaboratorName);
 
     dialogRef.afterClosed().subscribe(result => {
       if (result) {
