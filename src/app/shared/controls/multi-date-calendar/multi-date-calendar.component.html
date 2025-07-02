@@ -1,0 +1,68 @@
+<div class="multi-calendar-container">
+  <div class="calendar-header">
+    <button mat-icon-button color="primary" (click)="prevMonth()" matTooltip="Mes anterior">
+      <mat-icon>chevron_left</mat-icon>
+    </button>
+    <span class="month-year-display">{{ currentMonthName }}</span>
+    <button mat-icon-button color="primary" (click)="nextMonth()" matTooltip="Mes siguiente">
+      <mat-icon>chevron_right</mat-icon>
+    </button>
+  </div>
+
+  <div class="calendar-days-header">
+    <div class="day-name" *ngFor="let day of weekDays">{{ day }}</div>
+  </div>
+
+  <div class="calendar-body"
+       (mouseup)="onMouseUp()"
+       (mouseleave)="onMouseUp()">
+    <div class="calendar-week" *ngFor="let week of calendar">
+      <div
+        *ngFor="let day of week"
+        class="calendar-day"
+        [class.disabled]="day.disabled"
+        [class.selected]="day.selected"
+        [class.today]="day.today"
+        [class.outside-month]="!day.isCurrentMonth"
+        (click)="onDayClick(day, $event)"
+        (mousedown)="onMouseDown(day, $event)"
+        (mouseover)="onMouseOver(day)"
+      >
+        {{ day.date | date:'d' }}
+      </div>
+    </div>
+  </div>
+
+  <div class="calendar-footer">
+    <div class="selected-dates-summary" *ngIf="selectedDates.length > 0">
+      <span>{{ selectedDates.length }} día(s) seleccionado(s)</span>
+    </div>
+    <div class="calendar-actions">
+      <button mat-raised-button color="warn" *ngIf="selectedDates.length > 0" (click)="clearSelection()">
+        <mat-icon>clear</mat-icon> Limpiar
+      </button>
+    </div>
+  </div>
+
+  <!-- Lista de fechas seleccionadas -->
+  <div class="selected-dates-list" *ngIf="selectedDates.length > 0">
+    <div class="dates-list-header">
+      <h4>Fechas seleccionadas:</h4>
+    </div>
+    <div class="dates-list-items">
+      <div class="date-chip" *ngFor="let date of selectedDates">
+        {{ getFormattedDate(date) }}
+        <mat-icon class="remove-date" (click)="toggleDateSelection(date)">close</mat-icon>
+      </div>
+    </div>
+  </div>
+
+  <!-- Instrucciones de uso -->
+  <div class="calendar-instructions">
+    <small>
+      <strong>Cómo usar:</strong><br>
+      • Click simple para seleccionar/quitar un día<br>
+      • Shift+Click para seleccionar rangos
+    </small>
+  </div>
+</div>

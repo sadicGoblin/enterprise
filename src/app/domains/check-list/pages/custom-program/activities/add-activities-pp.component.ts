@@ -19,10 +19,12 @@ import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { UsuarioService } from '../../../services/usuario.service';
 import { ControlService } from '../../../services/control.service';
 // Componente usado programáticamente para mostrar diálogo de confirmación
 import { ConfirmationDialogComponent } from './confirmation-dialog.component';
+import { CalendarDialogComponent } from '../../../../../shared/controls/multi-date-calendar/calendar-dialog.component';
 
 // Interfaces para los diferentes tipos de objetos usados en el componente
 interface ProjectApiRequestBody {
@@ -132,10 +134,12 @@ interface ActivityApiRequestBody {
     MatIconModule,
     MatCardModule,
     MatDialogModule,
+    CalendarDialogComponent,
     MatProgressSpinnerModule,
     MatCheckboxModule,
     MatDatepickerModule,
     MatNativeDateModule,
+    MatTooltipModule,
     ConfirmationDialogComponent,
     CustomSelectComponent
   ],
@@ -654,6 +658,7 @@ export class AddActivitiesPpComponent implements OnInit {
     scope: string | number;
     name: string;
     days: string; // Campo para los días/íconos
+    selectedDays?: Date[]; // Almacena las fechas seleccionadas como objetos Date
     periodicity: string;
     category: string;
     parameter: string | number | null;
@@ -723,6 +728,7 @@ export class AddActivitiesPpComponent implements OnInit {
         scopeName: string; // Campo para mostrar el nombre del ámbito
         name: string;
         days: string; // Campo para los íconos de días
+        selectedDays?: Date[]; // Almacena las fechas seleccionadas como objetos Date
         periodicity: string;
         category: string;
         parameter: string | number | null;
@@ -759,6 +765,7 @@ export class AddActivitiesPpComponent implements OnInit {
         document: this.selectedDocument || '',
         // Campo para mostrar íconos de días en la tabla
         days: '15',  // Valor por defecto para los íconos de calendario
+        selectedDays: [],
         // También almacenar los valores reales para recuperarlos después
         activities: [actividad] as any[],
         // Campos adicionales para recuperación
@@ -1124,6 +1131,7 @@ export class AddActivitiesPpComponent implements OnInit {
               name: control.Actividad,
               // Agregamos el campo days para mostrar íconos de calendario
               days: control.dias || '15',  // Usamos dias en minúsculas según el objeto de ejemplo
+              selectedDays: control.dias ? this.parseDaysString(control.dias) : [],
               periodicity: control.Periocidad,
               periodicityId: control.IdPeriocidad,
               category: control.idCategoria,
@@ -1150,5 +1158,133 @@ export class AddActivitiesPpComponent implements OnInit {
         console.error('Error al cargar controles existentes:', error);
       }
     });
+  }
+
+  /**
+   * Genera el texto para el tooltip que muestra los días seleccionados
+   * @param element Elemento con los días seleccionados
+   * @returns Texto para el tooltip
+   */
+  getDaysTooltip(element: any): string {
+    if (!element.selectedDays || element.selectedDays.length === 0) {
+      return 'Seleccionar días';
+    }
+    
+    // Ordenar las fechas cronológicamente
+    const sortedDates = [...element.selectedDays].sort((a, b) => a.getTime() - b.getTime());
+    
+    // Formatear cada fecha como dd/MM y unirlas
+    const formattedDates = sortedDates.map(date => {
+      const day = date.getDate().toString().padStart(2, '0');
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      return `${day}/${month}`;
+    });
+    
+    // Devolver lista de días seleccionados
+    return `Días seleccionados: ${formattedDates.join(', ')}`;
+  }
+  
+  /**
+   * Abre el diálogo del calendario para seleccionar días
+   * @param element Fila de la tabla seleccionada
+   */
+  activeCalendarControl: number | null = null;
+
+  openCalendarDialog(element: any): void {
+    // Establecer este control como activo para resaltarlo
+    this.activeCalendarControl = element.id;
+    
+    // Convertir los días como string a números para defaultDays
+    const defaultDays = element.days ? 
+      element.days.split(',').map((d: string) => parseInt(d.trim(), 10)) : [];
+    
+    const dialogRef = this.dialog.open(CalendarDialogComponent, {
+      width: '400px',
+      data: {
+        selectedDates: element.selectedDays || [],
+        defaultDays: defaultDays,
+        rowData: element,
+        controlId: element.id
+      },
+      panelClass: 'calendar-dialog-panel'
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      // Limpiamos la marca de control activo
+      this.activeCalendarControl = null;
+      
+      if (result) {
+        // Actualizamos los datos localmente
+        const control = this.tableData.find(c => c.id === result.controlId);
+        if (control) {
+          control.selectedDays = result.selectedDates;
+          control.days = this.formatDaysToString(result.selectedDates);
+          // Actualizar los días en la base de datos
+          this.updateControlDays(control.id, control.days);
+        }
+      }
+    });
+  }
+  
+  /**
+   * Convierte un array de objetos Date a un string formato '1,5,10,15,20'
+   */
+  formatDaysToString(dates: Date[]): string {
+    if (!dates || dates.length === 0) return '';
+    
+    // Extraer solo los días del mes y ordenarlos
+    return dates
+      .map(date => date.getDate())
+      .sort((a, b) => a - b)
+      .join(',');
+  }
+  
+  /**
+   * Convierte un string de días '1,5,10' a objetos Date
+   */
+  parseDaysString(daysString: string): Date[] {
+    if (!daysString) return [];
+    
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth();
+    const currentYear = currentDate.getFullYear();
+    
+    return daysString.split(',').map(day => {
+      const dayNumber = parseInt(day.trim(), 10);
+      if (isNaN(dayNumber)) return null;
+      
+      return new Date(currentYear, currentMonth, dayNumber);
+    }).filter(date => date !== null) as Date[];
+  }
+  
+  /**
+   * Actualiza los días seleccionados en la base de datos
+   */
+  updateControlDays(controlId: number, daysString: string): void {
+    console.log(`Actualizando días para control ID ${controlId}: ${daysString}`);
+    
+    // Aquí iría la llamada al servicio para actualizar en la base de datos
+    const updateBody = {
+      "caso": "Actualiza",
+      "IdControl": controlId,
+      "dias": daysString
+    };
+    
+    // Opcional: Llamar al servicio para actualizar en la base de datos
+    // Comentado para evitar errores hasta implementarlo completamente
+    /*
+    this.controlService.updateControl(updateBody).subscribe({
+      next: (response) => {
+        console.log('Días actualizados correctamente:', response);
+      },
+      error: (error) => {
+        console.error('Error al actualizar días:', error);
+      }
+    });
+    */
+    
+    // La tabla se actualiza automáticamente porque estamos modificando
+    // directamente el objeto element que ya está en el array tableData
+    console.log('Datos actualizados en la tabla:', this.tableData);
   }
 }
