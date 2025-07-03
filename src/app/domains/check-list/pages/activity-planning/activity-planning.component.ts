@@ -94,8 +94,9 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     private proxyService: ProxyService,
     private dialog: MatDialog
   ) {
-    // Initialize with April 1, 2025 as default date
-    this.selectedPeriod = new Date(2025, 3, 1); // Month is 0-indexed (3 = April)
+    // Initialize with current date as default
+    const now = new Date();
+    this.selectedPeriod = new Date(now.getFullYear(), now.getMonth(), 1); // First day of current month
   }
   
   ngOnInit(): void {

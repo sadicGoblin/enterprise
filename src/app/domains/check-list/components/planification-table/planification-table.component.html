@@ -60,14 +60,18 @@
           <td class="sticky-end-column numeric-cell compliance-cell">{{ activity.compliance }}%</td>
         </tr>
       </ng-container>
+      
+      <!-- Summary row with totals -->
+      <tr class="summary-row">
+        <td class="fixed-first-column total-column" colspan="2">TOTAL</td>
+        <td *ngFor="let day of days" class="day-column summary-cell" [ngClass]="{'weekend-column': isWeekend(day)}"></td>
+        <td class="sticky-end-column numeric-cell total-cell">{{ totalAssigned }}</td>
+        <td class="sticky-end-column numeric-cell total-cell">{{ totalRealized }}</td>
+        <td class="sticky-end-column numeric-cell compliance-cell total-cell">{{ totalCompliancePercentage.toFixed(1) }}%</td>
+      </tr>
     </table>
     
       
-    <!-- Save button at bottom of table -->
-    <div class="table-actions">
-      <button mat-raised-button color="primary" (click)="saveAllChanges()">
-        <mat-icon>save</mat-icon> Guardar Cambios
-      </button>
-    </div>
+    <!-- Save button removed as per requirements -->
   </div>
 </div>

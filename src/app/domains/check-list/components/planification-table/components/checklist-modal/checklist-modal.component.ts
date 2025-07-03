@@ -1,4 +1,4 @@
-import { Component, OnInit, Inject, AfterViewInit, ViewChild } from '@angular/core';
+import { Component, OnInit, Inject, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, FormControl, Validators, AbstractControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { DateAdapter } from '@angular/material/core';
@@ -475,9 +475,138 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
     this.dialogRef.close(null);
   }
 
+  /**
+   * Genera un PDF con los datos del checklist
+   */
   saveAsPDF(): void {
-    console.log('Guardar como PDF', this.checkListForm.value);
-    // Implementar generación de PDF
+    // Crear el contenido HTML para el PDF
+    const reportTitle = 'CHECK LIST BODEGA DE GASES';
+    const projectName = this.data.projectName || 'Proyecto';
+    const currentDate = new Date().toLocaleDateString('es-CL');
+    
+    // Obtener los datos del formulario
+    const formData = this.checkListForm.value;
+    const inspectionDate = formData.inspectionDate2 ? new Date(formData.inspectionDate2).toLocaleDateString('es-CL') : 'No disponible';
+    const inspectionTime = formData.inspectionTime || '';
+    const inspectedBy = this.inspectionByControl.value || 'No especificado';
+    const reviewDate = formData.reviewDate ? new Date(formData.reviewDate).toLocaleDateString('es-CL') : 'No disponible';
+    const reviewTime = formData.reviewTime || '';
+    const reviewedBy = this.reviewedByControl.value || 'No especificado';
+    const observations = formData.observations || 'No hay observaciones';
+    
+    // Crear el contenido HTML para el PDF
+    let reportHtml = `
+      <div class="pdf-container" style="font-family: Arial, sans-serif; padding: 20px;">
+        <div class="pdf-header" style="text-align: center; margin-bottom: 20px;">
+          <h1 style="margin: 0; color: #0066cc; font-size: 20px;">ZONAS COMUNES :: ${reportTitle}</h1>
+          <p style="margin: 5px 0;">Proyecto: ${projectName}</p>
+          <p style="margin: 5px 0;">Fecha de emisión: ${currentDate}</p>
+        </div>
+
+        <div class="pdf-info" style="margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 5px; width: 50%;"><strong>Fecha inspección:</strong> ${inspectionDate}</td>
+              <td style="padding: 5px;"><strong>Hora:</strong> ${inspectionTime}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px;"><strong>Inspeccionado por:</strong> ${inspectedBy}</td>
+              <td style="padding: 5px;"><strong>Revisado por:</strong> ${reviewedBy}</td>
+            </tr>
+            <tr>
+              <td style="padding: 5px;"><strong>Fecha revisión:</strong> ${reviewDate}</td>
+              <td style="padding: 5px;"><strong>Hora revisión:</strong> ${reviewTime}</td>
+            </tr>
+          </table>
+        </div>
+    `;
+    
+    // Añadir tabla de items de checklist si hay datos
+    if (this.checkItemsControls.length > 0) {
+      reportHtml += `
+        <div class="pdf-items" style="margin-bottom: 20px;">
+          <h3 style="margin-top: 0; color: #333; font-size: 16px;">Elementos inspeccionados</h3>
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
+            <thead>
+              <tr style="background-color: #f2f2f2;">
+                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Elemento a inspeccionar</th>
+                <th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">Si</th>
+                <th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">No</th>
+                <th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">N.A.</th>
+                <th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">Fecha</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+      
+      // Agregar filas de datos
+      this.checkItemsControls.forEach((item, index) => {
+        const itemValue = item.value;
+        reportHtml += `
+          <tr style="${index % 2 === 0 ? 'background-color: #f9f9f9;' : ''}">
+            <td style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">${itemValue.description || 'No disponible'}</td>
+            <td style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">${itemValue.yes ? '✓' : ''}</td>
+            <td style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">${itemValue.no ? '✓' : ''}</td>
+            <td style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">${itemValue.na ? '✓' : ''}</td>
+            <td style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">${itemValue.date || 'No disponible'}</td>
+          </tr>
+        `;
+      });
+      
+      reportHtml += `
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+    
+    // Añadir observaciones
+    reportHtml += `
+      <div class="pdf-observations" style="margin-bottom: 20px;">
+        <h3 style="margin-top: 0; color: #333; font-size: 16px;">Observaciones</h3>
+        <div style="border: 1px solid #ddd; padding: 10px; border-radius: 4px; background-color: #f9f9f9;">
+          ${observations}
+        </div>
+      </div>
+    `;
+    
+    // Cerrar el contenedor principal
+    reportHtml += `
+      <div class="pdf-footer" style="margin-top: 30px; text-align: center; font-size: 12px; color: #666;">
+        <p>Este documento fue generado automáticamente por el sistema.</p>
+        <p>© ${new Date().getFullYear()} SSTMA - Todos los derechos reservados.</p>
+      </div>
+    </div>`;
+    
+    // Crear un elemento temporal para generar el PDF
+    const printWindow = window.open('', '_blank');
+    printWindow?.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Check List - Bodega de Gases</title>
+        <style>
+          @media print {
+            body { font-family: Arial, sans-serif; }
+            @page { size: A4; margin: 2cm; }
+          }
+        </style>
+      </head>
+      <body>
+        ${reportHtml}
+        <script>
+          window.onload = function() {
+            setTimeout(function() {
+              window.print();
+              setTimeout(function() { window.close(); }, 500);
+            }, 500);
+          }
+        </script>
+      </body>
+      </html>
+    `);
+    
+    printWindow?.document.close();
   }
 
   onSave(): void {
