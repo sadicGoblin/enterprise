@@ -65,7 +65,7 @@ export class CreateParamsComponent implements OnInit {
   subParams: SubParam[] = [];
 
   paramColumns = ['name', 'actions'];
-  subParamColumns = ['name'];
+  subParamColumns = ['name', 'edit', 'delete'];
   
   constructor(
     private parametroService: ParametroService,
@@ -120,6 +120,19 @@ export class CreateParamsComponent implements OnInit {
     if (this.subParamName && this.selectedParam) {
       this.selectedParam.subParams.push({ name: this.subParamName });
       this.subParamName = '';
+    }
+  }
+
+  editSubParam(index: number) {
+    if (this.selectedParam && index >= 0 && index < this.selectedParam.subParams.length) {
+      this.subParamName = this.selectedParam.subParams[index].name;
+      this.selectedParam.subParams.splice(index, 1);
+    }
+  }
+
+  deleteSubParam(index: number) {
+    if (this.selectedParam && index >= 0 && index < this.selectedParam.subParams.length) {
+      this.selectedParam.subParams.splice(index, 1);
     }
   }
   

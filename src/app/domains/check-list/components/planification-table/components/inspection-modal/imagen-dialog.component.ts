@@ -22,7 +22,7 @@ import { CommonModule } from '@angular/common';
       
       <div mat-dialog-actions class="dialog-actions">
         <button mat-button color="primary" [mat-dialog-close] class="close-button">
-          <mat-icon>close</mat-icon>
+          <mat-icon>delete</mat-icon>
           Cerrar
         </button>
       </div>
