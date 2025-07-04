@@ -132,11 +132,21 @@ table.mat-table {
       width: 30px;
       line-height: 30px;
       min-width: 30px;
+      position: relative;
       
       mat-icon {
         font-size: 18px;
         width: 18px;
         height: 18px;
+      }
+      
+      mat-spinner {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        right: 0;
+        bottom: 0;
+        margin: auto;
       }
     }
   }

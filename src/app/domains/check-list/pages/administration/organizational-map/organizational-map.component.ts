@@ -16,6 +16,7 @@ import { WorkMaintenancePopupComponent } from '../../../components/work-maintena
 import { AreaMaintenancePopupComponent } from '../../../components/area-maintenance-popup/area-maintenance-popup.component';
 import { CustomSelectComponent, SelectOption, ParameterType } from '../../../../../shared/controls/custom-select/custom-select.component';
 import { DataTableComponent } from '../../../../../shared/components/data-table/data-table.component';
+import { ConfirmDialogComponent } from '../../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { SubParametroService } from '../../../services/sub-parametro.service';
 import { UsuarioService } from '../../../services/usuario.service';
 import { UsuarioItem } from '../../../models/usuario.models';
@@ -272,7 +273,7 @@ export class OrganizationalMapComponent implements OnInit {
    * @param element User data object
    * @param index Index in tableData array
    */
-  editar(element: any, index: number): void {
+  updateUser(element: any, index: number): void {
     // Asegurar que el formulario sea visible cuando se inicia edición
     this.isFormVisible = true;
     
@@ -462,7 +463,7 @@ export class OrganizationalMapComponent implements OnInit {
       // Handle any post-dialog actions if needed
     });
   }
-  
+    
   /**
    * Mark all controls in a form group as touched to trigger validation display
    * @param formGroup The FormGroup to mark as touched
@@ -489,11 +490,30 @@ export class OrganizationalMapComponent implements OnInit {
     
     switch(event.action) {
       case 'edit':
-        this.editar(event.item, event.index);
+        this.updateUser(event.item, event.index);
         break;
       case 'delete':
-        // Llamar a la función para eliminar usuario
-        this.eliminarUsuario(event.item, event.index);
+        // Mostrar diálogo de confirmación antes de eliminar
+        const userName = event.item?.nombre || 'este usuario';
+        const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+          width: '400px',
+          data: {
+            title: 'Confirmar Eliminación',
+            message: `¿Está seguro que desea eliminar a ${userName}?`,
+            confirmText: 'Eliminar',
+            cancelText: 'Cancelar'
+          }
+        });
+
+        dialogRef.afterClosed().subscribe(confirmed => {
+          if (confirmed) {
+            console.log('Eliminando usuario...', event.item);
+            // Mostrar indicador de carga
+            this.isLoading = true;
+            // Llamar a la función para eliminar usuario si confirma
+            this.eliminarUsuario(event.item, event.index);
+          }
+        });
         break;
       case 'obras':
         if (event.item && event.item.userId) {

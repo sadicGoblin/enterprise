@@ -1,113 +1,196 @@
 <div class="dialog-header">
   <h2 mat-dialog-title>Inspección SSTMA</h2>
-  <button mat-icon-button class="close-button" (click)="onCancel()" matTooltip="Cerrar">
-    <mat-icon>delete</mat-icon>
-  </button>
+  <div class="header-actions">
+    <button mat-icon-button class="close-button" (click)="onCancel()" matTooltip="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
 </div>
 
 <div mat-dialog-content class="inspection-dialog-content">
-  <form [formGroup]="inspectionForm">
+  <!-- Pestañas para Formulario y Vista Previa -->
+  <mat-tab-group>
+    <mat-tab label="Formulario de Inspección">
+      <form [formGroup]="inspectionForm">
+        <div class="main-form-section">
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="date-field">
+              <mat-label>Fecha/Hora</mat-label>
+              <input matInput [matDatepicker]="picker" formControlName="date" placeholder="DD/MM/YYYY">
+              <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+              <mat-datepicker #picker></mat-datepicker>
+            </mat-form-field>
 
-    <div class="main-form-section">
-      <div class="form-row">
-        <mat-form-field appearance="outline" class="date-field">
-          <mat-label>Fecha/Hora</mat-label>
-          <input matInput [matDatepicker]="picker" formControlName="date" placeholder="DD/MM/YYYY">
-          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
+            <mat-form-field appearance="outline" class="select-field">
+              <mat-label>Realizado Por</mat-label>
+              <input matInput formControlName="realizadoPor" readonly>
+            </mat-form-field>
 
-        <mat-form-field appearance="outline" class="select-field">
-          <mat-label>Realizado Por</mat-label>
-          <input matInput formControlName="realizadoPor" readonly>
-        </mat-form-field>
+            <app-custom-select
+              label="Asignación Responsable"
+              [formControl]="responsableAsignadoControl"
+              [loadFromApi]="true"
+              [parameterType]="responsableParameterType"
+              [customApiEndpoint]="'/ws/UsuarioSvcImpl.php'"
+              [customApiRequestBody]="usuariosObraRequestBody"
+              [customOptionValueKey]="'IdUsuario'"
+              [customOptionLabelKey]="'nombre'"
+              placeholder="Seleccionar Responsable"
+              appearance="outline"
+              class="select-field"
+            ></app-custom-select>
+          </div>
+        </div>
 
-        <app-custom-select
-          label="Asignación Responsable"
-          [formControl]="responsableAsignadoControl"
-          [loadFromApi]="true"
-          [parameterType]="responsableParameterType"
-          [customApiEndpoint]="'/ws/UsuarioSvcImpl.php'"
-          [customApiRequestBody]="usuariosObraRequestBody"
-          [customOptionValueKey]="'IdUsuario'"
-          [customOptionLabelKey]="'nombre'"
-          placeholder="Seleccionar Responsable"
-          appearance="outline"
-          class="select-field"
-        ></app-custom-select>
+        <div class="inspection-type-selector">
+          <mat-radio-group formControlName="inspectionType" class="inspection-type-radio-group">
+            <mat-radio-button value="programada" color="primary">Programada</mat-radio-button>
+            <mat-radio-button value="informal" color="primary">Informal</mat-radio-button>
+          </mat-radio-group>
+          
+          <mat-form-field appearance="outline" class="full-width observation-field" *ngIf="inspectionForm.get('inspectionType')?.value === 'informal'">
+            <textarea matInput rows="4" formControlName="observation" placeholder="Ingrese su observación aquí"></textarea>
+          </mat-form-field>
+        </div>
+
+        <section class="items-table-section">
+          <h3>Inspección SSTMA</h3>
+          
+          <!-- Indicador de carga -->
+          <div *ngIf="isLoadingInspeccion" class="spinner-container">
+            <mat-spinner diameter="40"></mat-spinner>
+            <p>Cargando datos de inspección...</p>
+          </div>
+          
+          <!-- Mensaje de error -->
+          <div *ngIf="!isLoadingInspeccion && errorLoadingInspeccion" class="error-message">
+            <mat-icon color="warn">error</mat-icon>
+            <p>{{errorLoadingInspeccion}}</p>
+          </div>
+
+          <!-- Sin datos -->
+          <div *ngIf="!isLoadingInspeccion && !errorLoadingInspeccion && items.controls.length === 0" class="no-data-message">
+            <p>No hay datos de inspección disponibles.</p>
+          </div>
+
+          <!-- Tabla HTML Estándar -->
+          <div *ngIf="!isLoadingInspeccion && items.controls.length > 0" class="inspection-table-wrapper">
+            <table class="inspection-table">
+              <thead>
+                <tr>
+                  <th class="action-column"></th>
+                  <th>Condición Riesgo</th>
+                  <th>Incidencia</th>
+                  <th>Potencial Riesgo</th>
+                  <th>Clasificación Hallazgo</th>
+                  <th>Medida Correctiva</th>
+                  <th>Responsable</th>
+                  <th>Fecha Compromiso</th>
+                  <th>Fecha Cierre</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of items.controls; let i = index">
+                  <td class="action-column">
+                    <button mat-icon-button color="primary" type="button" matTooltip="Ver imagen" 
+                      (click)="mostrarImagenEnPopup(item.value.foto)" 
+                      [disabled]="!item.value.foto">
+                      <mat-icon>image</mat-icon>
+                    </button>
+                  </td>
+                  <td>{{item.value.condicionRiesgo || 'No disponible'}}</td>
+                  <td>{{item.value.incidencia || 'No disponible'}}</td>
+                  <td>{{item.value.potencialRiesgo || 'No disponible'}}</td>
+                  <td>{{item.value.clasificacionHallazgo || 'No disponible'}}</td>
+                  <td>{{item.value.medidaCorrectiva || 'No disponible'}}</td>
+                  <td>{{item.value.responsable || 'No disponible'}}</td>
+                  <td>{{item.value.fechaCompromisoFormateada || 'No disponible'}}</td>
+                  <td>{{item.value.fechaCierreFormateada || 'No disponible'}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </form>
+    </mat-tab>
+    
+    <mat-tab label="Vista Previa PDF">
+      <div class="pdf-preview">
+        <div class="pdf-preview-container">
+          <!-- Header del PDF -->
+          <div class="pdf-header">
+            <div class="logo">
+              <img src="assets/images/logo-empresa.png" alt="Logo Empresa" onerror="this.src='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAYAAABw4pVUAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAyNpVFh0WE1MOmNvbS5hZG9iZS54bXAAAAAAADw/eHBhY2tldCBiZWdpbj0i77u/IiBpZD0iVzVNME1wQ2VoaUh6cmVTek5UY3prYzlkIj8+IDx4OnhtcG1ldGEgeG1sbnM6eD0iYWRvYmU6bnM6bWV0YS8iIHg6eG1wdGs9IkFkb2JlIFhNUCBDb3JlIDUuNS1jMDE0IDc5LjE1MTQ4MSwgMjAxMy8wMy8xMy0xMjowOToxNSAgICAgICAgIj4gPHJkZjpSREYgeG1sbnM6cmRmPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5LzAyLzIyLXJkZi1zeW50YXgtbnMjIj4gPHJkZjpEZXNjcmlwdGlvbiByZGY6YWJvdXQ9IiIgeG1sbnM6eG1wPSJodHRwOi8vbnMuYWRvYmUuY29tL3hhcC8xLjAvIiB4bWxuczp4bXBNTT0iaHR0cDovL25zLmFkb2JlLmNvbS94YXAvMS4wL21tLyIgeG1sbnM6c3RSZWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20veGFwLzEuMC9zVHlwZS9SZXNvdXJjZVJlZiMiIHhtcDpDcmVhdG9yVG9vbD0iQWRvYmUgUGhvdG9zaG9wIENDIChNYWNpbnRvc2gpIiB4bXBNTTpJbnN0YW5jZUlEPSJ4bXAuaWlkOkY4NDU0MzQyRTc5NDExRTk5QThEOTRDMDg4QzM0RkUzIiB4bXBNTTpEb2N1bWVudElEPSJ4bXAuZGlkOkY4NDU0MzQzRTc5NDExRTk5QThEOTRDMDg4QzM0RkUzIj4gPHhtcE1NOkRlcml2ZWRGcm9tIHN0UmVmOmluc3RhbmNlSUQ9InhtcC5paWQ6Rjg0NTQzNDBFNzk0MTFFOTlBOEQ5NEMwODhDMzRGRTMiIHN0UmVmOmRvY3VtZW50SUQ9InhtcC5kaWQ6Rjg0NTQzNDFFNzk0MTFFOTlBOEQ5NEMwODhDMzRGRTMiLz4gPC9yZGY6RGVzY3JpcHRpb24+IDwvcmRmOlJERj4gPC94OnhtcG1ldGE+IDw/eHBhY2tldCBlbmQ9InIiPz7leBS7AAAGQElEQVR42uxdW2xU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'; this.style.width='40px'">
+            </div>
+            <h1 class="title">INSPECCIÓN SSTMA</h1>
+          </div>
+
+          <!-- Datos generales -->
+          <div class="info-section">
+            <table class="info-table">
+              <tr>
+                <td class="label">Tipo de inspección:</td>
+                <td class="value">{{ inspectionForm.get('inspectionType')?.value === 'programada' ? 'Programada' : 'Informal' }}</td>
+                <td class="label">Fecha:</td>
+                <td class="value">{{ inspectionForm.get('date')?.value | date:'dd/MM/yyyy' }}</td>
+              </tr>
+              <tr>
+                <td class="label">Realizado por:</td>
+                <td class="value">{{ inspectionForm.get('realizadoPor')?.value }}</td>
+                <td class="label">Responsable:</td>
+                <td class="value">{{ responsableAsignadoControl.value }}</td>
+              </tr>
+              <tr *ngIf="inspectionForm.get('inspectionType')?.value === 'informal'">
+                <td class="label">Observación:</td>
+                <td class="value" colspan="3">{{ inspectionForm.get('observation')?.value }}</td>
+              </tr>
+            </table>
+          </div>
+          
+          <!-- Tabla de items -->
+          <div class="data-section">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Condición Riesgo</th>
+                  <th>Incidencia</th>
+                  <th>Potencial Riesgo</th>
+                  <th>Clasificación</th>
+                  <th>Medida Correctiva</th>
+                  <th>Responsable</th>
+                  <th>Fecha Compromiso</th>
+                  <th>Fecha Cierre</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngIf="items.controls.length === 0">
+                  <td colspan="8" class="no-data">No hay datos de inspección disponibles.</td>
+                </tr>
+                <tr *ngFor="let item of items.controls; let i = index">
+                  <td>{{item.value.condicionRiesgo || 'No disponible'}}</td>
+                  <td>{{item.value.incidencia || 'No disponible'}}</td>
+                  <td>{{item.value.potencialRiesgo || 'No disponible'}}</td>
+                  <td>{{item.value.clasificacionHallazgo || 'No disponible'}}</td>
+                  <td>{{item.value.medidaCorrectiva || 'No disponible'}}</td>
+                  <td>{{item.value.responsable || 'No disponible'}}</td>
+                  <td>{{item.value.fechaCompromisoFormateada || 'No disponible'}}</td>
+                  <td>{{item.value.fechaCierreFormateada || 'No disponible'}}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- Footer -->
+          <div class="pdf-footer">
+            <div class="signature-box">
+              <div class="line"></div>
+              <p>Firma de responsable</p>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-
-    <div class="inspection-type-selector">
-      <mat-radio-group formControlName="inspectionType" class="inspection-type-radio-group">
-        <mat-radio-button value="programada" color="primary">Programada</mat-radio-button>
-        <mat-radio-button value="informal" color="primary">Informal</mat-radio-button>
-      </mat-radio-group>
-      
-      <mat-form-field appearance="outline" class="full-width observation-field" *ngIf="inspectionForm.get('inspectionType')?.value === 'informal'">
-        <textarea matInput rows="4" formControlName="observation" placeholder="Ingrese su observación aquí"></textarea>
-      </mat-form-field>
-    </div>
-
-    <section class="items-table-section">
-      <h3>Inspección SSTMA</h3>
-      
-      <!-- Indicador de carga -->
-      <div *ngIf="isLoadingInspeccion" class="spinner-container">
-        <mat-spinner diameter="40"></mat-spinner>
-        <p>Cargando datos de inspección...</p>
-      </div>
-      
-      <!-- Mensaje de error -->
-      <div *ngIf="!isLoadingInspeccion && errorLoadingInspeccion" class="error-message">
-        <mat-icon color="warn">error</mat-icon>
-        <p>{{errorLoadingInspeccion}}</p>
-      </div>
-
-      <!-- Sin datos -->
-      <div *ngIf="!isLoadingInspeccion && !errorLoadingInspeccion && items.controls.length === 0" class="no-data-message">
-        <p>No hay datos de inspección disponibles.</p>
-      </div>
-
-      <!-- Tabla HTML Estándar -->
-      <div *ngIf="!isLoadingInspeccion && items.controls.length > 0" class="inspection-table-wrapper">
-        <table class="inspection-table">
-          <thead>
-            <tr>
-              <th class="action-column"></th>
-              <th>Condición Riesgo</th>
-              <th>Incidencia</th>
-              <th>Potencial Riesgo</th>
-              <th>Clasificación Hallazgo</th>
-              <th>Medida Correctiva</th>
-              <th>Responsable</th>
-              <th>Fecha Compromiso</th>
-              <th>Fecha Cierre</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let item of items.controls; let i = index">
-              <td class="action-column">
-                <button mat-icon-button color="primary" type="button" matTooltip="Ver imagen" 
-                  (click)="mostrarImagenEnPopup(item.value.foto)" 
-                  [disabled]="!item.value.foto">
-                  <mat-icon>image</mat-icon>
-                </button>
-              </td>
-              <td>{{item.value.condicionRiesgo || 'No disponible'}}</td>
-              <td>{{item.value.incidencia || 'No disponible'}}</td>
-              <td>{{item.value.potencialRiesgo || 'No disponible'}}</td>
-              <td>{{item.value.clasificacionHallazgo || 'No disponible'}}</td>
-              <td>{{item.value.medidaCorrectiva || 'No disponible'}}</td>
-              <td>{{item.value.responsable || 'No disponible'}}</td>
-              <td>{{item.value.fechaCompromisoFormateada || 'No disponible'}}</td>
-              <td>{{item.value.fechaCierreFormateada || 'No disponible'}}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </form>
+    </mat-tab>
+  </mat-tab-group>
 </div>
 
 <div mat-dialog-actions class="dialog-actions">
@@ -115,8 +198,8 @@
     <mat-icon>exit_to_app</mat-icon> Salir
   </button>
   <div class="spacer"></div>
-  <button mat-button class="pdf-button" (click)="saveAsPDF()">
-    <span class="pdf-icon">PDF</span>
+  <button mat-flat-button color="primary" (click)="exportToPDF()" class="pdf-button" matTooltip="Exportar a PDF">
+    <mat-icon>picture_as_pdf</mat-icon> Exportar PDF
   </button>
   <button mat-raised-button color="primary" class="save-button" (click)="onSave()">
     <mat-icon>save</mat-icon> Grabar

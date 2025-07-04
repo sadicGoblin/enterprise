@@ -298,6 +298,9 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
         // Log for debugging
         console.log('%c Completed activities API response saved:', 'color: blue; font-weight: bold', this.completedActivitiesApiResponse);
         console.log('%c Completed activities data saved:', 'color: green; font-weight: bold', this.completedActivities);
+        this.totalRealized = 0;
+        this.totalRealized += this.completedActivities.length;
+        this.totalCompliancePercentage = (this.totalRealized / this.totalAssigned) * 100;
         console.table(this.completedActivities);
         
         // Update activities with completion status
@@ -410,19 +413,17 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
   calculateTotals(): void {
     // Reset totals
     this.totalAssigned = 0;
-    this.totalRealized = 0;
     
     // Only calculate if we have activities
     if (this._activities && this._activities.length > 0) {
       // Sum up assigned and realized values
       this._activities.forEach(activity => {
         this.totalAssigned += activity.assigned;
-        this.totalRealized += activity.realized;
       });
       
       // Calculate overall compliance percentage
       if (this.totalAssigned > 0) {
-        this.totalCompliancePercentage = (this.totalRealized / this.totalAssigned) * 100;
+        // this.totalCompliancePercentage = (this.totalRealized / this.totalAssigned) * 100;
       } else {
         this.totalCompliancePercentage = 0;
       }

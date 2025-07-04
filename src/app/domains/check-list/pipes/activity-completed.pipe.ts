@@ -16,11 +16,11 @@ export class ActivityCompletedPipe implements PipeTransform {
    */
   transform(idControl: string | undefined, day: number, completedActivities: CompletedActivity[]): boolean {
     
-    console.log('Checking activity completion for:', {
-      idControl,
-      day,
-      completedActivities
-    });
+    // console.log('Checking activity completion for:', {
+    //   idControl,
+    //   day,
+    //   completedActivities
+    // });
     if (!completedActivities || completedActivities.length === 0 || !idControl) {
       return false;
     }
@@ -32,7 +32,7 @@ export class ActivityCompletedPipe implements PipeTransform {
     let result = completedActivities.some(item => 
       item.IdControl === idControl && item.Dia === dayStr
     );
-    console.log('Result:', result);
+    // console.log('Result:', result);
     return result;
   }
 }

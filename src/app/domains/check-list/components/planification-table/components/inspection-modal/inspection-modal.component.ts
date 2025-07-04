@@ -1,9 +1,9 @@
-import { Component, OnInit, Inject, ViewChild, AfterViewInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, Inject, ViewChild, ElementRef, AfterViewInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormArray, Validators, FormControl } from '@angular/forms';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { ImagenDialogComponent } from './imagen-dialog.component';
 import { DateAdapter } from '@angular/material/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatNativeDateModule } from '@angular/material/core';
@@ -18,6 +18,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatTabsModule } from '@angular/material/tabs';
 import { CustomSelectComponent, ParameterType } from '../../../../../../shared/controls/custom-select/custom-select.component';
 import { ProxyService } from '../../../../../../core/services/proxy.service';
 import { Observable, catchError, finalize, of, map, throwError, forkJoin } from 'rxjs';
@@ -86,6 +87,7 @@ interface UserOption {
     MatRadioModule,
     MatTooltipModule,
     MatProgressSpinnerModule,
+    MatTabsModule,
     CustomSelectComponent
   ]
 })
@@ -651,6 +653,183 @@ export class InspectionModalComponent implements OnInit {
   saveAsPDF(): void {
     // En producción, implementar la lógica de guardar como PDF
     console.log('Guardar como PDF', this.inspectionForm.value);
+  }
+
+  /**
+   * Exporta la vista previa a PDF utilizando la función de impresión del navegador
+   */
+  exportToPDF(): void {
+    console.log('Exportando a PDF');
+    
+    // Obtener datos para el PDF
+    const formData = this.inspectionForm.value;
+    const tipo = formData.inspectionType === 'programada' ? 'Programada' : 'Informal';
+    const fecha = formData.date ? new Date(formData.date) : new Date();
+    const fechaStr = `${fecha.getDate().toString().padStart(2, '0')}-${(fecha.getMonth() + 1).toString().padStart(2, '0')}-${fecha.getFullYear()}`;
+    const realizadoPor = formData.realizadoPor || '';
+
+    // Abrir una nueva ventana
+    const printWindow = window.open('', '_blank');
+    
+    if (!printWindow) {
+      alert('El navegador bloqueó la ventana emergente. Por favor, permita ventanas emergentes e intente de nuevo.');
+      return;
+    }
+
+    // Preparar contenido HTML para la impresión
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Inspección SSTMA</title>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              margin: 20px;
+            }
+            .header {
+              display: flex;
+              align-items: center;
+              margin-bottom: 20px;
+            }
+            .logo {
+              width: 100px;
+              margin-right: 20px;
+            }
+            .title {
+              font-size: 24px;
+              font-weight: bold;
+              text-align: center;
+              flex-grow: 1;
+            }
+            .info-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 20px;
+            }
+            .info-table td {
+              padding: 5px;
+            }
+            .info-table tr td:first-child {
+              font-weight: bold;
+              width: 120px;
+            }
+            .data-table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-bottom: 20px;
+            }
+            .data-table th, .data-table td {
+              border: 1px solid #ddd;
+              padding: 8px;
+              text-align: left;
+              font-size: 12px;
+            }
+            .data-table th {
+              background-color: #f2f2f2;
+            }
+            @media print {
+              body { margin: 0; }
+              .no-print { display: none; }
+              button { display: none; }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <img src="assets/images/logo.png" class="logo" onerror="this.src='https://via.placeholder.com/100x50?text=INARCO'" />
+            <div class="title">Inspección SSTMA</div>
+          </div>
+          
+          <table class="info-table">
+            <tr>
+              <td>Tipo</td>
+              <td>${tipo}</td>
+              <td rowspan="3" style="text-align: right;">Observaciones</td>
+            </tr>
+            <tr>
+              <td>Fecha/Hora</td>
+              <td>${fechaStr}</td>
+            </tr>
+            <tr>
+              <td>Realizado por</td>
+              <td>${realizadoPor}</td>
+            </tr>
+          </table>
+          
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>C.Riesgo</th>
+                <th>Incidencia</th>
+                <th>Pot.Riesgo</th>
+                <th>Clasificación H.</th>
+                <th>Medida Correctiva</th>
+                <th>Resp.</th>
+                <th>F.Comp</th>
+                <th>Cierre</th>
+              </tr>
+            </thead>
+            <tbody>
+    `);
+
+    // Añadir filas de datos de inspección
+    const items = this.inspectionForm.get('items') as FormArray;
+    if (items && items.length > 0) {
+      items.controls.forEach(item => {
+        const itemData = item.value;
+        const fechaCompromiso = itemData.fechaCompromiso ? new Date(itemData.fechaCompromiso) : new Date();
+        const fechaCierre = itemData.fechaCierre ? new Date(itemData.fechaCierre) : new Date();
+        const fechaCompromisoStr = `${fechaCompromiso.getDate().toString().padStart(2, '0')}-${(fechaCompromiso.getMonth() + 1).toString().padStart(2, '0')}-${fechaCompromiso.getFullYear()}`;
+        const fechaCierreStr = `${fechaCierre.getDate().toString().padStart(2, '0')}-${(fechaCierre.getMonth() + 1).toString().padStart(2, '0')}-${fechaCierre.getFullYear()}`;
+        
+        printWindow.document.write(`
+              <tr>
+                <td>${itemData.condicionRiesgo || 'TEST'}</td>
+                <td>${itemData.incidencia || 'SEGURIDAD'}</td>
+                <td>${itemData.potencialRiesgo || 'MEDIANAMENTE GRAVE'}</td>
+                <td>${itemData.clasificacionHallazgo || ''}</td>
+                <td>${itemData.medidaCorrectiva || 'REVISAR TEST'}</td>
+                <td>${itemData.responsable || 'GERMAN MEDINA'}</td>
+                <td>${fechaCompromisoStr || '22-04-2025'}</td>
+                <td>${fechaCierreStr || '22-04-2025'}</td>
+              </tr>
+        `);
+      });
+    } else {
+      // Si no hay elementos, añadir una fila de ejemplo
+      printWindow.document.write(`
+              <tr>
+                <td>TEST</td>
+                <td>SEGURIDAD</td>
+                <td>MEDIANAMENTE GRAVE</td>
+                <td></td>
+                <td>REVISAR TEST</td>
+                <td>GERMAN MEDINA</td>
+                <td>22-04-2025</td>
+                <td>22-04-2025</td>
+              </tr>
+      `);
+    }
+
+    // Finalizar HTML y activar impresión
+    printWindow.document.write(`
+            </tbody>
+          </table>
+          
+          <div class="no-print" style="text-align: center; margin-top: 20px;">
+            <button onclick="window.print(); setTimeout(() => window.close(), 500);">Imprimir PDF</button>
+          </div>
+        </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+    
+    // Esperar a que se cargue el contenido y luego imprimir
+    setTimeout(() => {
+      printWindow.focus();
+      // La impresión se maneja mediante el botón en la página
+    }, 1000);
   }
 
   /**

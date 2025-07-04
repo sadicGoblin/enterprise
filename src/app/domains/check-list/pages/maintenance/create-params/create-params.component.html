@@ -1,79 +1,116 @@
 <div class="params-container">
   <mat-card class="params-card">
-    <h2 class="title">Creación de parámetros</h2>
+    <mat-tab-group>
+      <mat-tab label="Parámetros">
+        <!-- Error message -->
+        <div *ngIf="error" class="error-message">
+          <p>{{ error }}</p>
+          <button mat-button color="primary" (click)="loadParametros()">
+            Reintentar
+          </button>
+        </div>
 
+        <div class="form-container param-form">
+          <div class="form-header">
+            <h3>Nuevo Parámetro</h3>
+            <button mat-icon-button color="primary" (click)="clearParamForm()">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </div>
+          <mat-divider></mat-divider>
 
-    <div class="param-grid">
-      <div class="left-panel">
-        <h3 class="section-title">Parámetros</h3>
-        
-        <!-- Loading indicator -->
+          <div class="form-grid">
+            <mat-form-field appearance="outline" class="input-field">
+              <mat-label>Nombre</mat-label>
+              <input
+                matInput
+                [(ngModel)]="paramName"
+                placeholder="Ingrese nombre del parámetro"
+              />
+            </mat-form-field>
+
+            <div class="button-row">
+              <button mat-raised-button color="primary" (click)="saveParam()">
+                <mat-icon>{{ editingParamIndex >= 0 ? 'update' : 'save' }}</mat-icon>
+                {{ editingParamIndex >= 0 ? 'Actualizar' : 'Guardar' }}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div *ngIf="isLoading" class="loading-container">
           <mat-spinner diameter="40"></mat-spinner>
           <p>Cargando parámetros...</p>
         </div>
-        
-        <!-- Error message -->
-        <div *ngIf="error" class="error-message">
-          <p>{{ error }}</p>
-          <button mat-button color="primary" (click)="loadParametros()">Reintentar</button>
-        </div>
-        <div class="toolbar">
-          <mat-form-field appearance="fill" class=" input-full">
-            <mat-label>Nombre</mat-label>
-            <input matInput [(ngModel)]="paramName" />
-          </mat-form-field>
-          <button
-            (click)="saveParam()"
-            mat-raised-button
-            color="primary"
-            class="add-btn"
-          >
-            Agregar
-          </button>
-        </div>
-
-        <table mat-table [dataSource]="params" class="mat-elevation-z1" *ngIf="!isLoading && !error">
+        <table
+          mat-table
+          [dataSource]="params"
+          class="mat-elevation-z1"
+          *ngIf="!isLoading && !error"
+        >
           <ng-container matColumnDef="name">
             <th mat-header-cell *matHeaderCellDef>Parámetro</th>
             <td mat-cell *matCellDef="let p">{{ p.name }}</td>
           </ng-container>
 
-          <ng-container matColumnDef="actions">
+          <ng-container matColumnDef="edit">
             <th mat-header-cell *matHeaderCellDef></th>
-            <td mat-cell *matCellDef="let p; let i = index">
+            <td mat-cell *matCellDef="let p; let i = index" class="action-cell">
               <button mat-icon-button color="accent" (click)="editParam(i)">
                 <mat-icon>edit</mat-icon>
               </button>
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="delete">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let p; let i = index" class="action-cell">
               <button mat-icon-button color="warn" (click)="deleteParam(i)">
                 <mat-icon>delete</mat-icon>
               </button>
-            </td> 
+            </td>
           </ng-container>
 
           <tr mat-header-row *matHeaderRowDef="paramColumns"></tr>
           <tr mat-row *matRowDef="let row; columns: paramColumns"></tr>
         </table>
-      </div>
+      </mat-tab>
+      <mat-tab label="Sub-parámetros">
 
-      <div class="right-panel">
-        <h3 class="section-title">Sub-parámetros</h3>
-        <div class="toolbar">
-          <mat-form-field appearance="fill" class="input-full">
-            <mat-label>Parámetro</mat-label>
-            <mat-select [(ngModel)]="selectedParam" (ngModelChange)="onParameterSelected()">
-              <mat-option *ngFor="let p of params" [value]="p">{{ p.name }}</mat-option>
-            </mat-select>
-          </mat-form-field>
+        <div class="form-container param-form">
+          <div class="form-header">
+            <h3>Nuevo Sub-parámetro</h3>
+            <button mat-icon-button color="primary" (click)="clearSubParamForm()">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </div>
+          <mat-divider></mat-divider>
 
-          <mat-form-field appearance="fill" class="input-small">
-            <mat-label>Nombre</mat-label>
-            <input matInput [(ngModel)]="subParamName" />
-          </mat-form-field>
-
-          <button mat-icon-button color="primary" (click)="saveSubParam()">
-            <mat-icon>add_circle</mat-icon>
-          </button>
+          <div class="form-grid">
+            <mat-form-field appearance="fill" class="input-full">
+              <mat-label>Parámetro</mat-label>
+              <mat-select
+                [(ngModel)]="selectedParam"
+                (ngModelChange)="onParameterSelected()"
+              >
+                <mat-option *ngFor="let p of params" [value]="p">{{
+                  p.name
+                }}</mat-option>
+              </mat-select>
+            </mat-form-field>
+  
+            <mat-form-field appearance="fill" class="input-small">
+              <mat-label>Nombre</mat-label>
+              <input matInput [(ngModel)]="subParamName" />
+            </mat-form-field>
+  
+            <div class="button-row">
+              <button mat-raised-button color="primary" (click)="saveSubParam()">
+                <mat-icon>{{ editingSubParamIndex >= 0 ? 'update' : 'save' }}</mat-icon>
+                {{ editingSubParamIndex >= 0 ? 'Actualizar' : 'Guardar' }}
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- Loading indicator for sub-parameters -->
@@ -81,45 +118,48 @@
           <mat-spinner diameter="30"></mat-spinner>
           <p>Cargando sub-parámetros...</p>
         </div>
-        
+
         <!-- Error message for sub-parameters -->
         <div *ngIf="subParamError && !loadingSubParams" class="error-message">
           <p>{{ subParamError }}</p>
-          <button mat-button color="primary" (click)="onParameterSelected()">Reintentar</button>
+          <button mat-button color="primary" (click)="onParameterSelected()">
+            Reintentar
+          </button>
         </div>
-        
-        <table mat-table [dataSource]="selectedParam?.subParams || []" class="mat-elevation-z1" *ngIf="!loadingSubParams && !subParamError">
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Nombre</th>
-              <td mat-cell *matCellDef="let s">{{ s.name }}</td>
-            </ng-container>
 
-            <ng-container matColumnDef="edit">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let s; let i = index" class="action-cell">
-                <button mat-icon-button color="primary" (click)="editSubParam(i)">
-                  <mat-icon>edit</mat-icon>
-                </button>
-              </td>
-            </ng-container>
+        <table
+          mat-table
+          [dataSource]="selectedParam?.subParams || []"
+          class="mat-elevation-z1"
+          *ngIf="!loadingSubParams && !subParamError"
+        >
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Nombre</th>
+            <td mat-cell *matCellDef="let s">{{ s.name }}</td>
+          </ng-container>
 
-            <ng-container matColumnDef="delete">
-              <th mat-header-cell *matHeaderCellDef></th>
-              <td mat-cell *matCellDef="let s; let i = index" class="action-cell">
-                <button mat-icon-button color="warn" (click)="deleteSubParam(i)">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </td>
-            </ng-container>
+          <ng-container matColumnDef="edit">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let s; let i = index" class="action-cell">
+              <button mat-icon-button color="primary" (click)="editSubParam(i)">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </td>
+          </ng-container>
 
-            <tr mat-header-row *matHeaderRowDef="subParamColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: subParamColumns"></tr>
+          <ng-container matColumnDef="delete">
+            <th mat-header-cell *matHeaderCellDef></th>
+            <td mat-cell *matCellDef="let s; let i = index" class="action-cell">
+              <button mat-icon-button color="warn" (click)="deleteSubParam(i)">
+                <mat-icon>delete</mat-icon>
+              </button>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="subParamColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: subParamColumns"></tr>
         </table>
-      </div>
-    </div>
-
-    <div class="footer">
-      <button mat-raised-button color="primary">Guardar</button>
-    </div>
+      </mat-tab>
+    </mat-tab-group>
   </mat-card>
 </div>
