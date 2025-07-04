@@ -13,7 +13,7 @@ exports.apiProxy = functions.https.onRequest((request, response) => {
       const endpoint = request.path.substring(1); // Remove leading slash
       
       // Base URL for the API
-      const apiBaseUrl = 'http://raam-hosting.cl/apissoma/ws';
+      const apiBaseUrl = 'https://inarco-ssoma.favric.cl/ws';
       
       // Full URL to forward the request to
       const apiUrl = `${apiBaseUrl}/${endpoint}`;
