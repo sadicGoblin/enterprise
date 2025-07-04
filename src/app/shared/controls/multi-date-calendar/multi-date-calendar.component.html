@@ -1,0 +1,60 @@
+<div class="multi-calendar-container">
+  <div class="calendar-side">
+    <!-- Header del calendario con controles de navegación -->
+    <div class="calendar-header">
+      <button mat-icon-button (click)="prevMonth()" matTooltip="Mes anterior">
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      <span class="month-year-display">{{ currentMonthName }}</span>
+      <button mat-icon-button (click)="nextMonth()" matTooltip="Mes siguiente">
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+
+    <!-- Cabecera con nombres de días -->
+    <div class="calendar-days-header">
+      <div class="day-name" *ngFor="let day of weekDays">{{ day }}</div>
+    </div>
+
+    <!-- Cuerpo principal del calendario -->
+    <div class="calendar-body">
+      <div class="calendar-week" *ngFor="let week of calendar">
+        <div
+          *ngFor="let day of week"
+          class="calendar-day"
+          [class.disabled]="day.disabled"
+          [class.selected]="day.selected"
+          [class.today]="day.today"
+          [class.outside-month]="!day.isCurrentMonth"
+          (click)="onDayClick(day, $event)"
+        >
+          {{ day.date | date:'d' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Instrucciones de uso del calendario -->
+    <div class="calendar-instructions">
+      <small>• Click para seleccionar/quitar día</small>
+      <small>• Shift+Click para seleccionar rangos</small>
+    </div>
+  </div>
+  
+  <!-- Panel lateral derecho con fechas seleccionadas -->
+  <div class="selected-dates-panel" *ngIf="selectedDates.length > 0">
+    <div class="selected-dates-header">
+      <h4>Días seleccionados: {{ selectedDates.length }}</h4>
+      <button mat-icon-button class="clear-all-btn" (click)="clearSelection()" matTooltip="Limpiar todo">
+        <mat-icon>delete_sweep</mat-icon>
+      </button>
+    </div>
+    <div class="selected-dates-list">
+      <div class="selected-date-item" *ngFor="let date of sortedDates">
+        {{ date | date:'d/M' }}
+        <button mat-icon-button class="remove-date-btn" (click)="removeDate(date)">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
