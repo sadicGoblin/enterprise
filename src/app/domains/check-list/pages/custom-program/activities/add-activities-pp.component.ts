@@ -622,12 +622,12 @@ export class AddActivitiesPpComponent implements OnInit {
   // Columnas a mostrar en la tabla
   displayedColumns: string[] = [
     'project',
-    'user',
+    'risk',
     'period',
     'stage',
     'subprocess',
     'scope',
-    'activity',
+    'assignee',
     'days',
     'periodicity',
     'edit',

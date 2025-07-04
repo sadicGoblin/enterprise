@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output, ViewEncapsulation } from '@angular/core';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
-import { MatNativeDateModule, DateAdapter } from '@angular/material/core';
+import { DateAdapter, MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatIconModule } from '@angular/material/icon';
 import { MatTooltipModule } from '@angular/material/tooltip';
@@ -24,307 +24,8 @@ export interface CalendarDay {
  */
 @Component({
   selector: 'app-multi-date-calendar',
-  template: `
-<div class="calendar-layout">
-  <div class="calendar-container">
-    <!-- Navegación del mes -->
-    <div class="calendar-header">
-      <button mat-icon-button (click)="prevMonth()" class="nav-button">
-        <mat-icon>chevron_left</mat-icon>
-      </button>
-      <span class="month-year">
-        {{ monthNames[currentMonth] }} {{ currentYear }}
-      </span>
-      <button mat-icon-button (click)="nextMonth()" class="nav-button">
-        <mat-icon>chevron_right</mat-icon>
-      </button>
-    </div>
-
-    <!-- Días de la semana -->
-    <div class="calendar-weekdays">
-      <div class="day-name" *ngFor="let day of weekDays">{{ day }}</div>
-    </div>
-
-    <div class="calendar-body">
-      <div class="calendar-week" *ngFor="let week of calendar">
-        <div
-          *ngFor="let day of week"
-          class="calendar-day"
-          [class.disabled]="day.disabled"
-          [class.selected]="day.selected"
-          [class.today]="day.today"
-          [class.outside-month]="!day.isCurrentMonth"
-          (click)="onDayClick(day, $event)"
-        >
-          {{ day.date | date:'d' }}
-        </div>
-      </div>
-    </div>
-    
-    <!-- Instrucciones de uso -->
-    <div class="calendar-instructions">
-      <small>
-        <strong>Cómo usar:</strong><br>
-        • Click para seleccionar/deseleccionar<br>
-        • Shift+Click para seleccionar rangos
-      </small>
-    </div>
-  </div>
-  
-  <!-- Lista vertical de fechas seleccionadas -->
-  <div class="dates-list-vertical" *ngIf="selectedDates.length > 0">
-    <div class="dates-list-header">
-      <span><mat-icon class="small-icon">event_note</mat-icon> Días ({{ selectedDates.length }}):</span>
-      <button
-        mat-icon-button
-        color="warn"
-        class="clear-button"
-        (click)="clearSelection()"
-      >
-        <mat-icon class="small-icon">delete_sweep</mat-icon>
-      </button>
-    </div>
-    <div class="dates-list-items-vertical">
-      <div *ngFor="let date of sortedDates" class="date-chip-vertical">
-        {{ date | date:'dd/MM' }}
-        <span class="remove-date" (click)="removeDate(date)">
-          &times;
-        </span>
-      </div>
-    </div>
-  </div>
-</div>
-  `,
-  styles: [`
-.calendar-layout {
-  display: flex;
-  flex-direction: row;
-  background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
-  user-select: none;
-  border: 1px solid #e0e0e0;
-  transition: all 0.2s ease;
-  max-width: 400px;
-  overflow: hidden;
-  height: 100%;
-}
-
-.calendar-container {
-  display: flex;
-  flex-direction: column;
-  padding: 10px;
-  width: 270px;
-  border-right: 1px solid #eaeaea;
-}
-
-.calendar-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid #f5f5f5;
-}
-
-.month-year {
-  font-weight: 500;
-  font-size: 14px;
-  color: #333;
-}
-
-.calendar-weekdays {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  margin-bottom: 8px;
-}
-
-.day-name {
-  text-align: center;
-  font-size: 12px;
-  font-weight: 500;
-  color: #666;
-  padding: 8px 0;
-}
-
-.day-name:first-child,
-.day-name:last-child {
-  color: #f44336; /* Fin de semana en rojo */
-}
-
-.calendar-body {
-  display: flex;
-  flex-direction: column;
-}
-
-.calendar-week {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-}
-
-.calendar-day {
-  height: 30px;
-  width: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  margin: 2px;
-  border-radius: 50%;
-  font-size: 14px;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.calendar-day:hover:not(.disabled) {
-  background-color: #f0f4f8;
-}
-
-.calendar-day.outside-month {
-  color: #bdbdbd;
-}
-
-.calendar-day.today {
-  border: 2px solid #1976d2;
-}
-
-.calendar-day.selected {
-  background-color: #2196f3;
-  color: white;
-}
-
-.calendar-day.selected:hover {
-  background-color: #1976d2;
-}
-
-.calendar-day.disabled {
-  color: #d0d0d0;
-  cursor: not-allowed;
-}
-
-.calendar-instructions {
-  margin-top: 16px;
-  padding: 8px;
-  background-color: #f5f5f5;
-  border-radius: 4px;
-}
-
-.calendar-instructions small {
-  font-size: 11px;
-  color: #666;
-  line-height: 1.4;
-}
-
-.dates-list-vertical {
-  width: 90px;
-  display: flex;
-  flex-direction: column;
-  padding: 8px 6px;
-  background-color: #fafafa;
-  height: 100%;
-  flex: 1;
-}
-
-.dates-list-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 5px;
-  margin-bottom: 5px;
-  border-bottom: 1px solid #e0e0e0;
-  font-size: 11px;
-  color: #555;
-  white-space: nowrap;
-}
-
-.small-icon {
-  font-size: 14px;
-  width: 14px;
-  height: 14px;
-  line-height: 14px;
-}
-
-.dates-list-items-vertical {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  overflow-y: auto;
-  flex: 1;
-  padding-right: 2px;
-}
-
-.date-chip-vertical {
-  background-color: #e3f2fd;
-  color: #1976d2;
-  padding: 2px 4px;
-  border-radius: 4px;
-  font-size: 10px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 2px 0;
-  border: 1px solid #bbdefb;
-  transition: all 0.2s ease;
-  
-  &:hover {
-    background-color: #bbdefb;
-  }
-}
-
-.remove-date {
-  font-size: 12px;
-  height: 12px;
-  width: 12px;
-  line-height: 12px;
-  cursor: pointer;
-  color: #666;
-  transition: color 0.2s ease;
-  
-  &:hover {
-    color: #f44336;
-    transform: scale(1.1);
-  }
-}
-
-.remove-date:hover {
-  color: #f44336;
-}
-
-.calendar-instructions {
-  margin-top: 16px;
-  padding: 8px;
-  background-color: #f5f5f5;
-  border-radius: 4px;
-}
-
-.calendar-instructions small {
-  font-size: 11px;
-  color: #666;
-  line-height: 1.4;
-}
-
-/* Estilos para la vista de selección por arrastre */
-.calendar-day.drag-selection {
-  background-color: rgba(33, 150, 243, 0.5);
-  color: white;
-}
-
-/* Animaciones */
-@keyframes pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0.7);
-  }
-  70% {
-    box-shadow: 0 0 0 5px rgba(33, 150, 243, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(33, 150, 243, 0);
-  }
-}
-
-.calendar-day.today {
-  animation: pulse 2s infinite;
-}
-  `],
+  templateUrl: './multi-date-calendar.component.html',
+  styleUrls: ['./multi-date-calendar.component.scss'],
   standalone: true,
   imports: [
     CommonModule,
@@ -358,6 +59,10 @@ export class MultiDateCalendarComponent implements OnInit {
   ];
   
   lastClickedDate: Date | null = null;
+  
+  // Variables para controlar la selección por arrastre
+  isDragging = false;
+  dragStart: CalendarDay | null = null;
 
   // Fechas seleccionadas ordenadas para visualización
   get sortedDates(): Date[] {
@@ -522,6 +227,8 @@ export class MultiDateCalendarComponent implements OnInit {
     if (event.shiftKey && this.lastClickedDate) {
       this.selectDateRange(this.lastClickedDate, day.date);
       this.lastClickedDate = new Date(day.date);
+      // Forzar actualización inmediata del calendario tras seleccionar el rango
+      this.generateCalendar();
     }
     // Click simple - togglear selección (añadir/quitar)
     else {
@@ -547,9 +254,6 @@ export class MultiDateCalendarComponent implements OnInit {
     this.generateCalendar();
   }
 
-  /**
-   * Selecciona un rango de fechas
-   */
   /**
    * Obtener el rango de fechas entre dos fechas (sin modificar la selección actual)
    */
@@ -629,22 +333,21 @@ export class MultiDateCalendarComponent implements OnInit {
       this.emitChanges();
     }
   }
-
+  
   /**
-   * Emite el evento con las fechas seleccionadas
+   * Emite el evento de cambio de fechas seleccionadas
    */
   emitChanges(): void {
     this.datesChange.emit([...this.selectedDates]);
-    this.generateCalendar();
   }
-
+  
   /**
    * Devuelve la fecha en formato legible
    */
   getFormattedDate(date: Date): string {
     return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
   }
-
+  
   /**
    * Devuelve el nombre del mes y año actual
    */
