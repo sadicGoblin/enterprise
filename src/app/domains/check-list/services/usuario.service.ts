@@ -117,7 +117,7 @@ export class UsuarioService {
       "idUsuario": userId
     };
     
-    console.log('[UsuarioService] Eliminando usuario con ID:', userId);
+    console.log('[UsuarioService] Eliminando usuario...'); 
     console.log('[UsuarioService] Request body:', JSON.stringify(request));
     
     // Usar proxyService para aplicar la configuración de proxy de Angular

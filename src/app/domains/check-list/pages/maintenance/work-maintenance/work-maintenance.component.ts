@@ -12,12 +12,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 // Import custom select component
 import { CustomSelectComponent, ParameterType, SelectOption } from '../../../../../shared/controls/custom-select/custom-select.component';
 
 import { ObraService } from '../../../services/obra.service';
 import { Obra, ObrasFullResponse } from '../../../models/obra.models';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 // Interfaz que coincide con la respuesta de la API de obras
 interface Work {
@@ -52,6 +54,7 @@ interface Work {
     MatButtonModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
+    MatDialogModule,
     CustomSelectComponent
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
@@ -87,7 +90,8 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
   constructor(
     private fb: FormBuilder,
     private obraService: ObraService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {
     // Inicializar el formulario al crear el componente
     this.workForm = this.fb.group({
@@ -218,6 +222,10 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
         Observaciones: work.Observaciones || '',
       });
 
+      // Marcar como editando y guardar el índice
+      this.isEditing = true;
+      this.editingIndex = index;
+
       // If region is selected, update commune request body
       if (work.IdRegion) {
         this.communeRequestBody = {
@@ -225,15 +233,64 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
           idRegion: work.IdRegion
         };
       }
+
+      // Mostrar mensaje de edición
+      this.showMessage('Editando obra: ' + work.Obra);
     }
   }
 
   delete(index: number) {
-    // In a real implementation, this would call an API to delete the record
-    this.works.splice(index, 1);
-    this.dataSource.data = [...this.works]; // Create new reference to trigger change detection
-    this.cancel();
-    this.showMessage('Obra eliminada correctamente');
+    if (this.works[index]) {
+      const work = this.works[index];
+      const idObra = work.IdObra;
+      
+      // Configurar datos para el diálogo de confirmación
+      const dialogData: ConfirmDialogData = {
+        title: 'Eliminar obra',
+        message: `¿Está seguro que desea eliminar la obra '${work.Obra}'?`,
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar'
+      };
+      
+      // Abrir el diálogo de confirmación
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '400px',
+        data: dialogData
+      });
+      
+      // Manejar la respuesta del diálogo
+      dialogRef.afterClosed().subscribe(result => {
+        if (result === true) {
+          this.isLoading = true;
+          
+          // Llamar al servicio para eliminar la obra
+          this.obraService.deleteObra(idObra).subscribe({
+            next: (response) => {
+              console.log('Respuesta de eliminación:', response);
+              
+              if (response.success === true || response.codigo === 0) {
+                // Actualizar la lista local si la eliminación fue exitosa
+                this.works.splice(index, 1);
+                this.dataSource.data = [...this.works]; // Crear nueva referencia para activar detección de cambios
+                this.showMessage('Obra eliminada correctamente');
+              } else {
+                const errorMsg = response.message || response.glosa || 'Error desconocido';
+                this.showMessage(`Error al eliminar obra: ${errorMsg}`);
+              }
+            },
+            error: (error) => {
+              console.error('Error al eliminar obra', error);
+              this.showMessage('Error al eliminar obra. Por favor, inténtelo de nuevo.');
+              this.isLoading = false;
+            },
+            complete: () => {
+              this.isLoading = false;
+              this.cancel(); // Resetear el formulario y estado de edición
+            }
+          });
+        }
+      });
+    }
   }
 
   cancel(): void {
@@ -332,26 +389,31 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
   updateWork(): void {
     this.isLoading = true;
     
-    // Format the dates as expected by the API (YYYY-MM-DD)
+    // Format the dates as expected by the API
     const formValue = this.workForm.value;
     const startDate = formValue.FechaInicio ? new Date(formValue.FechaInicio) : null;
     const endDate = formValue.FechaTermino ? new Date(formValue.FechaTermino) : null;
     
-    // Prepare data for the API
-    const obraData = {
+    // Prepare data for the API with the exact format required
+    const requestBody = {
+      caso: "Actualiza",
       idObra: formValue.IdObra,
       obra: formValue.Obra,
       codigo: formValue.Codigo,
-      direccion: formValue.Direccion,
+      direccion: formValue.Direccion || "",
       idComuna: formValue.IdComuna,
-      fechaInicio: startDate ? startDate.toISOString().split('T')[0] : '',
-      fechaTermino: endDate ? endDate.toISOString().split('T')[0] : '',
-      observaciones: formValue.Observaciones || ''
+      comuna: formValue.Comuna || "",  // Usar el valor real de la comuna seleccionada
+      fechaInicio: startDate ? startDate.toISOString() : "",
+      fechaTermino: endDate ? endDate.toISOString() : "",
+      observaciones: formValue.Observaciones || ""
     };
     
-    console.log('Actualizando obra:', obraData);
+    // Mostrar el request body en consola para verificación
+    console.log('Request body para actualizar obra:');
+    console.log(JSON.stringify(requestBody, null, 2));
     
-    this.obraService.updateObra(obraData).subscribe({
+    // Realizar la llamada a la API
+    this.obraService.updateObra(requestBody).subscribe({
       next: (response) => {
         console.log('Respuesta de actualización:', response);
         if (response.success === true || response.codigo === 0) {

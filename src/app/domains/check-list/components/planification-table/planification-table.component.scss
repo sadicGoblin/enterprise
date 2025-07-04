@@ -342,4 +342,22 @@
     padding: 1px 3px;
     border-radius: 3px;
   }
+  
+  /* Styles for the summary totals row */
+  .summary-row {
+    background-color: #f5f5f5;
+    font-weight: bold;
+    border-top: 2px solid #ccc;
+  }
+
+  .total-column {
+    text-align: right;
+    text-transform: uppercase;
+    padding-right: 15px;
+  }
+
+  .total-cell {
+    font-weight: bold;
+    color: #1976d2; /* Primary color for emphasis */
+  }
 }

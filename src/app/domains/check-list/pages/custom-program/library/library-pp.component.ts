@@ -57,6 +57,11 @@ export class LibraryPpComponent implements OnInit {
   
   // States
   isLoading = false;
+  loadingDocumentId: number | null = null; // Para rastrear qué documento está siendo cargado
+  
+  // File upload
+  selectedFile: File | null = null;
+  selectedFileName: string = '';
   
   constructor(
     private bibliotecaService: BibliotecaService,
@@ -117,6 +122,9 @@ export class LibraryPpComponent implements OnInit {
   viewDocument(document: any): void {
     console.log('=== VIEWING DOCUMENT ===');
     console.log('Document object:', document);
+    
+    // Establecer el ID del documento que está siendo cargado
+    this.loadingDocumentId = document.id;
     console.log('Document ID being sent:', parseInt(document.id));
     
     // Use the document ID to fetch the full document with base64 data
@@ -190,22 +198,30 @@ export class LibraryPpComponent implements OnInit {
             // Handle dialog close
             dialogRef.afterClosed().subscribe(result => {
               console.log('Dialog closed');
+              // Limpiar el ID del documento cargado
+              this.loadingDocumentId = null;
             });
           } else {
             console.error('=== ERROR: NO BASE64 DATA ===');
             console.error('No valid base64 data found in any of these fields:', possibleBase64Fields);
             alert('El documento no contiene datos válidos para mostrar.');
+            // Limpiar el ID del documento cargado en caso de error
+            this.loadingDocumentId = null;
           }
         } else {
           console.error('=== ERROR: NO DOCUMENT DATA ===');
           console.error('API response structure issue');
           alert('No se pudo cargar el documento. Intente nuevamente.');
+          // Limpiar el ID del documento cargado en caso de error
+          this.loadingDocumentId = null;
         }
       },
       error: (error) => {
         console.error('=== API ERROR ===');
         console.error('Error fetching document:', error);
         alert('Error al cargar el documento. Verifique su conexión e intente nuevamente.');
+        // Limpiar el ID del documento cargado en caso de error
+        this.loadingDocumentId = null;
       }
     });
   }
@@ -220,11 +236,70 @@ export class LibraryPpComponent implements OnInit {
   }
   
   /**
+   * Handler for file selection
+   * @param event File input change event
+   */
+  onFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length) {
+      const file = input.files[0];
+      const fileExt = file.name.split('.').pop()?.toLowerCase();
+      
+      if (fileExt === 'xls' || fileExt === 'xlsx') {
+        this.selectedFile = file;
+        this.selectedFileName = file.name;
+        console.log('Archivo seleccionado:', file.name);
+      } else {
+        this.showMessage('Solo se permiten archivos Excel (.xls, .xlsx)');
+        // Reset file input
+        input.value = '';
+        this.selectedFile = null;
+        this.selectedFileName = '';
+      }
+    }
+  }
+
+  /**
    * Save document
    */
   saveDocument(): void {
-    // Implementation for saving document
+    if (!this.selectedFile) {
+      this.showMessage('Por favor, adjunte un archivo Excel');
+      return;
+    }
+    
+    if (!this.title.trim()) {
+      this.showMessage('Por favor, ingrese un título para el documento');
+      return;
+    }
+    
+    // Aquí enviarías el archivo al servidor
+    console.log('Enviando archivo:', this.selectedFile.name);
+    console.log('Título:', this.title);
+    console.log('Año:', this.year);
+    console.log('Tipo:', this.documentType);
+    
+    // Simular guardado exitoso
     this.showMessage('Documento guardado correctamente');
+    
+    // Reiniciar formulario
+    this.resetForm();
+  }
+  
+  /**
+   * Reset form fields
+   */
+  resetForm(): void {
+    this.title = '';
+    this.year = null;
+    this.documentType = '';
+    this.selectedFile = null;
+    this.selectedFileName = '';
+    // Limpiar el input file
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
   
   /**

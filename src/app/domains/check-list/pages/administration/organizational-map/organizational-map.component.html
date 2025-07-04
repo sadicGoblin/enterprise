@@ -101,8 +101,11 @@
           <button mat-stroked-button type="button" (click)="resetForm()">
             <mat-icon>refresh</mat-icon> Limpiar
           </button>
-          <button mat-raised-button color="primary" type="submit">
-            <mat-icon>save</mat-icon> Grabar
+          <button mat-raised-button color="primary" type="submit" *ngIf="!isEditMode">
+            <mat-icon>save</mat-icon> Crear
+          </button>
+          <button mat-raised-button color="accent" type="button" (click)="onSubmit()" *ngIf="isEditMode">
+            <mat-icon>update</mat-icon> Actualizar
           </button>
         </div>
       </form>

@@ -92,6 +92,11 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
    */
   groupedActivities: {ambito: string, activities: Activity[]}[] = [];
 
+  // Summary totals for the footer row
+  totalAssigned: number = 0;
+  totalRealized: number = 0;
+  totalCompliancePercentage: number = 0;
+
   /**
    * Group activities by ambito
    */
@@ -104,6 +109,11 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     
     // Reset the grouped activities
     this.groupedActivities = [];
+    
+    // Reset totals
+    this.totalAssigned = 0;
+    this.totalRealized = 0;
+    this.totalCompliancePercentage = 0;
     
     // Default ambito for activities without one
     const defaultAmbito = 'SIN CLASIFICAR';
@@ -155,17 +165,20 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
       group.activities.sort((a, b) => a.name.localeCompare(b.name));
     });
     
-    // Log summary information
-    console.log(`Total activities: ${this._activities.length}, Total groups: ${this.groupedActivities.length}`);
+    // Calculate totals for summary row
+    this.calculateTotals();
     
-    // Verify the data in each group
-    this.groupedActivities.forEach((group, index) => {
-      console.log(`Group ${index + 1}: ${group.ambito} - ${group.activities.length} activities`);
-      if (group.activities.length > 0) {
-        console.log(`  First activity: ${group.activities[0].name}`);
-        console.log(`  Last activity: ${group.activities[group.activities.length - 1].name}`);
-      }
-    });
+    // Final logging
+    console.log(`Processed ${this.activities.length} activities with ${Array.from(uniqueAmbitos).length} ámbitos`);
+    console.log(`Totals - Assigned: ${this.totalAssigned}, Realized: ${this.totalRealized}, Compliance: ${this.totalCompliancePercentage.toFixed(1)}%`);
+    
+    // Log the first few activities to see the new name format
+    if (this.activities.length > 0) {
+      console.log('Sample activity names:');
+      this.activities.slice(0, Math.min(5, this.activities.length)).forEach(a => {
+        console.log(`- ${a.name}`);
+      });
+    }
     
     // Force change detection
     this.cdr.detectChanges();
@@ -285,6 +298,9 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
         // Log for debugging
         console.log('%c Completed activities API response saved:', 'color: blue; font-weight: bold', this.completedActivitiesApiResponse);
         console.log('%c Completed activities data saved:', 'color: green; font-weight: bold', this.completedActivities);
+        this.totalRealized = 0;
+        this.totalRealized += this.completedActivities.length;
+        this.totalCompliancePercentage = (this.totalRealized / this.totalAssigned) * 100;
         console.table(this.completedActivities);
         
         // Update activities with completion status
@@ -371,24 +387,47 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
    * Updates metrics for an activity
    */
   updateActivityMetrics(activity: Activity): void {
-    // Total de días programados (amarillos + verdes)
+    // Count total scheduled days
     activity.assigned = activity.scheduledDays.length;
     
-    // Contar días realizados (solo verdes)
-    activity.realized = 0;
-    
-    // Recorremos todos los días programados y contamos los completados
-    for (const day of activity.scheduledDays) {
-      if (this.isActivityCompleted(activity, day)) {
-        activity.realized++;
-      }
+    // Count completed days
+    if (activity.completedDays) {
+      activity.realized = activity.completedDays.length;
+    } else {
+      activity.realized = 0;
     }
     
-    // Calculate compliance percentage (verdes / total asignados)
-    activity.compliance = activity.assigned > 0 ? 
-      Math.round((activity.realized / activity.assigned) * 100) : 0;
+    // Calculate compliance percentage
+    if (activity.assigned > 0) {
+      activity.compliance = Math.round((activity.realized / activity.assigned) * 100);
+    } else {
+      activity.compliance = 0;
+    }
     
-    console.log(`Actividad ${activity.name}: asignadas=${activity.assigned} (total programados), realizadas=${activity.realized} (verdes), cumplimiento=${activity.compliance}%`);
+    console.log(`Activity ${activity.name} metrics: Assigned=${activity.assigned}, Realized=${activity.realized}, Compliance=${activity.compliance}%`);
+  }
+
+  /**
+   * Calculate totals for the summary footer row
+   */
+  calculateTotals(): void {
+    // Reset totals
+    this.totalAssigned = 0;
+    
+    // Only calculate if we have activities
+    if (this._activities && this._activities.length > 0) {
+      // Sum up assigned and realized values
+      this._activities.forEach(activity => {
+        this.totalAssigned += activity.assigned;
+      });
+      
+      // Calculate overall compliance percentage
+      if (this.totalAssigned > 0) {
+        // this.totalCompliancePercentage = (this.totalRealized / this.totalAssigned) * 100;
+      } else {
+        this.totalCompliancePercentage = 0;
+      }
+    }
   }
 
   /**

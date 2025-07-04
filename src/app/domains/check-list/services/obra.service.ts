@@ -79,12 +79,29 @@ export class ObraService {
       codigo: obraData.codigo,
       direccion: obraData.direccion,
       idComuna: obraData.idComuna,
+      comuna: obraData.comuna, // Incluir el campo comuna en la solicitud
       fechaInicio: obraData.fechaInicio,
       fechaTermino: obraData.fechaTermino,
       observaciones: obraData.observaciones
     };
     
     console.log('[ObraService] Updating obra with request:', request);
+    return this.proxyService.post<ObrasFullResponse>(this.apiUrl, request);
+  }
+
+  /**
+   * Delete an existing obra
+   * @param idObra ID of the obra to delete
+   * @returns Observable with the delete response
+   */
+  deleteObra(idObra: string | number): Observable<ObrasFullResponse> {
+    // Request body for deleting an obra
+    const request = {
+      caso: 'Elimina',
+      idObra: idObra
+    };
+    
+    console.log('[ObraService] Deleting obra with request:', request);
     return this.proxyService.post<ObrasFullResponse>(this.apiUrl, request);
   }
 }
