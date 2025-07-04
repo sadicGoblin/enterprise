@@ -5,11 +5,11 @@ import { EnvironmentConfig } from './environment.config';
  */
 export const environment: EnvironmentConfig = {
   production: true,
-  apiBaseUrl: 'http://raam-hosting.cl/apissoma',
+  apiBaseUrl: 'https://inarco-ssoma.favric.cl/',
   apis: {
     // Use full URLs for production to avoid proxy issues
-    usuario: 'http://raam-hosting.cl/apissoma/ws/UsuarioSvcImpl.php',
-    perfil: 'http://raam-hosting.cl/apissoma/ws/PerfilSvcImpl.php',
+    usuario: 'https://inarco-ssoma.favric.cl/ws/UsuarioSvcImpl.php',
+    perfil: 'https://inarco-ssoma.favric.cl/ws/PerfilSvcImpl.php',
     // Add more API endpoints as needed
   },
   firebase: {

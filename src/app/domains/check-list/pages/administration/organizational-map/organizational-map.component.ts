@@ -316,9 +316,20 @@ export class OrganizationalMapComponent implements OnInit {
                 duration: 3000,
                 panelClass: ['success-snackbar']
               });
+              
               // Actualizar la tabla eliminando el registro
-              this.tableData.splice(index, 1);
-              this.tableData = [...this.tableData]; // Create new array reference to trigger change detection
+              // 1. Crear una copia nueva del array para forzar la detección de cambios
+              const newTableData = [...this.tableData];
+              // 2. Eliminar el elemento
+              newTableData.splice(index, 1);
+              // 3. Asignar el nuevo array, para garantizar que Angular detecte el cambio
+              this.tableData = newTableData;
+              
+              // Posiblemente necesitamos recargar la vista (usar setTimeout para ejecutarlo después del ciclo actual)
+              setTimeout(() => {
+                // Esta asignación adicional garantiza que el componente DataTable detecte el cambio
+                this.tableData = [...this.tableData];
+              }, 0);
             } else {
               this.snackBar.open('Error al eliminar: ' + (response.message || 'Error desconocido'), 'Cerrar', {
                 duration: 5000,
@@ -342,8 +353,6 @@ export class OrganizationalMapComponent implements OnInit {
     }
   }
   
-  // This method is replaced with the complete implementation at the end of the class
-
   /**
    * Process form submission for creating or updating a user
    */

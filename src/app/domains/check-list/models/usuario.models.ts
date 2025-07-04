@@ -1,9 +1,7 @@
-// Request models - can be used for both APIs
 export interface UsuarioRequest {
   caso: string;
 }
 
-// Legacy API Response format (raam-hosting.cl)
 export interface UsuarioResponse {
   codigo?: number;
   glosa?: string;
@@ -12,7 +10,6 @@ export interface UsuarioResponse {
   data: any[];          // Support both API formats
 }
 
-// Legacy API user model (raam-hosting.cl)
 export interface UsuarioItem {
   // Legacy fields
   IdUsuario?: string;

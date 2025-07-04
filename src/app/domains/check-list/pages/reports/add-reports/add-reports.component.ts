@@ -201,7 +201,7 @@ export class AddReportsComponent implements OnInit {
               project: incident.Obra,
               name: incident.Nombre,
               period: this.formatPeriod(incident.Periodo || incident.FechaIncidente),
-              pdfUrl: `http://raam-hosting.cl/apissoma/reportes/incidente_${incident.IdIncidente}.pdf`
+              pdfUrl: `https://inarco-ssoma.favric.cl/reportes/incidente_${incident.IdIncidente}.pdf`
             }));
           } else {
             this.tableData2 = [];
