@@ -68,11 +68,46 @@ table {
   height: 60px;
 }
 
+// Button container styling
+.button-container {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  padding-right: 16px;
+  padding-bottom: 8px;
+}
+
 // Button styling
 button.mat-raised-button {
   font-size: 0.85rem;
-  padding: 0.25rem 1rem;
-  margin-left: 0.5rem;
+  padding: 0.3rem 1.2rem;
+  line-height: 1.5;
+}
+
+// Dialog styling - ensure it's consistent with our app style
+::ng-deep .mat-dialog-container {
+  padding: 20px !important;
+  border-radius: 8px !important;
+  
+  .mat-dialog-title {
+    font-size: 1.2rem;
+    margin-bottom: 16px;
+  }
+  
+  .mat-dialog-content {
+    padding: 0;
+    margin: 0 0 20px 0;
+    max-height: none;
+    font-size: 0.9rem;
+  }
+  
+  .mat-dialog-actions {
+    padding: 12px 0 0;
+    margin-bottom: 0;
+    justify-content: flex-end;
+    gap: 12px;
+  }
 }
 
 // Responsive layout
