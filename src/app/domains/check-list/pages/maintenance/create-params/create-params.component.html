@@ -42,9 +42,33 @@
           <mat-spinner diameter="40"></mat-spinner>
           <p>Cargando parámetros...</p>
         </div>
+
+        <!-- Campo de búsqueda -->
+        <div class="search-container" *ngIf="!isLoading && !error">
+          <mat-form-field appearance="outline">
+            <mat-label>Buscar parámetros</mat-label>
+            <input 
+              matInput 
+              [(ngModel)]="searchQuery" 
+              (ngModelChange)="filterParams()"
+              placeholder="Buscar por nombre"
+            >
+            <button 
+              *ngIf="searchQuery" 
+              matSuffix 
+              mat-icon-button 
+              aria-label="Limpiar" 
+              (click)="searchQuery = ''; filterParams()"
+            >
+              <mat-icon>close</mat-icon>
+            </button>
+            <mat-icon matPrefix>search</mat-icon>
+          </mat-form-field>
+        </div>
+
         <table
           mat-table
-          [dataSource]="params"
+          [dataSource]="filteredParams"
           class="mat-elevation-z1"
           *ngIf="!isLoading && !error"
         >
