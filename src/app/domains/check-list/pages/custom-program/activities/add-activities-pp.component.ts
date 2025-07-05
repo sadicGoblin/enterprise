@@ -1201,8 +1201,8 @@ export class AddActivitiesPpComponent implements OnInit {
     const dialogRef = this.dialog.open(CalendarDialogComponent, {
       width: '400px',
       data: {
-        selectedDates: element.selectedDays || [],
-        defaultDays: defaultDays,
+        selectedDates: [],  // Inicializar siempre con array vacío para que no haya días seleccionados por defecto
+        defaultDays: [],    // Inicializar con array vacío para no tener días predeterminados
         rowData: element,
         controlId: element.id
       },

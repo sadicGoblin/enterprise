@@ -74,14 +74,12 @@ export interface CalendarDialogData {
     
     /* Título del calendario con tamaño profesional */
     ::ng-deep h2.calendar-dialog-title {
-      font-size: 14px !important;
+      font-size: 1rem !important;
       font-weight: 500 !important;
       color: #333 !important;
       letter-spacing: 0.5px !important;
       margin: 0 !important;
       padding: 0 !important;
-      text-align: center !important;
-      width: 100% !important;
     }
     
     /* Contenedor principal */
@@ -102,9 +100,9 @@ export interface CalendarDialogData {
       height: 40px !important;
       display: flex !important;
       align-items: center !important;
-      justify-content: center !important;
       margin-bottom: 5px !important;
       width: 100% !important;
+      margin-left: 18px;
     }
     
     /* Contenido */
