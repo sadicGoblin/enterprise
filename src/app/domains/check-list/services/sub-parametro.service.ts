@@ -195,56 +195,70 @@ export class SubParametroService {
       );
   }
 
+  /**
+   * Add a new constructive stage to a project
+   * @param etapaData Object containing codigo and nombre for the new stage
+   * @param idObra ID of the project to associate with the stage
+   * @returns Observable with API response
+   */
   addEtapaConstructiva(etapaData: { codigo: string; nombre: string }, idObra: string): Observable<any> {
-    const endpoint = '/ws/EtapaConstructivaSvcImpl.php'; // Assuming same endpoint
+    const endpoint = '/ws/EtapaConstructivaSvcImpl.php';
     const requestBody = {
-      caso: 'InsertarEtapaConstructiva', // Assuming this 'caso'
-      idObra: parseInt(idObra, 10),
+      caso: 'CreaEtapaConstructiva',
+      idEtapaConstructiva: 0, // Set to 0 for new records
+      idObra: idObra,
       codigo: etapaData.codigo,
-      nombre: etapaData.nombre,
-      // Potentially other fields like idEtapaConstructiva: 0 for new ones
+      nombre: etapaData.nombre
     };
+    
     console.log('[SubParametroService] Adding Etapa Constructiva with body:', requestBody);
+    
     return this.proxyService.post<any>(endpoint, requestBody).pipe(
       map(response => {
         console.log('[SubParametroService] Add Etapa Constructiva response:', response);
-        // Handle success/error based on typical response structure
         if (response && response.success) {
-          return response; // Or response.data if new item is returned
+          return response;
         }
-        throw new Error('Failed to add Etapa Constructiva: ' + (response?.glosa || 'Unknown error'));
+        throw new Error('Failed to add Etapa Constructiva: ' + (response?.message || response?.glosa || 'Unknown error'));
       }),
       catchError((error: any) => {
         console.error('[SubParametroService] API Error adding Etapa Constructiva:', error);
-        return throwError(() => new Error('API Error adding Etapa Constructiva'));
+        return throwError(() => new Error('Error al agregar Etapa Constructiva'));
       })
     );
   }
 
-  updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
-    const endpoint = '/ws/EtapaConstructivaSvcImpl.php'; // Assuming same endpoint
-    const requestBody = {
-      caso: 'ActualizarEtapaConstructiva', // Assuming this 'caso'
-      idEtapaConstructiva: parseInt(etapaData.idEtapaConstructiva, 10),
-      idObra: parseInt(etapaData.idObra, 10),
-      codigo: etapaData.codigo,
-      nombre: etapaData.nombre
-    };
-    console.log('[SubParametroService] Updating Etapa Constructiva with body:', requestBody);
-    return this.proxyService.post<any>(endpoint, requestBody).pipe(
-      map(response => {
-        console.log('[SubParametroService] Update Etapa Constructiva response:', response);
-        if (response && response.success) {
-          return response;
-        }
-        throw new Error('Failed to update Etapa Constructiva: ' + (response?.glosa || 'Unknown error'));
-      }),
-      catchError((error: any) => {
-        console.error('[SubParametroService] API Error updating Etapa Constructiva:', error);
-        return throwError(() => new Error('API Error updating Etapa Constructiva'));
-      })
-    );
-  }
+  /**
+ * Update an existing constructive stage
+ * @param etapaData Object containing stage data to update
+ * @returns Observable with API response
+ */
+updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
+  const endpoint = '/ws/EtapaConstructivaSvcImpl.php';
+  const requestBody = {
+    caso: 'ModificarEtapaConstructiva',
+    idEtapaConstructiva: parseInt(etapaData.idEtapaConstructiva || '0', 10),
+    idObra: parseInt(etapaData.idObra || '0', 10),
+    codigo: etapaData.codigo,
+    nombre: etapaData.nombre
+  };
+  
+  console.log('[SubParametroService] Updating Etapa Constructiva with body:', requestBody);
+  
+  return this.proxyService.post<any>(endpoint, requestBody).pipe(
+    map(response => {
+      console.log('[SubParametroService] Update Etapa Constructiva response:', response);
+      if (response && response.success) {
+        return response;
+      }
+      throw new Error('Failed to update Etapa Constructiva: ' + (response?.message || response?.glosa || 'Unknown error'));
+    }),
+    catchError((error: any) => {
+      console.error('[SubParametroService] API Error updating Etapa Constructiva:', error);
+      return throwError(() => new Error('Error al actualizar Etapa Constructiva'));
+    })
+  );
+}
 
   deleteEtapaConstructiva(idEtapaConstructiva: string): Observable<any> {
     const endpoint = '/ws/EtapaConstructivaSvcImpl.php'; // Assuming same endpoint

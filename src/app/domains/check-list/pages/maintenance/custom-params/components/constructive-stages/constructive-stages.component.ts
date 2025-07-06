@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CustomSelectComponent, SelectOption, ParameterType } from '../../../../../../../shared/controls/custom-select/custom-select.component';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, catchError, finalize, map, of } from 'rxjs';
@@ -38,6 +39,7 @@ export interface ActionButton {
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatSnackBarModule,
     CustomSelectComponent,
     ReactiveFormsModule,
     DataTableComponent
@@ -81,7 +83,8 @@ export class ConstructiveStagesComponent implements OnInit {
 
   constructor(
     private subParametroService: SubParametroService,
-    private proxyService: ProxyService
+    private proxyService: ProxyService,
+    private snackBar: MatSnackBar
   ) {}
 
   projectApiCaso = 'Consulta';
@@ -172,6 +175,10 @@ export class ConstructiveStagesComponent implements OnInit {
   addStage(): void {
     if (!this.selectedProjectId) {
       console.error('No project selected');
+      this.snackBar.open('Error: No se ha seleccionado un proyecto', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
       return;
     }
     
@@ -180,6 +187,10 @@ export class ConstructiveStagesComponent implements OnInit {
     
     if (!stageCode || !stageName) {
       console.error('Stage code and name are required');
+      this.snackBar.open('Error: Código y nombre de etapa son obligatorios', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
       return;
     }
     
@@ -194,9 +205,12 @@ export class ConstructiveStagesComponent implements OnInit {
         idObra: this.selectedProjectId
       };
       
+      console.log('Actualizando etapa constructiva:', stageToUpdate);
+      
       this.subParametroService.updateEtapaConstructiva(stageToUpdate)
         .pipe(
           map((response: { success?: boolean; message?: string; data?: any }) => {
+            console.log('Respuesta de actualización:', response);
             // Actualizamos la etapa en el caché
             if (this.selectedProjectId && this.stagesByProject[this.selectedProjectId]) {
               const stageIndex = this.stagesByProject[this.selectedProjectId]
@@ -213,10 +227,19 @@ export class ConstructiveStagesComponent implements OnInit {
               }
             }
             
+            this.snackBar.open('Etapa constructiva actualizada correctamente', 'Cerrar', {
+              duration: 3000,
+              panelClass: ['success-snackbar']
+            });
+            
             this.resetStageForm();
           }),
           catchError((error: Error) => {
             console.error('Error al actualizar la etapa constructiva:', error);
+            this.snackBar.open('Error al actualizar la etapa constructiva', 'Cerrar', {
+              duration: 3000,
+              panelClass: ['error-snackbar']
+            });
             return of(null);
           }),
           finalize(() => {
@@ -237,15 +260,28 @@ export class ConstructiveStagesComponent implements OnInit {
         return;
       }
       
+      console.log('Agregando nueva etapa constructiva:', newStageData, 'al proyecto:', this.selectedProjectId);
+      
       this.subParametroService.addEtapaConstructiva(newStageData, this.selectedProjectId)
         .pipe(
           map((response: { success?: boolean; message?: string; data?: any }) => {
+            console.log('Respuesta de creación:', response);
             // Recargamos las etapas para obtener la nueva etapa con su ID
             this.loadStagesByProject(this.selectedProjectId as string);
+            
+            this.snackBar.open('Etapa constructiva agregada correctamente', 'Cerrar', {
+              duration: 3000,
+              panelClass: ['success-snackbar']
+            });
+            
             this.resetStageForm();
           }),
           catchError((error: Error) => {
             console.error('Error al agregar la etapa constructiva:', error);
+            this.snackBar.open('Error al agregar la etapa constructiva', 'Cerrar', {
+              duration: 3000,
+              panelClass: ['error-snackbar']
+            });
             return of(null);
           }),
           finalize(() => {

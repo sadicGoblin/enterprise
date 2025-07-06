@@ -98,7 +98,7 @@ export class SubprocessesComponent implements OnInit {
       .pipe(
         map((response: EtapaConstructivaItem[]) => {
           this.etapasConstructivasList = response;
-          
+          console.log("etapasConstructivasList", this.etapasConstructivasList);
           // Convertir a formato de opciones para el selector
           this.etapasParaSelect = this.etapasConstructivasList.map(etapa => ({
             value: etapa.idEtapaConstructiva || '',
