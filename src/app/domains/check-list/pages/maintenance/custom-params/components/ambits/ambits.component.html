@@ -1,0 +1,77 @@
+<div class="map-container">
+    <div class="map-card-content">
+      <div class="form-container">
+        <div class="form-row input-row">
+          <mat-form-field appearance="fill" class="form-field">
+            <mat-label>Código</mat-label>
+            <input matInput [(ngModel)]="newAmbitoCode" placeholder="Código" />
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="form-field">
+            <mat-label>Nombre</mat-label>
+            <input matInput [(ngModel)]="newAmbitoName" placeholder="Nombre" />
+          </mat-form-field>
+        </div>
+        <div class="form-row button-row action-buttons-right">
+          <button 
+            mat-raised-button 
+            color="primary" 
+            (click)="addAmbito()" 
+            [disabled]="!newAmbitoCode || !newAmbitoName"
+            class="add-button"
+          >
+            {{ editingAmbito ? "Actualizar" : "Agregar Ambito" }}
+          </button>
+          
+          <button 
+            *ngIf="editingAmbito" 
+            mat-button 
+            color="warn" 
+            (click)="cancelEditAmbito()" 
+            class="cancel-button"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+      
+      <div class="table-section">
+        <div class="table-controls">
+          <mat-form-field appearance="fill" class="search-field">
+            <mat-label>Buscar</mat-label>
+            <input 
+              matInput 
+              (input)="onSearch($event)" 
+              [value]="searchValue" 
+              placeholder="Buscar" 
+            />
+            <mat-icon matSuffix>search</mat-icon>
+          </mat-form-field>
+        </div>
+
+        <div *ngIf="isLoading" class="loading-state">
+          <mat-spinner diameter="50"></mat-spinner>
+          <p>Cargando ámbitos...</p>
+        </div>
+
+        <app-data-table
+          *ngIf="!isLoading"
+          [data]="filteredData"
+          [columns]="tableColumns"
+          [actionButtons]="actionButtons"
+          [pageSize]="tablePageSize"
+          [pageSizeOptions]="tablePageSizeOptions"
+          (rowAction)="handleTableAction($event)"
+          [striped]="true"
+          class="mat-elevation-z2 full-width-table"
+          tableClass="mat-elevation-z1 full-width-table"
+        ></app-data-table>
+        
+        <div *ngIf="!isLoading && filteredData.length === 0" class="empty-state">
+          <mat-icon>info</mat-icon>
+          <p>No se encontraron ámbitos.</p>
+        </div>
+      </div>
+    </div>
+
+</div>

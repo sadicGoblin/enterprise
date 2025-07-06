@@ -1,0 +1,253 @@
+$scale-factor: 0.9; // Factor de escala global para texto más pequeño
+
+.tab-content {
+  margin-top: 40px;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.form-row {
+  display: flex;
+  width: 100%;
+  gap: 1rem;
+}
+
+.input-row {
+  justify-content: flex-start;
+
+  .form-field {
+    flex-grow: 1;
+    max-width: 100%;
+  }
+}
+
+.spinner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.map-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid #e0e0e0;
+
+  .title {
+    margin: 0;
+    font-size: #{20px * $scale-factor};
+    font-weight: 500;
+    color: #333;
+  }
+
+  .add-user-button {
+    display: flex;
+    align-items: center;
+    padding: 4px 16px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    font-size: #{14px * $scale-factor};
+
+    mat-icon {
+      margin-right: 6px;
+      font-size: #{18px * $scale-factor};
+      height: #{18px * $scale-factor};
+      width: #{18px * $scale-factor};
+      line-height: #{18px * $scale-factor};
+    }
+  }
+}
+
+.map-card-content {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: max-height 0.3s ease, opacity 0.2s ease;
+  overflow: hidden;
+
+  &.form-collapsed {
+    max-height: 0;
+    opacity: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+  }
+
+  .form-container {
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    margin-bottom: 20px;
+    border: 1px solid #e0e0e0;
+
+    .form-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+
+      h3 {
+        margin: 0;
+        font-size: #{16px * $scale-factor};
+        font-weight: 500;
+        color: #444;
+      }
+    }
+
+    mat-divider {
+      margin-bottom: 16px;
+    }
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.input-group {
+  display: flex;
+  flex-direction: column;
+
+  label {
+    font-size: #{14px * $scale-factor};
+    margin-bottom: 4px;
+    color: #555;
+  }
+}
+
+.search-box {
+  margin-bottom: 16px;
+  width: 100%;
+  max-width: 320px;
+
+  ::ng-deep .mat-mdc-form-field {
+    width: 100%;
+    font-size: #{14px * $scale-factor};
+  }
+
+  ::ng-deep .mat-mdc-text-field-wrapper {
+    padding-left: 8px;
+  }
+
+  ::ng-deep .mdc-text-field {
+    padding: 0 8px;
+  }
+}
+
+.table-controls {
+  display: flex;
+  justify-content: flex-start;
+  padding: 8px 0;
+
+  .search-field {
+    width: 300px;
+    font-size: 0.9em;
+
+    .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+    }
+    .mat-mdc-text-field-wrapper {
+        height: 48px;
+    }
+  }
+}
+
+
+.button-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+
+  button {
+    font-size: #{14px * $scale-factor};
+
+    mat-icon {
+      font-size: #{18px * $scale-factor};
+      height: #{18px * $scale-factor};
+      width: #{18px * $scale-factor};
+      line-height: #{18px * $scale-factor};
+    }
+  }
+}
+
+.table-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+// Estilos para campos de formulario más pequeños
+::ng-deep {
+  .mat-mdc-form-field {
+    font-size: #{14px * $scale-factor};
+  }
+
+  .mat-mdc-text-field-wrapper {
+    height: #{40px * $scale-factor};
+  }
+
+  .mdc-floating-label {
+    font-size: #{14px * $scale-factor};
+  }
+
+  .mat-mdc-form-field-infix {
+    min-height: #{40px * $scale-factor};
+  }
+
+  .mat-mdc-button,
+  .mat-mdc-raised-button,
+  .mat-mdc-outlined-button {
+    font-size: #{14px * $scale-factor};
+    line-height: #{36px * $scale-factor};
+    height: #{36px * $scale-factor};
+  }
+
+  .mat-mdc-icon-button {
+    font-size: #{14px * $scale-factor};
+    height: #{36px * $scale-factor};
+    width: #{36px * $scale-factor};
+  }
+}
+
+// Ajustes adicionales para alineación de botones con íconos
+.icon-button-container {
+  display: flex;
+  align-items: center;
+
+  mat-icon {
+    font-size: #{18px * $scale-factor};
+    height: #{18px * $scale-factor};
+    width: #{18px * $scale-factor};
+    margin-right: 4px;
+  }
+}
+
+// Responsive design para el grid
+@media screen and (max-width: 768px) {
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .map-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+
+    .title {
+      margin-bottom: 12px;
+    }
+  }
+}

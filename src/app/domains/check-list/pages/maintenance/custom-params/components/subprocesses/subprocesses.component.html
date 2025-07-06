@@ -1,0 +1,94 @@
+<div class="map-container">
+    
+    <!-- Selección de Etapa Constructiva -->
+    <div class="tab-content">
+      <app-custom-select
+        label="Etapa Constructiva"
+        [formControl]="etapaConstructivaControl"
+        [options]="etapasParaSelect"
+        [loadFromApi]="false"
+        (selectionChange)="onEtapaConstructivaSelectionChange($event)"
+        placeholder="Seleccione Etapa Constructiva"
+        [required]="true"
+        appearance="fill"
+      ></app-custom-select>
+    </div>
+
+    <!-- Formulario para agregar nuevo subproceso -->
+    <div class="stage-form-container" *ngIf="selectedEtapaId">
+      <div class="form-row input-row">
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>Código {{ editingSubprocess ? 'Editar' : 'Nuevo' }} Sub-proceso</mat-label>
+          <input matInput [(ngModel)]="newSubprocessCode" name="newSubprocessCode" />
+        </mat-form-field>
+        <mat-form-field appearance="fill" class="form-field">
+          <mat-label>Nombre {{ editingSubprocess ? 'Editar' : 'Nuevo' }} Sub-proceso</mat-label>
+          <input matInput [(ngModel)]="newSubprocessName" name="newSubprocessName" />
+        </mat-form-field>
+      </div>
+      <div class="form-row button-row action-buttons-right">
+        <button
+          mat-stroked-button
+          color="warn"
+          (click)="cancelEditSubprocess()"
+          *ngIf="editingSubprocess"
+          class="cancel-button"
+        >
+          <mat-icon>cancel</mat-icon> Cancelar
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          (click)="addSubprocess()"
+          [disabled]="!newSubprocessCode || !newSubprocessName"
+          class="add-button"
+        >
+          <mat-icon>{{ editingSubprocess ? 'edit' : 'add_circle' }}</mat-icon>
+          {{ editingSubprocess ? 'Actualizar' : 'Agregar' }} Sub-proceso
+        </button>
+      </div>
+    </div>
+
+    <!-- Sección para listar subprocesos -->
+    <div class="custom-params-section" *ngIf="selectedEtapaId">
+      <div class="table-controls">
+        <mat-form-field appearance="fill" class="search-field">
+          <mat-label>Buscar Sub-proceso</mat-label>
+          <input
+            matInput
+            (keyup)="onSearchSubprocesses()"
+            placeholder="Por Código o Nombre"
+            [(ngModel)]="subprocessSearchKey"
+            name="subprocessSearchKey"
+          />
+          <mat-icon matSuffix>search</mat-icon>
+        </mat-form-field>
+      </div>
+
+      <div *ngIf="isLoadingSubprocesos" class="loading-state">
+        <mat-spinner diameter="50"></mat-spinner>
+        <p>Cargando sub-procesos...</p>
+      </div>
+
+      <app-data-table
+        *ngIf="!isLoadingSubprocesos && filteredSubprocesos.length > 0"
+        [columns]="subprocesoTableColumns"
+        [data]="filteredSubprocesos"
+        [actionButtons]="subprocesoActionButtons"
+        (rowAction)="handleSubprocessTableAction($event)"
+        [striped]="true"
+        class="mat-elevation-z2"
+      >
+      </app-data-table>
+
+      <div *ngIf="!isLoadingSubprocesos && filteredSubprocesos.length === 0 && selectedEtapaId" class="empty-data-state">
+        <mat-icon>info</mat-icon>
+        <p>No hay sub-procesos registrados para esta etapa constructiva.</p>
+      </div>
+    </div>
+
+    <div *ngIf="!selectedEtapaId && !isLoadingSubprocesos" class="empty-state">
+      <mat-icon>info</mat-icon>
+      <p>Por favor, seleccione una etapa constructiva para continuar.</p>
+    </div>
+</div>
