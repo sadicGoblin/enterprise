@@ -1,6 +1,5 @@
 import { Routes } from '@angular/router';
 import { CheckListLayoutComponent } from './layout/check-list-layout/check-list-layout.component';
-import { CheckListDashboardComponent } from './pages/check-list-dashboard/check-list-dashboard.component';
 
 // Administration components in new folder structure
 import { CheckListAccessComponent } from './pages/administration/accesses/check-list-access.component';
@@ -26,7 +25,7 @@ export const checkListRoutes: Routes = [
     component: CheckListLayoutComponent,
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', component: CheckListDashboardComponent },
+      { path: 'dashboard', loadComponent: () => import('./pages/check-list-dashboard/check-list-dashboard.component').then(m => m.CheckListDashboardComponent) },
 
       // Administration routes grouped logically
       {

@@ -37,6 +37,29 @@ $compact-scale: 0.9;
   gap: 16px;
   margin-bottom: 16px;
   
+  app-custom-select, mat-form-field, .year-month-picker-container {
+    flex: 1;
+    min-width: 200px;
+    max-width: 300px;
+  }
+
+  .year-month-picker-container {
+    display: flex;
+    flex-direction: column;
+    min-width: 180px;
+    
+    label {
+      font-size: 12px;
+      margin-bottom: 4px;
+      color: rgba(0, 0, 0, 0.6);
+      padding: 0 12px;
+    }
+    
+    app-year-month-picker {
+      width: 100%;
+    }
+  }
+  
   app-custom-select, mat-form-field {
     flex: 1;
     min-width: 200px;

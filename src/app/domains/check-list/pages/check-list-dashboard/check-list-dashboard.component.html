@@ -1,59 +1,245 @@
 <div class="dashboard-container">
-  <div class="dashboard-cards">
-    <mat-card class="metric-card" *ngFor="let metric of metrics">
-      <div class="label">{{ metric.label }}</div>
-      <div class="value" [style.color]="metric.color">{{ metric.value }}</div>
-
-      <div class="progress-bar-container">
-        <div
-          class="progress-bar"
-          [style.width.%]="metric.change"
-          [ngStyle]="{
-            background:
-              metric.change > 0
-                ? 'linear-gradient(to right, #f26522, #f9a825)'
-                : 'linear-gradient(to right, #d32f2f, #ef5350)'
-          }"
-        ></div>
+  <!-- Cabecera y filtros -->
+  <div class="dashboard-header" @fadeIn>
+    <div class="header-title">
+      <h1>Panel de Control de Actividades</h1>
+      <div class="filter-toggle">
+        <button mat-button (click)="toggleFilters()" color="primary" class="filter-button">
+          <mat-icon>filter_list</mat-icon>
+          {{ showFilters ? 'Ocultar filtros' : 'Mostrar filtros' }}
+        </button>
       </div>
-
-      <div class="change">
-        <span [style.color]="metric.change > 0 ? 'limegreen' : 'red'">
-          {{ metric.change > 0 ? "▲" : "▼" }}
-        </span>
-        {{ metric.change }}%
+    </div>
+    
+    <!-- Panel de filtros -->
+    <div class="filters-panel" [@filterAnimation]="showFilters ? 'show' : 'hide'">
+      <div class="filters-content">
+        <mat-form-field appearance="outline">
+          <mat-label>Proyecto</mat-label>
+          <mat-select [(ngModel)]="selectedProject" (selectionChange)="onFilterChange()">
+            <mat-option value="">Todos los proyectos</mat-option>
+            <mat-option *ngFor="let project of projects" [value]="project">{{ project }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Usuario</mat-label>
+          <mat-select [(ngModel)]="selectedUser" (selectionChange)="onFilterChange()">
+            <mat-option value="">Todos los usuarios</mat-option>
+            <mat-option *ngFor="let user of users" [value]="user">{{ user }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <mat-form-field appearance="outline">
+          <mat-label>Ámbito</mat-label>
+          <mat-select [(ngModel)]="selectedScope" (selectionChange)="onFilterChange()">
+            <mat-option value="">Todos los ámbitos</mat-option>
+            <mat-option *ngFor="let scope of scopes" [value]="scope">{{ scope }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+        
+        <button mat-flat-button color="accent" (click)="clearFilters()">
+          <mat-icon>clear</mat-icon> Limpiar filtros
+        </button>
       </div>
-    </mat-card>
+    </div>
   </div>
-
-  <div class="chart-cards">
-    <mat-card class="chart-card donut-card">
-      <h3 class="chart-title">CATEGORIES</h3>
-      <div class="chart-content">
-        <canvas
-          baseChart
-          [data]="donutChartData"
-          [labels]="donutChartLabels"
-          [type]="donutChartType"
-        >
-        </canvas>
-        <div class="chart-total">
-          <div>TOTAL</div>
-          <div class="total-value">4586</div>
+  
+  <!-- Tarjetas de métricas principales -->
+  <div class="metrics-cards" @fadeIn>
+    <mat-card class="metric-card" @scaleIn>
+      <mat-card-content>
+        <div class="metric-header">
+          <div class="metric-icon">
+            <mat-icon>check_circle</mat-icon>
+          </div>
+          <h2>{{ complianceRate }}%</h2>
         </div>
-      </div>
+        <p>Cumplimiento Total</p>
+        <div class="progress-container">
+          <div class="progress-bar" 
+               [ngClass]="{
+                 'success': complianceRate >= 75,
+                 'warning': complianceRate >= 50 && complianceRate < 75,
+                 'danger': complianceRate < 50
+               }" 
+               [style.width.%]="complianceRate">
+          </div>
+        </div>
+      </mat-card-content>
     </mat-card>
-
-    <mat-card class="chart-card line-card">
-      <h3 class="chart-title">CHECKLIST PER MONTH</h3>
-      <canvas
-        baseChart
-        [data]="lineChartData"
-        [options]="lineChartOptions"
-        [type]="lineChartType"
-      >
-      </canvas>
+    
+    <mat-card class="metric-card" @scaleIn>
+      <mat-card-content>
+        <div class="metric-header">
+          <div class="metric-icon">
+            <mat-icon>people</mat-icon>
+          </div>
+          <h2>{{ totalUsers }}</h2>
+        </div>
+        <p>Usuarios Activos</p>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="metric-card" @scaleIn>
+      <mat-card-content>
+        <div class="metric-header">
+          <div class="metric-icon">
+            <mat-icon>assignment_late</mat-icon>
+          </div>
+          <h2>{{ pendingActivities }}</h2>
+        </div>
+        <p>Actividades Pendientes</p>
+        <div class="progress-container">
+          <div class="progress-bar warning" 
+               [style.width.%]="pendingActivities > 0 && totalActivities > 0 ? (pendingActivities / totalActivities) * 100 : 0">
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+    
+    <mat-card class="metric-card" @scaleIn>
+      <mat-card-content>
+        <div class="metric-header">
+          <div class="metric-icon">
+            <mat-icon>domain</mat-icon>
+          </div>
+          <h2>{{ totalProjects }}</h2>
+        </div>
+        <p>Proyectos Activos</p>
+      </mat-card-content>
     </mat-card>
   </div>
-  <app-dashboard-table></app-dashboard-table>
+  
+  <!-- Gráficos -->
+  <div class="charts-container">
+    <!-- Primera fila de gráficos -->
+    <div class="charts-row">
+      <!-- Gráfico de dona (Total Actividades: Asignadas vs Completadas) -->
+      <mat-card class="chart-card" @fadeIn>
+        <mat-card-content>
+          <div class="chart-container">
+            <canvas #donutChart></canvas>
+          </div>
+        </mat-card-content>
+      </mat-card>
+      
+      <!-- Gráfico de barras (cumplimiento por proyecto) -->
+      <mat-card class="chart-card" @fadeIn>
+        <mat-card-content>
+          <!-- Wrapper con scroll vertical -->
+          <div class="bar-chart-wrapper">
+            <div class="chart-container">
+              <canvas #barChart></canvas>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+    
+    <!-- Gráfico de línea (cumplimiento diario) - ocupa todo el ancho -->
+    <div class="charts-row full-width-chart">
+      <mat-card class="chart-card" @fadeIn>
+        <mat-card-content>
+          <div class="chart-container">
+            <canvas #lineChart></canvas>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+    
+    <!-- Segunda fila de gráficos -->
+    <div class="charts-row">
+      <!-- Heatmap (distribución por periodicidad y ámbito) -->
+      <mat-card class="chart-card heatmap-card" @fadeIn>
+        <mat-card-content>
+          <h3>Distribución por Periodicidad y Ámbito</h3>
+          <div class="heatmap-container">
+            <div class="heatmap-table">
+              <table>
+                <thead>
+                  <tr>
+                    <th></th>
+                    <th *ngFor="let scope of scopes">{{ scope }}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let periodicity of periodicities">
+                    <td class="periodicity-label">{{ periodicity }}</td>
+                    <td *ngFor="let scope of scopes" 
+                        [style.background-color]="getHeatmapColor(activityHeatmapData[periodicity] && activityHeatmapData[periodicity][scope] || 0)">
+                      {{ activityHeatmapData[periodicity] && activityHeatmapData[periodicity][scope] || 0 }}
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+  
+  <!-- Tabla de actividades recientes -->
+  <div class="recent-activities" @fadeIn>
+    <mat-card>
+      <mat-card-header>
+        <mat-card-title>Actividades Recientes</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="table-container">
+          <table mat-table [dataSource]="recentActivities">
+            <!-- Columna Obra -->
+            <ng-container matColumnDef="obra">
+              <th mat-header-cell *matHeaderCellDef>Proyecto</th>
+              <td mat-cell *matCellDef="let activity">{{ activity.obra }}</td>
+            </ng-container>
+            
+            <!-- Columna Usuario -->
+            <ng-container matColumnDef="usuario">
+              <th mat-header-cell *matHeaderCellDef>Usuario</th>
+              <td mat-cell *matCellDef="let activity">{{ activity.usuario }}</td>
+            </ng-container>
+            
+            <!-- Columna Actividad -->
+            <ng-container matColumnDef="actividad">
+              <th mat-header-cell *matHeaderCellDef>Actividad</th>
+              <td mat-cell *matCellDef="let activity">{{ activity.actividad }}</td>
+            </ng-container>
+            
+            <!-- Columna Ámbito -->
+            <ng-container matColumnDef="ambito">
+              <th mat-header-cell *matHeaderCellDef>Ámbito</th>
+              <td mat-cell *matCellDef="let activity">{{ activity.ambito }}</td>
+            </ng-container>
+            
+            <!-- Columna Día -->
+            <ng-container matColumnDef="dia">
+              <th mat-header-cell *matHeaderCellDef>Día</th>
+              <td mat-cell *matCellDef="let activity">{{ activity.dia }} ({{ activity.diaSemana }})</td>
+            </ng-container>
+            
+            <!-- Columna Estado -->
+            <ng-container matColumnDef="estado">
+              <th mat-header-cell *matHeaderCellDef>Estado</th>
+              <td mat-cell *matCellDef="let activity">
+                <span class="status-badge" [ngClass]="{
+                  'status-completed': activity.estado === 'Completado',
+                  'status-pending': activity.estado === 'Pendiente'
+                }">
+                  {{ activity.estado }}
+                </span>
+              </td>
+            </ng-container>
+            
+            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+            <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+          </table>
+          
+          <!-- Paginador para la tabla -->
+          <mat-paginator [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
 </div>

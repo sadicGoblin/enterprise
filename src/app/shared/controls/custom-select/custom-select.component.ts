@@ -98,7 +98,7 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
   loadOptionsFromApi(): void {
     this.isLoading = true;
     this.hasError = false;
-    console.log(`CustomSelect: Loading options for ${this.parameterType} from API...`);
+    // console.log(`CustomSelect: Loading options for ${this.parameterType} from API...`);
     
     let apiCall: Observable<SelectOption[]>; // Explicitly type apiCall
     
@@ -122,7 +122,7 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
           this.isLoading = false;
           return;
         }
-        console.log(`CustomSelect: Calling custom API for ${this.parameterType} at ${this.customApiEndpoint} with body:`, this.customApiRequestBody);
+        // console.log(`CustomSelect: Calling custom API for ${this.parameterType} at ${this.customApiEndpoint} with body:`, this.customApiRequestBody);
         // Directly use proxyService for the custom call
         apiCall = this.proxyService.post<any>(this.customApiEndpoint, this.customApiRequestBody).pipe(
           map((response: any): SelectOption[] => { // Explicit return type for map callback
@@ -154,7 +154,7 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
     ).subscribe({
       next: (data: SelectOption[]) => { // Explicitly type data
         this.options = data;
-        console.log(`CustomSelect: Received ${data.length} options for ${this.parameterType}:`, data);
+        // console.log(`CustomSelect: Received ${data.length} options for ${this.parameterType}:`, data);
         
         // If we have options and no value is set yet, select the first one by default
         if (this.options.length > 0 && this.value === undefined) {
@@ -197,13 +197,13 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
     this.markAsTouched();
     this.onChange(value);
     
-    console.log('[CustomSelect] Selection changed to value:', value);
-    console.log('[CustomSelect] Available options:', this.options);
+    // console.log('[CustomSelect] Selection changed to value:', value);
+    // console.log('[CustomSelect] Available options:', this.options);
     
     // Find the selected option to get the full object with idSubParam
     const selectedOption = this.options.find(option => option.value === value);
     
-    console.log('[CustomSelect] Found selected option object:', selectedOption);
+    // console.log('[CustomSelect] Found selected option object:', selectedOption);
     
     // Emit the full option object
     this.selectionChange.emit(selectedOption);
@@ -233,7 +233,7 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
    */
   reloadOptions(): void {
     if (this.loadFromApi && this.parameterType !== ParameterType.NONE) {
-      console.log(`[CustomSelect] Reloading options for ${this.label} with request body:`, this.customApiRequestBody);
+      // console.log(`[CustomSelect] Reloading options for ${this.label} with request body:`, this.customApiRequestBody);
       // Reset any previous data to ensure loading state is visible
       this.options = [];
       this.isLoading = true;

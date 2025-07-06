@@ -19,7 +19,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormControl } from '@angular/forms';
 import { CustomSelectComponent, ParameterType, SelectOption } from '../../../../shared/controls/custom-select/custom-select.component';
 import { PlanificationTableComponent, Activity as PlanificationActivity } from '../../components/planification-table/planification-table.component';
-import { ProxyService } from '../../../../core/services/proxy.service';
+import { ControlService } from '../../services/control.service';
 import { ControlApiRequest, ControlApiResponse } from '../../models/control-api.models';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -80,7 +80,6 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   selectedProjectId: string | null = null;
   selectedCollaboratorId: string | null = null;
   selectedCollaboratorName: string | null = null;
-  apiEndpoint = '/ws/ControlSvcImpl.php';
   
   // Store the formatted period for API calls
   formattedPeriod: string = '';
@@ -91,7 +90,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   @ViewChild('collaboratorSelect') collaboratorSelect!: CustomSelectComponent;
   @ViewChild(PlanificationTableComponent) planificationTable!: PlanificationTableComponent;
   constructor(
-    private proxyService: ProxyService,
+    private controlService: ControlService,
     private dialog: MatDialog
   ) {
     // Initialize with current date as default
@@ -100,6 +99,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   }
   
   ngOnInit(): void {
+    // Regenerar el calendario si es necesario
     this.formatPeriodString(this.selectedPeriod);
     console.log('Current period:', this.formattedPeriod);
     
@@ -327,6 +327,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
    * Fetch activity data from Control API
    */
   fetchActivitiesFromApi(): void {
+    console.log('DEPURACIÓN: fetchActivitiesFromApi() llamado');
     // Ensure we have all required parameters
     if (!this.selectedProjectId || !this.selectedCollaboratorId || !this.selectedPeriod) {
       console.warn('Cannot fetch activities: missing required parameters');
@@ -352,7 +353,12 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
       periodo: Number(this.formattedPeriod)
     };
 
-    console.log('Fetching activities with params:', requestBody);
+    console.log('DEPURACIÓN: Datos de la petición:', {
+      body: JSON.stringify(requestBody),
+      idObraType: typeof Number(this.selectedProjectId),
+      idUsuarioType: typeof Number(this.selectedCollaboratorId),
+      periodoType: typeof Number(this.formattedPeriod)
+    });
     
     // Clear any existing activities
     this.activities = [];
@@ -372,11 +378,12 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
       data?: ControlApiResponse[];
     }
 
-    // Make API call
-    this.proxyService.post<ApiResponseWrapper>(this.apiEndpoint, requestBody)
+    // Make API call usando ControlService
+    console.log('DEPURACIÓN: Llamando a controlService.getActivitiesForPlanification()');
+    this.controlService.getActivitiesForPlanification(requestBody)
       .pipe(
         catchError(error => {
-          console.error('Error fetching activities:', error);
+          console.error('DEPURACIÓN: Error en la llamada API:', error);
           this.toastMessage = 'Error al cargar actividades';
           this.showToast = true;
           setTimeout(() => this.showToast = false, 3000);
@@ -391,8 +398,9 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
         })
       )
       .subscribe(response => {
-        console.log(this.apiEndpoint, requestBody)
-        console.log('API Response received:', response);
+        console.log('DEPURACIÓN: Respuesta recibida');
+        console.log('DEPURACIÓN: Request:', requestBody);
+        console.log('DEPURACIÓN: Response completo:', response);
         
         // Check if the response is an object with a data property containing an array
         const activitiesData = response.data || [];
@@ -541,7 +549,9 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
    */
   dayNames: string[] = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
   
-  // Columns for the master view
+  // Form controls for the filters
+
+
   displayedColumns = [
     'expand',
     'name',
@@ -615,6 +625,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
    * Toggles a scheduled day for an activity
    */
   toggleScheduledDay(activity: Activity, day: number, checked: boolean): void {
+    console.log('Toggling scheduled day:', day, 'Checked:', checked);
     if (checked) {
       if (!activity.scheduledDays.includes(day)) {
         activity.scheduledDays.push(day);
@@ -853,12 +864,20 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   
       // Add scheduled day to the activity
       const activity = activitiesMap.get(uniqueKey)!;
-      const scheduledDay = Number(item.dias);
+
+      const scheduledDay = item.dias.split('-').map(Number);
+      scheduledDay.forEach(day => {
+        if (!activity.scheduledDays.includes(day)) {
+          activity.scheduledDays.push(day);
+          console.log(`Added day ${day} to activity "${activity.name}"`);
+        }
+      });
   
-      if (!isNaN(scheduledDay) && scheduledDay > 0 && !activity.scheduledDays.includes(scheduledDay)) {
-        activity.scheduledDays.push(scheduledDay);
-        console.log(`Added day ${scheduledDay} to activity "${activity.name}"`);
-      }
+      // if (!isNaN(scheduledDay) && scheduledDay > 0 && !activity.scheduledDays.includes(scheduledDay)) {
+      //   activity.scheduledDays.push(scheduledDay);
+      //   console.log(`Added day ${scheduledDay} to activity "${activity.name}"`);
+      // }
+
     });
   
     // Convert the map to an array

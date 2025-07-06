@@ -1,28 +1,4 @@
-/* Variables para la nueva paleta de colores estilo Google */
-:host {
-  --primary: #4285F4;      /* Azul Google */
-  --accent: #34A853;       /* Verde Google */
-  --warning: #FBBC05;      /* Amarillo Google */
-  --error: #EA4335;        /* Rojo Google */
-  --text-primary: #202124; /* Negro texto principal */
-  --text-secondary: #5F6368; /* Gris texto secundario */
-  --background: #F8F9FA;   /* Gris muy claro fondo */
-  --background-rgb: 248, 249, 250; /* RGB para opacidad */
-  --surface: #FFFFFF;      /* Blanco superficie */
-  --divider: #DADCE0;      /* Gris divisor */
-  --shadow: 0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
-  --radius: 8px;          /* Radio de bordes */
-  --radius-full: 24px;    /* Radio para botones tipo pill */
-  --transition: all 0.2s ease;
-  --spacing: 16px;
-  --header-height: 64px;
-}
 
-/* Estilos generales */
-* {
-  box-sizing: border-box;
-  font-family: 'Google Sans', Roboto, Arial, sans-serif;
-}
 
 /* Contenedor principal */
 .container {
@@ -58,10 +34,10 @@
 .title {
   font-size: 20px;
   font-weight: 500;
-  color: var(--text-primary);
-  margin: 0 0 24px;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--divider);
+  color: #444;
+  margin: 0 0 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #eaeaea;
   display: flex;
   align-items: center;
 }
@@ -79,15 +55,20 @@
 /* Contenido y layout */
 .form-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 24px;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
   margin-bottom: 24px;
-}
-
-.column {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+  
+  mat-form-field {
+    width: 100%;
+    margin-bottom: 1rem;
+  }
+  
+  .column {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
 }
 
 /* Estilos para formularios */
@@ -99,107 +80,92 @@
   width: 100%;
 }
 
-::ng-deep .mat-form-field-appearance-fill .mat-form-field-flex {
-  background-color: rgba(var(--background-rgb), 0.04);
-  border-radius: var(--radius) var(--radius) 0 0;
-  padding: 0.75em 0.75em 0;
-}
-
-::ng-deep .mat-form-field-label {
-  color: var(--text-secondary);
-}
-
 /* Estilos para botones */
 .button-row {
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  margin-top: 24px;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1.5rem;
 }
 
-::ng-deep .mat-raised-button {
-  border-radius: var(--radius-full);
-  font-weight: 500;
-  letter-spacing: 0.25px;
-  padding: 0 24px;
-  height: 36px;
-  box-shadow: var(--shadow);
-  text-transform: uppercase;
+/* Estilos para el área de contenido */
+.tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
-::ng-deep .mat-raised-button.mat-primary {
-  background-color: var(--primary);
-}
-
-::ng-deep .mat-raised-button.mat-warn {
-  background-color: var(--error);
-}
-
-/* Estilos para la tabla */
+/* Contenedor de tabla */
 .table-container {
-  border-radius: var(--radius);
   overflow: auto;
+  max-height: 70vh;
+  width: 100%;
+  border-radius: 4px;
   border: 1px solid var(--divider);
 }
 
-:host ::ng-deep .activities-table {
+/* Tabla completa */
+:host ::ng-deep table.mat-table {
   width: 100%;
-  box-shadow: none !important;
+  background-color: white;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
-:host ::ng-deep .activities-table .mat-header-row {
-  background-color: var(--background);
-  height: 48px;
+/* Fila de encabezado */
+:host ::ng-deep .mat-header-row {
+  background-color: #f0f4f8;
+  height: 56px;
 }
 
-:host ::ng-deep .activities-table .mat-header-cell {
-  color: var(--text-secondary);
-  font-size: 12px;
+/* Celdas de encabezado */
+:host ::ng-deep .mat-header-cell {
+  color: #333;
   font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  padding: 0 16px;
+  font-size: 0.95rem;
+  padding: 12px 16px;
+  text-transform: none;
+  letter-spacing: normal;
+  border-bottom: 2px solid #e0e0e0;
+  text-align: left;
 }
 
-:host ::ng-deep .activities-table .mat-row {
+/* Filas de datos */
+:host ::ng-deep .mat-row {
   height: 52px;
-  transition: background-color 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+  transition: background-color 0.2s ease;
 }
 
-:host ::ng-deep .activities-table .mat-row:hover {
-  background-color: rgba(66, 133, 244, 0.04);
+/* Efecto hover en filas */
+:host ::ng-deep .mat-row:hover,
+:host ::ng-deep .mat-row:nth-of-type(even):hover {
+  background-color: #edf3f9;
 }
 
-:host ::ng-deep .activities-table .mat-cell {
-  color: var(--text-primary);
-  font-size: 14px;
-  padding: 0 16px;
-  border-bottom: 1px solid var(--divider);
+/* Filas con índice par (alternando colores) */
+:host ::ng-deep .mat-row:nth-of-type(even) {
+  background-color: #fafafa;
 }
 
-/* Estilos para el botón de calendario activo */
-.calendar-button-active {
-  background-color: rgba(66, 133, 244, 0.1) !important;
-  transform: scale(1.05);
-  transition: var(--transition);
-  border-radius: 50%;
+/* Celdas de datos */
+:host ::ng-deep .mat-cell {
+  color: #333;
+  font-size: 0.9rem;
+  padding: 12px 16px;
+  line-height: 1.5;
+  text-align: left;
+  vertical-align: middle;
 }
 
-.calendar-button-active .calendar-icon {
-  color: var(--primary) !important;
-  animation: pulse 1.5s infinite alternate ease-in-out;
+/* Botones en las celdas */
+:host ::ng-deep .mat-icon-button {
+  width: 36px;
+  height: 36px;
+  line-height: 36px;
 }
 
-@keyframes pulse {
-  0% { opacity: 0.7; }
-  100% { opacity: 1; }
-}
-
-.calendar-icon {
-  transition: var(--transition);
-  color: var(--text-secondary);
-}
-
+/* Badge para calendario */
 .calendar-badge {
   position: absolute;
   top: -5px;
@@ -218,149 +184,7 @@
   box-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
-
-.tab-content {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 2rem !important;
-}
-
-.button-row {
-  display: flex !important;
-  justify-content: flex-end !important;
-  gap: 1rem !important;
-  margin-top: 1.5rem !important;
-}
-
-.save-button {
-  display: flex !important;
-  justify-content: center !important;
-  margin-top: 2rem !important;
-}
-
-/* Contenedor de tabla */
-.table-container {
-  overflow: auto !important;
-  max-height: 70vh !important;
-  width: 100% !important;
-  padding: 0 !important;
-  margin: 0 !important;
-  border-radius: 4px !important;
-}
-
-/* Títulos */
-.title {
-  color: #444 !important;
-  margin-bottom: 1.5rem !important;
-  font-weight: 500 !important;
-  border-bottom: 1px solid #eaeaea !important;
-  padding-bottom: 0.75rem !important;
-}
-  
-/* Estilos específicos para la tabla con !important para forzar la aplicación */
-
-/* Tabla completa */
-:host ::ng-deep table.mat-table {
-  width: 100% !important;
-  background-color: white !important;
-  border-collapse: separate !important;
-  border-spacing: 0 !important;
-}
-
-/* Fila de encabezado */
-:host ::ng-deep .mat-header-row {
-  background-color: #f0f4f8 !important;
-  height: 56px !important;
-}
-
-/* Celdas de encabezado */
-:host ::ng-deep .mat-header-cell {
-  color: #333 !important;
-  font-weight: 500 !important;
-  font-size: 0.95rem !important;
-  padding: 12px 16px !important;
-  text-transform: none !important;
-  letter-spacing: normal !important;
-  border-bottom: 2px solid #e0e0e0 !important;
-  text-align: left !important;
-}
-
-/* Filas de datos */
-:host ::ng-deep .mat-row {
-  height: 52px !important;
-  border-bottom: 1px solid #f0f0f0 !important;
-  transition: background-color 0.2s ease !important;
-}
-
-/* Efecto hover en filas */
-:host ::ng-deep .mat-row:hover {
-  background-color: #edf3f9 !important;
-}
-
-/* Filas con índice par (alternando colores) */
-:host ::ng-deep .mat-row:nth-of-type(even) {
-  background-color: #fafafa !important;
-}
-
-/* Hover en filas con índice par */
-:host ::ng-deep .mat-row:nth-of-type(even):hover {
-  background-color: #edf3f9 !important;
-}
-
-/* Celdas de datos */
-:host ::ng-deep .mat-cell {
-  color: #333 !important;
-  font-size: 0.9rem !important;
-  padding: 12px 16px !important;
-  line-height: 1.5 !important;
-  text-align: left !important;
-  vertical-align: middle !important;
-}
-
-/* Celdas de acción (botones) */
-:host ::ng-deep .action-cell {
-  text-align: center !important;
-  padding: 0.5rem !important;
-  width: 60px !important;
-}
-
-/* Botones en las celdas */
-:host ::ng-deep .mat-icon-button {
-  width: 36px !important;
-  height: 36px !important;
-  line-height: 36px !important;
-}
-
-/* Mensaje cuando no hay datos */
-:host ::ng-deep .no-data-cell {
-  text-align: center !important;
-  padding: 2rem 1rem !important;
-  font-style: italic !important;
-  color: #777 !important;
-}
-  
-// Layout de formulario grid
-.form-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-
-  mat-form-field {
-    width: 100%;
-    margin-bottom: 1rem;
-  }
-  
-  .column {
-    display: flex;
-    flex-direction: column;
-  }
-}
-
-.full-width {
-  width: 100%;
-}
-
-// Estilos para spinners de carga
+/* Estilos para spinners de carga */
 .loading-spinner-container {
   display: flex;
   align-items: center;
@@ -374,9 +198,16 @@
   }
 }
 
-// Estilos para efectos hover específicos sin Angular Material
+/* Estilo para filas de tabla */
 .table-row:hover {
-  background-color: #edf3f9 !important;
+  background-color: #edf3f9;
   cursor: pointer;
 }
-  
+
+/* Mensaje cuando no hay datos */
+:host ::ng-deep tr.mat-row.mat-no-data-row td.mat-cell {
+  text-align: center;
+  padding: 2rem 1rem;
+  font-style: italic;
+  color: #777;
+}

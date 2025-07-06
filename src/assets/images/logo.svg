@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="120" height="120" viewBox="0 0 120 120" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <!-- Definición de gradientes -->
+  <defs>
+    <!-- Gradiente para el elemento gris -->
+    <linearGradient id="greyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#ADADAD;stop-opacity:1" />
+      <stop offset="45%" style="stop-color:#E8E8E8;stop-opacity:1" />
+      <stop offset="55%" style="stop-color:#E8E8E8;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#8A8A8A;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Gradiente para la flecha amarilla -->
+    <linearGradient id="yellowGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FFD700;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F0C000;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Sombra para profundidad -->
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="2" />
+      <feOffset dx="2" dy="2" result="offsetblur" />
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3" />
+      </feComponentTransfer>
+      <feMerge>
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Elemento gris/plateado vertical -->
+  <g filter="url(#dropShadow)">
+    <!-- Cara frontal -->
+    <path d="M 45 15 L 60 10 L 60 80 L 45 85 Z" fill="url(#greyGradient)" />
+    
+    <!-- Lado derecho (para dar efecto 3D) -->
+    <path d="M 60 10 L 65 15 L 65 85 L 60 80 Z" fill="#9E9E9E" />
+    
+    <!-- Lado superior -->
+    <path d="M 45 15 L 60 10 L 65 15 L 50 20 Z" fill="#CCCCCC" />
+  </g>
+  
+  <!-- Flecha amarilla/dorada -->
+  <g filter="url(#dropShadow)">
+    <path d="M 15 50 L 60 50 L 60 35 L 95 70 L 60 105 L 60 90 L 15 90 Z" fill="url(#yellowGradient)" />
+    
+    <!-- Sombra interna para la flecha -->
+    <path d="M 60 50 L 60 35 L 95 70 L 60 105 L 60 90 L 60 50 Z" fill="#F0C000" opacity="0.3" />
+  </g>
+</svg>

@@ -30,7 +30,7 @@ export interface CalendarDialogData {
       </div>
       <div class="calendar-dialog-actions">
         <button mat-button (click)="onCancel()">Cancelar</button>
-        <button mat-raised-button color="primary" (click)="onSave()">Guardar</button>
+        <button mat-raised-button color="primary" [disabled]="!hasChanges" (click)="onSave()">Guardar</button>
       </div>
     </div>
   `,
@@ -177,6 +177,7 @@ export interface CalendarDialogData {
 export class CalendarDialogComponent {
   selectedDates: Date[] = [];
   tempSelectedDates: Date[] = [];
+  hasChanges: boolean = false;
 
   constructor(
     public dialogRef: MatDialogRef<CalendarDialogComponent>,
@@ -192,7 +193,53 @@ export class CalendarDialogComponent {
   }
 
   onDateSelectionChanged(dates: Date[]): void {
+    console.log('Selected dates changed:', dates);
     this.tempSelectedDates = [...dates];
+    
+    // Activar inmediatamente el botón de guardar cuando hay cualquier cambio en la selección
+    this.hasChanges = true;
+    console.log('Has changes after selection:', this.hasChanges);
+  }
+
+  /**
+   * Verifica si hay cambios en las selecciones de fechas
+   */
+  private checkForChanges(): void {
+    // Si la cantidad de fechas es diferente, definitivamente hay cambios
+    if (this.selectedDates.length !== this.tempSelectedDates.length) {
+      this.hasChanges = true;
+      return;
+    }
+    
+    // Convertir fechas a formato de string para comparar más fácilmente
+    const originalDatesSet = new Set(
+      this.selectedDates.map(date => date.toISOString().split('T')[0])
+    );
+    
+    // Verificar si alguna fecha nueva no está en el conjunto original
+    for (const date of this.tempSelectedDates) {
+      const dateStr = date.toISOString().split('T')[0];
+      if (!originalDatesSet.has(dateStr)) {
+        this.hasChanges = true;
+        return;
+      }
+    }
+    
+    // Verificar si alguna fecha original no está en el conjunto nuevo
+    const newDatesSet = new Set(
+      this.tempSelectedDates.map(date => date.toISOString().split('T')[0])
+    );
+    
+    for (const date of this.selectedDates) {
+      const dateStr = date.toISOString().split('T')[0];
+      if (!newDatesSet.has(dateStr)) {
+        this.hasChanges = true;
+        return;
+      }
+    }
+    
+    // Si llegamos aquí, las colecciones son idénticas
+    this.hasChanges = false;
   }
 
   onCancel(): void {
