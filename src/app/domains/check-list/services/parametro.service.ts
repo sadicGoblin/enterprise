@@ -27,6 +27,9 @@ export interface DeleteParametroRequest {
   idDet: number;
 }
 
+// Interfaz para actualizar parámetros - utiliza la misma estructura que CreateParametroRequest
+export interface UpdateParametroRequest extends CreateParametroRequest {}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -103,6 +106,17 @@ export class ParametroService {
     };
 
     console.log('Request body for deleting parameter:', requestBody);
+    
+    return this.proxyService.post('/ws/ParametrosSvcImpl.php', requestBody);
+  }
+  
+  /**
+   * Actualiza un parámetro existente
+   * @param requestBody Objeto con los datos para actualizar el parámetro
+   * @returns Observable con la respuesta de la API
+   */
+  updateParametro(requestBody: UpdateParametroRequest): Observable<any> {
+    console.log('Request body for updating parameter:', requestBody);
     
     return this.proxyService.post('/ws/ParametrosSvcImpl.php', requestBody);
   }

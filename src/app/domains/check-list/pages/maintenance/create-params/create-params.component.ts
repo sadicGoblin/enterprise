@@ -34,6 +34,7 @@ interface Param {
   name: string;
   id?: string;
   subParams: SubParam[];
+  originalIndex?: number; // Índice original para rastreo después del filtrado
 }
 
 @Component({
@@ -205,10 +206,97 @@ export class CreateParamsComponent implements OnInit, AfterViewInit {
   saveParam() {
     if (this.paramName) {
       if (this.editingParamIndex >= 0) {
-        // Actualizar parámetro existente
-        console.log(`Actualizando parámetro en índice ${this.editingParamIndex} con nombre: ${this.paramName}`);
-        this.params[this.editingParamIndex].name = this.paramName;
-        this.editingParamIndex = -1; // Resetear el estado de edición
+        // Actualizar parámetro existente mediante la API
+        this.isLoading = true;
+        
+        // Obtener el parámetro actual para obtener su ID
+        const paramToUpdate = this.params[this.editingParamIndex];
+        
+        // Verificar que el ID existe y es válido
+        if (!paramToUpdate || !paramToUpdate.id) {
+          this.snackBar.open(
+            'No se puede actualizar: ID de parámetro no válido', 
+            'Cerrar', 
+            { duration: 5000, panelClass: ['error-snackbar'] }
+          );
+          return;
+        }
+        
+        // Convertir ID a número
+        let idDet: number;
+        if (typeof paramToUpdate.id === 'string') {
+          idDet = parseInt(paramToUpdate.id, 10);
+        } else if (typeof paramToUpdate.id === 'number') {
+          idDet = paramToUpdate.id;
+        } else {
+          this.snackBar.open(
+            'No se puede actualizar: ID de parámetro no válido', 
+            'Cerrar', 
+            { duration: 5000, panelClass: ['error-snackbar'] }
+          );
+          return;
+        }
+        
+        // Preparar el request body para actualizar el parámetro
+        const idCab = 5; // Valor fijo para gabinete según el ejemplo
+        const requestBody = {
+          "caso": "DetalleActualiza",
+          "idDet": idDet,
+          "idCab": idCab,
+          "nombre": this.paramName,
+          "alias": "",
+          "codigo": "",
+          "idPeriocidad": 0,
+          "periocidad": "Sin Acceso",
+          "idCategoria": 0,
+          "idParam": 0
+        };
+        
+        console.log('Request para actualizar parámetro:', JSON.stringify(requestBody, null, 2));
+        
+        // Llamar al servicio para actualizar el parámetro
+        this.parametroService.updateParametro(requestBody).subscribe({
+          next: (response: any) => {
+            console.log('Respuesta de API al actualizar parámetro:', response);
+            
+            if (response && response.success) {
+              // Actualizar el nombre del parámetro localmente
+              this.params[this.editingParamIndex].name = this.paramName;
+              
+              // Actualizar también en los parámetros filtrados
+              this.filterParams();
+              
+              // Mostrar mensaje de éxito
+              this.snackBar.open(
+                `Parámetro "${this.originalParamName}" actualizado correctamente a "${this.paramName}"`, 
+                'Cerrar', 
+                { duration: 5000, panelClass: ['success-snackbar'] }
+              );
+            } else {
+              // Mostrar mensaje de error
+              this.snackBar.open(
+                `Error al actualizar el parámetro: ${response?.message || 'Error desconocido'}`, 
+                'Cerrar', 
+                { duration: 5000, panelClass: ['error-snackbar'] }
+              );
+            }
+            
+            this.isLoading = false;
+            this.paramName = ''; // Limpiar el formulario
+            this.editingParamIndex = -1; // Resetear el estado de edición
+          },
+          error: (err: any) => {
+            console.error('Error al actualizar parámetro:', err);
+            this.snackBar.open(
+              'Error en la comunicación con el servidor', 
+              'Cerrar', 
+              { duration: 5000, panelClass: ['error-snackbar'] }
+            );
+            this.isLoading = false;
+            this.editingParamIndex = -1; // Resetear el estado de edición
+          }
+        });
+      
       } else {
         // Crear nuevo parámetro mediante la API
         const idCab = 5; // Valor fijo para gabinete según el ejemplo
@@ -264,17 +352,19 @@ export class CreateParamsComponent implements OnInit, AfterViewInit {
     }
   }
 
-  editParam(index: number) {
-    if (index >= 0 && index < this.params.length) {
-      this.paramName = this.params[index].name;
-      this.originalParamName = this.params[index].name;
-      this.editingParamIndex = index;
+  editParam(index: number, originalIndex?: number) {
+    // Si se proporciona el índice original (desde la tabla filtrada), usarlo
+    const actualIndex = originalIndex !== undefined ? originalIndex : index;
+    
+    if (actualIndex >= 0 && actualIndex < this.params.length) {
+      this.paramName = this.params[actualIndex].name;
+      this.originalParamName = this.params[actualIndex].name;
+      this.editingParamIndex = actualIndex;
     }
   }
 
-  deleteParam(index: number) {
-    // Usar el array filtrado (filteredParams) en lugar del array original (params)
-    // para asegurar que se elimina el parámetro correcto después de filtrar
+  deleteParam(index: number, originalIndex?: number) {
+    // Obtener el parámetro del array filtrado
     const param = this.filteredParams[index];
     if (!param) {
       this.snackBar.open('No se puede eliminar: Parámetro no encontrado', 'Cerrar', {
@@ -284,6 +374,10 @@ export class CreateParamsComponent implements OnInit, AfterViewInit {
       return;
     }
     
+    // Usar el índice original si se proporciona, de lo contrario usar el original guardado en el parámetro
+    const actualIndex = originalIndex !== undefined ? originalIndex : 
+                         param.originalIndex !== undefined ? param.originalIndex : index;
+
     // Asegurar que el ID es un número válido
     let idDet: number;
     if (typeof param.id === 'string') {
@@ -329,14 +423,14 @@ export class CreateParamsComponent implements OnInit, AfterViewInit {
               console.log('Respuesta de API al eliminar parámetro:', response);
               
               if (response.success) {
-                // Encontrar el índice correcto en el array original
-                const originalIndex = this.params.findIndex(p => p.id === param.id);
-                if (originalIndex !== -1) {
-                  // Eliminar el parámetro del arreglo original
-                  this.params.splice(originalIndex, 1);
-                }
+                // Eliminar el parámetro del arreglo original usando el índice actual correcto
+                this.params.splice(actualIndex, 1);
+                
                 // Eliminar el parámetro del arreglo filtrado
                 this.filteredParams.splice(index, 1);
+                
+                // Actualizar los índices originales recalculando el filtro
+                this.filterParams();
                 
                 // Mostrar mensaje de éxito
                 this.snackBar.open(
@@ -741,14 +835,23 @@ export class CreateParamsComponent implements OnInit, AfterViewInit {
   filterParams(): void {
     if (!this.searchQuery) {
       // Si no hay búsqueda, mostrar todos los parámetros
-      this.filteredParams = [...this.params];
+      // Asignar índices originales a cada parámetro
+      this.filteredParams = this.params.map((param, index) => ({
+        ...param,
+        originalIndex: index
+      }));
       return;
     }
 
     const query = this.searchQuery.toLowerCase().trim();
-    this.filteredParams = this.params.filter((param: Param) => 
-      param.name.toLowerCase().includes(query)
-    );
+    this.filteredParams = this.params
+      .map((param, index) => ({
+        ...param,
+        originalIndex: index // Guardar el índice original de cada parámetro
+      }))
+      .filter(param => 
+        param.name.toLowerCase().includes(query)
+      );
   }
 
   
