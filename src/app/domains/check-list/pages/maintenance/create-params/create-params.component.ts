@@ -465,12 +465,13 @@ export class CreateParamsComponent implements OnInit, AfterViewInit {
               }
               
               // Recargar los datos desde el servidor para asegurar sincronización completa
-              // this.onParameterSelected();
+               this.onParameterSelected();
               
               // Resetear el estado de edición
               this.subParamName = '';
               this.editingSubParamIndex = -1;
               this.editingSubParamId = -1;
+              this.filterSubParams();
             } else {
               // Mostrar mensaje de error
               this.snackBar.open(
@@ -518,7 +519,7 @@ export class CreateParamsComponent implements OnInit, AfterViewInit {
               );
               
               // Recargar los sub-parámetros para el parámetro seleccionado
-              // this.onParameterSelected();
+               this.onParameterSelected();
             } else {
               // Mostrar mensaje de error
               this.snackBar.open(
@@ -531,6 +532,7 @@ export class CreateParamsComponent implements OnInit, AfterViewInit {
             // Limpiar el formulario
             this.subParamName = '';
             this.loadingSubParams = false;
+            this.filterSubParams();
           },
           error: (err) => {
             console.error('Error al crear sub-parámetro:', err);
