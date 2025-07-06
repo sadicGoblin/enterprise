@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -27,6 +27,7 @@ interface SelectOption {
 
 interface SubParam {
   name: string;
+  originalIndex?: number; // Índice original en el array de subparámetros
 }
 
 interface Param {
@@ -57,25 +58,39 @@ interface Param {
   templateUrl: './create-params.component.html',
   styleUrls: ['./create-params.component.scss'],
 })
-export class CreateParamsComponent implements OnInit {
-  paramName = '';
-  subParamName = '';
-  selectedParam?: Param;
-  loadingSubParams = false;
-  subParamError: string | null = null;
-  editingParamIndex: number = -1; // -1 indica que no se está editando ningún parámetro
-  editingSubParamIndex: number = -1; // -1 indica que no se está editando ningún sub-parámetro
-
-  params: Param[] = [];
-  filteredParams: Param[] = []; // Para los resultados filtrados
-  searchQuery: string = ''; // Para la búsqueda
-  isLoading = false;
+export class CreateParamsComponent implements OnInit, AfterViewInit {
+  // Loading and error states
+  isLoading: boolean = true;
+  loadingSubParams: boolean = false;
   error: string | null = null;
+  subParamError: string | null = null;
+  
+  // Form fields
+  paramName: string = '';
+  searchQuery: string = '';
+  subParamSearchQuery: string = '';
+  editingParamIndex: number = -1;
+  
+  // Data structure
+  params: Param[] = [];
+  filteredParams: Param[] = [];
+  
+  // Selected parameter and sub-parameter states
+  selectedParam: Param | null = null;
+  selectedParamOptions: SelectOption[] = [];
+  filteredSubParams: SubParam[] = [];
+  subParamName: string = '';
+  editingSubParamIndex: number = -1;
+  editingSubParamId: number = -1;
 
   subParams: SubParam[] = [];
 
   paramColumns = ['name', 'edit', 'delete'];
   subParamColumns = ['name', 'edit', 'delete'];
+
+  // Original names for editing reference
+  originalParamName: string = '';
+  originalSubParamName: string = '';
 
   constructor(
     private parametroService: ParametroService,
@@ -86,6 +101,12 @@ export class CreateParamsComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadParametros();
+    // Inicializar el array filtrado
+    this.filteredSubParams = [];
+  }
+
+  ngAfterViewInit(): void {
+    console.log('CreateParamsComponent view initialized');
   }
 
   loadParametros(): void {
@@ -116,12 +137,69 @@ export class CreateParamsComponent implements OnInit {
 
   clearParamForm() {
     this.paramName = '';
-    this.editingParamIndex = -1; // Resetear el estado de edición
+    this.editingParamIndex = -1;
+    this.originalParamName = '';
   }
 
   clearSubParamForm() {
     this.subParamName = '';
-    this.editingSubParamIndex = -1; // Resetear el estado de edición
+    this.editingSubParamIndex = -1;
+    this.originalSubParamName = '';
+    this.editingSubParamId = -1;
+  }
+  
+  /**
+   * Filtra los sub-parámetros según el término de búsqueda
+   */
+  filterSubParams(): void {
+    if (!this.selectedParam || !this.selectedParam.subParams) {
+      this.filteredSubParams = [];
+      return;
+    }
+    
+    // Asegurarse de que cada sub-parámetro tenga su índice original
+    const subParamsWithIndex = this.selectedParam.subParams.map((subParam, index) => ({
+      ...subParam,
+      originalIndex: index
+    }));
+    
+    if (!this.subParamSearchQuery) {
+      // Si no hay búsqueda, mostrar todos los sub-parámetros
+      this.filteredSubParams = [...subParamsWithIndex];
+      return;
+    }
+    
+    const query = this.subParamSearchQuery.toLowerCase().trim();
+    this.filteredSubParams = subParamsWithIndex.filter(subParam => 
+      subParam.name.toLowerCase().includes(query)
+    );
+  }
+
+  /**
+   * Muestra un diálogo de confirmación para actualizar un parámetro
+   */
+  confirmSaveParam() {
+    // Si estamos editando un parámetro existente, mostrar confirmación
+    if (this.editingParamIndex >= 0) {
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '350px',
+        data: {
+          title: 'Confirmar actualización',
+          message: `¿Está seguro que desea actualizar el parámetro "${this.originalParamName}" a "${this.paramName}"?`,
+          confirmText: 'Actualizar',
+          cancelText: 'Cancelar'
+        },
+      });
+
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result) {
+          this.saveParam();
+        }
+      });
+    } else {
+      // Si es nuevo, guardar directamente
+      this.saveParam();
+    }
   }
 
   saveParam() {
@@ -187,10 +265,11 @@ export class CreateParamsComponent implements OnInit {
   }
 
   editParam(index: number) {
-    // Almacenar el parámetro seleccionado sin eliminarlo
-    this.paramName = this.params[index].name;
-    this.editingParamIndex = index; // Guardamos el índice para actualizar más tarde
-    console.log(`Editando parámetro: ${this.paramName}, índice: ${this.editingParamIndex}`);
+    if (index >= 0 && index < this.params.length) {
+      this.paramName = this.params[index].name;
+      this.originalParamName = this.params[index].name;
+      this.editingParamIndex = index;
+    }
   }
 
   deleteParam(index: number) {
@@ -289,54 +368,332 @@ export class CreateParamsComponent implements OnInit {
     });
   }
 
+  /**
+   * Guarda un sub-parámetro (crear nuevo o actualizar existente)
+   */
+  /**
+   * Muestra un diálogo de confirmación para actualizar un sub-parámetro
+   */
+  confirmSaveSubParam() {
+    // Si estamos editando un sub-parámetro existente, mostrar confirmación
+    if (this.editingSubParamIndex >= 0) {
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        width: '350px',
+        data: {
+          title: 'Confirmar actualización',
+          message: `¿Está seguro que desea actualizar el sub-parámetro "${this.originalSubParamName}" a "${this.subParamName}"?`,
+          confirmText: 'Actualizar',
+          cancelText: 'Cancelar'
+        },
+      });
+
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result) {
+          this.saveSubParam();
+        }
+      });
+    } else {
+      // Si es nuevo, guardar directamente
+      this.saveSubParam();
+    }
+  }
+
   saveSubParam() {
-    if (this.subParamName && this.selectedParam) {
-      if (this.editingSubParamIndex >= 0) {
-        // Actualizar sub-parámetro existente
-        console.log(`Actualizando sub-parámetro en índice ${this.editingSubParamIndex} con nombre: ${this.subParamName}`);
-        // Aquí iría la llamada a la API para actualizar
-        this.selectedParam.subParams[this.editingSubParamIndex].name = this.subParamName;
-        this.editingSubParamIndex = -1; // Resetear el estado de edición
-      } else {
-        // Crear nuevo sub-parámetro
-        console.log(`Creando nuevo sub-parámetro: ${this.subParamName}`);
-        // Aquí iría la llamada a la API para crear
-        this.selectedParam.subParams.push({ name: this.subParamName });
-      }
-      this.subParamName = '';
+    if (!this.subParamName) {
+      this.snackBar.open('El nombre del sub-parámetro es obligatorio', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
+      return;
     }
-  }
 
-  editSubParam(index: number) {
-    if (
-      this.selectedParam &&
-      index >= 0 &&
-      index < this.selectedParam.subParams.length
-    ) {
-      this.subParamName = this.selectedParam.subParams[index].name;
-      this.editingSubParamIndex = index; // Guardamos el índice para actualizar más tarde
-      console.log(`Editando sub-parámetro: ${this.subParamName}, índice: ${this.editingSubParamIndex}`);
+    if (!this.selectedParam || !this.selectedParam.id) {
+      this.snackBar.open('Debe seleccionar un parámetro', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
+      return;
     }
-  }
 
-  deleteSubParam(index: number) {
-    if (
-      this.selectedParam &&
-      index >= 0 &&
-      index < this.selectedParam.subParams.length
-    ) {
-      this.selectedParam.subParams.splice(index, 1);
+    // Mostrar indicador de carga
+    this.loadingSubParams = true;
+
+    // Convertir el ID del parámetro a número
+    const idDet = typeof this.selectedParam!.id === 'string' ? 
+      parseInt(this.selectedParam!.id, 10) : 
+      this.selectedParam!.id;
+
+    // Verificar que el ID es válido
+    if (isNaN(idDet)) {
+      this.snackBar.open('ID de parámetro no válido', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
+      this.loadingSubParams = false;
+      return;
+    }
+
+    if (this.editingSubParamIndex >= 0 && this.editingSubParamId > 0) {
+      // Actualizar sub-parámetro existente
+      console.log(`Actualizando sub-parámetro ID ${this.editingSubParamId} con nombre: ${this.subParamName}`);
+      
+      // Llamar al servicio para actualizar el sub-parámetro
+      this.subParametroService.updateSubParametro(this.editingSubParamId, idDet, this.subParamName)
+        .subscribe({
+          next: (response) => {
+            console.log('Respuesta de API al actualizar sub-parámetro:', response);
+            
+            if (response && response.success) {
+              // Mostrar mensaje de éxito
+              this.snackBar.open(
+                `Sub-parámetro "${this.subParamName}" actualizado correctamente`, 
+                'Cerrar', 
+                { duration: 5000, panelClass: ['success-snackbar'] }
+              );
+              
+              // Actualizar el nombre en la lista local temporalmente para feedback inmediato
+              if (this.selectedParam && this.selectedParam.subParams) {
+                this.selectedParam.subParams[this.editingSubParamIndex].name = this.subParamName;
+                
+                // Actualizar también en las opciones originales
+                const optIndex = this.selectedParamOptions.findIndex(
+                  (opt: SelectOption) => typeof opt.value === 'number' && opt.value === this.editingSubParamId
+                );
+                if (optIndex >= 0) {
+                  this.selectedParamOptions[optIndex].label = this.subParamName;
+                }
+              }
+              
+              // Recargar los datos desde el servidor para asegurar sincronización completa
+              // this.onParameterSelected();
+              
+              // Resetear el estado de edición
+              this.subParamName = '';
+              this.editingSubParamIndex = -1;
+              this.editingSubParamId = -1;
+            } else {
+              // Mostrar mensaje de error
+              this.snackBar.open(
+                `Error al actualizar el sub-parámetro: ${response.message || 'Error desconocido'}`, 
+                'Cerrar', 
+                { duration: 5000, panelClass: ['error-snackbar'] }
+              );
+            }
+            
+            this.loadingSubParams = false;
+          },
+          error: (err) => {
+            console.error('Error al actualizar sub-parámetro:', err);
+            this.snackBar.open('Error en la comunicación con el servidor', 'Cerrar', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+            this.loadingSubParams = false;
+          }
+        });
+    } else {
+      // Crear nuevo sub-parámetro
+      console.log(`Creando nuevo sub-parámetro: ${this.subParamName} para parámetro ID: ${this.selectedParam!.id}`);
+      
+      // Imprimir el request body que se enviará a la API (para verificar)
+      console.log('Request body para crear sub-parámetro:', {
+        caso: 'SubParametroCrea',
+        idSubParam: 0,
+        idDet: idDet,
+        nombre: this.subParamName
+      });
+
+      // Llamar al servicio para crear el sub-parámetro
+      this.subParametroService.createSubParametro(this.subParamName, idDet)
+        .subscribe({
+          next: (response) => {
+            console.log('Respuesta de API al crear sub-parámetro:', response);
+            
+            if (response && response.success) {
+              // Mostrar mensaje de éxito
+              this.snackBar.open(
+                `Sub-parámetro "${this.subParamName}" creado correctamente`, 
+                'Cerrar', 
+                { duration: 5000, panelClass: ['success-snackbar'] }
+              );
+              
+              // Recargar los sub-parámetros para el parámetro seleccionado
+              // this.onParameterSelected();
+            } else {
+              // Mostrar mensaje de error
+              this.snackBar.open(
+                `Error al crear el sub-parámetro: ${response.message || 'Error desconocido'}`, 
+                'Cerrar', 
+                { duration: 5000, panelClass: ['error-snackbar'] }
+              );
+            }
+            
+            // Limpiar el formulario
+            this.subParamName = '';
+            this.loadingSubParams = false;
+          },
+          error: (err) => {
+            console.error('Error al crear sub-parámetro:', err);
+            this.snackBar.open('Error en la comunicación con el servidor', 'Cerrar', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+            this.loadingSubParams = false;
+          }
+        });
     }
   }
 
   /**
-   * Called when a parameter is selected from the dropdown
-   * Loads the sub-parameters for the selected parameter
+   * Prepara el formulario para editar un sub-parámetro
+   * @param index Índice del sub-parámetro en la lista filtrada
+   * @param originalIndex Índice original del subparámetro en la lista sin filtrar
    */
-  onParameterSelected(): void {
-    if (!this.selectedParam || !this.selectedParam.id) {
+  editSubParam(index: number, originalIndex?: number): void {
+    if (!this.selectedParam || !this.selectedParam.subParams) {
       return;
     }
+    
+    // Si se proporciona el índice original (desde la tabla filtrada), usarlo
+    const actualIndex = originalIndex !== undefined ? originalIndex : index;
+    
+    this.editingSubParamIndex = actualIndex;
+    this.subParamName = this.selectedParam.subParams[actualIndex].name;
+    this.originalSubParamName = this.selectedParam.subParams[actualIndex].name;
+
+    // Get the ID of the sub-parameter from the original array
+    if (this.selectedParamOptions && this.selectedParamOptions[actualIndex]) {
+      const value = this.selectedParamOptions[actualIndex].value;
+      this.editingSubParamId = typeof value === 'string' ? parseInt(value, 10) : value;
+    } else {
+      console.error('Could not find ID for sub-parameter at index', actualIndex);
+    }
+    
+    console.log(`Editing sub-param: ${this.subParamName} with ID: ${this.editingSubParamId}`);
+  }
+
+  /**
+   * Elimina un subparámetro mostrando un diálogo de confirmación primero
+   * @param index Índice del subparámetro a eliminar
+   * @param originalIndex Índice original del subparámetro en la lista sin filtrar
+   */
+  deleteSubParam(index: number, originalIndex?: number): void {
+    if (!this.selectedParam || !this.selectedParam.subParams) {
+      return;
+    }
+    
+    // Si se proporciona el índice original (desde la tabla filtrada), usarlo
+    const actualIndex = originalIndex !== undefined ? originalIndex : index;
+    
+    // Obtener el subparámetro a eliminar
+    const subParam = this.selectedParam.subParams[actualIndex];
+    
+    if (!subParam) {
+      this.snackBar.open('No se pudo encontrar el sub-parámetro', 'Cerrar',
+        { duration: 5000, panelClass: ['error-snackbar'] }
+      );
+      return;
+    }
+    
+    // Mostrar un diálogo de confirmación
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      data: {
+        title: 'Confirmar Eliminación',
+        message: `¿Está seguro de que desea eliminar el sub-parámetro "${subParam.name}"?`,
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar',
+      } as ConfirmDialogData
+    });
+
+      dialogRef.afterClosed().subscribe((result) => {
+        if (result) {
+          // Buscar el ID del subparámetro en las opciones originales
+          // (Es necesario porque nuestro array subParams solo tiene nombres, no IDs)
+          const foundOption = this.selectedParamOptions.find((opt: SelectOption) => opt.label === subParam.name);
+          if (!foundOption || foundOption.value === undefined) {
+            this.snackBar.open(
+              'No se pudo encontrar el ID del sub-parámetro para eliminarlo',
+              'Cerrar',
+              { duration: 5000, panelClass: ['error-snackbar'] }
+            );
+            return;
+          }
+          
+          // Convertir el ID a número
+          const idSubParam = typeof foundOption.value === 'string' ? 
+            parseInt(foundOption.value, 10) : 
+            foundOption.value;
+            
+          // Verificar que el ID es válido
+          if (isNaN(idSubParam)) {
+            this.snackBar.open(
+              'ID del sub-parámetro no válido',
+              'Cerrar',
+              { duration: 5000, panelClass: ['error-snackbar'] }
+            );
+            return;
+          }
+
+          // Mostrar indicador de carga
+          this.loadingSubParams = true;
+          
+          // Llamar al servicio para eliminar
+          this.subParametroService.deleteSubParametro(idSubParam).subscribe({
+            next: (response: any) => {
+              if (response && response.success) {
+                // Mostrar mensaje de éxito
+                this.snackBar.open(
+                  `Sub-parámetro "${subParam.name}" eliminado correctamente`,
+                  'Cerrar',
+                  { duration: 5000, panelClass: ['success-snackbar'] }
+                );
+                
+                // Actualizar la lista de sub-parámetros
+                if (this.selectedParam && this.selectedParam.subParams) {
+                  this.selectedParam.subParams.splice(actualIndex, 1);
+                  
+                  // Actualizar también la lista filtrada
+                  this.filterSubParams();
+                }
+                
+                // También eliminar de las opciones originales
+                const optIndex = this.selectedParamOptions.findIndex((opt: SelectOption) => opt.label === subParam.name);
+                if (optIndex >= 0) {
+                  this.selectedParamOptions.splice(optIndex, 1);
+                }
+              } else {
+                // Mostrar mensaje de error
+                this.snackBar.open(
+                  `Error al eliminar el sub-parámetro: ${response?.message || 'Error desconocido'}`,
+                  'Cerrar',
+                  { duration: 5000, panelClass: ['error-snackbar'] }
+                );
+              }
+              this.loadingSubParams = false;
+            },
+            error: (err: any) => {
+              console.error('Error al eliminar sub-parámetro:', err);
+              this.snackBar.open(
+                'Error en la comunicación con el servidor',
+                'Cerrar',
+                { duration: 5000, panelClass: ['error-snackbar'] }
+              );
+              this.loadingSubParams = false;
+            }
+          });
+        }
+      });
+    }
+  
+
+  onParameterSelected(): void {
+    if (!this.selectedParam || !this.selectedParam.id) {
+      this.filteredSubParams = [];
+      return;
+    }
+    
+    // Reiniciar el campo de búsqueda
+    this.subParamSearchQuery = '';
 
     this.loadingSubParams = true;
     this.subParamError = null;
@@ -348,11 +705,18 @@ export class CreateParamsComponent implements OnInit {
       next: (options: SelectOption[]) => {
         console.log('Received sub-parameter data:', options);
 
+        // Guardar las opciones originales con sus IDs para referencias futuras
+        this.selectedParamOptions = [...options];
+
         if (this.selectedParam) {
           // Transform API data to our component's format
-          this.selectedParam.subParams = options.map((option) => ({
+          this.selectedParam.subParams = options.map((option, index) => ({
             name: option.label,
+            originalIndex: index // Guardar el índice original de cada subparámetro
           }));
+          
+          // Actualizar la lista filtrada
+          this.filterSubParams();
         }
 
         this.loadingSubParams = false;
@@ -380,8 +744,10 @@ export class CreateParamsComponent implements OnInit {
     }
 
     const query = this.searchQuery.toLowerCase().trim();
-    this.filteredParams = this.params.filter(param => 
+    this.filteredParams = this.params.filter((param: Param) => 
       param.name.toLowerCase().includes(query)
     );
   }
+
+  
 }
