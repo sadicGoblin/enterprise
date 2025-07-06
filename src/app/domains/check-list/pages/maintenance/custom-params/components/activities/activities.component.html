@@ -8,6 +8,7 @@
       <div class="form-container">
         <div class="form-row input-row">
           <app-custom-select
+            #scopeSelect
             [formControl]="scopeControl"
             [loadFromApi]="true"
             [parameterType]="parameterTypes.CUSTOM_API" 

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,7 +10,8 @@ import { MatCardModule } from '@angular/material/card';
 import { MatTableModule } from '@angular/material/table';
 import { CustomSelectComponent, SelectOption, ParameterType } from '../../../../../../../shared/controls/custom-select/custom-select.component';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Observable, catchError, finalize, map, of } from 'rxjs';
+import { Observable, Subscription, catchError, finalize, map, of } from 'rxjs';
+import { SharedDataService } from '../../../../../services/shared-data.service';
 import { ProxyService } from '../../../../../../../core/services/proxy.service';
 
 // Define interfaces
@@ -48,7 +49,8 @@ export interface ActivityItem {
   templateUrl: './activities.component.html',
   styleUrls: ['./activities.component.scss']
 })
-export class ActivitiesComponent implements OnInit {
+export class ActivitiesComponent implements OnInit, OnDestroy {
+  @ViewChild('scopeSelect') scopeSelect!: CustomSelectComponent;
   // Parameter types enum for custom-select
   parameterTypes = ParameterType;
   
@@ -111,9 +113,54 @@ export class ActivitiesComponent implements OnInit {
   activitiesByScope: Record<string, ActivityItem[]> = {};
   selectedScopeId: string | null = null;
   
-  constructor(private proxyService: ProxyService) {}
+  // Subscription para cambios de ámbitos
+  private ambitosSubscription: Subscription | undefined;
   
-  ngOnInit(): void {}
+  constructor(
+    private proxyService: ProxyService,
+    private sharedDataService: SharedDataService
+  ) {}
+  
+  ngOnInit(): void {
+    // Suscribirse a actualizaciones de ámbitos
+    this.ambitosSubscription = this.sharedDataService.ambitosUpdated$.subscribe(() => {
+      console.log('🔄 Recibida notificación de actualización de ámbitos en activities.component');
+      this.refreshScopeOptions();
+    });
+  }
+  
+  ngOnDestroy(): void {
+    // Limpiar suscripciones al destruir el componente
+    if (this.ambitosSubscription) {
+      this.ambitosSubscription.unsubscribe();
+    }
+  }
+  
+  /**
+   * Refresca las opciones del selector de ámbitos
+   */
+  refreshScopeOptions(): void {
+    console.log('🔄 Refrescando opciones de ámbitos en activities.component');
+    
+    // Si tenemos un selector visible, forzar la recarga
+    if (this.scopeSelect) {
+      this.scopeSelect.reloadOptions();
+      console.log('✅ Opciones de ámbitos actualizadas');
+    } else {
+      console.log('⚠️ No se encontró referencia al selector de ámbitos');
+      
+      // Si no hay referencia, podemos resetear el control y volver a cargar datos
+      const currentValue = this.scopeControl.value;
+      this.scopeControl.reset();
+      
+      // Si había un valor seleccionado, intentar mantenerlo
+      if (currentValue) {
+        setTimeout(() => {
+          this.scopeControl.setValue(currentValue);
+        }, 100);
+      }
+    }
+  }
   
   /**
    * Handle document selection change from app-custom-select

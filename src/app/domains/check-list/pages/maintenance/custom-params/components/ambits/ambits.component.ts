@@ -9,12 +9,26 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { DataTableComponent } from '../../../../../../../shared/components/data-table/data-table.component';
 import { ProxyService } from '../../../../../../../core/services/proxy.service';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { catchError, of } from 'rxjs';
+import { SharedDataService } from '../../../../../services/shared-data.service';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 // Interfaz para los ámbitos
 interface AmbitItem {
   id: string | number;
   code: string;
   name: string;
+}
+
+// Interfaz para la respuesta de la API
+interface ApiResponse {
+  success: boolean;
+  code: number;
+  message: string;
+  data: any[];
+  glosa?: string;
 }
 
 // Interfaces para la tabla (mismas que en el componente padre)
@@ -43,7 +57,9 @@ interface ActionButton {
     MatButtonModule,
     MatIconModule,
     MatProgressSpinnerModule,
+    MatSnackBarModule,
     DataTableComponent,
+    MatDialogModule
   ],
   templateUrl: './ambits.component.html',
   styleUrls: ['./ambits.component.scss']
@@ -79,7 +95,12 @@ export class AmbitsComponent implements OnInit {
   tablePageSize: number = 10;
   tablePageSizeOptions: number[] = [5, 10, 25, 50];
   
-  constructor(private proxyService: ProxyService) {}
+  constructor(
+    private proxyService: ProxyService,
+    private snackBar: MatSnackBar,
+    private sharedDataService: SharedDataService,
+    private dialog: MatDialog
+  ) {}
   
   ngOnInit(): void {
     this.loadAmbitos();
@@ -90,42 +111,41 @@ export class AmbitsComponent implements OnInit {
    */
   loadAmbitos(): void {
     this.isLoading = true;
-    
-    // Simulación de carga API - reemplazar con proxyService real cuando esté listo
-    setTimeout(() => {
-      this.ambitosData = [
-        { id: '1', code: 'AMB001', name: 'Ámbito de Prueba 1' },
-        { id: '2', code: 'AMB002', name: 'Ámbito de Prueba 2' },
-        { id: '3', code: 'AMB003', name: 'Ámbito Operacional' },
-      ];
-      
-      this.filteredData = [...this.ambitosData];
-      this.isLoading = false;
-    }, 1000);
+    console.log('📤 Consultando ámbitos desde API');
     
     // Implementación real usando ProxyService
-    /* 
-    this.proxyService.post('/ws/AmbitosSvcImpl.php', {
+    const requestBody = {
       caso: 'ConsultaAmbitos',
-      // otros parámetros necesarios
-    }).subscribe({
-      next: (response) => {
+      idAmbito: 0,
+      nombre: null,
+      codigo: 0
+    };
+    
+    this.proxyService.post<ApiResponse>('/ws/AmbitosSvcImpl.php', requestBody).subscribe({
+      next: (response: ApiResponse) => {
+        console.log('📥 Respuesta de API de ámbitos:', response);
+        
         if (response && response.success) {
+          // Mapear datos de la API al formato que espera el componente
           this.ambitosData = response.data.map((item: any) => ({
             id: item.IdAmbito,
             code: item.codigo,
             name: item.nombre
           }));
+          
           this.filteredData = [...this.ambitosData];
+          console.log('✅ Ámbitos cargados correctamente:', this.ambitosData.length);
+        } else {
+          console.error('❌ Error en respuesta de API:', response?.message || 'Error desconocido');
         }
+        
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Error al cargar ámbitos:', err);
+        console.error('❌ Error al cargar ámbitos:', err);
         this.isLoading = false;
       }
     });
-    */
   }
   
   /**
@@ -150,122 +170,265 @@ export class AmbitsComponent implements OnInit {
    * Agrega o actualiza un ámbito
    */
   addAmbito(): void {
-    if (!this.newAmbitoCode || !this.newAmbitoName) return;
+    if (!this.newAmbitoCode || !this.newAmbitoName) {
+      this.snackBar.open('Debe completar todos los campos', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['warning-snackbar']
+      });
+      return;
+    }
+    
+    this.isLoading = true;
     
     if (this.editingAmbito && this.editingAmbitoId !== null) {
       // Actualizar ámbito existente
-      const index = this.ambitosData.findIndex(a => a.id === this.editingAmbitoId);
-      if (index !== -1) {
-        this.ambitosData[index] = {
-          ...this.ambitosData[index],
-          code: this.newAmbitoCode,
-          name: this.newAmbitoName
-        };
-        
-        // Actualizar lista filtrada
-        this.filteredData = this.searchValue ? 
-          this.applyFilter(this.ambitosData, this.searchValue) : 
-          [...this.ambitosData];
-        
-        this.cancelEditAmbito();
-      }
-    } else {
-      // Agregar nuevo ámbito
-      const newId = Date.now().toString(); // ID temporal, reemplazar con ID real de API
-      const newAmbito: AmbitItem = {
-        id: newId,
-        code: this.newAmbitoCode,
-        name: this.newAmbitoName
+      const payload = {
+        caso: 'ActualizaAmbito',
+        idAmbito: this.editingAmbitoId,
+        codigo: this.newAmbitoCode,
+        nombre: this.newAmbitoName
       };
       
-      this.ambitosData.push(newAmbito);
+      console.log('📤 ENVIANDO DATOS PARA ACTUALIZACIÓN DE ÁMBITO:', payload);
       
-      // Actualizar lista filtrada
-      this.filteredData = this.searchValue ? 
-        this.applyFilter(this.ambitosData, this.searchValue) : 
-        [...this.ambitosData];
-      
-      this.resetForm();
-    }
-    
-    // En producción, enviar a la API
-    /* 
-    const payload = {
-      caso: this.editingAmbito ? 'ActualizarAmbito' : 'CrearAmbito',
-      id: this.editingAmbito ? this.editingAmbitoId : undefined,
-      codigo: this.newAmbitoCode,
-      nombre: this.newAmbitoName,
-    };
-    
-    this.isLoading = true;
-    this.proxyService.post('/ws/AmbitosSvcImpl.php', payload).subscribe({
-      next: (response) => {
-        if (response && response.success) {
-          this.loadAmbitos(); // Recargar datos
+      this.proxyService.post<ApiResponse>('/ws/AmbitosSvcImpl.php', payload).subscribe({
+        next: (response: ApiResponse) => {
+          console.log('📥 RESPUESTA DE ACTUALIZACIÓN DE ÁMBITO:', response);
+          
+          if (response && response.success) {
+            this.snackBar.open(`Ámbito "${this.newAmbitoName}" actualizado correctamente`, 'Cerrar', {
+              duration: 3000,
+              panelClass: ['success-snackbar']
+            });
+            
+            // Recargar datos para asegurar que tenemos la versión más actualizada
+            this.loadAmbitos();
+            this.cancelEditAmbito();
+            
+            // Notificar a otros componentes sobre la actualización
+            this.sharedDataService.notifyAmbitosUpdate();
+          } else {
+            console.error('❌ Error en respuesta de API al actualizar ámbito:', response?.message || 'Error desconocido');
+            this.snackBar.open(`Error al actualizar ámbito: ${response?.message || 'Error desconocido'}`, 'Cerrar', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+          }
+          
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('❌ Error al actualizar ámbito:', err);
+          this.snackBar.open(`Error al actualizar ámbito: ${err.message || 'Error de comunicación con el servidor'}`, 'Cerrar', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
+          this.isLoading = false;
         }
-        this.isLoading = false;
-        this.resetForm();
-      },
-      error: (err) => {
-        console.error('Error al guardar ámbito:', err);
-        this.isLoading = false;
-      }
-    });
-    */
+      });
+      
+    } else {
+      // Agregar nuevo ámbito
+      const payload = {
+        caso: 'CreaAmbito',
+        idAmbito: 0,
+        codigo: parseInt(this.newAmbitoCode, 10) || 0, // Convertir a número
+        nombre: this.newAmbitoName
+      };
+      
+      console.log('📤 ENVIANDO DATOS PARA CREACIÓN DE ÁMBITO:', payload);
+      
+      this.proxyService.post<ApiResponse>('/ws/AmbitosSvcImpl.php', payload).subscribe({
+        next: (response: ApiResponse) => {
+          console.log('📥 RESPUESTA DE CREACIÓN DE ÁMBITO:', response);
+          
+          if (response && response.success) {
+            this.snackBar.open(`Ámbito "${this.newAmbitoName}" creado correctamente`, 'Cerrar', {
+              duration: 3000,
+              panelClass: ['success-snackbar']
+            });
+            
+            // Recargar datos para obtener el nuevo ámbito con su ID asignado
+            this.loadAmbitos();
+            this.resetForm();
+            
+            // Notificar a otros componentes sobre la actualización
+            this.sharedDataService.notifyAmbitosUpdate();
+          } else {
+            console.error('❌ Error en respuesta de API al crear ámbito:', response?.message || 'Error desconocido');
+            this.snackBar.open(`Error al crear ámbito: ${response?.message || 'Error desconocido'}`, 'Cerrar', {
+              duration: 5000,
+              panelClass: ['error-snackbar']
+            });
+          }
+          
+          this.isLoading = false;
+        },
+        error: (err) => {
+          console.error('❌ Error al crear ámbito:', err);
+          this.snackBar.open(`Error al crear ámbito: ${err.message || 'Error de comunicación con el servidor'}`, 'Cerrar', {
+            duration: 5000,
+            panelClass: ['error-snackbar']
+          });
+          this.isLoading = false;
+        }
+      });
+    }
   }
   
   /**
    * Prepara un ámbito para edición
    */
   editAmbito(id: string | number): void {
-    const ambito = this.ambitosData.find(a => a.id === id);
-    if (ambito) {
-      this.editingAmbito = true;
-      this.editingAmbitoId = id;
-      this.newAmbitoCode = ambito.code;
-      this.newAmbitoName = ambito.name;
+    console.log('✏️ Preparando edición de ámbito. Buscando ID:', id);
+    console.log('📄 Datos disponibles:', this.ambitosData);
+    
+    // Intentamos encontrar el ámbito por su ID, primero como está, luego intentando conversiones
+    let ambito = this.ambitosData.find(a => a.id === id);
+    
+    // Si no encontramos el ámbito, probamos otras estrategias
+    if (!ambito) {
+      // Intentar comparar como strings
+      ambito = this.ambitosData.find(a => String(a.id) === String(id));
+      
+      // Si aún no hay coincidencia, mostrar error
+      if (!ambito) {
+        console.error('❌ No se encontró el ámbito con ID:', id);
+        this.snackBar.open(`No se pudo editar. Ámbito con ID ${id} no encontrado.`, 'Cerrar', {
+          duration: 3000,
+          panelClass: ['error-snackbar']
+        });
+        return;
+      }
     }
+    
+    console.log('✅ Ámbito encontrado para edición:', ambito);
+    
+    // Preparar el formulario para edición
+    this.editingAmbito = true;
+    this.editingAmbitoId = id;
+    this.newAmbitoCode = ambito.code;
+    this.newAmbitoName = ambito.name;
   }
   
   /**
-   * Elimina un ámbito
+   * Elimina un ámbito de la lista
    */
   deleteAmbito(id: string | number): void {
-    // En producción, primero mostrar confirmación
-    this.ambitosData = this.ambitosData.filter(a => a.id !== id);
-    this.filteredData = this.searchValue ? 
-      this.applyFilter(this.ambitosData, this.searchValue) : 
-      [...this.ambitosData];
-    
-    // En producción, enviar a la API
-    /*
-    this.isLoading = true;
-    this.proxyService.post('/ws/AmbitosSvcImpl.php', {
-      caso: 'EliminarAmbito',
-      id: id
-    }).subscribe({
-      next: (response) => {
-        if (response && response.success) {
-          this.loadAmbitos(); // Recargar datos
-        }
-        this.isLoading = false;
-      },
-      error: (err) => {
-        console.error('Error al eliminar ámbito:', err);
-        this.isLoading = false;
-      }
+    // Buscar el ámbito a eliminar para mostrar su nombre en el diálogo
+    const ambitoToDelete = this.ambitosData.find(a => {
+      return String(a.id) === String(id);
     });
-    */
+    
+    const dialogData: ConfirmDialogData = {
+      title: 'Confirmar eliminación',
+      message: `¿Estás seguro de que deseas eliminar el ámbito "${ambitoToDelete?.name || ''}" (Código: ${ambitoToDelete?.code || ''})?`,
+      confirmText: 'Eliminar',
+      cancelText: 'Cancelar'
+    };
+    
+    // Abrir el diálogo de confirmación
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: dialogData
+    });
+    
+    // Suscribirse al resultado del diálogo
+    dialogRef.afterClosed().subscribe(result => {
+      // Si el usuario cancela, no hacer nada
+      if (!result) {
+        console.log('✖️ Eliminación cancelada por el usuario');
+        return;
+      }
+      
+      // Si el usuario confirma, proceder con la eliminación
+      this.isLoading = true;
+      console.log('📊 Eliminando ámbito con ID:', id);
+      
+      const requestBody = {
+        caso: 'EliminaAmbito',
+        idAmbito: id
+      };
+      
+      console.log('🚀 ENVIANDO DATOS PARA ELIMINACIÓN DE ÁMBITO:', requestBody);
+      
+      this.proxyService.post<any>('/ws/AmbitosSvcImpl.php', requestBody)
+        .pipe(
+          catchError(err => {
+            console.error('❌ Error al eliminar ámbito:', err);
+            this.snackBar.open(
+              `Error al eliminar ámbito: ${err.message || 'Error de conexión'}`,
+              'Cerrar',
+              { duration: 5000, panelClass: ['error-snackbar'] }
+            );
+            this.isLoading = false;
+            return of({ success: false, message: err.message });
+          })
+        )
+        .subscribe(response => {
+          console.log('📥 RESPUESTA DE ELIMINACIÓN DE ÁMBITO:', response);
+          this.isLoading = false;
+          
+          if (response && response.success) {
+            this.snackBar.open(
+              'Ámbito eliminado correctamente',
+              'Cerrar',
+              { duration: 3000 }
+            );
+            
+            // Recargar datos para actualizar la lista
+            this.loadAmbitos();
+            
+            // Notificar a otros componentes sobre la actualización
+            this.sharedDataService.notifyAmbitosUpdate();
+          } else {
+            console.error('❌ Error en respuesta de API al eliminar ámbito:', response?.message || 'Error desconocido');
+            this.snackBar.open(
+              `Error al eliminar ámbito: ${response?.message || 'Error desconocido'}`,
+              'Cerrar',
+              { duration: 5000, panelClass: ['error-snackbar'] }
+            );
+          }
+        });
+    });
   }
   
   /**
    * Maneja las acciones de la tabla
    */
   handleTableAction(event: any): void {
+    console.log('🚨 Evento de tabla recibido:', event);
+    
+    // La estructura del evento puede tener item o row dependiendo del componente
+    const dataItem = event.item || event.row;
+    
+    if (!event || !dataItem) {
+      console.error('❌ Error: evento de tabla no tiene la estructura esperada', event);
+      this.snackBar.open('Error al procesar la acción. Datos incompletos.', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+    
+    // Verificamos si tenemos un ID en el evento
+    const itemId = dataItem.id || dataItem.IdAmbito;
+    
+    if (!itemId) {
+      console.error('❌ Error: No se pudo obtener el ID del ámbito', dataItem);
+      this.snackBar.open('Error al procesar la acción. ID no encontrado.', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+    
     if (event.action === 'edit') {
-      this.editAmbito(event.row.id);
+      console.log('✏️ Editando ámbito con ID:', itemId);
+      this.editAmbito(itemId);
     } else if (event.action === 'delete') {
-      this.deleteAmbito(event.row.id);
+      console.log('🚫 Eliminando ámbito con ID:', itemId);
+      this.deleteAmbito(itemId);
     }
   }
   
