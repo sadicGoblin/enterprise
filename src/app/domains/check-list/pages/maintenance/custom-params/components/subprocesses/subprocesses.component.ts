@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -7,11 +7,14 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCardModule } from '@angular/material/card';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { CustomSelectComponent, SelectOption, ParameterType } from '../../../../../../../shared/controls/custom-select/custom-select.component';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Observable, catchError, finalize, map, of } from 'rxjs';
+import { Observable, Subscription, catchError, finalize, map, of } from 'rxjs';
 import { DataTableComponent } from '../../../../../../../shared/components/data-table/data-table.component';
 import { SubParametroService, EtapaConstructivaItem, SubprocesoItem } from '../../../../../services/sub-parametro.service';
+import { ProjectSelectionService } from '../../../../../services/project-selection.service';
 import { ProxyService } from '../../../../../../../core/services/proxy.service';
 
 // Define interfaces localmente
@@ -40,6 +43,7 @@ export interface ActionButton {
     MatIconModule,
     MatProgressSpinnerModule,
     MatCardModule,
+    MatSnackBarModule,
     CustomSelectComponent,
     ReactiveFormsModule,
     DataTableComponent
@@ -48,7 +52,12 @@ export interface ActionButton {
   styleUrls: ['./subprocesses.component.scss']
 })
 
-export class SubprocessesComponent implements OnInit {
+export class SubprocessesComponent implements OnInit, OnDestroy {
+  // Suscripción al ID de proyecto seleccionado
+  private projectSubscription: Subscription | null = null;
+  
+  // ID del proyecto actualmente seleccionado
+  selectedProjectId: string | null = null;
   
   // Control para etapa constructiva
   etapaConstructivaControl: FormControl = new FormControl('', Validators.required);
@@ -80,25 +89,72 @@ export class SubprocessesComponent implements OnInit {
 
   constructor(
     private subParametroService: SubParametroService,
-    private proxyService: ProxyService
+    private proxyService: ProxyService,
+    private projectSelectionService: ProjectSelectionService,
+    private snackBar: MatSnackBar
   ) {}
 
   ngOnInit(): void {
-    // Cargar las etapas constructivas disponibles
-    this.loadEtapasConstructivas();
+    // Suscribirse al ID de proyecto seleccionado
+    this.projectSubscription = this.projectSelectionService.selectedProjectId$
+      .subscribe(projectId => {
+        console.log('SubprocessesComponent: Received project ID', projectId);
+        this.selectedProjectId = projectId;
+        
+        // Limpiar la selección de etapa constructiva y datos relacionados cuando cambia el proyecto
+        if (this.etapaConstructivaControl.value || this.selectedEtapaId) {
+          // Reset selectedEtapaId to hide the table and form
+          this.selectedEtapaId = null;
+          this.filteredSubprocesos = [];
+          this.etapaConstructivaControl.setValue(null);
+        }
+        
+        if (projectId) {
+          // Cargar las etapas constructivas del proyecto seleccionado
+          this.loadEtapasConstructivas();
+        } else {
+          // Limpiar los datos cuando no hay proyecto seleccionado
+          this.etapasConstructivasList = [];
+          this.etapasParaSelect = [];
+          this.filteredSubprocesos = [];
+        }
+      });
+  }
+  
+  /**
+   * Limpia suscripciones cuando el componente se destruye
+   */
+  ngOnDestroy(): void {
+    if (this.projectSubscription) {
+      this.projectSubscription.unsubscribe();
+    }
   }
 
   /**
-   * Carga todas las etapas constructivas disponibles
+   * Carga las etapas constructivas filtradas por el proyecto seleccionado
    */
   loadEtapasConstructivas(): void {
+    if (!this.selectedProjectId) {
+      console.log('No hay proyecto seleccionado. No se cargarán etapas.');
+      this.etapasConstructivasList = [];
+      this.etapasParaSelect = [];
+      return;
+    }
+    
     this.isLoadingSubprocesos = true;
     
     this.subParametroService.getEtapasConstructivas()
       .pipe(
         map((response: EtapaConstructivaItem[]) => {
-          this.etapasConstructivasList = response;
-          console.log("etapasConstructivasList", this.etapasConstructivasList);
+          console.log('Todas las etapas constructivas:', response);
+          
+          // Filtrar las etapas por el proyecto seleccionado
+          this.etapasConstructivasList = response.filter(etapa => 
+            etapa.idObra === this.selectedProjectId
+          );
+          
+          console.log(`Etapas filtradas para proyecto ${this.selectedProjectId}:`, this.etapasConstructivasList);
+          
           // Convertir a formato de opciones para el selector
           this.etapasParaSelect = this.etapasConstructivasList.map(etapa => ({
             value: etapa.idEtapaConstructiva || '',
@@ -122,40 +178,71 @@ export class SubprocessesComponent implements OnInit {
    * Maneja el cambio de selección de etapa constructiva
    */
   onEtapaConstructivaSelectionChange(event: { value: string } | null): void {
+    console.log('📊 EVENTO DE CAMBIO EN SELECCIÓN DE ETAPA CONSTRUCTIVA:', event);
+    
     const etapaId = event?.value || '';
     if (!etapaId) {
+      console.log('❌ No se seleccionó ninguna etapa constructiva, reseteando datos...');
       this.filteredSubprocesos = [];
       this.selectedEtapaId = null;
       this.resetSubprocessForm();
       return;
     }
+    
     this.selectedEtapaId = etapaId;
+    console.log('✅ Etapa constructiva seleccionada:', {
+      etapaId: etapaId,
+      endpoint: '/ws/EtapaConstructivaSvcImpl.php',
+      caso: 'ConsultaSubProcesos',
+      descripción: 'Consultando subprocesos para la etapa seleccionada',
+      próximaAcción: 'loadSubprocessesByEtapa con ID: ' + etapaId
+    });
+    
     this.loadSubprocessesByEtapa(etapaId);
     this.resetSubprocessForm();
   }
 
   /**
    * Carga los subprocesos por etapa constructiva
+   * @param etapaId ID de la etapa constructiva
+   * @param forceRefresh Si es true, fuerza la recarga desde la API ignorando la caché
    */
-  loadSubprocessesByEtapa(etapaId: string): void {
+  loadSubprocessesByEtapa(etapaId: string, forceRefresh: boolean = false): void {
     if (!etapaId) return;
 
     this.isLoadingSubprocesos = true;
 
-    // Si ya tenemos los subprocesos cargados para esta etapa, usamos el caché
-    if (this.subprocessesByEtapa[etapaId]) {
+    // Si ya tenemos los subprocesos cargados para esta etapa y no se requiere refresco forzado, usamos la caché
+    if (!forceRefresh && this.subprocessesByEtapa[etapaId]) {
+      console.log('💾 USANDO DATOS EN CACHÉ para subprocesos de la etapa:', etapaId);
       this.filteredSubprocesos = [...this.subprocessesByEtapa[etapaId]];
       this.isLoadingSubprocesos = false;
       return;
     }
 
-    // Convertir el ID a número para la API
-    const etapaIdNum = parseInt(etapaId, 10);
+    console.log('🌐 REALIZANDO LLAMADA A API para cargar subprocesos:');
+    console.log('ℹ️ DETALLES DE LA SOLICITUD API:', {
+      endpoint: '/ws/EtapaConstructivaSvcImpl.php',
+      method: 'POST',
+      caso: 'ConsultaSubProcesos',
+      idEtapaConstructiva: etapaId,
+      servicio: 'SubParametroService.getSubprocesosPorEtapa',
+      payload: {
+        caso: 'ConsultaSubProcesos',
+        idEtapaConstructiva: parseInt(etapaId, 10),
+        idSubProceso: 0,
+        codigo: 0,
+        nombre: null
+      }
+    });
     
+    // Realizamos la llamada a la API - convertimos el ID a número para la API
+    const etapaIdNum = parseInt(etapaId, 10);
     this.subParametroService.getSubprocesosPorEtapa(etapaIdNum)
       .pipe(
         map((response: SubprocesoItem[]) => {
-          // Guardamos en caché
+          console.log('Respuesta de subprocesos:', response);
+          // Actualizamos la caché
           this.subprocessesByEtapa[etapaId] = response || [];
           this.filteredSubprocesos = [...this.subprocessesByEtapa[etapaId]];
         }),
@@ -179,14 +266,24 @@ export class SubprocessesComponent implements OnInit {
   addSubprocess(): void {
     if (!this.selectedEtapaId) {
       console.error('No se ha seleccionado una etapa constructiva');
+      this.snackBar.open('Por favor, seleccione una etapa constructiva', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
       return;
     }
+    
+    console.log('=== INICIO DE SOLICITUD PARA AGREGAR/ACTUALIZAR SUBPROCESO ===');
     
     const subprocessCode = this.newSubprocessCode.trim();
     const subprocessName = this.newSubprocessName.trim();
     
     if (!subprocessCode || !subprocessName) {
       console.error('Código y nombre de subproceso son requeridos');
+      this.snackBar.open('Código y nombre de subproceso son requeridos', 'Cerrar', {
+        duration: 3000,
+        panelClass: ['error-snackbar']
+      });
       return;
     }
     
@@ -201,29 +298,47 @@ export class SubprocessesComponent implements OnInit {
         idEtapaConstructiva: this.selectedEtapaId
       };
       
+      console.log('📤 ENVIANDO DATOS PARA ACTUALIZACIÓN:', {
+        método: 'updateSubproceso',
+        endpoint: '/ws/EtapaConstructivaSvcImpl.php',
+        caso: 'ModificaSubProceso', // Actualizado al nuevo caso requerido
+        idSubProceso: this.editingSubprocessId, // Nota: camelCase idSubProceso
+        idEtapaConstructiva: this.selectedEtapaId,
+        codigo: subprocessCode,
+        nombre: subprocessName
+      });
+      
       this.subParametroService.updateSubproceso(subprocessToUpdate)
         .pipe(
-          map((response: { success?: boolean; message?: string; data?: any }) => {
-            // Actualizamos el subproceso en el caché
-            if (this.selectedEtapaId && this.subprocessesByEtapa[this.selectedEtapaId]) {
-              const subprocessIndex = this.subprocessesByEtapa[this.selectedEtapaId]
-                .findIndex(s => s.idSubproceso === this.editingSubprocessId);
-              
-              if (subprocessIndex !== -1) {
-                this.subprocessesByEtapa[this.selectedEtapaId][subprocessIndex] = {
-                  ...this.subprocessesByEtapa[this.selectedEtapaId][subprocessIndex],
-                  codigo: subprocessCode,
-                  nombre: subprocessName
-                };
-                
-                this.filteredSubprocesos = [...this.subprocessesByEtapa[this.selectedEtapaId]];
-              }
-            }
+          map((response: { success?: boolean; message?: string; data?: any, glosa?: string }) => {
+            console.log('📥 RESPUESTA DE ACTUALIZACIÓN DE SUBPROCESO:', response);
             
-            this.resetSubprocessForm();
+            if (response && response.success) {
+              // Éxito en la actualización
+              // Forzamos la recarga desde la API para asegurar datos actualizados
+              this.loadSubprocessesByEtapa(this.selectedEtapaId as string, true);
+              
+              this.snackBar.open(`Subproceso "${subprocessName}" actualizado correctamente`, 'Cerrar', {
+                duration: 3000,
+                panelClass: ['success-snackbar']
+              });
+              
+              this.resetSubprocessForm();
+            } else {
+              // Error en la respuesta de la API
+              console.error('Error en la respuesta de la API:', response);
+              this.snackBar.open(`Error al actualizar el subproceso: ${response?.glosa || response?.message || 'Error desconocido'}`, 'Cerrar', {
+                duration: 3000,
+                panelClass: ['error-snackbar']
+              });
+            }
           }),
           catchError((error: Error) => {
             console.error('Error al actualizar el subproceso:', error);
+            this.snackBar.open(`Error al actualizar el subproceso: ${error.message || 'Error de comunicación con el servidor'}`, 'Cerrar', {
+              duration: 5000, // Mayor duración para mensajes de error
+              panelClass: ['error-snackbar']
+            });
             return of(null);
           }),
           finalize(() => {
@@ -237,22 +352,49 @@ export class SubprocessesComponent implements OnInit {
         codigo: subprocessCode,
         nombre: subprocessName
       };
-      
-      if (!this.selectedEtapaId) {
-        console.error('No se ha seleccionado una etapa constructiva');
-        this.isLoadingSubprocesos = false;
-        return;
-      }
+
+      console.log('📤 ENVIANDO DATOS PARA CREACIÓN DE NUEVO SUBPROCESO:', {
+        método: 'addSubproceso',
+        endpoint: '/ws/EtapaConstructivaSvcImpl.php',
+        caso: 'CreaSubProceso',
+        idEtapaConstructiva: this.selectedEtapaId,
+        idSubProceso: 0, // Para nuevos registros siempre es 0
+        codigo: subprocessCode,
+        nombre: subprocessName,
+        datos_completos: newSubprocessData
+      });
       
       this.subParametroService.addSubproceso(newSubprocessData, this.selectedEtapaId)
         .pipe(
-          map((response: { success?: boolean; message?: string; data?: any }) => {
-            // Recargamos los subprocesos para obtener el nuevo subproceso con su ID
-            this.loadSubprocessesByEtapa(this.selectedEtapaId as string);
-            this.resetSubprocessForm();
+          map((response: { success?: boolean; message?: string; data?: any; glosa?: string }) => {
+            console.log('📥 RESPUESTA DE CREACIÓN DE SUBPROCESO:', response);
+            
+            if (response && response.success) {
+              // Éxito en la creación
+              // Forzamos la recarga desde la API para obtener el nuevo subproceso con su ID
+              this.loadSubprocessesByEtapa(this.selectedEtapaId as string, true);
+              
+              this.snackBar.open(`Subproceso "${subprocessName}" agregado correctamente`, 'Cerrar', {
+                duration: 3000,
+                panelClass: ['success-snackbar']
+              });
+              
+              this.resetSubprocessForm();
+            } else {
+              // Error en la respuesta de la API
+              console.error('Error en la respuesta de la API:', response);
+              this.snackBar.open(`Error al agregar el subproceso: ${response?.glosa || response?.message || 'Error desconocido'}`, 'Cerrar', {
+                duration: 3000,
+                panelClass: ['error-snackbar']
+              });
+            }
           }),
           catchError((error: Error) => {
             console.error('Error al agregar el subproceso:', error);
+            this.snackBar.open(`Error al agregar el subproceso: ${error.message || 'Error de comunicación con el servidor'}`, 'Cerrar', {
+              duration: 5000, // Mayor duración para mensajes de error
+              panelClass: ['error-snackbar']
+            });
             return of(null);
           }),
           finalize(() => {
@@ -348,13 +490,14 @@ export class SubprocessesComponent implements OnInit {
   }
 
   /**
-   * Resetea el formulario de subprocesos
+   * Resetea el formulario de subprocesos y campos de búsqueda
    */
   resetSubprocessForm(): void {
     this.newSubprocessCode = '';
     this.newSubprocessName = '';
     this.editingSubprocess = false;
     this.editingSubprocessId = null;
+    this.subprocessSearchKey = '';
   }
 
   /**

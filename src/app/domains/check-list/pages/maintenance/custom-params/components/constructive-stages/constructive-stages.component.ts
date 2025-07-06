@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -12,6 +12,7 @@ import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, catchError, finalize, map, of } from 'rxjs';
 import { DataTableComponent } from '../../../../../../../shared/components/data-table/data-table.component';
 import { SubParametroService, EtapaConstructivaItem } from '../../../../../services/sub-parametro.service';
+import { ProjectSelectionService } from '../../../../../services/project-selection.service';
 import { ProxyService } from '../../../../../../../core/services/proxy.service';
 
 // Define interfaces localmente
@@ -49,7 +50,7 @@ export interface ActionButton {
 })
 
 
-export class ConstructiveStagesComponent implements OnInit {
+export class ConstructiveStagesComponent implements OnInit, OnDestroy {
   
   // Props para el Custom Select de Proyecto
   projectControl: FormControl = new FormControl('', Validators.required);
@@ -84,7 +85,8 @@ export class ConstructiveStagesComponent implements OnInit {
   constructor(
     private subParametroService: SubParametroService,
     private proxyService: ProxyService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private projectSelectionService: ProjectSelectionService
   ) {}
 
   projectApiCaso = 'Consulta';
@@ -110,48 +112,62 @@ export class ConstructiveStagesComponent implements OnInit {
     };
   }
 
+  ngOnDestroy(): void {
+    // Limpiar el ID de proyecto seleccionado al salir del componente
+    this.projectSelectionService.setSelectedProjectId(null);
+  }
+
   /**
    * Maneja el cambio de selección de proyecto
    */
   onProjectSelectionChange(event: { value: string } | null): void {
-    const projectId = event?.value || '';
-    if (!projectId) {
-      this.filteredStages = [];
+    if (!event?.value) {
       this.selectedProjectId = null;
-      this.resetStageForm();
+      this.filteredStages = [];
+      // Compartir el ID del proyecto (null) con otros componentes
+      this.projectSelectionService.setSelectedProjectId(null);
       return;
     }
-    this.selectedProjectId = projectId;
-    this.loadStagesByProject(projectId);
+
+    this.selectedProjectId = event.value;
+    // Compartir el ID del proyecto seleccionado con otros componentes
+    this.projectSelectionService.setSelectedProjectId(event.value);
+    this.loadStagesByProject(event.value);
     this.resetStageForm();
   }
 
   /**
    * Carga las etapas constructivas por proyecto
+   * @param projectId ID del proyecto del cual cargar las etapas
+   * @param forceRefresh Si es true, fuerza la recarga desde la API ignorando la caché
    */
-  loadStagesByProject(projectId: string): void {
+  loadStagesByProject(projectId: string, forceRefresh: boolean = false): void {
     if (!projectId) return;
 
     this.isLoadingStages = true;
 
-    // Si ya tenemos las etapas cargadas para este proyecto, usamos el caché
-    if (this.stagesByProject[projectId]) {
+    // Si ya tenemos las etapas cargadas para este proyecto y no se requiere refresco forzado, usamos la caché
+    if (!forceRefresh && this.stagesByProject[projectId]) {
+      console.log('Usando caché para etapas del proyecto:', projectId);
       this.filteredStages = [...this.stagesByProject[projectId]];
       this.isLoadingStages = false;
       return;
     }
 
-    // Si no hay etapas cargadas para este proyecto, realizamos la llamada a la API para obtener todas las etapas constructivas
+    console.log('Cargando etapas desde API para proyecto:', projectId);
+    // Realizamos la llamada a la API para obtener todas las etapas constructivas
     // y filtramos por proyecto en el cliente
     this.subParametroService.getEtapasConstructivas()
       .pipe(
         map((response: EtapaConstructivaItem[]) => {
+          console.log('Respuesta de etapas constructivas:', response);
           // Filtramos las etapas por el proyecto seleccionado
           const stagesByProject = response.filter(stage => 
             stage.idObra === projectId
           );
           
-          // Guardamos en caché
+          console.log('Etapas filtradas para el proyecto:', stagesByProject);
+          // Actualizamos la caché
           this.stagesByProject[projectId] = stagesByProject;
           this.filteredStages = [...stagesByProject];
         }),
@@ -211,21 +227,9 @@ export class ConstructiveStagesComponent implements OnInit {
         .pipe(
           map((response: { success?: boolean; message?: string; data?: any }) => {
             console.log('Respuesta de actualización:', response);
-            // Actualizamos la etapa en el caché
-            if (this.selectedProjectId && this.stagesByProject[this.selectedProjectId]) {
-              const stageIndex = this.stagesByProject[this.selectedProjectId]
-                .findIndex(s => s.idEtapaConstructiva === this.editingStageId);
-              
-              if (stageIndex !== -1) {
-                this.stagesByProject[this.selectedProjectId][stageIndex] = {
-                  ...this.stagesByProject[this.selectedProjectId][stageIndex],
-                  codigo: stageCode,
-                  nombre: stageName
-                };
-                
-                this.filteredStages = [...this.stagesByProject[this.selectedProjectId]];
-              }
-            }
+            
+            // Forzamos la recarga desde la API para asegurar datos actualizados
+            this.loadStagesByProject(this.selectedProjectId as string, true);
             
             this.snackBar.open('Etapa constructiva actualizada correctamente', 'Cerrar', {
               duration: 3000,
@@ -266,8 +270,8 @@ export class ConstructiveStagesComponent implements OnInit {
         .pipe(
           map((response: { success?: boolean; message?: string; data?: any }) => {
             console.log('Respuesta de creación:', response);
-            // Recargamos las etapas para obtener la nueva etapa con su ID
-            this.loadStagesByProject(this.selectedProjectId as string);
+            // Recargamos las etapas para obtener la nueva etapa con su ID, forzando refresco
+            this.loadStagesByProject(this.selectedProjectId as string, true);
             
             this.snackBar.open('Etapa constructiva agregada correctamente', 'Cerrar', {
               duration: 3000,
@@ -312,17 +316,23 @@ export class ConstructiveStagesComponent implements OnInit {
     
     this.subParametroService.deleteEtapaConstructiva(stage.idEtapaConstructiva)
       .pipe(
-        map(() => {
-          // Eliminamos la etapa del caché
-          if (this.selectedProjectId && this.stagesByProject[this.selectedProjectId]) {
-            this.stagesByProject[this.selectedProjectId] = 
-              this.stagesByProject[this.selectedProjectId].filter(s => 
-                s.idEtapaConstructiva !== stage.idEtapaConstructiva);
-            this.filteredStages = [...this.stagesByProject[this.selectedProjectId]];
-          }
+        map((response) => {
+          console.log('Respuesta al eliminar etapa:', response);
+          
+          // Forzamos la recarga desde la API para asegurar datos actualizados
+          this.loadStagesByProject(this.selectedProjectId as string, true);
+          
+          this.snackBar.open('Etapa constructiva eliminada correctamente', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['success-snackbar']
+          });
         }),
         catchError((error: Error) => {
           console.error('Error al eliminar la etapa constructiva:', error);
+          this.snackBar.open('Error al eliminar la etapa constructiva', 'Cerrar', {
+            duration: 3000,
+            panelClass: ['error-snackbar']
+          });
           return of(null);
         }),
         finalize(() => {

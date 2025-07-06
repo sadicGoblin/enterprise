@@ -1,7 +1,7 @@
 <div class="map-container">
     
-    <!-- Selección de Etapa Constructiva -->
-    <div class="tab-content">
+    <!-- Selección de Etapa Constructiva (solo visible cuando hay un proyecto seleccionado) -->
+    <div class="tab-content" *ngIf="selectedProjectId">
       <app-custom-select
         label="Etapa Constructiva"
         [formControl]="etapaConstructivaControl"
@@ -12,6 +12,12 @@
         [required]="true"
         appearance="fill"
       ></app-custom-select>
+    </div>
+    
+    <!-- Mensaje cuando no hay proyecto seleccionado -->
+    <div *ngIf="!selectedProjectId" class="empty-state">
+      <mat-icon>info</mat-icon>
+      <p>Por favor, seleccione primero un proyecto en la pestaña de Etapas Constructivas.</p>
     </div>
 
     <!-- Formulario para agregar nuevo subproceso -->

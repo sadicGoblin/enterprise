@@ -66,6 +66,16 @@ mat-form-field {
   }
 }
 
+.empty-data-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100px;
+  color: grey;
+  font-style: italic;
+  gap: 15px;
+}
+
 .empty-state-message {
   display: flex;
   justify-content: center;
