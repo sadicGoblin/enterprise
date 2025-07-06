@@ -67,6 +67,35 @@ interface ObrasResponse {
   message: string;
   data: ObraItem[];
 }
+
+// Interface for creating sub-parameters
+export interface CreateSubParametroRequest {
+  caso: string;
+  idSubParam: number;
+  idDet: number;
+  nombre: string;
+}
+
+export interface UpdateSubParametroRequest {
+  caso: string;
+  idSubParam: number;
+  idDet: number;
+  nombre: string;
+}
+
+export interface DeleteSubParametroRequest {
+  caso: string;
+  idEnt: number;
+}
+
+// Interface for sub-parameter responses
+export interface SubParametroApiResponse {
+  success: boolean;
+  code?: number;
+  message?: string;
+  data?: any;
+  glosa?: string;
+}
 import { SelectOption } from '../../../shared/controls/custom-select/custom-select.component';
 
 @Injectable({
@@ -415,6 +444,103 @@ export class SubParametroService {
             error
           );
           return of([]); // Return empty array on API error
+        })
+      );
+  }
+  
+  /**
+   * Create a new sub-parameter associated with a parameter
+   * @param nombre Name of the sub-parameter to create
+   * @param idDet ID of the parent parameter
+   * @returns Observable with API response
+   */
+  createSubParametro(nombre: string, idDet: number): Observable<SubParametroApiResponse> {
+    const requestBody: CreateSubParametroRequest = {
+      "caso": "SubParametroCrea",
+      "idSubParam": 0,
+      "idDet": idDet,
+      "nombre": nombre
+    };
+
+    console.log('[SubParametroService] Creating sub-parameter with request:', requestBody);
+    
+    return this.proxyService.post<SubParametroApiResponse>(this.apiEndpoint, requestBody)
+      .pipe(
+        tap(response => console.log('[SubParametroService] Create sub-parameter response:', response)),
+        map(response => {
+          if (response && response.success) {
+            return response;
+          } else {
+            throw new Error(`Failed to create sub-parameter: ${response?.message || 'Unknown error'}`);
+          }
+        }),
+        catchError(error => {
+          console.error('[SubParametroService] API Error creating sub-parameter:', error);
+          return throwError(() => new Error('Error al crear sub-parámetro'));
+        })
+      );
+  }
+  
+  /**
+   * Delete a sub-parameter by its ID
+   * @param idSubParam ID of the sub-parameter to delete
+   * @returns Observable with API response
+   */
+  deleteSubParametro(idSubParam: number): Observable<SubParametroApiResponse> {
+    const requestBody: DeleteSubParametroRequest = {
+      "caso": "SubParametroElimina",
+      "idEnt": idSubParam
+    };
+
+    console.log('[SubParametroService] Deleting sub-parameter with request:', requestBody);
+    
+    return this.proxyService.post<SubParametroApiResponse>(this.apiEndpoint, requestBody)
+      .pipe(
+        tap(response => console.log('[SubParametroService] Delete sub-parameter response:', response)),
+        map(response => {
+          if (response && response.success) {
+            return response;
+          } else {
+            throw new Error(`Failed to delete sub-parameter: ${response?.message || 'Unknown error'}`);
+          }
+        }),
+        catchError(error => {
+          console.error('[SubParametroService] API Error deleting sub-parameter:', error);
+          return throwError(() => new Error('Error al eliminar sub-parámetro'));
+        })
+      );
+  }
+  
+  /**
+   * Update an existing sub-parameter 
+   * @param idSubParam ID of the sub-parameter to update
+   * @param idDet ID of the parent parameter
+   * @param nombre New name for the sub-parameter
+   * @returns Observable with API response
+   */
+  updateSubParametro(idSubParam: number, idDet: number, nombre: string): Observable<SubParametroApiResponse> {
+    const requestBody: UpdateSubParametroRequest = {
+      "caso": "SubParametroActualiza",
+      "idSubParam": idSubParam,
+      "idDet": idDet,
+      "nombre": nombre
+    };
+
+    console.log('[SubParametroService] Updating sub-parameter with request:', requestBody);
+    
+    return this.proxyService.post<SubParametroApiResponse>(this.apiEndpoint, requestBody)
+      .pipe(
+        tap(response => console.log('[SubParametroService] Update sub-parameter response:', response)),
+        map(response => {
+          if (response && response.success) {
+            return response;
+          } else {
+            throw new Error(`Failed to update sub-parameter: ${response?.message || 'Unknown error'}`);
+          }
+        }),
+        catchError(error => {
+          console.error('[SubParametroService] API Error updating sub-parameter:', error);
+          return throwError(() => new Error('Error al actualizar sub-parámetro'));
         })
       );
   }

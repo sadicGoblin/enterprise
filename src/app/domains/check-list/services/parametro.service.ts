@@ -8,6 +8,28 @@ import {
   ParametroItem 
 } from '../models/parametro.models';
 
+// Interfaz para la creación de parámetros
+export interface CreateParametroRequest {
+  caso: string;
+  idDet: number;
+  idCab: number;
+  nombre: string;
+  alias: string;
+  codigo: string;
+  idPeriocidad: number;
+  periocidad?: any;
+  idCategoria: number;
+  idParam: number;
+}
+
+export interface DeleteParametroRequest {
+  caso: string;
+  idDet: number;
+}
+
+// Interfaz para actualizar parámetros - utiliza la misma estructura que CreateParametroRequest
+export interface UpdateParametroRequest extends CreateParametroRequest {}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -45,5 +67,57 @@ export class ParametroService {
           return [];
         })
       );
+  }
+  
+  /**
+   * Crea un nuevo parámetro
+   * @param nombre Nombre del parámetro
+   * @param idCab ID del gabinete (default: 5)
+   * @returns Observable con la respuesta de la API
+   */
+  createParametro(nombre: string, idCab: number): Observable<any> {
+    const requestBody: CreateParametroRequest = {
+      "caso": "DetalleCrea",
+      "idDet": 0,
+      "idCab": idCab,
+      "nombre": nombre,
+      "alias": "",
+      "codigo": "",
+      "idPeriocidad": 0,
+      "periocidad": null,
+      "idCategoria": 0,
+      "idParam": 0
+    };
+
+    console.log('Request body for creating parameter:', requestBody);
+    
+    return this.proxyService.post('/ws/ParametrosSvcImpl.php', requestBody);
+  }
+  
+  /**
+   * Elimina un parámetro por su ID
+   * @param idDet ID del parámetro a eliminar
+   * @returns Observable con la respuesta de la API
+   */
+  deleteParametro(idDet: number): Observable<any> {
+    const requestBody: DeleteParametroRequest = {
+      "caso": "DetalleElimina",
+      "idDet": idDet
+    };
+
+    console.log('Request body for deleting parameter:', requestBody);
+    
+    return this.proxyService.post('/ws/ParametrosSvcImpl.php', requestBody);
+  }
+  
+  /**
+   * Actualiza un parámetro existente
+   * @param requestBody Objeto con los datos para actualizar el parámetro
+   * @returns Observable con la respuesta de la API
+   */
+  updateParametro(requestBody: UpdateParametroRequest): Observable<any> {
+    console.log('Request body for updating parameter:', requestBody);
+    
+    return this.proxyService.post('/ws/ParametrosSvcImpl.php', requestBody);
   }
 }

@@ -122,6 +122,29 @@ $scale-factor: 0.9; // Factor de escala global
   margin-top: 20px;
 }
 
+// Contenedor de búsqueda
+.search-container {
+  margin-bottom: 16px;
+  padding: 0 4px 0px 15px;
+  
+  mat-form-field {
+    width: 100%;
+    max-width: 400px;
+    
+    // Aplicar el factor de escala
+    font-size: #{$scale-factor}em;
+    
+    ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+      height: 0;
+      padding: 0;
+    }
+  }
+  
+  mat-icon {
+    color: #666;
+  }
+}
+
 // Tabla de datos
 .table-container {
   margin-top: 20px;
@@ -130,14 +153,45 @@ $scale-factor: 0.9; // Factor de escala global
   table {
     width: 100%;
   }
+  
+  /* Estilo para las celdas de acción */
+  .action-cell {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    min-width: 100px !important;
+    width: 20% !important;
+    white-space: nowrap !important;
+    overflow: visible !important;
+    flex-wrap: nowrap !important;
+    
+    button {
+      margin: 0 2px !important;
+      width: 30px !important;
+      height: 30px !important;
+      padding: 0 !important;
+      flex-shrink: 0 !important;
+      flex-grow: 0 !important;
+      
+      mat-icon {
+        font-size: 18px;
+        height: 18px;
+        width: 18px;
+        line-height: 18px;
+      }
+    }
+  }
+  
+  /* Truncar texto en celdas para ahorrar espacio */
+  .mat-column-name {
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 /* Estilos para las columnas de acciones */
-.action-cell {
-  text-align: center !important;
-  padding: 0.2rem !important;
-}
-
 .mat-column-edit, 
 .mat-column-delete {
   width: 4%;
@@ -191,4 +245,12 @@ $scale-factor: 0.9; // Factor de escala global
     padding: 0.5em 0;
   }
 }
-  
+
+// Estilo para el indicador de nombre original en edición
+::ng-deep .editing-hint {
+  color: #1976d2; // Color azul distintivo
+  font-style: italic;
+  font-size: #{$scale-factor}em;
+  font-weight: 500;
+  margin-top: 4px;
+}
