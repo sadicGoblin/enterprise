@@ -1,0 +1,104 @@
+<form [formGroup]="activityForm" (ngSubmit)="onSubmit()" class="activity-form">
+  <div class="form-fields">
+    <!-- Ámbito -->
+    <app-custom-select
+      #scopeSelect
+      [formControl]="scopeControl"
+      [loadFromApi]="true"
+      [parameterType]="parameterTypes.CUSTOM_API"
+      [customApiEndpoint]="scopeApiEndpoint"
+      [customApiRequestBody]="scopeApiRequestBody"
+      [customOptionValueKey]="'IdAmbito'"
+      [customOptionLabelKey]="'nombre'"
+      label="Ámbito"
+      [appearance]="'fill'"
+      class="form-field"
+      (selectionChange)="onScopeSelectionChange($event)"
+    ></app-custom-select>
+
+    <mat-form-field appearance="fill" class="form-field">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="name" placeholder="Nombre" />
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" class="form-field">
+      <mat-label>Código</mat-label>
+      <input matInput formControlName="code" placeholder="Código" />
+    </mat-form-field>
+
+    <div class="form-row input-row">
+      <app-custom-select
+        [formControl]="frequencyControl"
+        [loadFromApi]="true"
+        [parameterType]="parameterTypes.CUSTOM_API"
+        [customApiEndpoint]="frequencyApiEndpoint"
+        [customApiRequestBody]="frequencyApiRequestBody"
+        [customOptionValueKey]="'IdSubParam'"
+        [customOptionLabelKey]="'Nombre'"
+        label="Periocidad"
+        [appearance]="'fill'"
+        class="form-field"
+        (selectionChange)="onFrequencySelectionChange($event)"
+      ></app-custom-select>
+
+      <app-custom-select
+        [formControl]="categoryControl"
+        [loadFromApi]="true"
+        [parameterType]="parameterTypes.CUSTOM_API"
+        [customApiEndpoint]="categoryApiEndpoint"
+        [customApiRequestBody]="categoryApiRequestBody"
+        [customOptionValueKey]="'IdSubParam'"
+        [customOptionLabelKey]="'Nombre'"
+        label="Categoría Actividad"
+        [appearance]="'fill'"
+        class="form-field"
+        (selectionChange)="onCategorySelectionChange($event)"
+      ></app-custom-select>
+
+      <app-custom-select
+        [formControl]="parameterControl"
+        [loadFromApi]="true"
+        [parameterType]="parameterTypes.CUSTOM_API"
+        [customApiEndpoint]="parameterApiEndpoint"
+        [customApiRequestBody]="parameterApiRequestBody"
+        [customOptionValueKey]="'IdSubParam'"
+        [customOptionLabelKey]="'Nombre'"
+        label="Parámetro Asociado"
+        [appearance]="'fill'"
+        class="form-field"
+        (selectionChange)="onParameterSelectionChange($event)"
+      ></app-custom-select>
+    </div>
+
+    <div class="form-row input-row">
+      <app-custom-select
+        [formControl]="documentControl"
+        [loadFromApi]="true"
+        [parameterType]="parameterTypes.CUSTOM_API"
+        [customApiEndpoint]="documentApiEndpoint"
+        [customApiRequestBody]="documentApiRequestBody"
+        [customOptionValueKey]="'IdDocumento'"
+        [customOptionLabelKey]="'Nombre'"
+        label="Documento Asociado"
+        [appearance]="'fill'"
+        class="form-field"
+        (selectionChange)="onDocumentSelectionChange($event)"
+      ></app-custom-select>
+    </div>
+  </div>
+  <div class="form-row button-row action-buttons-right">
+    <button
+      mat-stroked-button
+      type="button"
+      *ngIf="activityBeingEdited"
+      (click)="cancelEditActivity()"
+      class="cancel-button"
+    >
+      <mat-icon>close</mat-icon> Cancelar
+    </button>
+    <button mat-raised-button color="primary" type="submit" class="add-button">
+      <mat-icon>{{ activityBeingEdited ? "save" : "add_circle" }}</mat-icon>
+      {{ activityBeingEdited ? "Actualizar" : "Agregar" }}
+    </button>
+  </div>
+</form>
