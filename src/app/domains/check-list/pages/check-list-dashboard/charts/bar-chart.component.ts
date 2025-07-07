@@ -34,10 +34,8 @@ interface CheckListRawItem {
         <mat-card-title>Actividades por Proyecto</mat-card-title>
       </mat-card-header>
       <mat-card-content>
-        <div class="bar-chart-wrapper">
-          <div class="chart-container">
-            <canvas #chartCanvas></canvas>
-          </div>
+        <div class="chart-container" style="height:430px;">
+          <canvas #chartCanvas></canvas>
         </div>
       </mat-card-content>
     </mat-card>
@@ -87,38 +85,29 @@ interface CheckListRawItem {
       color: #ffffff !important; /* Forzar color blanco para el título */
     }
     
-    .bar-chart-wrapper {
-      height: calc(100% - 60px); /* Restar la altura aproximada del header */
-      overflow-y: auto;
-      padding-right: 10px;
-      display: flex;
-      flex-direction: column;
-    }
-    
     .chart-container {
       position: relative;
       width: 100%;
-      flex-grow: 1;
-      height: 430px; /* Altura fija para el gráfico */
-      min-height: 430px; /* Altura mínima para asegurar visibilidad */
-      max-height: 430px; /* Máxima altura para evitar que se descontrole */
+      height: 430px !important; /* Altura fija para el gráfico */
+      min-height: 430px !important; /* Altura mínima para asegurar visibilidad */
+      max-height: 430px !important; /* Máxima altura para evitar que se descontrole */
       padding: 8px 0;
       display: block; /* Forzar que sea un bloque */
     }
 
     /* Estilo para la barra de desplazamiento */
-    .bar-chart-wrapper::-webkit-scrollbar {
+    .chart-container::-webkit-scrollbar {
       width: 6px;
       height: 6px;
       background-color: rgba(0, 0, 0, 0.1);
     }
 
-    .bar-chart-wrapper::-webkit-scrollbar-track {
+    .chart-container::-webkit-scrollbar-track {
       background: rgba(255, 255, 255, 0.05);
       border-radius: 5px;
     }
 
-    .bar-chart-wrapper::-webkit-scrollbar-thumb {
+    .chart-container::-webkit-scrollbar-thumb {
       border-radius: 5px;
       background-color: rgba(255, 255, 255, 0.2);
       
@@ -151,11 +140,14 @@ export class BarChartComponent implements OnInit, AfterViewInit, OnChanges {
   }
 
   ngAfterViewInit(): void {
+    // Configuración global de Chart.js
+    Chart.defaults.color = '#e0e0e0';
+    Chart.defaults.font.family = 'Roboto, "Helvetica Neue", sans-serif';
+    
     // Dar tiempo al DOM para renderizarse completamente
     setTimeout(() => {
-      if (this.rawData.length > 0) {
-        this.initChart();
-      }
+      this.processData();
+      this.initChart();
     }, 200);
   }
 
@@ -184,34 +176,21 @@ export class BarChartComponent implements OnInit, AfterViewInit, OnChanges {
     const ctx = this.chartCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
     
-    // Procesar datos primero
-    this.processData();
-    
-    // Asegurarnos que el contenedor tiene la altura correcta antes de inicializar el gráfico
-    const containerHeight = 430; // Altura fija de 430px
-    
-    const container = this.chartCanvas.nativeElement.parentElement;
-    if (container) {
-      container.style.height = `${containerHeight}px`;
+    // Destruir gráfico existente si hay uno
+    if (this.chart) {
+      this.chart.destroy();
+      this.chart = null;
     }
     
-    // Esperar un momento para que el DOM se actualice
-    setTimeout(() => {
-      // Destruir gráfico existente si hay uno
-      if (this.chart) {
-        this.chart.destroy();
-      }
-      
-      // Crear nuevo gráfico
-      this.chart = new Chart(ctx, {
-        type: 'bar',
-        data: this.getChartData(),
-        options: this.getChartOptions()
-      });
-      
-      // Forzar detección de cambios
-      this.cdr.detectChanges();
-    }, 50);
+    // Crear el gráfico con los datos ya procesados
+    this.chart = new Chart(ctx, {
+      type: 'bar',
+      data: this.getChartData(),
+      options: this.getChartOptions()
+    });
+    
+    // Forzar detección de cambios
+    this.cdr.detectChanges();
   }
 
   private updateChart(): void {
@@ -220,14 +199,6 @@ export class BarChartComponent implements OnInit, AfterViewInit, OnChanges {
       return;
     }
 
-    // Asegurarnos que el contenedor tiene la altura correcta
-    const containerHeight = 430; // Altura fija de 430px
-    
-    const container = this.chartCanvas.nativeElement.parentElement;
-    if (container) {
-      container.style.height = `${containerHeight}px`;
-    }
-    
     // Actualizar los datos
     const data = this.getChartData();
     this.chart.data = data;
@@ -290,6 +261,15 @@ export class BarChartComponent implements OnInit, AfterViewInit, OnChanges {
   }
 
   private getChartData(): ChartConfiguration['data'] {
+    // Verificar si hay suficientes datos para mostrar
+    if (this.projects.length === 0) {
+      // Devolver una estructura ChartData válida pero vacía
+      return {
+        labels: [],
+        datasets: []
+      };
+    }
+    
     // Obtener solo los dos primeros colores de la paleta (azul y verde)
     const colors = this.chartUtils.generateChartColors(2);
     const blueColor = colors[0]; // Azul para asignadas
@@ -412,19 +392,14 @@ export class BarChartComponent implements OnInit, AfterViewInit, OnChanges {
       onResize: (chart: Chart) => {
         if (!chart.canvas) return;
         
-        // Usar una altura fija para evitar que el gráfico se descontrole
-        const newHeight = 430;
-        
+        // Mantener una altura fija para evitar que el gráfico se descontrole
         if (chart.canvas.parentElement) {
-          chart.canvas.parentElement.style.height = `${newHeight}px`;
-          chart.canvas.parentElement.style.minHeight = `${newHeight}px`;
-          chart.canvas.style.height = `${newHeight}px`;
-          
-          // Establecer un timeout para permitir que el DOM se actualice
-          setTimeout(() => {
-            chart.resize();
-          }, 100);
+          chart.canvas.parentElement.style.height = '430px';
+          chart.canvas.parentElement.style.minHeight = '430px';
         }
+        
+        // Actualizamos inmediatamente sin animar
+        chart.update('none');
       }
     };
   }
