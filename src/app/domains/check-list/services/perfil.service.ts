@@ -6,11 +6,11 @@ import { ProxyService } from '../../../core/services/proxy.service';
 
 export interface PerfilPantallaRequest {
   caso: string;
-  IdPerfil: number;
-  IdPantalla: number;
-  IdPerfilPantalla: number;
-  Acceso: boolean;
-  Grabar: boolean;
+  IdPerfil: string | number;
+  IdPantalla: string | number;
+  IdPerfilPantalla: string | number;
+  Acceso: string | boolean;
+  Grabar: string | boolean;
   Pantalla: string | null;
 }
 
@@ -44,7 +44,7 @@ export class PerfilService {
    * @param idPerfil The profile ID to query
    */
   getScreensForProfile(idPerfil: number): Observable<PantallaPerfil[]> {
-    // Make sure idPerfil is a number
+    // Make sure idPerfil is a number and then convert to string for consistency
     const numericIdPerfil = Number(idPerfil);
     
     if (isNaN(numericIdPerfil)) {
@@ -52,19 +52,20 @@ export class PerfilService {
       return throwError(() => new Error('Invalid profile ID'));
     }
     
-    const requestData: PerfilPantallaRequest = {
+    // Usar el mismo formato que en updateScreenPermission para consistencia
+    const requestData = {
       caso: 'Consulta',
-      IdPerfil: numericIdPerfil,
-      IdPantalla: 0,
-      IdPerfilPantalla: 0,
-      Acceso: false,
-      Grabar: false,
+      IdPerfil: String(numericIdPerfil),  // Convertir a string como en updateScreenPermission
+      IdPantalla: "0",                    // Usar string en lugar de número
+      IdPerfilPantalla: "0",              // Usar string en lugar de número
+      Acceso: "0",                        // Usar string en lugar de booleano
+      Grabar: "0",                        // Usar string en lugar de booleano
       Pantalla: null
     };
     
     console.log(`[PerfilService] Fetching screens for profile ID: ${numericIdPerfil}`);
     console.log(`[PerfilService] Request data:`, JSON.stringify(requestData));
-    console.log(`[PerfilService] CRITICAL: IdPerfil being sent to API:`, numericIdPerfil);
+    console.log(`[PerfilService] CRITICAL: IdPerfil being sent to API:`, requestData.IdPerfil);
     
     return this.proxyService.post<PerfilPantallaResponse>(this.apiEndpoint, requestData)
       .pipe(
@@ -93,12 +94,19 @@ export class PerfilService {
                 ...item,
                 NombrePantalla: screenName,
                 Acceso: acceso,
-                Grabar: grabar
+                Grabar: grabar,
+                // Agregar campo para mantener el ID de pantalla como string para comparaciones consistentes
+                IdPantallaStr: String(item.IdPantalla) 
               };
             });
             
-            console.log('[PerfilService] Transformed data:', transformedData);
-            return transformedData;
+            // Ordenar los datos por NombrePantalla para mantener un orden consistente
+            const sortedData = transformedData.sort((a, b) => 
+              a.NombrePantalla.localeCompare(b.NombrePantalla, undefined, {sensitivity: 'base'})
+            );
+            
+            console.log('[PerfilService] Transformed and sorted data:', sortedData);
+            return sortedData;
           } else {
             console.error(`PerfilService: API error: ${response.message}`);
             return [];
@@ -122,13 +130,17 @@ export class PerfilService {
     acceso: boolean,
     grabar: boolean
   ): Observable<boolean> {
-    const requestData: PerfilPantallaRequest = {
-      caso: 'Graba',
-      IdPerfil: idPerfil,
-      IdPantalla: idPantalla,
-      IdPerfilPantalla: idPerfilPantalla,
-      Acceso: acceso,
-      Grabar: grabar,
+    // Convertir booleanos a strings "1"/"0" como espera la API
+    const accesoStr = acceso ? "1" : "0";
+    const grabarStr = grabar ? "1" : "0";
+    
+    const requestData = {
+      caso: 'Modifica', // Cambiado de 'Graba' a 'Modifica' como muestra el ejemplo
+      IdPerfil: String(idPerfil), // Convertir a string
+      IdPantalla: String(idPantalla), // Convertir a string
+      IdPerfilPantalla: String(idPerfilPantalla), // Convertir a string
+      Acceso: accesoStr,
+      Grabar: grabarStr,
       Pantalla: null
     };
     

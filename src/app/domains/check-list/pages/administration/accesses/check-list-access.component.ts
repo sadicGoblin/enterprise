@@ -50,6 +50,9 @@ export class CheckListAccessComponent implements OnInit {
   // Screen permissions and selected option
   screenPermissions: PantallaPerfil[] = [];
   selectedOption: SelectOption | null = null; // Store the currently selected option
+  
+  // Guardar el ID del perfil seleccionado actualmente
+  currentProfileId: number | null = null;
 
   constructor(
     private subParametroService: SubParametroService,
@@ -125,6 +128,10 @@ export class CheckListAccessComponent implements OnInit {
       this.screenErrorMessage = 'El tipo de acceso seleccionado es inválido.';
       return;
     }
+    
+    // Guardar el ID del perfil seleccionado para usarlo en updatePermission
+    this.currentProfileId = idPerfil;
+    console.log('[CheckList] Saved current profile ID:', this.currentProfileId);
 
     this.loadScreenPermissions(idPerfil);
   }
@@ -158,6 +165,9 @@ export class CheckListAccessComponent implements OnInit {
     
     console.log('[CheckList] Loading screen permissions for profile ID:', idPerfil);
     console.log('[CheckList] Profile ID type:', typeof idPerfil);
+    
+    // Asegurarnos de que el currentProfileId esté actualizado
+    this.currentProfileId = idPerfil;
     
     if (!idPerfil && idPerfil !== 0) {
       console.error('[CheckList] Invalid profile ID:', idPerfil);
@@ -200,27 +210,32 @@ export class CheckListAccessComponent implements OnInit {
    */
   updatePermission(screen: PantallaPerfil, type: 'access' | 'write', checked: boolean): void {
     console.log(`Updating ${type} permission for screen ${screen.NombrePantalla} to ${checked}`);
+    console.log('Screen object before update:', JSON.stringify(screen));
     
-    // Set the correct field based on the type
+    // Set the correct field based on the type - ahora cada checkbox es independiente
     if (type === 'access') {
       screen.Acceso = checked;
-      
-      // If access is false, write should also be false
-      if (!checked) {
-        screen.Grabar = false;
-      }
+      // Ya no cambiamos Grabar cuando Acceso cambia
     } else if (type === 'write') {
       screen.Grabar = checked;
-      
-      // If write is true, access should also be true
-      if (checked) {
-        screen.Acceso = true;
-      }
+      // Ya no cambiamos Acceso cuando Grabar cambia
     }
+    
+    // Usar el ID del perfil actualmente seleccionado en el dropdown
+    // Esto asegura que estamos actualizando el perfil correcto
+    if (this.currentProfileId === null) {
+      console.error('No hay un perfil seleccionado actualmente');
+      return;
+    }
+    
+    const idPerfil = this.currentProfileId;
+    
+    console.log('Screen object after update:', JSON.stringify(screen));
+    console.log('Sending idPerfil from selected profile:', idPerfil);
     
     // Call the API to update the permission
     this.perfilService.updateScreenPermission(
-      screen.IdPerfil,
+      idPerfil,
       screen.IdPantalla,
       screen.IdPerfilPantalla,
       screen.Acceso,
