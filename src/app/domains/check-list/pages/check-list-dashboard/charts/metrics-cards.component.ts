@@ -119,20 +119,46 @@ import { animate, style, transition, trigger } from '@angular/animations';
     }
     
     .metric-card {
-      background: linear-gradient(135deg, rgba(30, 30, 40, 0.95), rgba(20, 20, 30, 0.9));
+      background: linear-gradient(145deg, #1e2132, #2d3042);
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border: none;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1);
       border-radius: 5px;
       padding: 0;
       overflow: hidden;
       height: 100%;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .metric-card:before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+    }
+    
+    .compliance-card:before {
+      background: linear-gradient(to right, #3B82F6, #60A5FA, #93C5FD);
+    }
+    
+    .users-card:before {
+      background: linear-gradient(to right, #8B5CF6, #A78BFA, #C4B5FD);
+    }
+    
+    .pending-card:before {
+      background: linear-gradient(to right, #F59E0B, #FBBF24, #FCD34D);
+    }
+    
+    .projects-card:before {
+      background: linear-gradient(to right, #10B981, #34D399, #6EE7B7);
     }
     
     .metric-card:hover {
       transform: translateY(-3px);
-      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+      box-shadow: 0 12px 20px rgba(0, 0, 0, 0.25), 0 8px 8px rgba(0, 0, 0, 0.15);
     }
     
     .metric-content {

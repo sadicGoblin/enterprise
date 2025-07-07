@@ -101,11 +101,11 @@
         @fadeIn>
       </app-heatmap>
       
-      <!-- Componente de proyectos activos -->
+      <!-- Componente de Top 5 Usuarios -->
       <app-active-projects-card
-        [totalProjects]="totalProjects"
-        [showTrend]="true"
-        [trendPercentage]="5"
+        [rawData]="rawData"
+        [selectedProject]="selectedProject"
+        [selectedScope]="selectedScope"
         @fadeIn>
       </app-active-projects-card>
     </div>

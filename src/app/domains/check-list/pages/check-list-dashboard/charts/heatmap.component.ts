@@ -56,13 +56,30 @@ interface CheckListRawItem {
   `,
   styles: [`
     .chart-card {
-      background: linear-gradient(135deg, rgba(30, 30, 40, 0.9), rgba(20, 20, 30, 0.95));
+      background: linear-gradient(145deg, #1e2132, #2d3042);
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border: none;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1);
       border-radius: 5px;
       height: 100%;
       overflow: hidden;
+      position: relative;
+      transition: transform 0.3s, box-shadow 0.3s;
+      
+      &:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(to right, #3B82F6, #60A5FA, #93C5FD);
+      }
+      
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.25), 0 8px 8px rgba(0, 0, 0, 0.15);
+      }
     }
     
     .mat-card-header {
@@ -72,58 +89,86 @@ interface CheckListRawItem {
     }
     
     .mat-card-title {
-      color: #e0e0e0;
-      font-size: 1.1rem;
+      color: #ffffff !important; /* Forzar color blanco para el título */
+      font-size: 0.95rem;
       font-weight: 500;
       margin: 0;
     }
     
+    ::ng-deep .mat-mdc-card-title {
+      color: #ffffff !important; /* Forzar color blanco para el título */
+    }
+    
     .heatmap-container {
       width: 100%;
+      height: 100%;
       overflow-x: auto;
-      padding: 8px 0;
+      padding: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     
     .heatmap-table {
       width: 100%;
       min-width: 500px;
+      background: rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+      padding: 12px;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.2);
     }
     
     .heatmap-table table {
       width: 100%;
       border-collapse: separate;
-      border-spacing: 2px;
+      border-spacing: 4px;
+      table-layout: fixed;
     }
     
     .heatmap-table th {
       text-align: center;
-      padding: 8px;
-      font-size: 12px;
-      color: #a0a0a0;
-      font-weight: normal;
+      padding: 10px 8px;
+      font-size: 0.75rem;
+      color: #d0d0d0;
+      font-weight: 500;
       vertical-align: bottom;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
     }
     
     .heatmap-table td {
       text-align: center;
-      padding: 10px 5px;
-      font-size: 12px;
+      padding: 12px 8px;
+      font-size: 0.85rem;
+      font-weight: 500;
       color: #ffffff;
-      border-radius: 4px;
+      border-radius: 6px;
       transition: all 0.2s ease-in-out;
+      min-width: 60px;
+      position: relative;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     .heatmap-table td:hover {
-      transform: scale(1.05);
-      box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+      transform: scale(1.08);
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.3);
+      z-index: 10;
+      cursor: pointer;
     }
     
     .periodicity-label {
-      font-weight: normal;
-      color: #a0a0a0 !important;
-      background-color: transparent !important;
+      font-weight: 500;
+      font-size: 0.8rem;
+      color: #d0d0d0 !important;
+      background-color: rgba(60, 65, 80, 0.3) !important;
       text-align: right !important;
-      padding-right: 10px !important;
+      padding: 8px 12px !important;
+      border-radius: 4px 0 0 4px !important;
+      box-shadow: none !important;
+      width: 100px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
     }
   `]
 })
@@ -186,30 +231,51 @@ export class HeatmapComponent implements OnChanges {
   getHeatmapColor(value: number): string {
     // Si no hay valor, devolver un color neutral
     if (value === 0) {
-      return 'rgba(30, 30, 30, 0.4)';
+      return 'rgba(40, 42, 54, 0.5)';
     }
     
-    // Escala de calor desde azul (frío/bajo) a rojo (caliente/alto)
-    // El valor máximo hipotético es 20 (ajusta según tus datos reales)
-    const maxValue = 20;
+    // Encontrar el valor máximo real en los datos para una escala dinámica
+    let maxValue = 0;
+    Object.keys(this.heatmapData).forEach(periodicity => {
+      Object.keys(this.heatmapData[periodicity]).forEach(scope => {
+        maxValue = Math.max(maxValue, this.heatmapData[periodicity][scope]);
+      });
+    });
+    
+    // Usar el máximo real o un valor mínimo de 10
+    maxValue = Math.max(maxValue, 10);
     const normalizedValue = Math.min(value / maxValue, 1); // Valor entre 0 y 1
     
     let r, g, b;
     
-    if (normalizedValue < 0.5) {
-      // De azul a verde (frío a templado)
-      const t = normalizedValue * 2;
-      r = Math.round(41 * (1 - t) + 56 * t);
-      g = Math.round(114 * (1 - t) + 192 * t);
-      b = Math.round(203 * (1 - t) + 122 * t);
+    // Paleta de colores moderna
+    if (normalizedValue < 0.3) {
+      // Azul a cyan (valores bajos)
+      const t = normalizedValue / 0.3;
+      r = Math.round(59 * (1 - t) + 66 * t);
+      g = Math.round(130 * (1 - t) + 190 * t);
+      b = Math.round(246 * (1 - t) + 220 * t);
+    } else if (normalizedValue < 0.6) {
+      // Cyan a verde (valores medios bajos)
+      const t = (normalizedValue - 0.3) / 0.3;
+      r = Math.round(66 * (1 - t) + 76 * t);
+      g = Math.round(190 * (1 - t) + 217 * t);
+      b = Math.round(220 * (1 - t) + 112 * t);
+    } else if (normalizedValue < 0.8) {
+      // Verde a amarillo (valores medios altos)
+      const t = (normalizedValue - 0.6) / 0.2;
+      r = Math.round(76 * (1 - t) + 253 * t);
+      g = Math.round(217 * (1 - t) + 204 * t);
+      b = Math.round(112 * (1 - t) + 71 * t);
     } else {
-      // De verde a rojo (templado a caliente)
-      const t = (normalizedValue - 0.5) * 2;
-      r = Math.round(56 * (1 - t) + 220 * t);
-      g = Math.round(192 * (1 - t) + 52 * t);
-      b = Math.round(122 * (1 - t) + 47 * t);
+      // Amarillo a rojo (valores altos)
+      const t = (normalizedValue - 0.8) / 0.2;
+      r = Math.round(253 * (1 - t) + 235 * t);
+      g = Math.round(204 * (1 - t) + 87 * t);
+      b = Math.round(71 * (1 - t) + 87 * t);
     }
     
-    return `rgba(${r}, ${g}, ${b}, 0.85)`;
+    // Agregar una sombra interna con box-shadow
+    return `rgba(${r}, ${g}, ${b}, 0.9)`;
   }
 }

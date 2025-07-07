@@ -17,8 +17,8 @@ import { BarChartComponent } from './charts/bar-chart.component';
 import { LineChartComponent } from './charts/line-chart.component';
 import { HeatmapComponent } from './charts/heatmap.component';
 import { RecentActivitiesComponent } from './charts/recent-activities.component';
-// Importamos el componente de proyectos activos
-import { ActiveProjectsCardComponent } from './charts/active-projects-card/active-projects-card.component';
+// Importamos el componente de Top 5 Usuarios
+import { ActiveProjectsCardComponent } from './charts/active-projects-card.component';
 
 // Interfaces para los datos raw del JSON
 

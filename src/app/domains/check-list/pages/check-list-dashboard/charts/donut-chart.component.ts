@@ -42,13 +42,30 @@ interface CheckListRawItem {
   `,
   styles: [`
     .chart-card {
-      background: linear-gradient(135deg, rgba(30, 30, 40, 0.9), rgba(20, 20, 30, 0.95));
+      background: linear-gradient(145deg, #1e2132, #2d3042);
       backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border: none;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15), 0 3px 6px rgba(0, 0, 0, 0.1);
       border-radius: 5px;
       height: 100%;
       overflow: hidden;
+      position: relative;
+      transition: transform 0.3s, box-shadow 0.3s;
+      
+      &:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(to right, #3B82F6, #60A5FA, #93C5FD);
+      }
+      
+      &:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 20px rgba(0, 0, 0, 0.25), 0 8px 8px rgba(0, 0, 0, 0.15);
+      }
     }
     
     .mat-card-header {
@@ -58,10 +75,14 @@ interface CheckListRawItem {
     }
     
     .mat-card-title {
-      color: #e0e0e0;
-      font-size: 1.1rem;
+      color: #ffffff !important; /* Forzar color blanco para el título */
+      font-size: 0.95rem;
       font-weight: 500;
       margin: 0;
+    }
+    
+    ::ng-deep .mat-mdc-card-title {
+      color: #ffffff !important; /* Forzar color blanco para el título */
     }
     
     .chart-container {
@@ -159,22 +180,26 @@ export class DonutChartComponent implements OnInit, AfterViewInit, OnChanges {
   }
 
   private getChartData(): ChartConfiguration['data'] {
-    // Obtener colores consistentes del servicio
-    const statusColors = this.chartUtils.getStatusColors();
+    // Obtener la paleta de colores básicos
+    const chartColors = this.chartUtils.generateChartColors(2);
     
     return {
-      labels: ['Completadas', 'Pendientes'],
+      labels: ['Asignadas', 'Completadas'],
       datasets: [{
-        data: [this.completedActivities, this.pendingActivities],
+        data: [this.totalActivities, this.completedActivities],
         backgroundColor: [
-          this.chartUtils.adjustAlpha(statusColors.completed, 0.8),
-          this.chartUtils.adjustAlpha(statusColors.pending, 0.8)
+          this.chartUtils.adjustAlpha(chartColors[0], 0.8), // Azul para asignadas
+          this.chartUtils.adjustAlpha(chartColors[1], 0.8)  // Verde para completadas
         ],
         borderColor: [
-          statusColors.completed,
-          statusColors.pending
+          chartColors[0], // Azul para asignadas
+          chartColors[1]  // Verde para completadas
         ],
         borderWidth: 1,
+        hoverBackgroundColor: [
+          this.chartUtils.adjustAlpha(chartColors[0], 0.9),
+          this.chartUtils.adjustAlpha(chartColors[1], 0.9)
+        ],
         hoverOffset: 5
       }]
     };
@@ -245,38 +270,33 @@ export class DonutChartComponent implements OnInit, AfterViewInit, OnChanges {
         legend: {
           position: 'bottom',
           labels: {
-            color: '#e0e0e0',
+            boxWidth: 12,
+            padding: 15,
             font: {
-              size: 14,
-              weight: 'bold'
+              size: 11
             },
-            padding: 20,
-            usePointStyle: true,
-            pointStyle: 'circle'
+            color: '#e0e0e0'
           }
         },
         title: {
           display: false // Quitamos el título duplicado ya que está en el mat-card-header
         },
         tooltip: {
-          backgroundColor: 'rgba(20, 20, 30, 0.9)',
+          backgroundColor: 'rgba(20, 20, 30, 0.95)',
           titleColor: '#ffffff',
           bodyColor: '#ffffff',
-          bodyFont: {
-            size: 14
-          },
           padding: 12,
           cornerRadius: 6,
           callbacks: {
-            label: (context: any) => {
+            label: function(context: any) {
               const label = context.label || '';
               const value = context.raw || 0;
-              const percentage = this.totalActivities > 0 ? Math.round((value / this.totalActivities) * 100) : 0;
+              const total = context.chart.data.datasets[0].data.reduce((a: number, b: number) => a + b, 0);
+              const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
               return `${label}: ${value} (${percentage}%)`;
             }
           }
         },
-        // Usamos plugin integrado para opciones avanzadas
         datalabels: {
           display: false // Desactivamos las etiquetas de datos para mantener el gráfico limpio
         }

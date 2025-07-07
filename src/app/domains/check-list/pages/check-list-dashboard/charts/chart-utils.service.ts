@@ -12,11 +12,15 @@ export class ChartUtilsService {
    */
   generateChartColors(count: number): string[] {
     const baseColors = [
-      '#1E88E5', '#42A5F5', '#90CAF9',
-      '#26A69A', '#4DB6AC', '#80CBC4',
-      '#7CB342', '#9CCC65', '#C5E1A5',
-      '#FFB300', '#FFD54F', '#FFE082',
-      '#F4511E', '#FF8A65', '#FFAB91'
+      '#3B82F6', // Azul principal - actividades asignadas
+      '#10B981', // Verde principal - actividades completadas
+      '#F43F5E', // Rojo principal - actividades pendientes
+      '#8B5CF6', // Morado
+      '#F59E0B', // Naranja
+      '#6366F1', // Indigo
+      '#EC4899', // Rosa
+      '#14B8A6', // Teal
+      '#64748B'  // Slate
     ];
     
     const colors: string[] = [];
@@ -32,8 +36,8 @@ export class ChartUtilsService {
    */
   getStatusColors(): { completed: string, pending: string } {
     return {
-      completed: '#26A69A', // Verde de la paleta
-      pending: '#F4511E'    // Rojo de la paleta
+      completed: '#10B981', // Verde principal del ejemplo
+      pending: '#EF4444'    // Rojo del ejemplo
     };
   }
 
