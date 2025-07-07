@@ -20,28 +20,7 @@ import { RecentActivitiesComponent } from './charts/recent-activities.component'
 // Importamos el componente de proyectos activos
 import { ActiveProjectsCardComponent } from './charts/active-projects-card/active-projects-card.component';
 
-// Tipado personalizado para los datos de gráficos
-interface BarChartData {
-  projects: string[];
-  completionRates: number[];
-}
-
-interface LineChartData {
-  labels: string[];
-  completionData: number[];
-}
-
-interface DonutChartData {
-  labels: string[];
-  data: number[];
-  backgroundColor: string[];
-}
-
-interface HeatmapData {
-  periodicities: string[];
-  scopes: string[];
-  data: { [periodicity: string]: { [scope: string]: number } };
-}
+// Interfaces para los datos raw del JSON
 
 // Interfaces para los datos raw del JSON
 export interface CheckListRawItem {
@@ -76,12 +55,7 @@ export interface DashboardActivity {
   estado: string;
 }
 
-// Estructura para datos de heatmap
-interface HeatmapDataPoint {
-  x: number;
-  y: number;
-  v: number;
-}
+
 
 @Component({
   selector: 'app-check-list-dashboard',
@@ -140,12 +114,6 @@ interface HeatmapDataPoint {
   ]
 })
 export class CheckListDashboardComponent implements OnInit, AfterViewInit {
-  // Datos para gráficos
-  barChartData: BarChartData = { projects: [], completionRates: [] };
-  lineChartData: LineChartData = { labels: [], completionData: [] };
-  donutChartData: DonutChartData = { labels: [], data: [], backgroundColor: [] };
-  heatmapData: HeatmapData = { periodicities: [], scopes: [], data: {} };
-  
   // Datos de actividades
   rawData: CheckListRawItem[] = [];
   activities: DashboardActivity[] = [];
@@ -178,8 +146,7 @@ export class CheckListDashboardComponent implements OnInit, AfterViewInit {
   // Configuración de tabla
   displayedColumns: string[] = ['obra', 'usuario', 'actividad', 'ambito', 'dia', 'estado'];
   
-  // Datos para heatmap
-  activityHeatmapData: Record<string, Record<string, number>> = {};
+
 
   constructor(private http: HttpClient) {}
 
@@ -194,165 +161,7 @@ export class CheckListDashboardComponent implements OnInit, AfterViewInit {
   
 
   
-  /**
-   * Genera los datos para el heatmap de actividades por periodicidad y ámbito
-   */
-  generateHeatmapData(): void {
-    const heatmapData: Record<string, Record<string, number>> = {};
-    
-    // Inicializar estructura de datos
-    this.periodicities.forEach(periodicity => {
-      heatmapData[periodicity] = {};
-      this.scopes.forEach(scope => {
-        heatmapData[periodicity][scope] = 0;
-      });
-    });
-    
-    // Rellenar con datos reales
-    this.filteredActivities.forEach(activity => {
-      const periodicity = activity.periocidad;
-      const scope = activity.ambito;
-      
-      if (heatmapData[periodicity] && heatmapData[periodicity][scope] !== undefined) {
-        heatmapData[periodicity][scope]++;
-      }
-    });
-    
-    this.activityHeatmapData = heatmapData;
-  }
-  
-  /**
-   * Prepara los datos para todos los componentes de gráficos
-   */
-  updateChartData(): void {
-    // Preparar datos para los gráficos
-    this.prepareDonutChartData();
-    this.prepareLineChartData();
-    this.prepareBarChartData();
-    
-    // Datos para heatmap
-    this.heatmapData = {
-      periodicities: this.periodicities,
-      scopes: this.scopes,
-      data: this.activityHeatmapData
-    };
-  }
-  
-  /**
-   * Prepara los datos para el gráfico de dona (completado vs pendiente)
-   */
-  prepareDonutChartData(): void {
-    this.donutChartData = {
-      labels: ['Completado', 'Pendiente'],
-      data: [this.completedActivities, this.pendingActivities],
-      backgroundColor: ['#4caf50', '#ff9800']
-    };
-  }
-  
-  /**
-   * Prepara los datos para el gráfico de línea (tendencia de cumplimiento diario)
-   */
-  prepareLineChartData(): void {
-    // Agrupar actividades por día y calcular tasas de cumplimiento
-    const dailyCompletionMap = new Map<string, {completed: number, total: number}>();
-    
-    // Obtener los últimos 7 días para mostrar en el gráfico
-    const today = new Date();
-    const labels: string[] = [];
-    
-    // Inicializar datos para los últimos 7 días
-    for (let i = 6; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(today.getDate() - i);
-      const dateStr = date.toISOString().split('T')[0]; // formato YYYY-MM-DD
-      labels.push(dateStr);
-      dailyCompletionMap.set(dateStr, {completed: 0, total: 0});
-    }
-    
-    // Contar actividades completadas y totales por día
-    this.filteredActivities.forEach(activity => {
-      const dateStr = activity.fecha.toISOString().split('T')[0];
-      if (dailyCompletionMap.has(dateStr)) {
-        const data = dailyCompletionMap.get(dateStr)!;
-        data.total++;
-        if (activity.estado === 'Completado') {
-          data.completed++;
-        }
-      }
-    });
-    
-    // Calcular tasa de cumplimiento diario
-    const completionData = labels.map(date => {
-      const data = dailyCompletionMap.get(date)!;
-      return data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0;
-    });
-    
-    this.lineChartData = {
-      labels,
-      completionData
-    };
-  }
-  
-  /**
-   * Prepara los datos para el gráfico de barras (cumplimiento por proyecto)
-   */
-  prepareBarChartData(): void {
-    const projectCompletionMap = new Map<string, {completed: number, total: number}>();
-    
-    // Inicializar datos por proyecto
-    this.projects.forEach(project => {
-      projectCompletionMap.set(project, {completed: 0, total: 0});
-    });
-    
-    // Contar actividades completadas y totales por proyecto
-    this.filteredActivities.forEach(activity => {
-      if (projectCompletionMap.has(activity.obra)) {
-        const data = projectCompletionMap.get(activity.obra)!;
-        data.total++;
-        if (activity.estado === 'Completado') {
-          data.completed++;
-        }
-      }
-    });
-    
-    // Generar arrays para el gráfico, ordenando por tasa de cumplimiento
-    const projectData = Array.from(projectCompletionMap.entries())
-      .filter(([_, data]) => data.total > 0) // Solo incluir proyectos con actividades
-      .map(([project, data]) => ({
-        project,
-        completionRate: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0
-      }))
-      .sort((a, b) => b.completionRate - a.completionRate) // Ordenar de mayor a menor
-      .slice(0, 10); // Mostrar top 10 proyectos
-    
-    this.barChartData = {
-      projects: projectData.map(d => d.project),
-      completionRates: projectData.map(d => d.completionRate)
-    };
-  }
-  
-  /**
-   * Genera un color para la celda del heatmap basado en el valor
-   * @param value Número de actividades
-   * @returns Color en formato hexadecimal o rgba
-   */
-  getHeatmapColor(value: number): string {
-    if (value === 0) {
-      return '#f5f5f5'; // Gris claro para celdas sin actividades
-    }
-    
-    // Escala de colores de frío a caliente basado en la intensidad
-    // Valor bajo: azul claro, Valor medio: amarillo, Valor alto: rojo
-    const intensity = Math.min(value / 10, 1); // Normalizar en rango 0-1, máximo 10 actividades
-    
-    if (intensity < 0.3) {
-      return `rgba(135, 206, 250, ${intensity + 0.2})`; // Azul claro
-    } else if (intensity < 0.7) {
-      return `rgba(255, 255, 0, ${intensity + 0.2})`; // Amarillo
-    } else {
-      return `rgba(255, 0, 0, ${intensity + 0.2})`; // Rojo
-    }
-  }
+
 
   /**
    * Carga los datos del dashboard desde un archivo JSON
@@ -427,57 +236,65 @@ export class CheckListDashboardComponent implements OnInit, AfterViewInit {
   private generateMockData(): void {
     console.log('Generating mock data');
     
-    const mockActivities: DashboardActivity[] = [];
+    // Arrays para generar datos aleatorios
     const obras = ['Edificio Central', 'Torres Norte', 'Residencial Sur', 'Campus Tech'];
     const usuarios = ['Juan Pérez', 'María González', 'Carlos Rodríguez', 'Ana Martínez'];
     const ambitos = ['Seguridad', 'Calidad', 'Medio Ambiente', 'Administrativo'];
-    const actividades = [
-      'Revisar equipos de protección', 
-      'Verificar instalaciones', 
-      'Inspección de materiales',
-      'Control de documentación',
-      'Validar permisos',
-      'Revisar cumplimiento normativo'
-    ];
+    const actividades = ['Revisar equipos', 'Verificar instalaciones', 'Control de documentos'];
     const periodicidades = ['Diaria', 'Semanal', 'Mensual'];
     
-    // Generar 50 actividades aleatorias
-    for (let i = 0; i < 50; i++) {
+    // Generar 20 actividades aleatorias (reducido de 50 para mayor eficiencia)
+    const mockActivities: DashboardActivity[] = [];
+    for (let i = 0; i < 20; i++) {
       const diaNum = Math.floor(Math.random() * 28) + 1;
       const today = new Date();
       const date = new Date(today.getFullYear(), today.getMonth(), diaNum);
+      const isCompleted = Math.random() > 0.4;
       
       mockActivities.push({
         id: `ACT-${1000 + i}`,
-        obra: obras[Math.floor(Math.random() * obras.length)],
-        usuario: usuarios[Math.floor(Math.random() * usuarios.length)],
+        obra: obras[i % obras.length],
+        usuario: usuarios[i % usuarios.length],
         periodo: `${today.getFullYear()}${String(today.getMonth() + 1).padStart(2, '0')}`,
         etapaConst: 'Ejecución',
         subProceso: 'Control',
-        ambito: ambitos[Math.floor(Math.random() * ambitos.length)],
-        actividad: actividades[Math.floor(Math.random() * actividades.length)],
-        periocidad: periodicidades[Math.floor(Math.random() * periodicidades.length)],
+        ambito: ambitos[i % ambitos.length],
+        actividad: actividades[i % actividades.length],
+        periocidad: periodicidades[i % periodicidades.length],
         dia: String(diaNum),
-        diaCompletado: Math.random() > 0.4 ? '1' : '0',
+        diaCompletado: isCompleted ? '1' : '0',
         fecha: date,
         diaSemana: this.getDayOfWeek(date.getDay()),
-        estado: Math.random() > 0.4 ? 'Completado' : 'Pendiente'
+        estado: isCompleted ? 'Completado' : 'Pendiente'
       });
     }
     
     this.activities = mockActivities;
+    this.rawData = mockActivities.map(a => ({
+      IdControl: a.id,
+      Obra: a.obra,
+      Usuario: a.usuario,
+      Periodo: a.periodo,
+      EtapaConst: a.etapaConst,
+      SubProceso: a.subProceso,
+      Ambito: a.ambito,
+      Actividad: a.actividad,
+      Periocidad: a.periocidad,
+      dia: a.dia,
+      diaCompletado: a.diaCompletado
+    }));
     
     // Extraer opciones únicas para los filtros
-    this.projects = Array.from(new Set(this.activities.map(a => a.obra)));
-    this.users = Array.from(new Set(this.activities.map(a => a.usuario)));
-    this.scopes = Array.from(new Set(this.activities.map(a => a.ambito)));
-    this.periodicities = Array.from(new Set(this.activities.map(a => a.periocidad)));
+    this.projects = [...new Set(mockActivities.map(a => a.obra))];
+    this.users = [...new Set(mockActivities.map(a => a.usuario))];
+    this.scopes = [...new Set(mockActivities.map(a => a.ambito))];
+    this.periodicities = [...new Set(mockActivities.map(a => a.periocidad))];
     
     this.processActivities();
   }
   
   /**
-   * Procesa las actividades para actualizar las métricas y gráficos
+   * Procesa las actividades para actualizar las métricas
    */
   processActivities(): void {
     // Aplicar filtros
@@ -485,12 +302,6 @@ export class CheckListDashboardComponent implements OnInit, AfterViewInit {
     
     // Actualizar métricas
     this.updateMetrics();
-    
-    // Generar datos para el heatmap
-    this.generateHeatmapData();
-    
-    // Actualizar datos de los gráficos
-    this.updateChartData();
     
     // Actualizar tabla de actividades recientes (5 más recientes)
     this.recentActivities.data = this.filteredActivities
@@ -552,123 +363,11 @@ export class CheckListDashboardComponent implements OnInit, AfterViewInit {
       : 0;
   }
   
-  /**
-   * Opciones para el gráfico de barras
-   */
-  private getBarChartOptions(): any {
-    // Calcular altura mínima necesaria para el gráfico (30px por proyecto)
-    const projectCount = this.filteredActivities ? new Set(this.filteredActivities.map(a => a.obra)).size : 0;
-    const minHeight = Math.max(projectCount * 30, 300); // Mínimo 300px, o más si hay muchos proyectos
-    
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      indexAxis: 'y',
-      layout: {
-        padding: {
-          top: 0,
-          right: 5,
-          bottom: 0,
-          left: 5
-        }
-      },
-      scales: {
-        x: {
-          beginAtZero: true,
-          stacked: false,
-          grid: {
-            color: 'rgba(255, 255, 255, 0.05)'
-          }
-        },
-        y: {
-          stacked: false,
-          grid: {
-            display: false
-          },
-          ticks: {
-            font: {
-              size: 10
-            }
-          }
-        }
-      },
-      plugins: {
-        legend: {
-          display: true,
-          position: 'top',
-          labels: {
-            usePointStyle: true,
-            boxWidth: 10,
-            padding: 15,
-            font: {
-              size: 11
-            }
-          }
-        },
-        title: {
-          display: true,
-          text: 'Actividades por Proyecto (Ordenados por Tasa de Cumplimiento)',
-          font: {
-            size: 14,
-            weight: 'bold'
-          },
-          padding: {
-            bottom: 15
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context: any) {
-              const label = context.dataset.label || '';
-              const value = context.parsed.x || 0;
-              return `${label}: ${value}`;
-            }
-          }
-        }
-      }
-    };
-  }
+
   
-  /**
-   * Genera una paleta de colores para los gráficos
-   */
-  private generateChartColors(count: number): string[] {
-    const baseColors = [
-      '#1E88E5', '#42A5F5', '#90CAF9',
-      '#26A69A', '#4DB6AC', '#80CBC4',
-      '#7CB342', '#9CCC65', '#C5E1A5',
-      '#FFB300', '#FFD54F', '#FFE082',
-      '#F4511E', '#FF8A65', '#FFAB91'
-    ];
-    
-    const colors: string[] = [];
-    for (let i = 0; i < count; i++) {
-      colors.push(baseColors[i % baseColors.length]);
-    }
-    
-    return colors;
-  }
+
   
-  /**
-   * Ajusta el brillo de un color hexadecimal
-   */
-  private adjustColorBrightness(hex: string, percent: number): string {
-    // Convertir hex a RGB
-    let r = parseInt(hex.substring(1, 3), 16);
-    let g = parseInt(hex.substring(3, 5), 16);
-    let b = parseInt(hex.substring(5, 7), 16);
-    
-    // Ajustar brillo
-    r = Math.min(255, Math.max(0, Math.round(r * (1 + percent / 100))));
-    g = Math.min(255, Math.max(0, Math.round(g * (1 + percent / 100))));
-    b = Math.min(255, Math.max(0, Math.round(b * (1 + percent / 100))));
-    
-    // Convertir de nuevo a hex
-    return '#' + 
-      r.toString(16).padStart(2, '0') + 
-      g.toString(16).padStart(2, '0') + 
-      b.toString(16).padStart(2, '0');
-  }
+
   
   /**
    * Maneja el cambio en los filtros y actualiza los datos

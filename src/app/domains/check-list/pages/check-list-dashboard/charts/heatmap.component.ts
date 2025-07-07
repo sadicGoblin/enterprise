@@ -1,6 +1,21 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
+
+// Interfaz para los datos raw
+interface CheckListRawItem {
+  IdControl: string;
+  Obra: string;
+  Usuario: string;
+  Periodo: string;
+  EtapaConst: string;
+  SubProceso: string;
+  Ambito: string;
+  Actividad: string;
+  Periocidad: string;
+  dia: string;
+  diaCompletado: string;
+}
 
 @Component({
   selector: 'app-heatmap',
@@ -11,8 +26,10 @@ import { MatCardModule } from '@angular/material/card';
   ],
   template: `
     <mat-card class="chart-card heatmap-card">
+      <mat-card-header>
+        <mat-card-title>Distribución por Periodicidad y Ámbito</mat-card-title>
+      </mat-card-header>
       <mat-card-content>
-        <h3>Distribución por Periodicidad y Ámbito</h3>
         <div class="heatmap-container">
           <div class="heatmap-table">
             <table>
@@ -39,26 +56,32 @@ import { MatCardModule } from '@angular/material/card';
   `,
   styles: [`
     .chart-card {
-      background: rgba(30, 30, 30, 0.5);
+      background: linear-gradient(135deg, rgba(30, 30, 40, 0.9), rgba(20, 20, 30, 0.95));
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-      border-radius: 8px;
+      border-radius: 5px;
       height: 100%;
+      overflow: hidden;
     }
     
-    .heatmap-card h3 {
-      font-size: 16px;
-      font-weight: normal;
+    .mat-card-header {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding-bottom: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .mat-card-title {
       color: #e0e0e0;
-      margin-top: 0;
-      margin-bottom: 1rem;
-      text-align: center;
+      font-size: 1.1rem;
+      font-weight: 500;
+      margin: 0;
     }
     
     .heatmap-container {
       width: 100%;
       overflow-x: auto;
+      padding: 8px 0;
     }
     
     .heatmap-table {
@@ -104,11 +127,62 @@ import { MatCardModule } from '@angular/material/card';
     }
   `]
 })
-export class HeatmapComponent {
-  @Input() heatmapData: Record<string, Record<string, number>> = {};
-  @Input() periodicities: string[] = [];
-  @Input() scopes: string[] = [];
+export class HeatmapComponent implements OnChanges {
+  @Input() rawData: CheckListRawItem[] = [];
+  @Input() selectedProject: string = '';
+  @Input() selectedUser: string = '';
+  @Input() selectedScope: string = '';
   
+  // Datos procesados internamente
+  public heatmapData: Record<string, Record<string, number>> = {};
+  public periodicities: string[] = [];
+  public scopes: string[] = [];
+  
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['rawData'] || changes['selectedProject'] || changes['selectedUser'] || changes['selectedScope']) {
+      this.processData();
+    }
+  }
+
+  private processData(): void {
+    // Filtrar datos según los filtros seleccionados
+    let filteredData = [...this.rawData];
+    
+    if (this.selectedProject) {
+      filteredData = filteredData.filter(item => item.Obra === this.selectedProject);
+    }
+    
+    if (this.selectedUser) {
+      filteredData = filteredData.filter(item => item.Usuario === this.selectedUser);
+    }
+    
+    if (this.selectedScope) {
+      filteredData = filteredData.filter(item => item.Ambito === this.selectedScope);
+    }
+    
+    // Extraer ámbitos únicos
+    this.scopes = Array.from(new Set(filteredData.map(item => item.Ambito)));
+    
+    // Extraer periodicidades únicas
+    this.periodicities = Array.from(new Set(filteredData.map(item => item.Periocidad)));
+    
+    // Inicializar la estructura del heatmap
+    this.heatmapData = {};
+    this.periodicities.forEach(periodicity => {
+      this.heatmapData[periodicity] = {};
+      this.scopes.forEach(scope => {
+        this.heatmapData[periodicity][scope] = 0;
+      });
+    });
+    
+    // Rellenar el heatmap con los conteos
+    filteredData.forEach(item => {
+      if (this.heatmapData[item.Periocidad] && this.heatmapData[item.Periocidad][item.Ambito] !== undefined) {
+        this.heatmapData[item.Periocidad][item.Ambito]++;
+      }
+    });
+  }
+
   getHeatmapColor(value: number): string {
     // Si no hay valor, devolver un color neutral
     if (value === 0) {

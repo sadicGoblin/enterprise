@@ -62,14 +62,19 @@
     <div class="charts-row">
       <!-- Gráfico de dona (Total Actividades: Asignadas vs Completadas) -->
       <app-donut-chart 
-        [chartData]="donutChartData"
+        [rawData]="rawData"
+        [selectedProject]="selectedProject"
+        [selectedUser]="selectedUser"
+        [selectedScope]="selectedScope"
         @fadeIn>
       </app-donut-chart>
       
       <!-- Gráfico de barras (cumplimiento por proyecto) -->
       <app-bar-chart 
-        [projects]="barChartData.projects"
-        [completionRates]="barChartData.completionRates"
+        [rawData]="rawData"
+        [selectedProject]="selectedProject"
+        [selectedUser]="selectedUser"
+        [selectedScope]="selectedScope"
         @fadeIn>
       </app-bar-chart>
     </div>
@@ -77,8 +82,10 @@
     <!-- Gráfico de línea (cumplimiento diario) - ocupa todo el ancho -->
     <div class="charts-row full-width-chart">
       <app-line-chart 
-        [labels]="lineChartData.labels"
-        [completionData]="lineChartData.completionData"
+        [rawData]="rawData"
+        [selectedProject]="selectedProject"
+        [selectedUser]="selectedUser"
+        [selectedScope]="selectedScope"
         @fadeIn>
       </app-line-chart>
     </div>
@@ -87,9 +94,10 @@
     <div class="charts-row">
       <!-- Heatmap (distribución por periodicidad y ámbito) -->
       <app-heatmap 
-        [heatmapData]="activityHeatmapData"
-        [periodicities]="periodicities"
-        [scopes]="scopes"
+        [rawData]="rawData"
+        [selectedProject]="selectedProject"
+        [selectedUser]="selectedUser"
+        [selectedScope]="selectedScope"
         @fadeIn>
       </app-heatmap>
       

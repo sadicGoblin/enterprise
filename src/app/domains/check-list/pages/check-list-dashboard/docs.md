@@ -38,6 +38,23 @@ El componente está organizado en los siguientes archivos:
 - Indicadores visuales del estado de cada actividad
 - Optimizada para pantallas de diferentes tamaños
 
+## Estructura de Datos
+
+### Modelo de Datos y Métricas de Cumplimiento
+
+Los datos utilizados por el dashboard provienen del archivo `mock-dash.json` y contienen la siguiente estructura clave:
+
+- **dia**: Representa la asignación de una actividad a un usuario para su realización en una fecha específica. Este campo es fundamental ya que indica las tareas programadas.
+
+- **diaCompletado**: Campo booleano (0 o 1) que indica si el usuario realizó la actividad asignada. Un valor de "1" significa que la actividad fue completada, mientras que "0" indica que no se completó.
+
+Estos campos son críticos para el cálculo del cumplimiento de actividades mostrado en los diferentes gráficos del dashboard. Los componentes gráficos procesan estos valores para visualizar:
+
+- Porcentaje de cumplimiento general
+- Cumplimiento por proyecto
+- Tendencia de cumplimiento diario
+- Distribución de actividades por ámbito y periodicidad
+
 ## Evolución del Diseño
 
 ### Fase 1: Implementación Inicial
