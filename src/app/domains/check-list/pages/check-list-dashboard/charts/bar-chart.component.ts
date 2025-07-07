@@ -151,33 +151,30 @@ export class BarChartComponent implements OnInit, AfterViewInit, OnChanges {
   }
 
   ngAfterViewInit(): void {
-    // Dar un breve tiempo para que el DOM se estabilice
+    // Dar tiempo al DOM para renderizarse completamente
     setTimeout(() => {
-      if (this.rawData && this.rawData.length > 0) {
+      if (this.rawData.length > 0) {
         this.initChart();
       }
-      
-      // Observar cambios en el tamaño del contenedor para redibujar el gráfico
-      if (typeof ResizeObserver !== 'undefined') {
-        const resizeObserver = new ResizeObserver(() => {
-          if (this.chart) {
-            this.chart.resize();
-          }
-        });
-        
-        if (this.chartCanvas && this.chartCanvas.nativeElement) {
-          resizeObserver.observe(this.chartCanvas.nativeElement);
-        }
-      }
-    }, 100);
+    }, 200);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['rawData'] || changes['selectedProject'] || changes['selectedUser'] || changes['selectedScope']) {
-      this.processData();
-      if (this.chart) {
-        this.updateChart();
-      }
+    if (
+      changes['rawData'] || 
+      changes['selectedProject'] || 
+      changes['selectedUser'] || 
+      changes['selectedScope']
+    ) {
+      // Dar tiempo para que los cambios se propaguen
+      setTimeout(() => {
+        this.processData();
+        if (this.chart) {
+          this.updateChart();
+        } else {
+          this.initChart();
+        }
+      }, 100);
     }
   }
 
@@ -420,11 +417,13 @@ export class BarChartComponent implements OnInit, AfterViewInit, OnChanges {
         
         if (chart.canvas.parentElement) {
           chart.canvas.parentElement.style.height = `${newHeight}px`;
+          chart.canvas.parentElement.style.minHeight = `${newHeight}px`;
+          chart.canvas.style.height = `${newHeight}px`;
           
           // Establecer un timeout para permitir que el DOM se actualice
           setTimeout(() => {
             chart.resize();
-          }, 10);
+          }, 100);
         }
       }
     };
