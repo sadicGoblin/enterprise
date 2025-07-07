@@ -1,0 +1,108 @@
+<div class="tab-content">
+  <app-custom-select
+    label="Proyecto"
+    [formControl]="projectControl"
+    [parameterType]="projectParameterType"
+    [loadFromApi]="true"
+    [customApiEndpoint]="projectApiEndpoint"
+    [customApiRequestBody]="projectApiRequestBody"
+    [customOptionValueKey]="projectOptionValue"
+    [customOptionLabelKey]="projectOptionLabel"
+    (selectionChange)="onProjectSelectionChange($event)"
+    placeholder="Seleccionar Proyecto"
+    [required]="true"
+    appearance="fill"
+  ></app-custom-select>
+
+  <!-- Form to add new stage -->
+  <div class="stage-form-container" *ngIf="projectControl.value">
+    <div class="form-row input-row">
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>Código Nueva Etapa</mat-label>
+        <input
+          matInput
+          [(ngModel)]="newStageCode"
+          name="newStageCode"
+          placeholder="Ej: ET001"
+        />
+      </mat-form-field>
+      <mat-form-field appearance="fill" class="form-field">
+        <mat-label>Nombre Nueva Etapa</mat-label>
+        <input
+          matInput
+          [(ngModel)]="newStageName"
+          name="newStageName"
+          placeholder="Ej: Excavación"
+        />
+      </mat-form-field>
+    </div>
+    <div class="form-row button-row action-buttons-right">
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="addStage()"
+        [disabled]="!newStageCode || !newStageName"
+      >
+        {{ editingStage ? "Actualizar Etapa" : "Agregar Etapa" }}
+      </button>
+      <button
+        mat-stroked-button
+        color="warn"
+        (click)="cancelEditStage()"
+        *ngIf="editingStage"
+        class="ml-2"
+      >
+        Cancelar Edición
+      </button>
+    </div>
+  </div>
+
+  <!-- Section for listing stages -->
+  <div class="custom-params-section" *ngIf="projectControl.value">
+    <div class="section-header">
+      <h3>Listado de Etapas Constructivas del Proyecto</h3>
+    </div>
+
+    <div class="table-controls">
+      <mat-form-field appearance="fill" class="search-field">
+        <mat-label>Buscar Etapa</mat-label>
+        <input
+          matInput
+          (keyup)="onSearchStages()"
+          placeholder="Por Código o Nombre"
+          [(ngModel)]="stageSearchKey"
+          name="stageSearchKey"
+        />
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <div *ngIf="isLoadingStages" class="loading-state">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Cargando etapas...</p>
+    </div>
+
+    <app-data-table
+      *ngIf="!isLoadingStages"
+      [columns]="stageTableColumns"
+      [data]="filteredStages"
+      [actionButtons]="stageActionButtons"
+      [pageSize]="stageTablePageSize"
+      [pageSizeOptions]="stageTablePageSizeOptions"
+      (rowAction)="
+        handleStageTableAction({ action: $event.action, row: $event.item })
+      "
+      [striped]="true"
+      class="mat-elevation-z2"
+    >
+    </app-data-table>
+    <!-- DataTableComponent handles its own 'no data' message -->
+  </div>
+
+  <div *ngIf="!projectControl.value && !isLoadingStages" class="empty-state">
+    <mat-icon>info_fill</mat-icon>
+    <p>
+      Por favor, seleccione un proyecto para ver o agregar etapas constructivas.
+    </p>
+  </div>
+</div>

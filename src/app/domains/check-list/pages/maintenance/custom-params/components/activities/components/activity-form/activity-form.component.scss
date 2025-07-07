@@ -1,0 +1,28 @@
+.activity-form {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+}
+
+.form-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+}
+
+.form-field {
+  width: 100%;
+}
+
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+  gap: 8px;
+}
+
+.action-buttons-right {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}

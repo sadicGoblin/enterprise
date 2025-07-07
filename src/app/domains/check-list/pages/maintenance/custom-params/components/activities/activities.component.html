@@ -1,0 +1,21 @@
+<div class="container">
+  <div class="row">
+    <div class="col">
+        <app-activity-form 
+          [isEditing]="!isAddMode"
+          [activityToEdit]="selectedActivity"
+          [referenceData]="(referenceData$ | async) || emptyReferenceData"
+          (saveActivity)="handleSaveActivity($event)"
+          (cancelEdit)="handleCancelEdit()"
+          (scopeChange)="handleScopeChange($event)">
+        </app-activity-form>
+    </div>
+    
+    <app-activities-table 
+      [activities]="(filteredActivities$ | async) || []"
+      [isLoading]="(loading$ | async) || false"
+      (editActivity)="handleEditActivity($event)"
+      (deleteActivity)="handleDeleteActivity($event)">
+    </app-activities-table>
+  </div>
+</div>

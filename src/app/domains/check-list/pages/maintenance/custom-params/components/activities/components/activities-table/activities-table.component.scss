@@ -1,0 +1,52 @@
+.table-container {
+  position: relative;
+  min-height: 200px;
+  width: 100%;
+  overflow: auto;
+}
+
+.full-width-table {
+  width: 100%;
+}
+
+.spinner-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.7);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.no-records {
+  padding: 20px;
+  text-align: center;
+  font-style: italic;
+  color: #666;
+}
+
+// Estilos específicos para las columnas de acción separadas
+.action-cell {
+  text-align: center !important;
+  padding: 0.2rem !important;
+  width: 40px;
+}
+
+// Estilos específicos para cada columna de acción
+.mat-column-edit, .mat-column-delete {
+  width: 4%;
+  text-align: center;
+}
+
+// Aseguramos que los botones en las celdas de acción no se redimensionen
+td.action-cell button {
+  padding: 0;
+  margin: 0;
+  flex-shrink: 0;
+  flex-grow: 0;
+  min-width: 32px;
+}

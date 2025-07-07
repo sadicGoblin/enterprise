@@ -1,0 +1,209 @@
+.tab-content {
+    margin-top: 40px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  
+  mat-form-field {
+    width: 300px;
+  }
+  
+  .button-row {
+    display: flex;
+    margin-top: -20px;
+    gap: 1rem;
+  }
+  
+  .full-width-table {
+    width: 100%;
+  }
+  
+  .mat-column-edit, .mat-column-delete {
+    width: 4%;
+    text-align: center;
+  }
+  
+  .action-cell {
+    text-align: center !important;
+    padding: 0.2rem !important;
+  }
+  
+  .table-container {
+    position: relative;
+    min-height: 150px; 
+  }
+  
+  .spinner-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.7); 
+    z-index: 10;
+  }
+  
+  .table-controls {
+    display: flex;
+    justify-content: flex-start;
+    padding: 8px 0;
+  
+    .search-field {
+      width: 300px;
+      font-size: 0.9em;
+  
+      .mat-mdc-form-field-subscript-wrapper {
+          display: none;
+      }
+      .mat-mdc-text-field-wrapper {
+          height: 48px;
+      }
+    }
+  }
+  
+  .empty-state-message {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100px; 
+    color: grey;
+    font-style: italic;
+  }
+  
+  table {
+    margin-top: 20px;
+  }
+  
+  .container {
+    padding: 20px;
+    margin-top: 2rem;
+  }
+  
+  mat-card {
+    padding: 1rem;
+    margin-bottom: 2rem;
+  }
+  
+  .stage-form-container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .selection-row {
+    display: flex;
+    gap: 16px;
+    width: 100%;
+  
+    > app-custom-select {
+      flex: 1;
+    }
+  }
+  
+  .form-row {
+    display: flex;
+    width: 100%;
+    gap: 1rem;
+  }
+  
+  .input-row {
+    justify-content: flex-start;
+  
+    .form-field {
+      flex-grow: 1;
+      max-width: 100%;
+    }
+  }
+  
+  .action-buttons-right {
+    justify-content: flex-end;
+  }
+  
+  .tab-content {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .custom-params-section {
+    width: 100%;
+  }
+  .ambitos-form-container {
+    display: flex;
+    width: 100%;
+    margin-bottom: 20px;
+    align-items: center;
+    justify-content: space-between;
+    
+    .ambitos-inputs {
+      display: flex;
+      gap: 16px;
+      
+      mat-form-field {
+        width: 240px;
+      }
+    }
+    
+    .ambitos-buttons {
+      display: flex;
+      gap: 8px;
+      margin-left: 16px;
+    }
+  }
+  
+  // Make sure tables take full width
+  .full-width-table {
+    width: 100% !important;
+  }
+  
+  // Ensure action buttons stay horizontal
+  .mat-column-actions {
+    width: 120px !important;
+    min-width: 120px !important;
+    text-align: center !important;
+  }
+  
+  // Empty state styling
+  .empty-state {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 0;
+    color: rgba(0, 0, 0, 0.54);
+    
+    mat-icon {
+      font-size: 48px;
+      height: 48px;
+      width: 48px;
+      margin-bottom: 16px;
+    }
+    
+    p {
+      font-size: 16px;
+      text-align: center;
+    }
+  }
+  
+  // Loading state styling
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 0;
+    
+    p {
+      margin-top: 16px;
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.54);
+    }
+  }
+  

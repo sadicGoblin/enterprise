@@ -127,10 +127,62 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
         apiCall = this.proxyService.post<any>(this.customApiEndpoint, this.customApiRequestBody).pipe(
           map((response: any): SelectOption[] => { // Explicit return type for map callback
             if (response && response.success && response.data && Array.isArray(response.data)) {
-              return response.data.map((item: any) => ({
-                value: item[this.customOptionValueKey],
-                label: item[this.customOptionLabelKey]
-              } as SelectOption));
+              console.log(`CustomSelect: API completa para ${this.label}:`, response);
+              console.log(`CustomSelect: Primer elemento de datos para ${this.label}:`, response.data[0]);
+              console.log(`CustomSelect: Buscando valores usando las claves [${this.customOptionValueKey}] y [${this.customOptionLabelKey}]`);
+              
+              // Detectar la estructura real de los datos para debugging
+              if (response.data.length > 0) {
+                const firstItem = response.data[0];
+                const availableKeys = Object.keys(firstItem);
+                console.log(`CustomSelect: Claves disponibles en los datos: ${availableKeys.join(', ')}`);
+              }
+              
+              return response.data.map((item: any) => {
+                // Buscar la propiedad independiente de mayúsculas/minúsculas
+                let value: any = null;
+                let label: string = '';
+                
+                // Intentar encontrar la clave en el objeto independiente de la capitalización
+                for (const key of Object.keys(item)) {
+                  if (key.toLowerCase() === this.customOptionValueKey.toLowerCase()) {
+                    value = item[key];
+                    break;
+                  }
+                }
+                
+                // Intentar encontrar la etiqueta
+                for (const key of Object.keys(item)) {
+                  if (key.toLowerCase() === this.customOptionLabelKey.toLowerCase()) {
+                    label = item[key];
+                    break;
+                  }
+                }
+                
+                console.log(`CustomSelect: Mapeando item con ${this.customOptionValueKey}=${value}, ${this.customOptionLabelKey}=${label}`);
+                
+                if (value === undefined || value === null) {
+                  // console.warn(`CustomSelect: Valor no encontrado para ${this.label} usando clave ${this.customOptionValueKey}`, item);
+                  // Intento de recuperación - usar IdSubParam o IdDet si están disponibles
+                  if (item.IdSubParam !== undefined) {
+                    value = item.IdSubParam;
+                    // console.log(`CustomSelect: Recuperando con IdSubParam=${value}`);
+                  } else if (item.IdDet !== undefined) {
+                    value = item.IdDet;
+                    // console.log(`CustomSelect: Recuperando con IdDet=${value}`);
+                  }
+                }
+                
+                return {
+                  value: value,
+                  label: label,
+                  // Guardar propiedades específicas que necesitamos para el mapeo
+                  idSubParam: item.IdSubParam, 
+                  idDet: item.IdDet,
+                  // Guardar el item original para debugging y referencia
+                  originalItem: item 
+                } as any;
+              });
             } else {
               console.error(`CustomSelect: Custom API response for ${this.parameterType} is not in the expected format or call failed.`, response);
               throw new Error(`Respuesta de API personalizada inválida para ${this.label}`);
