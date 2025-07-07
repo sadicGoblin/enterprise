@@ -12,10 +12,19 @@ import { CustomSelectComponent, SelectOption, ParameterType } from '../../../../
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Observable, Subscription, catchError, finalize, map, of } from 'rxjs';
 import { SharedDataService } from '../../../../../services/shared-data.service';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { ProxyService } from '../../../../../../../core/services/proxy.service';
 
-// Define interfaces
-export interface ActivityItem {
+// Interfaces para respuestas de API
+interface ApiActivityResponse {
+  success: boolean;
+  data: any[];
+  msg?: string;
+  message?: string;
+}
+
+// Interfaces para items de actividad
+interface ActivityItem {
   id?: string | number;
   code: string;
   name: string;
@@ -23,12 +32,54 @@ export interface ActivityItem {
   category: string;
   parameter: string;
   document: string;
-  idAmbito?: string;
-  idFrequency?: string;
-  idCategory?: string;
-  idParameter?: string;
-  idDocument?: string;
+  idAmbito: string;
+  idFrequency: string;
+  idCategory: string;
+  idParameter: string;
+  idDocument: string;
 }
+
+// Interfaces para los datos de referencia
+interface FrequencyOption {
+  id?: string | number;
+  IdDet?: string | number;
+  IdSubParam?: string | number;
+  Nombre?: string;
+  nombre?: string;
+  [key: string]: any; // Para otras propiedades que pueda contener
+}
+
+interface CategoryOption {
+  id?: string | number;
+  IdDet?: string | number;
+  IdSubParam?: string | number;
+  Nombre?: string;
+  nombre?: string;
+  [key: string]: any;
+}
+
+interface ParameterOption {
+  id?: string | number;
+  idDetalle?: string | number;
+  IdParametro?: string | number;
+  idParametro?: string | number;
+  Nombre?: string;
+  nombre?: string;
+  [key: string]: any;
+}
+
+interface DocumentOption {
+  id?: string | number;
+  idBiblioteca?: string | number;
+  IdDocumento?: string | number;
+  idDocumento?: string | number;
+  Nombre?: string;
+  nombre?: string;
+  nombreArchivo?: string;
+  [key: string]: any;
+}
+
+
 
 @Component({
   selector: 'app-activities',
@@ -116,9 +167,16 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
   // Subscription para cambios de ámbitos
   private ambitosSubscription: Subscription | undefined;
   
+  // Datos de referencia para mapear IDs a nombres
+  private frequencyOptions: FrequencyOption[] = [];
+  private categoryOptions: CategoryOption[] = [];
+  private parameterOptions: ParameterOption[] = [];
+  private documentOptions: DocumentOption[] = [];
+  
   constructor(
     private proxyService: ProxyService,
-    private sharedDataService: SharedDataService
+    private sharedDataService: SharedDataService,
+    private snackBar: MatSnackBar
   ) {}
   
   ngOnInit(): void {
@@ -127,6 +185,9 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
       console.log('🔄 Recibida notificación de actualización de ámbitos en activities.component');
       this.refreshScopeOptions();
     });
+    
+    // Cargar datos de referencia para los mapeos
+    this.loadReferenceData();
   }
   
   ngOnDestroy(): void {
@@ -238,6 +299,180 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
     this.loadActivitiesByScope(scopeId);
   }
   
+  // La implementación de loadActivitiesByScope se ha movido más abajo en el código
+
+  /**
+   * Cargar datos de referencia para los mapeos
+   */
+  loadReferenceData(): void {
+    // Cargar datos de frecuencia (periodicidad)
+    this.proxyService.post<any>('/ws/SubParametrosSvcImpl.php', this.frequencyApiRequestBody)
+      .pipe(
+        map(response => {
+          if (response && response.success && Array.isArray(response.data)) {
+            // Asegurar que cada objeto tenga las propiedades correctas
+            this.frequencyOptions = response.data.map((item: any): FrequencyOption => ({
+              ...item,
+              // Asegurar consistencia de propiedad de valor
+              id: item.IdDet || item.IdSubParam || item.id,
+              // Mantener propiedades originales para compatibilidad con diferentes métodos
+              IdDet: item.IdDet || item.id,
+              IdSubParam: item.IdSubParam || item.IdDet || item.id,
+              Nombre: item.Nombre || item.nombre
+            }));
+            console.log('📚 Datos de frecuencia cargados:', this.frequencyOptions);
+          }
+          return response;
+        }),
+        catchError(error => {
+          console.error('❌ Error al cargar datos de frecuencia:', error);
+          return of(null);
+        })
+      ).subscribe();
+    
+    // Cargar datos de categoría
+    this.proxyService.post<any>('/ws/SubParametrosSvcImpl.php', this.categoryApiRequestBody)
+      .pipe(
+        map(response => {
+          if (response && response.success && Array.isArray(response.data)) {
+            // Asegurar que cada objeto tenga las propiedades correctas
+            this.categoryOptions = response.data.map((item: any): CategoryOption => ({
+              ...item,
+              // Asegurar consistencia de propiedad de valor
+              id: item.IdDet || item.IdSubParam || item.id,
+              // Mantener propiedades originales para compatibilidad con diferentes métodos
+              IdDet: item.IdDet || item.id,
+              IdSubParam: item.IdSubParam || item.IdDet || item.id,
+              Nombre: item.Nombre || item.nombre
+            }));
+            console.log('📚 Datos de categoría cargados:', this.categoryOptions);
+          }
+          return response;
+        }),
+        catchError(error => {
+          console.error('❌ Error al cargar datos de categoría:', error);
+          return of(null);
+        })
+      ).subscribe();
+    
+    // Cargar datos de parámetro
+    this.proxyService.post<any>('/ws/ParametrosSvcImpl.php', this.parameterApiRequestBody)
+      .pipe(
+        map(response => {
+          if (response && response.success && Array.isArray(response.data)) {
+            // Asegurar que cada objeto tenga la propiedad IdParametro que espera el selector
+            this.parameterOptions = response.data.map((item: any): ParameterOption => ({
+              ...item,
+              // Asegurar que exista la propiedad que espera el selector
+              IdParametro: item.idDetalle || item.IdParametro || item.idParametro || item.id,
+              // Asegurar consistencia de nombres de propiedad
+              id: item.idDetalle || item.IdParametro || item.idParametro || item.id,
+              idDetalle: item.idDetalle || item.id,
+              Nombre: item.nombre || item.Nombre
+            }));
+            console.log('📚 Datos de parámetro cargados y normalizados:', this.parameterOptions);
+          }
+          return response;
+        }),
+        catchError(error => {
+          console.error('❌ Error al cargar datos de parámetro:', error);
+          return of(null);
+        })
+      ).subscribe();
+    
+    // Cargar datos de documento
+    this.proxyService.post<any>('/ws/BibliotecaSvcImpl.php', this.documentApiRequestBody)
+      .pipe(
+        map(response => {
+          if (response && response.success && Array.isArray(response.data)) {
+            // Asegurar que cada objeto tenga la propiedad IdDocumento que espera el selector
+            this.documentOptions = response.data.map((item: any): DocumentOption => ({
+              ...item,
+              // Asegurar que exista la propiedad que espera el selector
+              IdDocumento: item.idBiblioteca || item.IdDocumento || item.idDocumento || item.id,
+              // Asegurar consistencia de nombres de propiedad
+              id: item.idBiblioteca || item.IdDocumento || item.idDocumento || item.id,
+              idBiblioteca: item.idBiblioteca || item.id,
+              Nombre: item.nombreArchivo || item.Nombre || item.nombre
+            }));
+            console.log('📚 Datos de documento cargados y normalizados:', this.documentOptions);
+          }
+          return response;
+        }),
+        catchError(error => {
+          console.error('❌ Error al cargar datos de documento:', error);
+          return of(null);
+        })
+      ).subscribe();
+  }
+
+  /**
+   * Obtener el nombre de la frecuencia según su ID
+   */
+  getFrequencyNameById(id: string): string {
+    // Si el id es 0 o null, retornamos un texto descriptivo
+    if (!id || id === '0') {
+      return 'Sin periodicidad';
+    }
+    
+    const frequency = this.frequencyOptions.find(option => option.IdDet === id || option.IdSubParam === id);
+    return frequency ? (frequency.Nombre || frequency.nombre || `Periodicidad ${id}`) : `Periodicidad ${id}`;
+  }
+
+  /**
+   * Obtener el nombre de la categoría según su ID
+   */
+  getCategoryNameById(id: string): string {
+    // Si el id es 0 o null, retornamos un texto descriptivo
+    if (!id || id === '0') {
+      return 'Sin categoría';
+    }
+    
+    const category = this.categoryOptions.find(option => option.IdDet === id || option.IdSubParam === id);
+    return category ? (category.Nombre || category.nombre || `Categoría ${id}`) : `Categoría ${id}`;
+  }
+
+  /**
+   * Obtener el nombre del parámetro según su ID
+   */
+  getParameterNameById(id: string): string {
+    // Si el id es 0 o null, retornamos un texto descriptivo
+    if (!id || id === '0') {
+      return 'Sin parámetro asociado';
+    }
+    
+    // Buscar usando la propiedad IdDet que es donde vienen los id como "102", "210", etc.
+    const parameter = this.parameterOptions.find(option => 
+      option["IdDet"] === id || 
+      option["IdParametro"] === id || 
+      option.idParametro === id || 
+      option.idDetalle === id
+    );
+    
+    console.log(`🔍 Buscando parámetro con id=${id}, encontrado:`, parameter);
+    return parameter ? (parameter.Nombre || parameter.nombre || `Parámetro ${id}`) : `Parámetro ${id}`;
+  }
+
+  /**
+   * Obtener el nombre del documento según su ID
+   */
+  getDocumentNameById(id: string): string {
+    // Si el id es 0 o null, retornamos un texto descriptivo
+    if (!id || id === '0') {
+      return 'No Asociado';
+    }
+    
+    // Buscar usando la propiedad IdDocumento como se define en el custom-select
+    const document = this.documentOptions.find(option => 
+      option.IdDocumento === id || 
+      option.idDocumento === id || 
+      option.idBiblioteca === id
+    );
+    
+    console.log(`🔍 Buscando documento con id=${id}, encontrado:`, document);
+    return document ? (document.Nombre || document.nombreArchivo || `Documento ${id}`) : `Documento ${id}`;
+  }
+
   /**
    * Load activities by scope ID
    */
@@ -247,7 +482,6 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
       return;
     }
     
-    // If we already have activities for this scope in cache, use them
     if (this.activitiesByScope[scopeId]) {
       this.activities = [...this.activitiesByScope[scopeId]];
       return;
@@ -255,76 +489,100 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
     
     this.isLoadingActivities = true;
     
-    // TODO: Replace with actual API call to load activities by scope
-    // For now, just simulate an API call with setTimeout
-    setTimeout(() => {
-      // Example data - in a real app, this would come from an API
-      const mockActivities: ActivityItem[] = [
-        {
-          id: '1',
-          code: 'ACT001',
-          name: 'Revisión de Estructuras',
-          frequency: 'Semanal',
-          category: 'Inspección',
-          parameter: 'Seguridad',
-          document: 'Manual de Inspección',
-          idAmbito: scopeId,
-          idFrequency: '1',
-          idCategory: '1',
-          idParameter: '1',
-          idDocument: '1'
-        },
-        {
-          id: '2',
-          code: 'ACT002',
-          name: 'Limpieza de Equipos',
-          frequency: 'Diaria',
-          category: 'Mantenimiento',
-          parameter: 'Operatividad',
-          document: 'Procedimiento de Limpieza',
-          idAmbito: scopeId,
-          idFrequency: '2',
-          idCategory: '2',
-          idParameter: '2',
-          idDocument: '2'
-        }
-      ];
-      
-      // Store in cache and update current list
-      this.activitiesByScope[scopeId] = mockActivities;
-      this.activities = [...mockActivities];
-      this.isLoadingActivities = false;
-    }, 1000);
+    // Preparar el payload para consultar actividades por ámbito
+    const payload = {
+      "caso": "ConsultaActividades",
+      "idActividades": 0,
+      "idAmbito": parseInt(scopeId, 10),
+      "codigo": 0,
+      "nombre": null,
+      "idPeriocidad": 0,
+      "idCategoriaActividad": 0,
+      "idParametroAsociado": 0,
+      "idBiblioteca": 0
+    };
     
-    // In a real application, replace the above with:
-    /*
-    this.someService.getActivitiesByScope(scopeId).pipe(
-      map(response => {
-        this.activitiesByScope[scopeId] = response;
-        this.activities = [...response];
-      }),
-      catchError(error => {
-        console.error('Error loading activities:', error);
-        this.activitiesByScope[scopeId] = [];
-        this.activities = [];
-        return of(null);
-      }),
-      finalize(() => {
-        this.isLoadingActivities = false;
-      })
-    ).subscribe();
-    */
+    console.log('🔍 Consultando actividades para el ámbito:', scopeId, 'con payload:', payload);
+    
+    this.proxyService.post<ApiActivityResponse>('/ws/AmbitosSvcImpl.php', payload)
+      .pipe(
+        map(response => {
+          console.log('📥 Respuesta de consulta de actividades:', response);
+          if (response && response.success && Array.isArray(response.data)) {
+            const activities = response.data.map(item => {
+              // Mapear los IDs a sus nombres usando los métodos auxiliares
+              const frequencyName = this.getFrequencyNameById(item.idPeriocidad);
+              const categoryName = this.getCategoryNameById(item.idCategoriaActividad);
+              const parameterName = this.getParameterNameById(item.idParametroAsociado);
+              const documentName = this.getDocumentNameById(item.idBiblioteca);
+              
+              return {
+                id: item.idActividades,
+                code: item.codigo,
+                name: item.nombre,
+                frequency: frequencyName,  // Nombre en lugar de ID
+                category: categoryName,    // Nombre en lugar de ID
+                parameter: parameterName,  // Nombre en lugar de ID
+                document: documentName,    // Nombre en lugar de ID
+                idAmbito: item.idAmbito,
+                idFrequency: item.idPeriocidad,
+                idCategory: item.idCategoriaActividad,
+                idParameter: item.idParametroAsociado,
+                idDocument: item.idBiblioteca
+              };
+            });
+            
+            console.log(`✅ ${activities.length} actividades procesadas para el ámbito ${scopeId}:`, activities);
+            return activities;
+          } else {
+            console.warn('⚠️ No se encontraron actividades para este ámbito o hay un error en la respuesta');
+            return [];
+          }
+        }),
+        catchError(error => {
+          console.error('❌ Error al cargar actividades:', error);
+          this.snackBar.open(
+            `Error al cargar actividades: ${error.message || 'Error de conexión'}`,
+            'Cerrar',
+            { duration: 5000, panelClass: ['error-snackbar'] }
+          );
+          return of([]);
+        }),
+        finalize(() => {
+          this.isLoadingActivities = false;
+        })
+      )
+      .subscribe(activities => {
+        // Guardar en caché y actualizar la lista actual
+        this.activitiesByScope[scopeId] = activities;
+        this.activities = [...activities];
+      });
   }
-  
+
   /**
    * Add or update an activity
    */
   addActivity(): void {
+    // Validar que todos los campos requeridos estén completos
     if (!this.selectedScopeId || !this.activityCode || !this.activityName) {
+      this.snackBar.open('Faltan campos requeridos: Ámbito, Código y Nombre son obligatorios', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
       console.error('Missing required fields for activity');
       return;
     }
-    
+
+    if (!this.selectedFrequency || !this.selectedCategory || !this.selectedParameter || !this.selectedDocument) {
+      this.snackBar.open('Faltan campos requeridos: Frecuencia, Categoría, Parámetro y Documento son obligatorios', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
+      console.error('Missing required fields for activity');
+      return;
+    }
+  
+    // Datos para mostrar en la interfaz
     const newActivity: ActivityItem = {
       code: this.activityCode,
       name: this.activityName,
@@ -338,21 +596,75 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
       idParameter: this.selectedParameter ? this.selectedParameter.id : '',
       idDocument: this.selectedDocument ? this.selectedDocument.id : ''
     };
-    
+  
     if (this.activityBeingEdited && this.currentEditingIndex !== null) {
-      // Update existing activity
+      // Actualizar actividad existente (no implementado aún en la API)
       this.activities[this.currentEditingIndex] = { ...newActivity };
       if (this.selectedScopeId) {
         this.activitiesByScope[this.selectedScopeId] = [...this.activities];
       }
       this.resetActivityForm();
     } else {
-      // Add new activity
-      this.activities.push({ ...newActivity });
-      if (this.selectedScopeId) {
-        this.activitiesByScope[this.selectedScopeId] = [...this.activities];
-      }
-      this.resetActivityForm();
+      // Agregar nueva actividad con llamada a API
+      // Preparar el payload para la API
+      const apiPayload = {
+        caso: 'CreaActividad',
+        idActividades: 0,
+        idAmbito: parseInt(this.selectedScopeId, 10),
+        codigo: parseInt(this.activityCode, 10),
+        nombre: this.activityName,
+        idPeriocidad: parseInt(this.selectedFrequency.id, 10) || 0,
+        idCategoriaActividad: parseInt(this.selectedCategory.id, 10) || 0,
+        idParametroAsociado: parseInt(this.selectedParameter.id, 10) || 0,
+        idBiblioteca: parseInt(this.selectedDocument.id, 10) || 0
+      };
+      
+      console.log('🚀 ENVIANDO SOLICITUD PARA CREAR ACTIVIDAD:', apiPayload);
+      this.isLoadingActivities = true;
+      
+      this.proxyService.post<ApiActivityResponse>('/ws/AmbitosSvcImpl.php', apiPayload)
+        .pipe(
+          map(response => {
+            console.log('📥 RESPUESTA DE CREACIÓN DE ACTIVIDAD:', response);
+            if (response && response.success) {
+              // Agregar la nueva actividad a la lista local solo si la API responde con éxito
+              this.activities.push({ ...newActivity });
+              if (this.selectedScopeId) {
+                this.activitiesByScope[this.selectedScopeId] = [...this.activities];
+              }
+              
+              this.snackBar.open('Actividad creada con éxito', 'Cerrar', {
+                duration: 3000,
+                panelClass: ['success-snackbar']
+              });
+              
+              // Refrescar la lista de actividades para obtener la versión actualizada desde el servidor
+              if (this.selectedScopeId) {
+                this.loadActivitiesByScope(this.selectedScopeId);
+              }
+            } else {
+              this.snackBar.open(`Error al crear actividad: ${response?.message || 'Error desconocido'}`, 'Cerrar', {
+                duration: 5000,
+                panelClass: ['error-snackbar']
+              });
+            }
+            return response;
+          }),
+          catchError(error => {
+            console.error('❌ Error al crear actividad:', error);
+            this.snackBar.open(
+              `Error al crear actividad: ${error.message || 'Error de conexión'}`,
+              'Cerrar',
+              { duration: 5000, panelClass: ['error-snackbar'] }
+            );
+            return of(null);
+          }),
+          finalize(() => {
+            this.isLoadingActivities = false;
+            this.resetActivityForm();
+          })
+        )
+        .subscribe();
     }
   }
   
@@ -464,44 +776,5 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
    */
   cancelEditActivity(): void {
     this.resetActivityForm();
-  }
-  
-  /**
-   * Save all activities to the server
-   */
-  saveActivity(): void {
-    if (!this.selectedScopeId || this.activities.length === 0) {
-      console.error('No activities to save or no scope selected');
-      return;
-    }
-    
-    // TODO: Implement actual save to server
-    console.log('Saving activities:', this.activities);
-    
-    // In a real app, you would call a service method to save the activities
-    /*
-    this.isLoadingActivities = true;
-    this.someService.saveActivities(this.activities).pipe(
-      map(response => {
-        console.log('Activities saved successfully:', response);
-        // Maybe show a success message
-      }),
-      catchError(error => {
-        console.error('Error saving activities:', error);
-        // Show an error message
-        return of(null);
-      }),
-      finalize(() => {
-        this.isLoadingActivities = false;
-      })
-    ).subscribe();
-    */
-    
-    // For demo purposes, just show a success message after a delay
-    this.isLoadingActivities = true;
-    setTimeout(() => {
-      this.isLoadingActivities = false;
-      alert('Actividades guardadas exitosamente!');
-    }, 1000);
   }
 }
