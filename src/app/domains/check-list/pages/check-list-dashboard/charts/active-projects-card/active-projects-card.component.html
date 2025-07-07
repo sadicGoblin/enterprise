@@ -1,0 +1,17 @@
+<mat-card class="project-card">
+  <mat-card-content>
+    <div class="card-content">
+      <div class="card-icon active">
+        <mat-icon>business</mat-icon>
+      </div>
+      <div class="card-data">
+        <h3>{{ totalProjects }}</h3>
+        <p>Proyectos activos</p>
+        <div class="trend positive" *ngIf="showTrend">
+          <mat-icon>arrow_upward</mat-icon>
+          <span>{{ trendPercentage }}% vs. mes anterior</span>
+        </div>
+      </div>
+    </div>
+  </mat-card-content>
+</mat-card>

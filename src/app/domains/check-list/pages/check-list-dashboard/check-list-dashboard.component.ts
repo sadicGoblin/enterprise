@@ -1,25 +1,47 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
-import { MatTableModule } from '@angular/material/table';
-import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
-import { MatTableDataSource } from '@angular/material/table';
-import { NgChartsModule } from 'ng2-charts';
 import { animate, state, style, transition, trigger } from '@angular/animations';
-import { Chart, registerables } from 'chart.js';
 
-// Tipado personalizado para los gráficos
-type ChartSize = 'small' | 'default' | 'large';
+// Importaciones de componentes de gráficos
+import { MetricsCardsComponent } from './charts/metrics-cards.component';
+import { DonutChartComponent } from './charts/donut-chart.component';
+import { BarChartComponent } from './charts/bar-chart.component';
+import { LineChartComponent } from './charts/line-chart.component';
+import { HeatmapComponent } from './charts/heatmap.component';
+import { RecentActivitiesComponent } from './charts/recent-activities.component';
+// Importamos el componente de proyectos activos
+import { ActiveProjectsCardComponent } from './charts/active-projects-card/active-projects-card.component';
 
-// Registrar los componentes necesarios de Chart.js
-Chart.register(...registerables);
+// Tipado personalizado para los datos de gráficos
+interface BarChartData {
+  projects: string[];
+  completionRates: number[];
+}
+
+interface LineChartData {
+  labels: string[];
+  completionData: number[];
+}
+
+interface DonutChartData {
+  labels: string[];
+  data: number[];
+  backgroundColor: string[];
+}
+
+interface HeatmapData {
+  periodicities: string[];
+  scopes: string[];
+  data: { [periodicity: string]: { [scope: string]: number } };
+}
 
 // Interfaces para los datos raw del JSON
 export interface CheckListRawItem {
@@ -63,21 +85,24 @@ interface HeatmapDataPoint {
 
 @Component({
   selector: 'app-check-list-dashboard',
+  standalone: true,
   templateUrl: './check-list-dashboard.component.html',
   styleUrls: ['./check-list-dashboard.component.scss'],
-  standalone: true,
   imports: [
     CommonModule,
-    MatCardModule,
     MatFormFieldModule,
     MatSelectModule,
     MatInputModule,
     MatButtonModule,
     MatIconModule,
-    MatTableModule,
-    MatPaginatorModule,
-    NgChartsModule,
-    FormsModule
+    FormsModule,
+    MetricsCardsComponent,
+    DonutChartComponent,
+    BarChartComponent,
+    LineChartComponent,
+    HeatmapComponent,
+    RecentActivitiesComponent,
+    ActiveProjectsCardComponent
   ],
   animations: [
     trigger('filterAnimation', [
@@ -115,14 +140,11 @@ interface HeatmapDataPoint {
   ]
 })
 export class CheckListDashboardComponent implements OnInit, AfterViewInit {
-  // Referencias a elementos del DOM para gráficos y paginador
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild('donutChart') donutChartRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('lineChart') lineChartRef!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('barChart') barChartRef!: ElementRef<HTMLCanvasElement>;
-  
-  // Instancias de los gráficos
-  charts: Record<string, Chart> = {};
+  // Datos para gráficos
+  barChartData: BarChartData = { projects: [], completionRates: [] };
+  lineChartData: LineChartData = { labels: [], completionData: [] };
+  donutChartData: DonutChartData = { labels: [], data: [], backgroundColor: [] };
+  heatmapData: HeatmapData = { periodicities: [], scopes: [], data: {} };
   
   // Datos de actividades
   rawData: CheckListRawItem[] = [];
@@ -166,15 +188,172 @@ export class CheckListDashboardComponent implements OnInit, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    // Inicializar gráficos después de que las referencias del DOM estén disponibles
-    setTimeout(() => {
-      this.initCharts();
-    }, 0);
-    
-    // Asignar paginador a la tabla
-    this.recentActivities.paginator = this.paginator;
+    // Ya no necesitamos hacer nada aquí
+    // Los componentes de gráficos se encargarán de inicializarse
   }
   
+
+  
+  /**
+   * Genera los datos para el heatmap de actividades por periodicidad y ámbito
+   */
+  generateHeatmapData(): void {
+    const heatmapData: Record<string, Record<string, number>> = {};
+    
+    // Inicializar estructura de datos
+    this.periodicities.forEach(periodicity => {
+      heatmapData[periodicity] = {};
+      this.scopes.forEach(scope => {
+        heatmapData[periodicity][scope] = 0;
+      });
+    });
+    
+    // Rellenar con datos reales
+    this.filteredActivities.forEach(activity => {
+      const periodicity = activity.periocidad;
+      const scope = activity.ambito;
+      
+      if (heatmapData[periodicity] && heatmapData[periodicity][scope] !== undefined) {
+        heatmapData[periodicity][scope]++;
+      }
+    });
+    
+    this.activityHeatmapData = heatmapData;
+  }
+  
+  /**
+   * Prepara los datos para todos los componentes de gráficos
+   */
+  updateChartData(): void {
+    // Preparar datos para los gráficos
+    this.prepareDonutChartData();
+    this.prepareLineChartData();
+    this.prepareBarChartData();
+    
+    // Datos para heatmap
+    this.heatmapData = {
+      periodicities: this.periodicities,
+      scopes: this.scopes,
+      data: this.activityHeatmapData
+    };
+  }
+  
+  /**
+   * Prepara los datos para el gráfico de dona (completado vs pendiente)
+   */
+  prepareDonutChartData(): void {
+    this.donutChartData = {
+      labels: ['Completado', 'Pendiente'],
+      data: [this.completedActivities, this.pendingActivities],
+      backgroundColor: ['#4caf50', '#ff9800']
+    };
+  }
+  
+  /**
+   * Prepara los datos para el gráfico de línea (tendencia de cumplimiento diario)
+   */
+  prepareLineChartData(): void {
+    // Agrupar actividades por día y calcular tasas de cumplimiento
+    const dailyCompletionMap = new Map<string, {completed: number, total: number}>();
+    
+    // Obtener los últimos 7 días para mostrar en el gráfico
+    const today = new Date();
+    const labels: string[] = [];
+    
+    // Inicializar datos para los últimos 7 días
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(today.getDate() - i);
+      const dateStr = date.toISOString().split('T')[0]; // formato YYYY-MM-DD
+      labels.push(dateStr);
+      dailyCompletionMap.set(dateStr, {completed: 0, total: 0});
+    }
+    
+    // Contar actividades completadas y totales por día
+    this.filteredActivities.forEach(activity => {
+      const dateStr = activity.fecha.toISOString().split('T')[0];
+      if (dailyCompletionMap.has(dateStr)) {
+        const data = dailyCompletionMap.get(dateStr)!;
+        data.total++;
+        if (activity.estado === 'Completado') {
+          data.completed++;
+        }
+      }
+    });
+    
+    // Calcular tasa de cumplimiento diario
+    const completionData = labels.map(date => {
+      const data = dailyCompletionMap.get(date)!;
+      return data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0;
+    });
+    
+    this.lineChartData = {
+      labels,
+      completionData
+    };
+  }
+  
+  /**
+   * Prepara los datos para el gráfico de barras (cumplimiento por proyecto)
+   */
+  prepareBarChartData(): void {
+    const projectCompletionMap = new Map<string, {completed: number, total: number}>();
+    
+    // Inicializar datos por proyecto
+    this.projects.forEach(project => {
+      projectCompletionMap.set(project, {completed: 0, total: 0});
+    });
+    
+    // Contar actividades completadas y totales por proyecto
+    this.filteredActivities.forEach(activity => {
+      if (projectCompletionMap.has(activity.obra)) {
+        const data = projectCompletionMap.get(activity.obra)!;
+        data.total++;
+        if (activity.estado === 'Completado') {
+          data.completed++;
+        }
+      }
+    });
+    
+    // Generar arrays para el gráfico, ordenando por tasa de cumplimiento
+    const projectData = Array.from(projectCompletionMap.entries())
+      .filter(([_, data]) => data.total > 0) // Solo incluir proyectos con actividades
+      .map(([project, data]) => ({
+        project,
+        completionRate: data.total > 0 ? Math.round((data.completed / data.total) * 100) : 0
+      }))
+      .sort((a, b) => b.completionRate - a.completionRate) // Ordenar de mayor a menor
+      .slice(0, 10); // Mostrar top 10 proyectos
+    
+    this.barChartData = {
+      projects: projectData.map(d => d.project),
+      completionRates: projectData.map(d => d.completionRate)
+    };
+  }
+  
+  /**
+   * Genera un color para la celda del heatmap basado en el valor
+   * @param value Número de actividades
+   * @returns Color en formato hexadecimal o rgba
+   */
+  getHeatmapColor(value: number): string {
+    if (value === 0) {
+      return '#f5f5f5'; // Gris claro para celdas sin actividades
+    }
+    
+    // Escala de colores de frío a caliente basado en la intensidad
+    // Valor bajo: azul claro, Valor medio: amarillo, Valor alto: rojo
+    const intensity = Math.min(value / 10, 1); // Normalizar en rango 0-1, máximo 10 actividades
+    
+    if (intensity < 0.3) {
+      return `rgba(135, 206, 250, ${intensity + 0.2})`; // Azul claro
+    } else if (intensity < 0.7) {
+      return `rgba(255, 255, 0, ${intensity + 0.2})`; // Amarillo
+    } else {
+      return `rgba(255, 0, 0, ${intensity + 0.2})`; // Rojo
+    }
+  }
+
   /**
    * Carga los datos del dashboard desde un archivo JSON
    */
@@ -300,7 +479,7 @@ export class CheckListDashboardComponent implements OnInit, AfterViewInit {
   /**
    * Procesa las actividades para actualizar las métricas y gráficos
    */
-  private processActivities(): void {
+  processActivities(): void {
     // Aplicar filtros
     this.filterActivities();
     
@@ -371,360 +550,6 @@ export class CheckListDashboardComponent implements OnInit, AfterViewInit {
     this.avgActivitiesPerProject = this.totalProjects > 0
       ? Math.round(this.totalActivities / this.totalProjects)
       : 0;
-  }
-  
-  /**
-   * Genera los datos para el heatmap de actividades por periodicidad y ámbito
-   */
-  generateHeatmapData(): void {
-    const heatmapData: Record<string, Record<string, number>> = {};
-    
-    // Inicializar estructura de datos
-    this.periodicities.forEach(periodicity => {
-      heatmapData[periodicity] = {};
-      this.scopes.forEach(scope => {
-        heatmapData[periodicity][scope] = 0;
-      });
-    });
-    
-    // Rellenar con datos reales
-    this.filteredActivities.forEach(activity => {
-      const periodicity = activity.periocidad;
-      const scope = activity.ambito;
-      
-      if (heatmapData[periodicity] && heatmapData[periodicity][scope] !== undefined) {
-        heatmapData[periodicity][scope]++;
-      }
-    });
-    
-    this.activityHeatmapData = heatmapData;
-  }
-  
-  /**
-   * Actualiza los datos de todos los gráficos
-   */
-  updateChartData(): void {
-    if (this.charts['donut']) {
-      this.charts['donut'].data = this.getDonutChartData();
-      this.charts['donut'].update();
-    }
-    
-    if (this.charts['line']) {
-      this.charts['line'].data = this.getLineChartData();
-      this.charts['line'].update();
-    }
-    
-    if (this.charts['bar']) {
-      this.charts['bar'].data = this.getBarChartData();
-      this.charts['bar'].update();
-    }
-  }
-  
-  /**
-   * Inicializa las instancias de los gráficos
-   */
-  private initCharts(): void {
-    console.log('Initializing charts');
-    
-    try {
-      if (this.donutChartRef) {
-        const ctx = this.donutChartRef.nativeElement.getContext('2d');
-        if (ctx) {
-          this.charts['donut'] = new Chart(ctx, {
-            type: 'doughnut',
-            data: this.getDonutChartData(),
-            options: this.getDonutChartOptions()
-          });
-        }
-      }
-      
-      if (this.lineChartRef) {
-        const ctx = this.lineChartRef.nativeElement.getContext('2d');
-        if (ctx) {
-          this.charts['line'] = new Chart(ctx, {
-            type: 'line',
-            data: this.getLineChartData(),
-            options: this.getLineChartOptions()
-          });
-        }
-      }
-      
-      if (this.barChartRef) {
-        const ctx = this.barChartRef.nativeElement.getContext('2d');
-        if (ctx) {
-          // Configurar altura adecuada para mostrar todos los proyectos
-          const projectCount = this.filteredActivities ? new Set(this.filteredActivities.map(a => a.obra)).size : 0;
-          const canvasHeight = Math.max(projectCount * 30, 300); // 30px por proyecto, mínimo 300px
-          
-          // Configurar el canvas con una altura que permita ver todos los proyectos
-          this.barChartRef.nativeElement.height = canvasHeight;
-          
-          this.charts['bar'] = new Chart(ctx, {
-            type: 'bar',
-            data: this.getBarChartData(),
-            options: this.getBarChartOptions()
-          });
-        }
-      }
-    } catch (error) {
-      console.error('Error initializing charts:', error);
-    }
-  }
-  
-  /**
-   * Obtiene los datos para el gráfico de dona (total asignado vs cumplido)
-   */
-  private getDonutChartData(): any {
-    // Calcular totales generales
-    const totalAssigned = this.filteredActivities.length;
-    const totalCompleted = this.filteredActivities.filter(a => a.diaCompletado === "1").length;
-    
-    // Crear un array de datos para el gráfico
-    const data = [totalAssigned, totalCompleted];
-    
-    // Definir colores para cada categoría
-    const colors = ['#3B82F6', '#10B981'];
-    
-    return {
-      labels: ['Asignadas', 'Completadas'],
-      datasets: [{
-        data: data,
-        backgroundColor: colors,
-        hoverBackgroundColor: colors.map(color => this.adjustColorBrightness(color, 20)),
-        borderWidth: 1
-      }]
-    };
-  }
-  
-  /**
-   * Opciones para el gráfico de dona
-   */
-  private getDonutChartOptions(): any {
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: 'bottom',
-          labels: {
-            boxWidth: 12,
-            padding: 15,
-            font: {
-              size: 11
-            }
-          }
-        },
-        title: {
-          display: true,
-          text: 'Total Actividades: Asignadas vs Completadas',
-          font: {
-            size: 14,
-            weight: 'bold'
-          },
-          padding: {
-            bottom: 10
-          }
-        },
-        tooltip: {
-          callbacks: {
-            label: function(context: any) {
-              const label = context.label || '';
-              const value = context.raw || 0;
-              const total = context.chart.data.datasets[0].data.reduce((a: number, b: number) => a + b, 0);
-              const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-              return `${label}: ${value} (${percentage}%)`;
-            }
-          }
-        }
-      }
-    };
-  }
-  
-  /**
-   * Obtiene los datos para el gráfico de línea (cumplimiento diario)
-   */
-  private getLineChartData(): any {
-    // Agrupar por día y contar actividades asignadas vs completadas
-    const dates = Array.from(new Set(this.filteredActivities.map(a => a.dia)));
-    dates.sort((a, b) => parseInt(a, 10) - parseInt(b, 10));
-    
-    // Conteo de actividades asignadas por día
-    const assignedData = dates.map(day => {
-      return this.filteredActivities.filter(a => a.dia === day).length;
-    });
-    
-    // Conteo de actividades completadas por día (diaCompletado = "1")
-    const completedData = dates.map(day => {
-      return this.filteredActivities.filter(a => a.dia === day && a.diaCompletado === "1").length;
-    });
-    
-    return {
-      labels: dates.map(day => `Día ${day}`),
-      datasets: [
-        {
-          label: 'Actividades Asignadas',
-          data: assignedData,
-          borderColor: '#3B82F6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          borderWidth: 2,
-          tension: 0.3,
-          fill: false,
-          pointRadius: 4,
-          pointBackgroundColor: '#3B82F6',
-          pointBorderColor: '#ffffff',
-          pointBorderWidth: 1.5,
-          order: 1
-        },
-        {
-          label: 'Actividades Completadas',
-          data: completedData,
-          borderColor: '#10B981',
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          borderWidth: 2,
-          tension: 0.3,
-          fill: false,
-          pointRadius: 4,
-          pointBackgroundColor: '#10B981',
-          pointBorderColor: '#ffffff',
-          pointBorderWidth: 1.5,
-          order: 2
-        }
-      ]
-    };
-  }
-  
-  /**
-   * Opciones para el gráfico de línea
-   */
-  private getLineChartOptions(): any {
-    return {
-      responsive: true,
-      maintainAspectRatio: false,
-      scales: {
-        y: {
-          beginAtZero: true,
-          grace: '10%',
-          ticks: {
-            precision: 0
-          },
-          grid: {
-            color: 'rgba(255, 255, 255, 0.05)'
-          }
-        },
-        x: {
-          grid: {
-            display: false
-          }
-        }
-      },
-      interaction: {
-        mode: 'index',
-        intersect: false
-      },
-      plugins: {
-        legend: {
-          display: true,
-          position: 'top',
-          labels: {
-            usePointStyle: true,
-            boxWidth: 10,
-            padding: 15,
-            font: {
-              size: 11
-            }
-          }
-        },
-        title: {
-          display: true,
-          text: 'Actividades Asignadas vs. Completadas por Día',
-          font: {
-            size: 14,
-            weight: 'bold'
-          },
-          padding: {
-            bottom: 20
-          }
-        },
-        tooltip: {
-          mode: 'index',
-          intersect: false,
-          callbacks: {
-            label: function(context: any) {
-              let label = context.dataset.label || '';
-              if (label) {
-                label += ': ';
-              }
-              if (context.parsed.y !== null) {
-                label += context.parsed.y;
-              }
-              return label;
-            }
-          }
-        }
-      }
-    };
-  }
-  
-  /**
-   * Obtiene los datos para el gráfico de barras (cumplimiento por proyecto)
-   */
-  private getBarChartData(): any {
-    // Obtenemos la lista de proyectos y calculamos sus métricas
-    const projects = Array.from(new Set(this.filteredActivities.map(a => a.obra)));
-    
-    // Crear un array con los datos de cada proyecto
-    const projectData = projects.map(project => {
-      const projectActivities = this.filteredActivities.filter(a => a.obra === project);
-      const assignedCount = projectActivities.length;
-      const completedCount = projectActivities.filter(a => a.diaCompletado === "1").length;
-      const completionRate = assignedCount > 0 ? (completedCount / assignedCount) * 100 : 0;
-      
-      return {
-        name: project,
-        assigned: assignedCount,
-        completed: completedCount,
-        rate: Math.round(completionRate)
-      };
-    });
-    
-    // Ordenar proyectos de mayor a menor tasa de cumplimiento
-    projectData.sort((a, b) => b.rate - a.rate);
-    
-    // Extraer los datos ordenados para el gráfico
-    const sortedProjects = projectData.map(p => p.name);
-    const assignedCounts = projectData.map(p => p.assigned);
-    const completedCounts = projectData.map(p => p.completed);
-    
-    // Límite de caracteres para nombres de proyectos largos
-    const truncatedProjects = sortedProjects.map(name => {
-      return name.length > 20 ? name.substring(0, 18) + '...' : name;
-    });
-    
-    return {
-      labels: truncatedProjects,
-      datasets: [
-        {
-          label: 'Asignadas',
-          data: assignedCounts,
-          backgroundColor: '#3B82F6',
-          borderColor: this.adjustColorBrightness('#3B82F6', -20),
-          borderWidth: 1,
-          borderRadius: 5,
-          maxBarThickness: 35,
-          order: 2
-        },
-        {
-          label: 'Completadas',
-          data: completedCounts,
-          backgroundColor: '#10B981',
-          borderColor: this.adjustColorBrightness('#10B981', -20),
-          borderWidth: 1,
-          borderRadius: 5,
-          maxBarThickness: 35,
-          order: 1
-        }
-      ]
-    };
   }
   
   /**
@@ -867,27 +692,5 @@ export class CheckListDashboardComponent implements OnInit, AfterViewInit {
     this.selectedUser = '';
     this.selectedScope = '';
     this.processActivities();
-  }
-  
-  /**
-   * Genera un color para la celda del heatmap basado en el valor
-   * @param value Número de actividades
-   * @returns Color en formato hexadecimal o rgba
-   */
-  getHeatmapColor(value: number): string {
-    // Si no hay actividades, devolver un gris claro
-    if (value === 0) {
-      return '#f5f5f5';
-    }
-    
-    // Calcular la intensidad basada en el valor (asumiendo un máximo de 20)
-    const maxValue = 20;
-    const normalizedValue = Math.min(value / maxValue, 1);
-    
-    // Usar una escala de verde (más claro a más oscuro)
-    const baseColor = 120; // Tono verde en HSL
-    const lightness = 90 - (normalizedValue * 50); // Del 90% al 40% de lightness
-    
-    return `hsl(${baseColor}, 70%, ${lightness}%)`;
   }
 }

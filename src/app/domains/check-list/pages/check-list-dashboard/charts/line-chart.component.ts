@@ -1,160 +1,176 @@
-import { Component, ElementRef, Input, OnInit, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
-import { Chart, ChartType } from 'chart.js';
+import { Component, OnInit, AfterViewInit, Input, ElementRef, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { NgChartsModule } from 'ng2-charts';
+import { Chart, ChartConfiguration } from 'chart.js';
 
 @Component({
   selector: 'app-line-chart',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    MatCardModule,
+    NgChartsModule
+  ],
   template: `
-    <div class="chart-title" *ngIf="title">{{ title }}</div>
-    <div class="chart-container">
-      <canvas #lineChartCanvas></canvas>
-    </div>
+    <mat-card class="chart-card">
+      <mat-card-content>
+        <div class="chart-container">
+          <canvas #chartCanvas></canvas>
+        </div>
+      </mat-card-content>
+    </mat-card>
   `,
   styles: [`
-    :host {
-      display: block;
-      width: 100%;
+    .chart-card {
+      background: rgba(30, 30, 30, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      height: 100%;
     }
-
-    .chart-title {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #e0e0e0;
-    }
-
+    
     .chart-container {
       position: relative;
-      height: 250px;
+      height: 100%;
       width: 100%;
+      min-height: 250px;
     }
   `]
 })
-export class LineChartComponent implements OnInit, OnChanges {
-  @Input() data: any;
-  @Input() title: string = 'Tendencia de actividades';
-  
-  @ViewChild('lineChartCanvas') lineChartCanvas!: ElementRef<HTMLCanvasElement>;
+export class LineChartComponent implements OnInit, AfterViewInit, OnChanges {
+  @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
+  @Input() chartData: { labels: string[], completionData: number[] } = { labels: [], completionData: [] };
+  @Input() labels: string[] = [];
+  @Input() completionData: number[] = [];
   
   private chart: Chart | null = null;
 
-  constructor() {}
+  constructor() { }
 
-  ngOnInit() {
+  ngOnInit(): void {
+  }
+
+  ngAfterViewInit(): void {
     this.initChart();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['data'] && !changes['data'].firstChange) {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (this.chart && (changes['chartData'] || changes['labels'] || changes['completionData'])) {
+      // Si se proporcionan labels y completionData como inputs separados, actualizar chartData
+      if (this.labels.length > 0 && this.completionData.length > 0) {
+        this.chartData = {
+          labels: this.labels,
+          completionData: this.completionData
+        };
+      }
       this.updateChart();
     }
   }
 
-  private initChart() {
-    if (!this.lineChartCanvas || !this.data) return;
+  private initChart(): void {
+    if (!this.chartCanvas) return;
 
-    const ctx = this.lineChartCanvas.nativeElement.getContext('2d');
+    const ctx = this.chartCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
 
     this.chart = new Chart(ctx, {
-      type: 'line' as ChartType,
-      data: this.data,
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        elements: {
-          line: {
-            tension: 0.3, // Líneas curvas suaves
-            borderWidth: 2
-          },
-          point: {
-            radius: 3,
-            hitRadius: 10,
-            hoverRadius: 5
-          }
-        },
-        scales: {
-          x: {
-            grid: {
-              display: false
-            },
-            ticks: {
-              color: '#e0e0e0'
-            }
-          },
-          y: {
-            beginAtZero: true,
-            grid: {
-              color: 'rgba(255, 255, 255, 0.05)'
-            },
-            ticks: {
-              precision: 0,
-              color: '#e0e0e0'
-            }
-          }
-        },
-        plugins: {
-          legend: {
-            position: 'top',
-            align: 'start',
-            labels: {
-              usePointStyle: true,
-              boxWidth: 8,
-              font: {
-                size: 11
-              },
-              color: '#e0e0e0'
-            }
-          },
-          title: {
-            display: false,
-            text: this.title,
-            font: {
-              size: 14,
-              weight: 'bold'
-            },
-            padding: {
-              bottom: 20
-            },
-            color: '#e0e0e0'
-          },
-          tooltip: {
-            mode: 'index',
-            intersect: false,
-            callbacks: {
-              label: function(context: any) {
-                let label = context.dataset.label || '';
-                if (label) {
-                  label += ': ';
-                }
-                if (context.parsed.y !== null) {
-                  label += context.parsed.y;
-                }
-                return label;
-              }
-            }
-          }
-        }
-      }
+      type: 'line',
+      data: this.getChartData(),
+      options: this.getChartOptions()
     });
   }
 
-  private updateChart() {
-    if (!this.chart || !this.data) return;
-    
-    this.chart.data = this.data;
+  private updateChart(): void {
+    if (!this.chart) return;
+
+    const data = this.getChartData();
+    this.chart.data = data;
     this.chart.update();
   }
 
-  /**
-   * Destruir el gráfico cuando se destruya el componente
-   */
-  ngOnDestroy() {
-    if (this.chart) {
-      this.chart.destroy();
-      this.chart = null;
-    }
+  private getChartData(): ChartConfiguration['data'] {
+    return {
+      labels: this.chartData.labels,
+      datasets: [{
+        label: 'Porcentaje de cumplimiento',
+        data: this.chartData.completionData,
+        fill: {
+          target: 'origin',
+          above: 'rgba(59, 130, 246, 0.1)'
+        },
+        borderColor: '#3B82F6',
+        borderWidth: 3,
+        pointBackgroundColor: '#3B82F6',
+        pointBorderColor: '#3B82F6',
+        pointHoverBackgroundColor: '#fff',
+        pointHoverBorderColor: '#3B82F6',
+        pointRadius: 4,
+        pointHoverRadius: 6,
+        tension: 0.4
+      }]
+    };
+  }
+
+  private getChartOptions(): any {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false
+        },
+        title: {
+          display: true,
+          text: 'Tendencia de Cumplimiento Diario',
+          color: '#e0e0e0',
+          font: {
+            size: 16,
+            weight: 'normal'
+          }
+        },
+        tooltip: {
+          mode: 'index',
+          intersect: false,
+          callbacks: {
+            label: (context: any) => {
+              return `Cumplimiento: ${context.raw}%`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          min: 0,
+          max: 100,
+          ticks: {
+            callback: function(value: any) {
+              return value + '%';
+            },
+            color: '#a0a0a0',
+            font: {
+              size: 11
+            }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.05)'
+          }
+        },
+        x: {
+          ticks: {
+            color: '#a0a0a0',
+            font: {
+              size: 11
+            },
+            maxRotation: 45,
+            minRotation: 45
+          },
+          grid: {
+            display: false
+          }
+        }
+      }
+    };
   }
 }

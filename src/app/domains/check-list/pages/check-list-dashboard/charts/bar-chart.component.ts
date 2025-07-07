@@ -1,199 +1,219 @@
-import { Component, ElementRef, Input, OnInit, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
-import { Chart, ChartType } from 'chart.js';
+import { Component, OnInit, AfterViewInit, Input, ElementRef, ViewChild, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { NgChartsModule } from 'ng2-charts';
+import { Chart, ChartConfiguration } from 'chart.js';
 
 @Component({
   selector: 'app-bar-chart',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    MatCardModule,
+    NgChartsModule
+  ],
   template: `
-    <div class="chart-title" *ngIf="title">{{ title }}</div>
-    <div class="bar-chart-wrapper">
-      <div class="chart-container">
-        <canvas #barChartCanvas></canvas>
-      </div>
-    </div>
+    <mat-card class="chart-card">
+      <mat-card-content>
+        <div class="bar-chart-wrapper">
+          <div class="chart-container">
+            <canvas #chartCanvas></canvas>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
   `,
   styles: [`
-    :host {
-      display: block;
-      width: 100%;
+    .chart-card {
+      background: rgba(30, 30, 30, 0.5);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      height: 100%;
     }
-
-    .chart-title {
-      font-size: 16px;
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #e0e0e0;
-    }
-
+    
     .bar-chart-wrapper {
+      max-height: 300px;
+      overflow-y: auto;
+      padding-right: 10px;
+    }
+    
+    .chart-container {
       position: relative;
       width: 100%;
-      max-height: 350px;
-      overflow-y: auto;
-      scrollbar-width: thin;
-      scrollbar-color: #666 #222;
+      min-height: 200px;
     }
 
+    /* Estilo para la barra de desplazamiento */
     .bar-chart-wrapper::-webkit-scrollbar {
       width: 6px;
+      height: 6px;
     }
 
     .bar-chart-wrapper::-webkit-scrollbar-track {
-      background: #222;
-    }
-
-    .bar-chart-wrapper::-webkit-scrollbar-thumb {
-      background-color: #666;
+      background: rgba(255, 255, 255, 0.05);
       border-radius: 3px;
     }
 
-    .chart-container {
-      position: relative;
-      min-height: 350px;
+    .bar-chart-wrapper::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+
+    .bar-chart-wrapper::-webkit-scrollbar-thumb:hover {
+      background: rgba(255, 255, 255, 0.3);
     }
   `]
 })
-export class BarChartComponent implements OnInit, OnChanges {
-  @Input() data: any;
-  @Input() title: string = 'Actividades por proyecto';
-  
-  @ViewChild('barChartCanvas') barChartCanvas!: ElementRef<HTMLCanvasElement>;
+export class BarChartComponent implements OnInit, AfterViewInit, OnChanges {
+  @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
+  @Input() chartData: { projects: string[], completionRates: number[] } = { projects: [], completionRates: [] };
+  @Input() projects: string[] = [];
+  @Input() completionRates: number[] = [];
   
   private chart: Chart | null = null;
 
-  constructor() {}
+  constructor() { }
 
-  ngOnInit() {
+  ngOnInit(): void {
+  }
+
+  ngAfterViewInit(): void {
     this.initChart();
   }
 
-  ngOnChanges(changes: SimpleChanges) {
-    if (changes['data'] && !changes['data'].firstChange) {
+  ngOnChanges(changes: SimpleChanges): void {
+    if (this.chart && (changes['chartData'] || changes['projects'] || changes['completionRates'])) {
+      // Si se proporcionan projects y completionRates como inputs separados, actualizar chartData
+      if (this.projects.length > 0 && this.completionRates.length > 0) {
+        this.chartData = {
+          projects: this.projects,
+          completionRates: this.completionRates
+        };
+      }
       this.updateChart();
     }
   }
 
-  private initChart() {
-    if (!this.barChartCanvas || !this.data) return;
+  private initChart(): void {
+    if (!this.chartCanvas) return;
 
-    const ctx = this.barChartCanvas.nativeElement.getContext('2d');
+    const ctx = this.chartCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    // Configurar altura adecuada para mostrar todos los proyectos
-    const projectCount = this.data?.labels?.length || 0;
-    const canvasHeight = Math.max(projectCount * 30, 300); // 30px por proyecto, mínimo 300px
-    
-    // Configurar el canvas con una altura que permita ver todos los proyectos
-    this.barChartCanvas.nativeElement.height = canvasHeight;
-
     this.chart = new Chart(ctx, {
-      type: 'bar' as ChartType,
-      data: this.data,
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: 'y',  // Barras horizontales
-        layout: {
-          padding: {
-            top: 20,
-            right: 20,
-            bottom: 10,
-            left: 10
-          }
-        },
-        scales: {
-          y: {
-            ticks: {
-              font: {
-                size: 10 // Fuente más pequeña para las etiquetas
-              },
-              color: '#e0e0e0'
-            },
-            grid: {
-              display: false
-            }
-          },
-          x: {
-            beginAtZero: true,
-            grace: '5%',
-            grid: {
-              color: 'rgba(255, 255, 255, 0.05)'
-            },
-            ticks: {
-              precision: 0,
-              color: '#e0e0e0'
-            }
-          }
-        },
-        plugins: {
-          legend: {
-            display: true,
-            position: 'top',
-            labels: {
-              usePointStyle: true,
-              boxWidth: 10,
-              font: {
-                size: 11
-              },
-              color: '#e0e0e0'
-            }
-          },
-          title: {
-            display: false,  // El título lo manejamos en el template
-            text: this.title,
-            font: {
-              size: 14,
-              weight: 'bold'
-            },
-            padding: {
-              bottom: 15
-            },
-            color: '#e0e0e0'
-          },
-          tooltip: {
-            callbacks: {
-              label: function(context: any) {
-                let label = context.dataset.label || '';
-                if (label) {
-                  label += ': ';
-                }
-                if (context.parsed.x !== null) {
-                  label += context.parsed.x;
-                }
-                return label;
-              }
-            }
-          }
-        }
-      }
+      type: 'bar',
+      data: this.getChartData(),
+      options: this.getChartOptions()
     });
   }
 
-  private updateChart() {
-    if (!this.chart || !this.data) return;
-    
-    // Actualizar los datos
-    this.chart.data = this.data;
-    
-    // Ajustar la altura según la cantidad de proyectos
-    if (this.barChartCanvas) {
-      const projectCount = this.data?.labels?.length || 0;
-      const canvasHeight = Math.max(projectCount * 30, 300);
-      this.barChartCanvas.nativeElement.height = canvasHeight;
-    }
-    
+  private updateChart(): void {
+    if (!this.chart) return;
+
+    const data = this.getChartData();
+    this.chart.data = data;
+    this.chart.options = this.getChartOptions();
     this.chart.update();
   }
 
-  /**
-   * Destruir el gráfico cuando se destruya el componente
-   */
-  ngOnDestroy() {
-    if (this.chart) {
-      this.chart.destroy();
-      this.chart = null;
+  private getChartData(): ChartConfiguration['data'] {
+    // Generar gradiente de colores desde azul claro a azul oscuro
+    const colors = this.generateChartColors(this.chartData.projects.length);
+    
+    return {
+      labels: this.chartData.projects,
+      datasets: [{
+        label: 'Porcentaje de cumplimiento',
+        data: this.chartData.completionRates,
+        backgroundColor: colors,
+        borderColor: colors.map(c => this.adjustColorBrightness(c, 20)),
+        borderWidth: 1,
+        borderRadius: 4,
+        maxBarThickness: 40
+      }]
+    };
+  }
+
+  private getChartOptions(): any {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      indexAxis: 'y', // Para barras horizontales
+      plugins: {
+        legend: {
+          display: false
+        },
+        title: {
+          display: true,
+          text: 'Cumplimiento por Proyecto',
+          color: '#e0e0e0',
+          font: {
+            size: 16,
+            weight: 'normal'
+          }
+        },
+        tooltip: {
+          callbacks: {
+            label: (context: any) => {
+              return `Cumplimiento: ${context.raw}%`;
+            }
+          }
+        }
+      },
+      scales: {
+        y: {
+          ticks: {
+            color: '#a0a0a0',
+            font: {
+              size: 11
+            }
+          },
+          grid: {
+            display: false
+          }
+        },
+        x: {
+          min: 0,
+          max: 100,
+          ticks: {
+            callback: function(value: any) {
+              return value + '%';
+            },
+            color: '#a0a0a0',
+            font: {
+              size: 11
+            }
+          },
+          grid: {
+            color: 'rgba(255, 255, 255, 0.05)'
+          }
+        }
+      }
+    };
+  }
+
+  // Genera una paleta de colores para los gráficos
+  private generateChartColors(count: number): string[] {
+    const baseColor = '#3B82F6'; // Azul primario
+    const colors: string[] = [];
+    
+    for (let i = 0; i < count; i++) {
+      // Variar el brillo basado en la posición
+      const brightness = 100 - (i * (50 / Math.max(count - 1, 1)));
+      colors.push(this.adjustColorBrightness(baseColor, brightness));
     }
+    
+    return colors;
+  }
+  
+  // Ajusta el brillo de un color hexadecimal
+  private adjustColorBrightness(hex: string, percent: number): string {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const r = Math.round(((num >> 16) & 255) * (percent / 100));
+    const g = Math.round(((num >> 8) & 255) * (percent / 100));
+    const b = Math.round((num & 255) * (percent / 100));
+    return `rgba(${r}, ${g}, ${b}, 0.8)`;
   }
 }
