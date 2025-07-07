@@ -13,7 +13,9 @@
 
     <!-- Cabecera con nombres de días -->
     <div class="calendar-days-header">
-      <div class="day-name" *ngFor="let day of weekDays">{{ day }}</div>
+      <div class="day-name" *ngFor="let day of weekDays; let i = index" (click)="selectAllDaysOfWeek(i)" [matTooltip]="'Seleccionar todos los ' + day">
+        {{ day }}
+      </div>
     </div>
 
     <!-- Cuerpo principal del calendario -->
@@ -22,7 +24,7 @@
         <div
           *ngFor="let day of week"
           class="calendar-day"
-          [class.disabled]="day.disabled"
+          [class.disabled]="day.disabled || !day.isCurrentMonth"
           [class.selected]="day.selected"
           [class.today]="day.today"
           [class.outside-month]="!day.isCurrentMonth"
@@ -33,17 +35,12 @@
       </div>
     </div>
 
-    <!-- Instrucciones de uso del calendario -->
-    <div class="calendar-instructions">
-      <small>• Click para seleccionar/quitar día</small>
-      <small>• Shift+Click para seleccionar rangos</small>
-    </div>
   </div>
   
   <!-- Panel lateral derecho con fechas seleccionadas -->
-  <div class="selected-dates-panel" *ngIf="selectedDates.length > 0">
+  <div class="selected-dates-panel">
     <div class="selected-dates-header">
-      <h4>Días seleccionados: {{ selectedDates.length }}</h4>
+      <h4>Días seleccionados:</h4><span class="date-count">{{ selectedDates.length }}</span>
       <button mat-icon-button class="clear-all-btn" (click)="clearSelection()" matTooltip="Limpiar todo">
         <mat-icon>delete_sweep</mat-icon>
       </button>
@@ -55,6 +52,11 @@
           <mat-icon>close</mat-icon>
         </button>
       </div>
+    </div>
+    <!-- Instrucciones de uso del calendario -->
+    <div class="calendar-instructions">
+      <small>• Click para seleccionar/quitar día</small>
+      <small>• Shift+Click para seleccionar rangos</small>
     </div>
   </div>
 </div>

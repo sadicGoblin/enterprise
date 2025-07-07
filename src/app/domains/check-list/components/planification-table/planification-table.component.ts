@@ -4,7 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { ProxyService } from '../../../../core/services/proxy.service';
+import { ControlService } from '../../services/control.service';
 import { CompletionApiRequest, CompletionApiResponse, CompletedActivity } from '../../models/control-api.models';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -38,12 +38,11 @@ export interface Activity {
 export class PlanificationTableComponent implements OnInit, OnChanges {
   constructor(
     private cdr: ChangeDetectorRef,
-    private proxyService: ProxyService,
+    private controlService: ControlService,
     private dialog: MatDialog
   ) {}
   
-  // API endpoint for fetching completed activities
-  private completionsApiEndpoint = '/ws/PlanificacionSvcImpl.php';
+  // Endpoint manejado ahora por el ControlService
   
   // Completed activities data
   completedActivities: CompletedActivity[] = [];
@@ -66,6 +65,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     this._days = data;
   }
   get days(): number[] {
+    console.log('Planification Table days:', this._days);
     return this._days;
   }
 
@@ -265,17 +265,17 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     this.completedActivities = [];
     this.completedActivitiesApiResponse = null;
     
-    // Create request body
-    const requestBody: CompletionApiRequest = {
+    // Create request body para el formato que espera ControlService.getCompletedActivities
+    const requestParams = {
       caso: 'ConsultaPlanificacion',
-      IdUsuario: userId,
-      Periodo: period
+      idUsuario: userId,
+      periodo: period
     };
     
-    console.log('API Request:', requestBody);
+    console.log('API Request:', requestParams);
     
-    // Call the API
-    this.proxyService.post<CompletionApiResponse>(this.completionsApiEndpoint, requestBody)
+    // Call the API usando el ControlService
+    this.controlService.getCompletedActivities(requestParams)
       .pipe(
         catchError(error => {
           console.error('Error fetching completed activities:', error);
@@ -296,8 +296,8 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
         }
         
         // Log for debugging
-        console.log('%c Completed activities API response saved:', 'color: blue; font-weight: bold', this.completedActivitiesApiResponse);
-        console.log('%c Completed activities data saved:', 'color: green; font-weight: bold', this.completedActivities);
+        console.log('Completed activities API response saved:', this.completedActivitiesApiResponse);
+        console.log('Completed activities data saved:', this.completedActivities);
         this.totalRealized = 0;
         this.totalRealized += this.completedActivities.length;
         this.totalCompliancePercentage = (this.totalRealized / this.totalAssigned) * 100;
@@ -387,6 +387,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
    * Updates metrics for an activity
    */
   updateActivityMetrics(activity: Activity): void {
+    console.log('Updating metrics for activity:', activity.scheduledDays);
     // Count total scheduled days
     activity.assigned = activity.scheduledDays.length;
     

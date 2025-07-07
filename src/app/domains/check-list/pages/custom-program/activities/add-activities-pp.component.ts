@@ -20,11 +20,13 @@ import { MatNativeDateModule } from '@angular/material/core';
 import { MatCardModule } from '@angular/material/card';
 import { MatDialog, MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { UsuarioService } from '../../../services/usuario.service';
 import { ControlService } from '../../../services/control.service';
 // Componente usado programáticamente para mostrar diálogo de confirmación
 import { ConfirmationDialogComponent } from './confirmation-dialog.component';
 import { CalendarDialogComponent } from '../../../../../shared/controls/multi-date-calendar/calendar-dialog.component';
+import { CalendarSelectComponent } from '../../../../../shared/controls/multi-date-calendar/calendar-select.component';
 
 // Interfaces para los diferentes tipos de objetos usados en el componente
 interface ProjectApiRequestBody {
@@ -123,6 +125,7 @@ interface ActivityApiRequestBody {
   selector: 'app-add-activities-pp',
   standalone: true,
   imports: [
+    MatSnackBarModule,
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
@@ -141,7 +144,8 @@ interface ActivityApiRequestBody {
     MatNativeDateModule,
     MatTooltipModule,
     ConfirmationDialogComponent,
-    CustomSelectComponent
+    CustomSelectComponent,
+    CalendarSelectComponent,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' }
@@ -267,10 +271,12 @@ export class AddActivitiesPpComponent implements OnInit {
 
   constructor(
     private proxyService: ProxyService,
-    private dateAdapter: DateAdapter<Date>,
     private usuarioService: UsuarioService,
     private controlService: ControlService,
-    private dialog: MatDialog
+    private dateAdapter: DateAdapter<Date>,
+    @Inject(MAT_DATE_LOCALE) private _locale: string,
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
   ) {
     // Set locale to Spanish
     this.dateAdapter.setLocale('es');
@@ -293,10 +299,10 @@ export class AddActivitiesPpComponent implements OnInit {
    */
   onDateChange(): void {
     this.formatSelectedDate();
-    
+
     // Verificar si tenemos todos los datos para cargar controles existentes
     if (this.projectSelectedId && this.stageSelectedId && this.selectedUser && this.selectedDate) {
-      console.log('Tenemos obra, etapa y colaborador - cargando controles existentes al cambiar fecha...');
+      // console.log('Tenemos obra, etapa y colaborador - cargando controles existentes al cambiar fecha...');
       this.loadExistingControls();
     }
   }
@@ -307,9 +313,9 @@ export class AddActivitiesPpComponent implements OnInit {
       if (userData) {
         const parsedData = JSON.parse(userData);
         this.userId = parsedData.userId;
-        console.log('User ID from localStorage:', this.userId);
+        // console.log('User ID from localStorage:', this.userId);
       } else {
-        console.warn('No userData found in localStorage');
+        // console.warn('No userData found in localStorage');
       }
     } catch (error) {
       console.error('Error parsing userData from localStorage:', error);
@@ -327,17 +333,16 @@ export class AddActivitiesPpComponent implements OnInit {
    * Handles project selection change from custom select component
    */
   onProjectSelectionChange(selectedProject: any): void {
-    console.log('Project selection changed to:', selectedProject);
+    // console.log('Project selection changed to:', selectedProject);
 
     if (selectedProject) {
       this.projectSelectedId = selectedProject.value;
 
-      // Reset stage selection when project changes
-      this.stageControl.reset();
-      this.stageSelectedId = null;
+      // Reset all form fields except project
+      this.resetFormFieldsExceptProject();
 
       // Load stages for the selected project
-      console.log('Loading stages for project 0:', this.projectSelectedId);
+      // console.log('Loading stages for project 0:', this.projectSelectedId);
       this.loadStages();
 
       // Load users for the selected project
@@ -345,14 +350,49 @@ export class AddActivitiesPpComponent implements OnInit {
     } else {
       this.projectSelectedId = null;
       this.stageOptions = [];
+      this.users = [];
+      
+      // Limpiar la tabla de actividades
+      this.tableData = [];
     }
+  }
+  
+  /**
+   * Resetea todos los campos del formulario excepto el proyecto seleccionado
+   */
+  resetFormFieldsExceptProject(): void {
+    // Resetear controles de formulario
+    this.stageControl.reset();
+    this.scopeControl.reset();
+    this.riskParameterControl.reset();
+    
+    // Resetear IDs seleccionados
+    this.stageSelectedId = null;
+    this.scopeSelectedId = null;
+    this.riskParameterSelectedId = null;
+    
+    // Resetear selecciones
+    this.selectedSubprocesses = [];
+    this.selectedActivities = [];
+    this.selectedUser = '';
+    this.selectedPeriodicity = 'MENSUAL'; // Valor por defecto
+    this.selectedCategory = '';
+    this.selectedParameter = '';
+    this.selectedDocument = '';
+    
+    // Resetear opciones cargadas
+    this.subprocessOptions = [];
+    this.activityOptions = [];
+    
+    // Limpiar la tabla de actividades al cambiar de proyecto
+    this.tableData = [];
   }
 
   /**
    * Handles stage selection change from custom select component
    */
   onStageSelectionChange(selectedStageId: any): void {
-    console.log('Stage selection changed to:', selectedStageId);
+    // console.log('Stage selection changed to:', selectedStageId);
 
     if (selectedStageId) {
       this.stageSelectedId = selectedStageId.toString();
@@ -380,12 +420,12 @@ export class AddActivitiesPpComponent implements OnInit {
    * @param selectedScope La opción seleccionada del componente custom-select
    */
   onScopeSelectionChange(selectedScope: SelectOption | null): void {
-    console.log('onScopeSelectionChange recibió:', selectedScope);
+    // console.log('onScopeSelectionChange recibió:', selectedScope);
 
     if (selectedScope && selectedScope.value) {
       // Convertir el valor a string para asegurar compatibilidad
       this.scopeSelectedId = String(selectedScope.value);
-      console.log('Ámbito seleccionado:', this.scopeSelectedId, typeof this.scopeSelectedId);
+      // console.log('Ámbito seleccionado:', this.scopeSelectedId, typeof this.scopeSelectedId);
 
       // Verificar si el valor es un objeto y extraer el ID correcto si es necesario
       if (typeof selectedScope.value === 'object' && selectedScope.value !== null) {
@@ -406,7 +446,7 @@ export class AddActivitiesPpComponent implements OnInit {
       // Load activities for the selected scope
       this.loadActivities();
     } else {
-      console.log('Se limpió la selección de ámbito');
+      // console.log('Se limpió la selección de ámbito');
       this.scopeSelectedId = null;
 
       // Clear activities when scope is cleared
@@ -421,9 +461,9 @@ export class AddActivitiesPpComponent implements OnInit {
   onRiskParameterSelectionChange(selectedRiskParameter: SelectOption | null): void {
     if (selectedRiskParameter && selectedRiskParameter.value) {
       this.riskParameterSelectedId = String(selectedRiskParameter.value);
-      console.log('Risk parameter selected:', this.riskParameterSelectedId);
+      // console.log('Risk parameter selected:', this.riskParameterSelectedId);
     } else {
-      console.log('Risk parameter selection cleared');
+      // console.log('Risk parameter selection cleared');
       this.riskParameterSelectedId = null;
     }
   }
@@ -432,12 +472,12 @@ export class AddActivitiesPpComponent implements OnInit {
    * Loads construction stages based on the selected project
    */
   loadStages(): void {
-    console.log('Loading stages for project:', this.projectSelectedId);
+    // console.log('Loading stages for project:', this.projectSelectedId);
     if (!this.projectSelectedId) {
       this.stageOptions = [];
       return;
     }
-    console.log('Loading stages for project2:', this.projectSelectedId);
+    // console.log('Loading stages for project2:', this.projectSelectedId);
 
     this.loadingStages = true;
 
@@ -457,10 +497,10 @@ export class AddActivitiesPpComponent implements OnInit {
 
         if (response && response.success && response.data) {
           this.stageOptions = response.data;
-          console.log('Stages loaded:', this.stageOptions);
+          // console.log('Stages loaded:', this.stageOptions);
         } else {
           this.stageOptions = [];
-          console.warn('No stages data available or request failed');
+          // console.warn('No stages data available or request failed');
         }
       });
   }
@@ -494,7 +534,7 @@ export class AddActivitiesPpComponent implements OnInit {
 
         if (response && response.success && response.data) {
           this.users = response.data as User[];
-          console.log('Users loaded:', this.users);
+          // console.log('Users loaded:', this.users);
         } else {
           this.users = [];
           console.warn('No users found or error in response:', response);
@@ -512,7 +552,7 @@ export class AddActivitiesPpComponent implements OnInit {
 
     this.loadingSubprocesses = true;
     this.subprocessApiRequestBody.idEtapaConstructiva = Number(this.stageSelectedId);
-    console.log('Loading subprocesses for stage:', this.subprocessApiEndpoint, this.subprocessApiRequestBody);
+    // console.log('Loading subprocesses for stage:', this.subprocessApiEndpoint, this.subprocessApiRequestBody);
     this.proxyService.post(this.subprocessApiEndpoint, this.subprocessApiRequestBody)
       .pipe(
         catchError(error => {
@@ -526,7 +566,7 @@ export class AddActivitiesPpComponent implements OnInit {
 
         if (response && response.success && response.data) {
           this.subprocessOptions = response.data;
-          console.log('Subprocesses loaded:', this.subprocessOptions);
+         // console.log('Subprocesses loaded:', this.subprocessOptions);
         } else {
           this.subprocessOptions = [];
           console.warn('No subprocesses data available or request failed');
@@ -557,7 +597,7 @@ export class AddActivitiesPpComponent implements OnInit {
 
         if (response && response.success && response.data) {
           this.activityOptions = response.data;
-          console.log('Activities loaded:', this.activityOptions);
+         // console.log('Activities loaded:', this.activityOptions);
         } else {
           this.activityOptions = [];
           console.warn('No activities data available or request failed');
@@ -577,7 +617,7 @@ export class AddActivitiesPpComponent implements OnInit {
       // Si no está seleccionado, lo añadimos
       this.selectedSubprocesses.push(subprocess);
     }
-    console.log('Selected subprocesses:', this.selectedSubprocesses);
+    // console.log('Selected subprocesses:', this.selectedSubprocesses);
   }
 
   /**
@@ -586,7 +626,7 @@ export class AddActivitiesPpComponent implements OnInit {
   isSubprocessSelected(subprocess: any): boolean {
     return this.selectedSubprocesses.some((sp: any) => sp.idSubproceso === subprocess.idSubproceso);
   }
-  
+
   /**
    * Función para comparar objetos de subproceso en selección múltiple
    * Necesaria para que ngModel funcione correctamente con objetos
@@ -608,7 +648,7 @@ export class AddActivitiesPpComponent implements OnInit {
       this.selectedActivities.push(activity);
     }
 
-    console.log('Selected activities:', this.selectedActivities);
+    // console.log('Selected activities:', this.selectedActivities);
   }
 
   /**
@@ -622,18 +662,17 @@ export class AddActivitiesPpComponent implements OnInit {
   // Columnas a mostrar en la tabla
   displayedColumns: string[] = [
     'project',
-    'risk',
+    'assignee',
     'period',
     'stage',
     'subprocess',
     'scope',
-    'assignee',
+    'name',
     'days',
     'periodicity',
-    'edit',
-    'delete',
+    'delete'
   ];
-  
+
   /**
    * Aplica estilo a filas alternadas
    * @param index índice de la fila
@@ -642,7 +681,7 @@ export class AddActivitiesPpComponent implements OnInit {
   getRowStyle(index: number): object {
     return {
       'background-color': index % 2 === 0 ? 'white' : '#fafafa',
-      'height': '52px', 
+      'height': '52px',
       'transition': 'background-color 0.2s ease'
     };
   }
@@ -847,14 +886,14 @@ export class AddActivitiesPpComponent implements OnInit {
         // Contador para un seguimiento más claro
         let totalControles = 0;
         const totalCombinaciones = this.selectedSubprocesses.length * this.selectedActivities.length;
-        
-        console.log(`Creando ${totalCombinaciones} controles para ${this.selectedSubprocesses.length} subprocesos y ${this.selectedActivities.length} actividades`);
-        
+
+        // console.log(`Creando ${totalCombinaciones} controles para ${this.selectedSubprocesses.length} subprocesos y ${this.selectedActivities.length} actividades`);
+
         // Bucle anidado: para cada subproceso, crear controles para todas las actividades
         this.selectedSubprocesses.forEach((subproceso: SubprocessOption) => {
           this.selectedActivities.forEach((actividad: { idActividades?: number; nombre: string }) => {
             totalControles++;
-            
+
             // Crear objeto de control con la combinación actual de subproceso y actividad
             const controlBody = {
               "caso": "Crea",
@@ -885,10 +924,10 @@ export class AddActivitiesPpComponent implements OnInit {
               "dias": null,
               "fechaControl": "0001-01-01T00:00:00"
             };
-            
+
             // Mostrar información en consola
-            console.log(`Control ${totalControles}/${totalCombinaciones}: Subproceso [${subproceso.nombre} (${subproceso.idSubproceso})] + Actividad [${actividad.nombre} (${actividad.idActividades})]`);
-            
+            // console.log(`Control ${totalControles}/${totalCombinaciones}: Subproceso [${subproceso.nombre} (${subproceso.idSubproceso})] + Actividad [${actividad.nombre} (${actividad.idActividades})]`);
+
             // Enviar objeto al servicio POST usando controlService
             this.controlService.createControl(controlBody).subscribe({
               next: (response: any) => {
@@ -906,10 +945,10 @@ export class AddActivitiesPpComponent implements OnInit {
         tableItems.forEach(item => {
           this.tableData.push(item);
         });
-        
+
         // Cargar los controles existentes después de guardar
         console.log('Recargando controles existentes después de guardar...');
-        
+
       } else {
         // Si el usuario cancela, no hacer nada
         console.log('Operación cancelada por el usuario');
@@ -969,94 +1008,6 @@ export class AddActivitiesPpComponent implements OnInit {
   }
 
   /**
-   * Edita una actividad existente en la tabla
-   */
-  editActivity(activity: {
-    id: number;
-    project: string | number;
-    stage: string | number;
-    period?: string | number;
-    user?: string | number;
-    subprocess?: string;
-    scope?: string | number;
-    name?: string;
-    periodicity?: string;
-    category?: string;
-    parameter?: string | number | null;
-    document?: string;
-    activities?: ActivityOption[];
-    subprocesses?: SubprocessOption[];
-  }): void {
-    console.log('Editing activity:', activity);
-
-    this.projectSelectedId = activity.project.toString();
-    this.selectedPeriod = activity.period ? activity.period.toString() : '';
-    this.selectedUser = activity.user ? activity.user.toString() : '';
-
-    // Set stage first to trigger subprocess API update
-    const stageValue = activity.stage;
-    // Forzar tipo para evitar errores de asignación
-    this.stageControl.setValue(String(stageValue) as any);
-    this.stageSelectedId = stageValue.toString();
-
-    // Update subprocess API request body with the selected stage ID
-    this.subprocessApiRequestBody = {
-      ...this.subprocessApiRequestBody,
-      idEtapaConstructiva: Number(stageValue)
-    };
-
-    // Load subprocesses and set selected ones after data is loaded
-    this.loadSubprocesses();
-    setTimeout(() => {
-      // Verificar que subprocesses es un array válido con objetos que tienen la propiedad requerida
-      if (activity.subprocesses && Array.isArray(activity.subprocesses)) {
-        // Asegurar que cada objeto tiene la estructura adecuada antes de asignarlo
-        const validSubprocesses = activity.subprocesses.filter((sp: any) =>
-          sp && typeof sp === 'object' && 'idSubproceso' in sp && 'nombre' in sp
-        ) as SubprocessOption[];
-        this.selectedSubprocesses = validSubprocesses;
-      }
-    }, 500);
-
-    // Set scope first to trigger activity API update
-    if (activity.scope) {
-      // Forzar tipo para evitar errores de asignación
-      this.scopeControl.setValue(String(activity.scope) as any);
-      this.scopeSelectedId = activity.scope.toString();
-
-      // Update activity API request body with the selected scope ID
-      this.activityApiRequestBody = {
-        ...this.activityApiRequestBody,
-        idAmbito: Number(activity.scope)
-      };
-    }
-
-    // Load activities and set selected ones after data is loaded
-    this.loadActivities();
-    setTimeout(() => {
-      // Verificar que activities es un array válido con objetos que tienen la propiedad requerida
-      if (activity.activities && Array.isArray(activity.activities)) {
-        // Asegurar que cada objeto tiene la estructura adecuada antes de asignarlo
-        const validActivities = activity.activities.filter((act: any) =>
-          act && typeof act === 'object' && 'idActividades' in act && 'nombre' in act
-        ) as ActivityOption[];
-        this.selectedActivities = validActivities;
-      }
-    }, 700);
-
-    // Establecer otros campos
-    this.selectedPeriodicity = activity.periodicity || '';
-    this.selectedCategory = activity.category || '';
-    this.selectedDocument = activity.document || '';
-
-    // Establecer parámetro de riesgo
-    if (activity.parameter) {
-      this.riskParameterControl.setValue(String(activity.parameter) as any);
-      this.riskParameterSelectedId = activity.parameter.toString();
-    }
-  }
-
-  /**
    * Elimina una actividad de la tabla por su ID
    */
   deleteActivity(activity: { id: number }): void {
@@ -1072,7 +1023,7 @@ export class AddActivitiesPpComponent implements OnInit {
   onUserSelectionChange(event: any): void {
     this.selectedUser = event?.value;
     console.log('Usuario seleccionado:', this.selectedUser);
-    
+
     // Si tenemos obra, etapa, usuario y periodo seleccionados, cargamos los controles existentes
     this.loadExistingControls();
   }
@@ -1087,12 +1038,12 @@ export class AddActivitiesPpComponent implements OnInit {
       console.warn('Faltan datos necesarios para cargar controles existentes');
       return;
     }
-    
+
     // Extraer el periodo en formato YYYYMM a partir de la fecha seleccionada
     const periodoFormateado = this.selectedDate ?
       (this.selectedDate.getFullYear() * 100 + (this.selectedDate.getMonth() + 1)) :
       202507;
-    
+
     // Preparar parámetros para la consulta
     const queryParams = {
       caso: "Consulta",
@@ -1100,37 +1051,37 @@ export class AddActivitiesPpComponent implements OnInit {
       idUsuario: Number(this.selectedUser),
       periodo: periodoFormateado
     };
-    
+
     console.log('Consultando controles existentes con parámetros:', queryParams);
     this.loadingExistingControls = true;
-    
+
     // Llamar al servicio para obtener los controles existentes
     this.controlService.getControls(queryParams).subscribe({
       next: (response: any) => {
         this.loadingExistingControls = false;
-        
+
         if (response && response.success && response.data && Array.isArray(response.data)) {
           console.log(`Se encontraron ${response.data.length} controles existentes:`, response.data);
-          
+
           // Convertir los datos recibidos al formato de la tabla
           this.tableData = response.data.map((control: any) => {
             return {
               id: Number(control.IdControl),
-              project: control.IdObra,
-              projectName: control.Obra,
-              user: control.IdUsuario,
-              userName: control.Usuario,
+              project: control.Obra, // Usar directamente el nombre para mostrar
+              projectId: control.IdObra,
+              user: control.Usuario, // Usar directamente el nombre para mostrar
+              userId: control.IdUsuario,
               period: control.Periodo,
-              stage: control.IdEtapaConst,
-              stageName: control.EtapaConst,
+              stage: control.EtapaConst, // Usar directamente el nombre para mostrar
+              stageId: control.IdEtapaConst,
               subprocess: control.SubProceso,
               subprocessId: control.IdSubProceso,
-              scope: control.IdAmbito,
-              scopeName: control.Ambito, // El nombre del ámbito que se mostrará en la tabla
-              activity: control.IdActividad,
+              scope: control.Ambito, // Usar directamente el nombre para mostrar
+              scopeId: control.IdAmbito,
               name: control.Actividad,
-              // Agregamos el campo days para mostrar íconos de calendario
-              days: control.dias || '15',  // Usamos dias en minúsculas según el objeto de ejemplo
+              activityId: control.IdActividad,
+              // Campo para días seleccionados
+              days: control.dias || '',  
               selectedDays: control.dias ? this.parseDaysString(control.dias) : [],
               periodicity: control.Periocidad,
               periodicityId: control.IdPeriocidad,
@@ -1144,10 +1095,11 @@ export class AddActivitiesPpComponent implements OnInit {
               subprocesses: [{
                 idSubProceso: Number(control.IdSubProceso),
                 nombre: control.SubProceso
-              }]
+              }],
+              assignee: control.Usuario // Agregar campo para mostrar en la columna "Asignado"
             };
           });
-          
+
           console.log('Tabla actualizada con controles existentes:', this.tableData);
         } else {
           console.warn('No se encontraron controles o la respuesta no tiene el formato esperado');
@@ -1169,21 +1121,21 @@ export class AddActivitiesPpComponent implements OnInit {
     if (!element.selectedDays || element.selectedDays.length === 0) {
       return 'Seleccionar días';
     }
-    
+
     // Ordenar las fechas cronológicamente
     const sortedDates = [...element.selectedDays].sort((a, b) => a.getTime() - b.getTime());
-    
+
     // Formatear cada fecha como dd/MM y unirlas
     const formattedDates = sortedDates.map(date => {
       const day = date.getDate().toString().padStart(2, '0');
       const month = (date.getMonth() + 1).toString().padStart(2, '0');
       return `${day}/${month}`;
     });
-    
+
     // Devolver lista de días seleccionados
     return `Días seleccionados: ${formattedDates.join(', ')}`;
   }
-  
+
   /**
    * Abre el diálogo del calendario para seleccionar días
    * @param element Fila de la tabla seleccionada
@@ -1193,16 +1145,16 @@ export class AddActivitiesPpComponent implements OnInit {
   openCalendarDialog(element: any): void {
     // Establecer este control como activo para resaltarlo
     this.activeCalendarControl = element.id;
-    
+
     // Convertir los días como string a números para defaultDays
-    const defaultDays = element.days ? 
+    const defaultDays = element.days ?
       element.days.split(',').map((d: string) => parseInt(d.trim(), 10)) : [];
-    
+
     const dialogRef = this.dialog.open(CalendarDialogComponent, {
       width: '400px',
       data: {
-        selectedDates: element.selectedDays || [],
-        defaultDays: defaultDays,
+        selectedDates: [],  // Inicializar siempre con array vacío para que no haya días seleccionados por defecto
+        defaultDays: [],    // Inicializar con array vacío para no tener días predeterminados
         rowData: element,
         controlId: element.id
       },
@@ -1212,7 +1164,8 @@ export class AddActivitiesPpComponent implements OnInit {
     dialogRef.afterClosed().subscribe(result => {
       // Limpiamos la marca de control activo
       this.activeCalendarControl = null;
-      
+      console.log('Selected dates (AddActivitiesPpComponent):', result);
+
       if (result) {
         // Actualizamos los datos localmente
         const control = this.tableData.find(c => c.id === result.controlId);
@@ -1225,64 +1178,93 @@ export class AddActivitiesPpComponent implements OnInit {
       }
     });
   }
-  
+
+  /**
+   * Maneja la selección de fechas desde el componente calendar-select
+   * @param dates Las fechas seleccionadas
+   * @param element El elemento de la tabla que contiene el control
+   */
+  onCalendarDatesSelected(dates: Date[], element: any): void {
+    // Actualizamos los datos localmente
+    const control = this.tableData.find(c => c.id === element.id);
+    if (control) {
+      control.selectedDays = dates;
+      control.days = this.formatDaysToString(dates);
+      // Actualizar los días en la base de datos
+      this.updateControlDays(control.id, control.days);
+    }
+  }
+
   /**
    * Convierte un array de objetos Date a un string formato '1,5,10,15,20'
    */
   formatDaysToString(dates: Date[]): string {
     if (!dates || dates.length === 0) return '';
-    
+
     // Extraer solo los días del mes y ordenarlos
     return dates
       .map(date => date.getDate())
       .sort((a, b) => a - b)
-      .join(',');
+      .join('-');
   }
-  
+
   /**
-   * Convierte un string de días '1,5,10' a objetos Date
+   * Convierte un string de días '1-5-10' a objetos Date
    */
   parseDaysString(daysString: string): Date[] {
     if (!daysString) return [];
-    
+
     const currentDate = new Date();
     const currentMonth = currentDate.getMonth();
     const currentYear = currentDate.getFullYear();
-    
-    return daysString.split(',').map(day => {
+
+    return daysString.split('-').map(day => {
       const dayNumber = parseInt(day.trim(), 10);
       if (isNaN(dayNumber)) return null;
-      
+
       return new Date(currentYear, currentMonth, dayNumber);
     }).filter(date => date !== null) as Date[];
   }
-  
+
   /**
    * Actualiza los días seleccionados en la base de datos
    */
   updateControlDays(controlId: number, daysString: string): void {
     console.log(`Actualizando días para control ID ${controlId}: ${daysString}`);
-    
-    // Aquí iría la llamada al servicio para actualizar en la base de datos
+
+   // Reemplazar comas por guiones
+    daysString = daysString.replaceAll(',', '-');
+
+     // Preparar el body para la llamada al servicio
     const updateBody = {
-      "caso": "Actualiza",
-      "IdControl": controlId,
+      "caso": "ActualizaDias",
+      "idControl": controlId,
       "dias": daysString
     };
-    
-    // Opcional: Llamar al servicio para actualizar en la base de datos
-    // Comentado para evitar errores hasta implementarlo completamente
-    /*
-    this.controlService.updateControl(updateBody).subscribe({
+
+
+    // Llamar al servicio para actualizar los días en la base de datos
+    this.controlService.updateControlDays(updateBody).subscribe({
       next: (response) => {
         console.log('Días actualizados correctamente:', response);
+        this.snackBar.open('Días actualizados correctamente', 'Cerrar', {
+          duration: 3000,
+          horizontalPosition: 'center',
+          verticalPosition: 'bottom',
+          panelClass: ['success-snackbar']
+        });
       },
       error: (error) => {
         console.error('Error al actualizar días:', error);
+        this.snackBar.open('Error al actualizar días', 'Cerrar', {
+          duration: 5000,
+          horizontalPosition: 'center',
+          verticalPosition: 'bottom',
+          panelClass: ['error-snackbar']
+        });
       }
     });
-    */
-    
+
     // La tabla se actualiza automáticamente porque estamos modificando
     // directamente el objeto element que ya está en el array tableData
     console.log('Datos actualizados en la tabla:', this.tableData);

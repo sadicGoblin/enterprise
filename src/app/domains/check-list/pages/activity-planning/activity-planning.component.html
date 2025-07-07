@@ -35,7 +35,7 @@
       ></app-custom-select>
 
       <mat-form-field appearance="fill">
-        <mat-label>Periodo</mat-label>
+        <mat-label>Periodo (Actual)</mat-label>
         <input 
           matInput 
           [matDatepicker]="picker" 
@@ -54,6 +54,7 @@
           panelClass="month-picker"
         ></mat-datepicker>
       </mat-form-field>
+
 
       <div class="button-container">
         <button mat-raised-button color="primary" class="consultar-btn" (click)="onConsultarClick()">

@@ -23,7 +23,7 @@ export class ProxyService {
     
     // We'll always use the relative URL and rely on Angular's proxy
     // This completely avoids CORS issues in development
-    console.log('Using relative URL with Angular proxy:', endpoint);
+    console.log('%c Using relative URL with Angular proxy:', 'color: blue; font-weight: bold', endpoint, JSON.stringify(body));
     
     // Let Angular's development server proxy handle the request
     return this.http.post<T>(endpoint, body, { headers }).pipe(

@@ -1,0 +1,43 @@
+<!-- Year-month picker component template -->
+<div class="year-month-picker">
+  <form [formGroup]="form">
+    <div class="picker-container">
+      <mat-form-field [appearance]="appearance" class="year-select">
+        <mat-label>Año</mat-label>
+        <mat-select formControlName="year" (blur)="onBlur()">
+          <mat-option *ngFor="let year of years" [value]="year">
+            {{ year }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.get('year').hasError('required') && form.get('year').touched">
+          Año requerido
+        </mat-error>
+      </mat-form-field>
+      
+      <mat-form-field [appearance]="appearance" class="month-select">
+        <mat-label>Mes</mat-label>
+        <mat-select formControlName="month" (blur)="onBlur()">
+          <mat-option *ngFor="let month of months" [value]="month.value">
+            {{ month.viewValue }}
+          </mat-option>
+        </mat-select>
+        <mat-error *ngIf="form.get('month').hasError('required') && form.get('month').touched">
+          Mes requerido
+        </mat-error>
+      </mat-form-field>
+      
+      <button mat-icon-button 
+              type="button"
+              class="current-period-button"
+              matTooltip="Seleccionar periodo actual"
+              (click)="selectCurrentPeriod()">
+        <mat-icon>today</mat-icon>
+      </button>
+    </div>
+    
+    <div *ngIf="form.valid" class="preview">
+      <span class="period-label">Periodo seleccionado:</span>
+      <span class="period-value">{{ formatYearMonth(form.get('year').value, form.get('month').value) }}</span>
+    </div>
+  </form>
+</div>

@@ -208,12 +208,19 @@ export class MultiDateCalendarComponent implements OnInit {
    * Verifica si una fecha está deshabilitada
    */
   isDateDisabled(date: Date): boolean {
+    // Verificar límites de fecha mínima y máxima
     if (this.minDate && date < this.minDate) {
       return true;
     }
     if (this.maxDate && date > this.maxDate) {
       return true;
     }
+    
+    // Verificar si la fecha está fuera del mes actual visualizado
+    if (date.getMonth() !== this.currentMonth || date.getFullYear() !== this.currentYear) {
+      return true;
+    }
+    
     return false;
   }
 
@@ -221,7 +228,8 @@ export class MultiDateCalendarComponent implements OnInit {
    * Maneja el click en un día
    */
   onDayClick(day: CalendarDay, event: MouseEvent): void {
-    if (day.disabled) return;
+    // Ignorar días deshabilitados o fuera del mes actual
+    if (day.disabled || !day.isCurrentMonth) return;
     
     // Seleccionar rango con Shift+Click
     if (event.shiftKey && this.lastClickedDate) {
@@ -353,5 +361,35 @@ export class MultiDateCalendarComponent implements OnInit {
    */
   get currentMonthName(): string {
     return `${this.monthNames[this.currentMonth]} ${this.currentYear}`;
+  }
+  
+  /**
+   * Selecciona todos los días del mes que coincidan con el día de la semana indicado
+   * @param dayIndex ídice del día de la semana (0-6, donde 0 es domingo)
+   */
+  selectAllDaysOfWeek(dayIndex: number): void {
+    // Crear un array para almacenar los días a seleccionar
+    const daysToSelect: Date[] = [];
+    
+    // Recorrer el calendario actual y encontrar todos los días que coincidan con el día de la semana
+    for (const week of this.calendar) {
+      for (const day of week) {
+        // Solo considerar días del mes actual y no deshabilitados
+        if (day.isCurrentMonth && !day.disabled && day.date.getDay() === dayIndex) {
+          daysToSelect.push(new Date(day.date));
+        }
+      }
+    }
+    
+    // Añadir los días seleccionados al array de días seleccionados, sin duplicados
+    for (const date of daysToSelect) {
+      if (!this.isDateSelected(date)) {
+        this.selectedDates.push(new Date(date));
+      }
+    }
+    
+    // Actualizar el calendario y emitir el evento de cambio
+    this.generateCalendar();
+    this.emitChanges();
   }
 }
