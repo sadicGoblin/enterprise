@@ -1,119 +1,157 @@
 <div class="dashboard-container">
+  <!-- Indicador de carga -->
+  <div class="loading-overlay" *ngIf="isLoading">
+    <div class="spinner-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p class="loading-text">Cargando datos del período {{selectedPeriod}}...</p>
+    </div>
+  </div>
   <!-- Cabecera y filtros -->
   <div class="dashboard-header" @fadeIn>
     <div class="header-title">
       <h1>Panel de Control de Actividades</h1>
-      <div class="filter-toggle">
-        <button mat-button (click)="toggleFilters()" color="primary" class="filter-button">
+
+      <!-- Botonera de descarga -->
+      <div class="download-actions">
+        <button mat-raised-button class="download-button download-excel btn-small" (click)="downloadExcel()">
+          <mat-icon>file_download</mat-icon>
+          Descargar Datos (XLS)
+        </button>
+        <button mat-raised-button class="download-button generate-pdf btn-small" (click)="generatePDF()">
+          <mat-icon>picture_as_pdf</mat-icon>
+          Generar PDF
+        </button>
+        <button mat-button size="small" (click)="toggleFilters()" color="primary" class="filter-button">
           <mat-icon>filter_list</mat-icon>
           {{ showFilters ? 'Ocultar filtros' : 'Mostrar filtros' }}
         </button>
       </div>
     </div>
-    
+
     <!-- Panel de filtros -->
     <div class="filters-panel" [@filterAnimation]="showFilters ? 'show' : 'hide'">
-      <div class="filters-content">
-        <mat-form-field appearance="outline">
-          <mat-label>Proyecto</mat-label>
-          <mat-select [(ngModel)]="selectedProject" (selectionChange)="onFilterChange()">
-            <mat-option value="">Todos los proyectos</mat-option>
-            <mat-option *ngFor="let project of projects" [value]="project">{{ project }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        
-        <mat-form-field appearance="outline">
-          <mat-label>Usuario</mat-label>
-          <mat-select [(ngModel)]="selectedUser" (selectionChange)="onFilterChange()">
-            <mat-option value="">Todos los usuarios</mat-option>
-            <mat-option *ngFor="let user of users" [value]="user">{{ user }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        
-        <mat-form-field appearance="outline">
-          <mat-label>Ámbito</mat-label>
-          <mat-select [(ngModel)]="selectedScope" (selectionChange)="onFilterChange()">
-            <mat-option value="">Todos los ámbitos</mat-option>
-            <mat-option *ngFor="let scope of scopes" [value]="scope">{{ scope }}</mat-option>
-          </mat-select>
-        </mat-form-field>
-        
-        <button mat-flat-button color="accent" (click)="clearFilters()">
-          <mat-icon>clear</mat-icon> Limpiar filtros
-        </button>
+      <mat-card class="filters-card">
+        <mat-card-content class="filters-content">
+          <div class="filters-grid">
+            <mat-form-field appearance="fill" class="filter-field">
+              <mat-label>Período</mat-label>
+              <mat-select [(ngModel)]="selectedPeriod" (selectionChange)="onFilterChange()" panelClass="compact-select">
+                <mat-option *ngFor="let period of periodOptions" [value]="period">
+                  {{ period }}
+                </mat-option>
+              </mat-select>
+              <mat-icon matPrefix>calendar_today</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="filter-field">
+              <mat-label>Proyecto</mat-label>
+              <mat-select [(ngModel)]="selectedProject" (selectionChange)="onFilterChange()"
+                panelClass="compact-select">
+                <mat-option value="">Todos los proyectos</mat-option>
+                <mat-option *ngFor="let project of projects" [value]="project">{{ project }}</mat-option>
+              </mat-select>
+              <mat-icon matPrefix>business</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="filter-field">
+              <mat-label>Usuario</mat-label>
+              <mat-select [(ngModel)]="selectedUser" (selectionChange)="onFilterChange()" panelClass="compact-select">
+                <mat-option value="">Todos los usuarios</mat-option>
+                <mat-option *ngFor="let user of users" [value]="user">{{ user }}</mat-option>
+              </mat-select>
+              <mat-icon matPrefix>person</mat-icon>
+            </mat-form-field>
+
+            <mat-form-field appearance="fill" class="filter-field">
+              <mat-label>Ámbito</mat-label>
+              <mat-select [(ngModel)]="selectedScope" (selectionChange)="onFilterChange()" panelClass="compact-select">
+                <mat-option value="">Todos los ámbitos</mat-option>
+                <mat-option *ngFor="let scope of scopes" [value]="scope">{{ scope }}</mat-option>
+              </mat-select>
+              <mat-icon matPrefix>category</mat-icon>
+            </mat-form-field>
+          </div>
+
+          <div class="filter-actions">
+            <button mat-flat-button color="primary" class="apply-filters-button" (click)="onFilterChange()">
+              <mat-icon>filter_list</mat-icon>
+              Aplicar
+            </button>
+
+            <button mat-stroked-button class="clear-filters-button" (click)="clearFilters()">
+              <mat-icon>refresh</mat-icon>
+              Limpiar
+            </button>
+          </div>
+        </mat-card-content>
+      </mat-card>
+    </div>
+  </div>
+
+  <!-- Gráficos y Métricas -->
+  <mat-card class="charts-card" @fadeIn>
+    <mat-card-content>
+      <div class="title">
+        Métricas Período {{selectedPeriod}}
+        <span *ngIf="selectedProject || selectedUser || selectedScope">
+          | {{ selectedProject ? 'Proyecto: ' + selectedProject : '' }}
+          {{ selectedUser ? 'Usuario: ' + selectedUser : '' }}
+          {{ selectedScope ? 'Ámbito: ' + selectedScope : '' }}
+        </span>
       </div>
-    </div>
-  </div>
-  
-  <!-- Tarjetas de métricas principales -->
-  <app-metrics-cards 
-    [complianceRate]="complianceRate"
-    [totalUsers]="totalUsers"
-    [pendingActivities]="pendingActivities"
-    [totalActivities]="totalActivities"
-    [totalProjects]="totalProjects"
-    [pendingPercentage]="pendingPercentage"
-    @fadeIn>
-  </app-metrics-cards>
-  
-  <!-- Gráficos -->
-  <div class="charts-container">
-    <!-- Primera fila de gráficos -->
-    <div class="charts-row">
-      <!-- Gráfico de dona (Total Actividades: Asignadas vs Completadas) -->
-      <app-donut-chart 
-        [rawData]="rawData"
-        [selectedProject]="selectedProject"
-        [selectedUser]="selectedUser"
-        [selectedScope]="selectedScope"
-        @fadeIn>
-      </app-donut-chart>
-      
-      <!-- Gráfico de barras (cumplimiento por proyecto) -->
-      <app-bar-chart 
-        [rawData]="rawData"
-        [selectedProject]="selectedProject"
-        [selectedUser]="selectedUser"
-        [selectedScope]="selectedScope"
-        @fadeIn>
-      </app-bar-chart>
-    </div>
-    
-    <!-- Gráfico de línea (cumplimiento diario) - ocupa todo el ancho -->
-    <div class="charts-row full-width-chart">
-      <app-line-chart 
-        [rawData]="rawData"
-        [selectedProject]="selectedProject"
-        [selectedUser]="selectedUser"
-        [selectedScope]="selectedScope"
-        @fadeIn>
-      </app-line-chart>
-    </div>
-    
-    <!-- Segunda fila de gráficos -->
-    <div class="charts-row">
-      <!-- Heatmap (distribución por periodicidad y ámbito) -->
-      <app-heatmap 
-        [rawData]="rawData"
-        [selectedProject]="selectedProject"
-        [selectedUser]="selectedUser"
-        [selectedScope]="selectedScope"
-        @fadeIn>
-      </app-heatmap>
-      
-      <!-- Componente de Top 5 Usuarios -->
-      <app-active-projects-card
-        [rawData]="rawData"
-        [selectedProject]="selectedProject"
-        [selectedScope]="selectedScope"
-        @fadeIn>
-      </app-active-projects-card>
-    </div>
-  </div>
-  
+      <div class="charts-container">
+        <!-- Tarjetas de métricas principales -->
+        <div class="metrics-section">
+          <app-metrics-cards [complianceRate]="complianceRate" [totalUsers]="totalUsers"
+            [pendingActivities]="pendingActivities" [totalActivities]="totalActivities" [totalProjects]="totalProjects"
+            [pendingPercentage]="pendingPercentage" @fadeIn>
+          </app-metrics-cards>
+        </div>
+        <!-- Primera fila de gráficos -->
+        <div class="charts-row">
+          <!-- Gráfico de dona (Total Actividades: Asignadas vs Completadas) -->
+          <app-donut-chart [rawData]="rawData" [selectedProject]="selectedProject" [selectedUser]="selectedUser"
+            [selectedScope]="selectedScope" @fadeIn>
+          </app-donut-chart>
+
+          <!-- Gráfico de barras (cumplimiento por proyecto) -->
+          <app-bar-chart [rawData]="rawData" [selectedProject]="selectedProject" [selectedUser]="selectedUser"
+            [selectedScope]="selectedScope" @fadeIn>
+          </app-bar-chart>
+        </div>
+
+        <div class="row-section"></div>
+
+        <!-- Gráfico de línea (cumplimiento diario) - ocupa todo el ancho -->
+        <div class="charts-row full-width-chart">
+          <app-line-chart [rawData]="rawData" [selectedProject]="selectedProject" [selectedUser]="selectedUser"
+            [selectedScope]="selectedScope" @fadeIn>
+          </app-line-chart>
+        </div>
+
+        <!-- Segunda fila de gráficos -->
+        <div class="charts-row">
+          <!-- Heatmap (distribución por periodicidad y ámbito) -->
+          <app-heatmap [rawData]="rawData" [selectedProject]="selectedProject" [selectedUser]="selectedUser"
+            [selectedScope]="selectedScope" @fadeIn>
+          </app-heatmap>
+
+          <!-- Componente de Top 5 Usuarios -->
+          <app-active-projects-card [rawData]="rawData" [selectedProject]="selectedProject"
+            [selectedScope]="selectedScope" @fadeIn>
+          </app-active-projects-card>
+        </div>
+
+      </div>
+
+      <div class="row-section"></div>
+
+
+    </mat-card-content>
+  </mat-card>
   <!-- Tabla de actividades recientes -->
-  <app-recent-activities 
-    [activities]="filteredActivities"
-    @fadeIn>
-  </app-recent-activities>
+  <div class="activities-section">
+    <app-recent-activities [activities]="filteredActivities" @fadeIn>
+    </app-recent-activities>
+  </div>
 </div>

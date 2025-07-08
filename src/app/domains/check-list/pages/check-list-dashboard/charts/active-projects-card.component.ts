@@ -306,8 +306,18 @@ export class ActiveProjectsCardComponent implements OnChanges {
       };
     });
     
-    // Ordenar por porcentaje de cumplimiento (descendente)
-    usersArray.sort((a, b) => b.percentage - a.percentage);
+    // Ordenar por porcentaje de cumplimiento (descendente) y luego por cantidad de completadas
+    usersArray.sort((a, b) => {
+      // Primero comparar por porcentaje
+      const percentageDiff = b.percentage - a.percentage;
+      
+      // Si los porcentajes son iguales, ordenar por cantidad de actividades completadas
+      if (Math.abs(percentageDiff) < 0.01) { // Comparación con margen de error para valores de punto flotante
+        return b.completed - a.completed;
+      }
+      
+      return percentageDiff;
+    });
     
     // Tomar solo los 8 mejores
     this.topUsers = usersArray.slice(0, 8);
