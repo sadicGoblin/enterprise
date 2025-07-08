@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormControl } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -12,11 +12,18 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatSortModule, MatSort } from '@angular/material/sort';
 
 import { HttpClient } from '@angular/common/http';
 import { CustomSelectComponent, SelectOption, ParameterType } from '../../../../../shared/controls/custom-select/custom-select.component';
 import { ObraService } from '../../../services/obra.service';
+import { ActividadService } from '../../../services/actividad.service';
 import { UserContextService } from '../../../../../core/services/user-context.service';
+import { InspeccionSSTMA } from '../../../models/actividad.models';
+
+import * as XLSX from 'xlsx';
 
 // Interface para las obras
 export interface ObraSimple {
@@ -41,12 +48,15 @@ export interface ObraSimple {
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatDividerModule,
+    MatTableModule,
+    MatPaginatorModule,
+    MatSortModule,
     CustomSelectComponent
   ],
   templateUrl: './sstma-inspection.component.html',
-  styleUrl: './sstma-inspection.component.scss'
+  styleUrls: ['./sstma-inspection.component.scss']
 })
-export class SstmaInspectionComponent implements OnInit {
+export class SstmaInspectionComponent implements OnInit, AfterViewInit {
   // Control for the form visibility
   isLoading = false;
 
@@ -56,14 +66,12 @@ export class SstmaInspectionComponent implements OnInit {
   fromDate: Date | null = null;
   toDate: Date | null = null;
 
-  // API Parameters for obra selection
+  // API Parameters for obra selection - Using the same pattern as add-activities-pp
   projectApiEndpoint = '/ws/ObrasSvcImpl.php';
   projectApiRequestBody: any;
   projectOptionValueKey = 'IdObra';
   projectOptionLabelKey = 'Obra';
-
-  // Parameter type for the custom select
-  parameterTypeCustomApi = ParameterType.CUSTOM_API;
+  projectParameterType = ParameterType.OBRA;
 
   // For the custom select components
   obraOptions: SelectOption[] = [];
@@ -78,22 +86,92 @@ export class SstmaInspectionComponent implements OnInit {
     'Empresa INARCO/SC'
   ];
   
+  // Resultados de inspecciones
+  inspecciones: InspeccionSSTMA[] = [];
+  inspeccionesFiltradas: InspeccionSSTMA[] = [];
+  dataSource = new MatTableDataSource<InspeccionSSTMA>([]);
+  displayedColumns: string[] = [
+    'idInspeccionSSTMA', 
+    'fecha', 
+    'Obra', 
+    'areaTrabajo', 
+    'riesgoAsociado', 
+    'potencialGravedad', 
+    'ambitoInvolucrado', 
+    'empresa',
+    'usuarioCreacion'
+  ];
+  isResultsLoading = false;
+  hasResults = false;
+  errorMessage = '';
+  filterValue = '';
+  
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+  @ViewChild(MatSort) sort!: MatSort;
+  
   constructor(
     private http: HttpClient,
     private obraService: ObraService,
+    private actividadService: ActividadService,
     private userContextService: UserContextService,
     private snackBar: MatSnackBar
   ) {}
   
   ngOnInit(): void {
+    // Set default dates
+    this.fromDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1); // First day of current month
+    this.toDate = new Date(); // Today
+    
+    // Set up API request details for project selection
     this.setupApiRequest();
-    this.initializeSelectOptions();
+    
+    // Set up indicator options
+    this.setupIndicatorOptions();
+    
+    console.log('[SSTMA] Component initialized with default dates:', {
+      fromDate: this.fromDate,
+      toDate: this.toDate
+    });
+  }
+  
+  ngAfterViewInit(): void {
+    // Configurar el ordenamiento y la paginación después de inicializar la vista
+    if (this.dataSource) {
+      this.dataSource.paginator = this.paginator;
+      this.dataSource.sort = this.sort;
+      
+      // Configuración personalizada para ordenamiento de fechas
+      this.dataSource.sortingDataAccessor = (item: InspeccionSSTMA, property: string) => {
+        switch(property) {
+          case 'fecha':
+            return new Date(item.fecha).getTime();
+          case 'idInspeccionSSTMA':
+            return item.idInspeccionSSTMA;
+          case 'Obra':
+            return item.Obra;
+          case 'areaTrabajo':
+            return item.areaTrabajo;
+          case 'riesgoAsociado':
+            return item.riesgoAsociado;
+          case 'potencialGravedad':
+            return item.potencialGravedad;
+          case 'ambitoInvolucrado':
+            return item.ambitoInvolucrado;
+          case 'empresa':
+            return item.empresa;
+          case 'usuarioCreacion':
+            return item.usuarioCreacion || '';
+          default:
+            return '';
+        }
+      };
+    }
   }
   
   /**
    * Initialize the indicator select options
    */
-  initializeSelectOptions(): void {
+  setupIndicatorOptions(): void {
     // Add default option
     this.indicatorOptions = [{ value: '', label: 'Seleccione...' }];
     
@@ -107,32 +185,20 @@ export class SstmaInspectionComponent implements OnInit {
   }
   
   /**
-   * Setup API request with user ID from localStorage
+   * Setup API request with user ID
    */
   setupApiRequest(): void {
-    // Get user ID from localStorage or use default
-    let userId: number;
-    try {
-      const userDataStr = localStorage.getItem('userData');
-      if (userDataStr) {
-        const userData = JSON.parse(userDataStr);
-        userId = userData.id || 478; // Use 478 as fallback if id not found
-      } else {
-        userId = 478; // Default fallback
-      }
-    } catch (error) {
-      console.error('Error parsing user data from localStorage:', error);
-      userId = 478; // Default fallback on error
-    }
-
-    // Setup the API request body
+    // Get user ID from user context or use default
+    const userId = this.userContextService.getUserId() || 0;
+    
+    // Setup API request body for obra service (matching the format used in add-activities-pp)
     this.projectApiRequestBody = {
       caso: 'Consulta',
       idObra: 0,
       idUsuario: userId
     };
     
-    console.log('API Request Body:', this.projectApiRequestBody);
+    console.log('[SSTMA] API request configured with userId:', userId);
   }
   
   /**
@@ -140,9 +206,9 @@ export class SstmaInspectionComponent implements OnInit {
    */
   onProjectSelectionChange(selectedProject: SelectOption | null): void {
     if (selectedProject && selectedProject.value) {
-      console.log('Project selected:', selectedProject.value);
+      console.log('[SSTMA] Project selected:', selectedProject.value);
     } else {
-      console.log('Project selection cleared');
+      console.log('[SSTMA] Project selection cleared');
     }
   }
   
@@ -150,23 +216,135 @@ export class SstmaInspectionComponent implements OnInit {
    * Reset form controls
    */
   resetForm(): void {
-    this.projectControl.reset('');
-    this.indicator.reset('');
-    this.fromDate = null;
-    this.toDate = null;
+    this.projectControl.reset();
+    this.indicator.reset();
+    this.fromDate = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+    this.toDate = new Date();
+    this.filterValue = '';
+  }
+
+  /**
+   * Filtrar inspecciones basado en el término de búsqueda
+   * @param event Evento de teclado del input de filtro
+   */
+  applyFilter(event: Event): void {
+    this.filterValue = (event.target as HTMLInputElement).value;
+    this.dataSource.filter = this.filterValue.trim().toLowerCase();
+    
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
+    }
+    // Mantener la lista filtrada para otras operaciones como exportación
+    this.inspeccionesFiltradas = this.filterValue ? 
+      this.dataSource.filteredData : 
+      this.inspecciones;
+  }
+
+  /**
+   * Exportar los datos de inspecciones a Excel
+   */
+  exportToExcel(): void {
+    if (!this.inspeccionesFiltradas.length) {
+      this.showMessage('No hay datos para exportar');
+      return;
+    }
+    
+    try {
+      const fileName = `Inspecciones_SSTMA_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      // Preparar los datos para la exportación
+      const exportData = this.inspeccionesFiltradas.map(item => ({
+        'ID': item.idInspeccionSSTMA,
+        'Fecha': item.fecha,
+        'Obra': item.Obra,
+        'Área de Trabajo': item.areaTrabajo,
+        'Riesgo Asociado': item.riesgoAsociado,
+        'Potencial Gravedad': item.potencialGravedad,
+        'Ámbito': item.ambitoInvolucrado,
+        'Empresa': item.empresa,
+        'Acción': item.accion,
+        'Medida de Control': item.medidaControl,
+        'Profesional Responsable': item.profesionalResponsable
+      }));
+      
+      // Crear el libro y hoja de Excel
+      const worksheet = XLSX.utils.json_to_sheet(exportData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Inspecciones');
+      
+      // Guardar archivo
+      XLSX.writeFile(workbook, fileName);
+      
+      this.showMessage('Datos exportados correctamente');
+    } catch (error) {
+      console.error('[SSTMA] Error exporting data:', error);
+      this.showMessage('Error al exportar los datos');
+    }
   }
 
   /**
    * Search inspection reports with current filters
    */
   buscarReportes(): void {
-    console.log('Searching with filters:', {
-      proyecto: this.projectControl.value,
+    const idObra = this.projectControl.value;
+    
+    if (!idObra) {
+      this.showMessage('Debe seleccionar una obra');
+      return;
+    }
+    
+    console.log('[SSTMA] Searching with filters:', {
+      proyecto: idObra,
       indicador: this.indicator.value,
       fechaDesde: this.fromDate,
       fechaHasta: this.toDate
     });
-    // Aquí iría la lógica para buscar reportes con los filtros aplicados
+    
+    this.isLoading = true;
+    this.isResultsLoading = true;
+    this.hasResults = false;
+    this.errorMessage = '';
+    
+    this.actividadService.getInspeccionesSSTMA(Number(idObra)).subscribe({
+      next: (response) => {
+        console.log('[SSTMA] Response:', response);
+        this.hasResults = true;
+        
+        if (response && response.success && response.data && response.data.length > 0) {
+          // Ordenar las inspecciones por fecha descendente antes de asignarlas
+          this.inspecciones = response.data.sort((a: InspeccionSSTMA, b: InspeccionSSTMA) => {
+            const fechaA = new Date(a.fecha).getTime();
+            const fechaB = new Date(b.fecha).getTime();
+            return fechaB - fechaA; // Orden descendente (más reciente primero)
+          });
+          
+          this.inspeccionesFiltradas = [...this.inspecciones];
+          this.dataSource = new MatTableDataSource<InspeccionSSTMA>(this.inspeccionesFiltradas);
+          
+          // Configurar el ordenador y paginador
+          if (this.paginator) this.dataSource.paginator = this.paginator;
+          if (this.sort) this.dataSource.sort = this.sort;
+          
+          console.log('[SSTMA] Inspecciones cargadas y ordenadas por fecha descendente:', this.inspecciones.length);
+        } else {
+          this.inspecciones = [];
+          this.inspeccionesFiltradas = [];
+          this.dataSource = new MatTableDataSource<InspeccionSSTMA>([]);
+          this.errorMessage = 'No se encontraron inspecciones para la obra seleccionada';
+          console.warn('[SSTMA] No inspections found in response');
+        }
+        this.isLoading = false;
+        this.isResultsLoading = false;
+      },
+      error: (error) => {
+        console.error('[SSTMA] Error loading inspections:', error);
+        this.inspecciones = [];
+        this.errorMessage = 'Error al cargar las inspecciones';
+        this.isLoading = false;
+        this.isResultsLoading = false;
+        this.showMessage('Error al cargar las inspecciones');
+      }
+    });
   }
 
   /**

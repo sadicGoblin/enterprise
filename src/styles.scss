@@ -28,6 +28,12 @@ body {
   line-height: var(--line-height-base);
 }
 
+
+.mat-form-field, .mat-form-field-wrapper {
+  font-size: var(--font-size-sm) !important;
+  zoom: 0.8 !important;
+}
+
 // Global text size adjustments
 .mat-typography h1 {
   font-size: 1.75rem !important; // Reduced from 2.5rem

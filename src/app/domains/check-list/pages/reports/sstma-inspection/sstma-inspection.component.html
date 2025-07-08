@@ -23,7 +23,7 @@
             [customApiRequestBody]="projectApiRequestBody"
             [customOptionValueKey]="projectOptionValueKey"
             [customOptionLabelKey]="projectOptionLabelKey"
-            [parameterType]="parameterTypeCustomApi"
+            [parameterType]="projectParameterType"
             [loadFromApi]="true"
             (selectionChange)="onProjectSelectionChange($event)"
             [label]="'Obra'"
@@ -61,17 +61,117 @@
             <mat-icon>refresh</mat-icon> Limpiar
           </button>
           <button mat-raised-button color="primary" (click)="buscarReportes()">
-            <mat-icon>search</mat-icon> Buscar
+            <mat-icon>save</mat-icon> Buscar
           </button>
         </div>
       </div>
 
-      <!-- Aquí iría el contenido de los resultados -->
-      <!-- Ejemplo de espacio para resultados -->
-      <div class="results-container" *ngIf="projectControl.value">
-        <h3>Resultados</h3>
-        <p>Mostrando datos para: {{ projectControl.value }}</p>
-        <!-- Aquí podría ir una tabla o gráficos con los datos -->
+      <!-- Contenido de resultados -->
+      <div class="results-container">
+        <!-- Spinner mientras se cargan resultados -->
+        <div *ngIf="isResultsLoading" class="spinner-container">
+          <mat-spinner diameter="30"></mat-spinner>
+          <p>Cargando inspecciones...</p>
+        </div>
+        
+        <!-- Mensaje cuando no hay resultados -->
+        <div *ngIf="!isResultsLoading && errorMessage" class="no-results">
+          <mat-icon color="warn">info</mat-icon>
+          <p>{{ errorMessage }}</p>
+        </div>
+        
+        <!-- Tabla de resultados -->
+        <div *ngIf="hasResults" class="results-table">
+          <div class="results-header">
+            <div class="header-title">
+              <h3>Inspecciones SSTMA</h3>
+              <p>Se encontraron {{ dataSource.filteredData.length }} de {{ inspecciones.length }} inspecciones</p>
+            </div>
+            <div class="actions-container">
+              <div class="search-container">
+                <mat-form-field appearance="outline" class="filter-field">
+                  <mat-label>Buscar</mat-label>
+                  <input matInput (keyup)="applyFilter($event)" placeholder="Filtrar resultados">
+                  <mat-icon matSuffix>search</mat-icon>
+                </mat-form-field>
+              </div>
+              <button mat-mini-fab color="accent" class="export-button" (click)="exportToExcel()" 
+                      matTooltip="Exportar a Excel">
+                <mat-icon>file_download</mat-icon>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Tabla Material Angular -->
+          <div class="mat-elevation-z8 table-container">
+            <table mat-table [dataSource]="dataSource" matSort matSortActive="fecha" matSortDirection="desc">
+              
+              <!-- ID Column -->
+              <ng-container matColumnDef="idInspeccionSSTMA">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> ID </th>
+                <td mat-cell *matCellDef="let inspeccion"> {{inspeccion.idInspeccionSSTMA}} </td>
+              </ng-container>
+
+              <!-- Fecha Column -->
+              <ng-container matColumnDef="fecha">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Fecha </th>
+                <td mat-cell *matCellDef="let inspeccion"> {{inspeccion.fecha | date:'dd/MM/yyyy'}} </td>
+              </ng-container>
+
+              <!-- Obra Column -->
+              <ng-container matColumnDef="Obra">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Obra </th>
+                <td mat-cell *matCellDef="let inspeccion"> {{inspeccion.Obra}} </td>
+              </ng-container>
+
+              <!-- Area Trabajo Column -->
+              <ng-container matColumnDef="areaTrabajo">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Área de Trabajo </th>
+                <td mat-cell *matCellDef="let inspeccion"> {{inspeccion.areaTrabajo}} </td>
+              </ng-container>
+
+              <!-- Riesgo Column -->
+              <ng-container matColumnDef="riesgoAsociado">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Riesgo </th>
+                <td mat-cell *matCellDef="let inspeccion"> {{inspeccion.riesgoAsociado}} </td>
+              </ng-container>
+
+              <!-- Gravedad Column -->
+              <ng-container matColumnDef="potencialGravedad">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Gravedad </th>
+                <td mat-cell *matCellDef="let inspeccion"> {{inspeccion.potencialGravedad}} </td>
+              </ng-container>
+
+              <!-- Ambito Column -->
+              <ng-container matColumnDef="ambitoInvolucrado">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Ámbito </th>
+                <td mat-cell *matCellDef="let inspeccion"> {{inspeccion.ambitoInvolucrado}} </td>
+              </ng-container>
+
+              <!-- Empresa Column -->
+              <ng-container matColumnDef="empresa">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Empresa </th>
+                <td mat-cell *matCellDef="let inspeccion"> {{inspeccion.empresa}} </td>
+              </ng-container>
+              
+              <!-- Usuario Creación Column -->
+              <ng-container matColumnDef="usuarioCreacion">
+                <th mat-header-cell *matHeaderCellDef mat-sort-header> Usuario </th>
+                <td mat-cell *matCellDef="let inspeccion"> {{inspeccion.usuarioCreacion}} </td>
+              </ng-container>
+
+              <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+              <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+              <!-- Fila para cuando no hay datos -->
+              <tr class="mat-row" *matNoDataRow>
+                <td class="mat-cell" colspan="8">No se encontraron datos que coincidan con el filtro "{{filterValue}}"</td>
+              </tr>
+            </table>
+
+            <mat-paginator [pageSize]="15" [pageSizeOptions]="[15, 30, 50, 100]" showFirstLastButtons></mat-paginator>
+          </div>
+        </div>
       </div>
     </div>
   </mat-card>

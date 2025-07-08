@@ -17,17 +17,90 @@ $danger-color: #f44336;
   background-color: #fafafa;
   min-height: 100vh;
   font-family: Roboto, "Helvetica Neue", sans-serif;
+  position: relative; // Necesario para posicionar el overlay correctamente
+  max-width: 1200px;
+  margin: 0 auto; // Centrar el contenedor
+  width: 100%;
+  box-sizing: border-box; // Para que el padding no afecte el ancho total
+}
+
+// Overlay de carga
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(250, 250, 250, 0.8);
+  z-index: 1000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px); // Para Safari
+  
+  .spinner-container {
+    background-color: white;
+    padding: 30px 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    min-width: 250px;
+    
+    mat-spinner {
+      ::ng-deep circle {
+        stroke: $primary-color;
+      }
+    }
+    
+    .loading-text {
+      margin: 0;
+      font-size: 14px;
+      color: $text-secondary;
+      font-weight: 500;
+    }
+  }
 }
 
 // Cabecera y filtros
 .dashboard-header {
-  margin-bottom: 20px;
+  margin-bottom: 10px;
 
   .header-title {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
+    
+    .period-indicator {
+      background: linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(66, 165, 245, 0.15) 100%);
+      border-left: 3px solid $primary-color;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 14px;
+      margin-left: 24px;
+      display: flex;
+      align-items: center;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      transition: all 0.3s ease;
+      
+      .period-label {
+        color: $text-secondary;
+        font-weight: 500;
+        margin-right: 8px;
+      }
+      
+      .period-value {
+        color: $primary-color;
+        font-weight: 600;
+        font-size: 16px;
+        letter-spacing: 1px;
+      }
+    }
+    
 
     h1 {
       font-size: 24px;
@@ -60,28 +133,103 @@ $danger-color: #f44336;
   }
 
   .filters-panel {
-    background: white;
-    border-radius: 5px;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-    margin-bottom: 16px;
+    margin-bottom: 20px;
     overflow: hidden;
-
-    .filters-content {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px;
-      padding: 16px;
-      align-items: center;
-
-      mat-form-field {
-        flex: 1;
-        min-width: 200px;
+    
+    .filters-card {
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+      border-radius: 8px;
+      padding: 0;
+      
+      .filters-content {
+        padding: 12px 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
       }
-
-      button {
-        height: 36px;
-        margin: 0;
-        align-self: center;
+      
+      .filters-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 16px;
+        width: 100%;
+        
+        .filter-field {
+          margin: 0;
+          
+          ::ng-deep {
+            .mat-form-field-wrapper {
+              padding-bottom: 0;
+            }
+            
+            .mat-form-field-infix {
+              padding: 0.5em 0;
+              border-top: 0.5em solid transparent;
+            }
+            
+            .mat-form-field-flex {
+              padding: 0.5em 0.75em 0.5em 0.75em;
+              background-color: rgba(0, 0, 0, 0.02);
+            }
+            
+            .mat-form-field-underline {
+              bottom: 0;
+            }
+            
+            .mat-form-field-prefix {
+              margin-right: 8px;
+              color: #666;
+              top: 0.25em;
+              position: relative;
+            }
+            
+            .mat-select-arrow-wrapper {
+              padding-left: 8px;
+            }
+          }
+          
+          mat-icon {
+            font-size: 18px;
+            height: 18px;
+            width: 18px;
+          }
+        }
+      }
+      
+      .filter-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        padding-top: 4px;
+        
+        button {
+          min-width: 100px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 8px;
+          height: 36px;
+          border-radius: 4px;
+          font-weight: 500;
+          font-size: 14px;
+          transition: all 0.2s ease;
+          
+          mat-icon {
+            font-size: 18px;
+            height: 18px;
+            width: 18px;
+            margin-right: 4px;
+          }
+        }
+        
+        .clear-filters-button {
+          color: #666;
+          border-color: #ddd;
+          
+          &:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+          }
+        }
       }
     }
   }
@@ -200,8 +348,60 @@ $danger-color: #f44336;
 }
 
 // Contenedor de gráficos
-.charts-container {
+// Tarjeta de gráficos
+.charts-card {
   margin-bottom: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  overflow: hidden;
+  
+  mat-card-header {
+    padding: 16px 24px;
+    background-color: rgba(25, 118, 210, 0.03);
+    border-bottom: 1px solid $border-color;
+    
+    mat-card-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: #202435 !important;
+    }
+    
+    mat-card-subtitle {
+      color: #202435 !important;
+      font-size: 14px;
+    }
+  }
+  
+  mat-card-content {
+    padding: 20px;
+    
+    .metrics-section {
+      margin-bottom: 24px;
+    }
+    
+    .charts-container {
+      padding-top: 10px;
+      border-top: 1px solid $border-color;
+    }
+    
+    .activities-section {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid $border-color;
+      
+      .section-title {
+        font-size: 18px;
+        font-weight: 500;
+        color: #202435 !important;
+        margin-bottom: 16px;
+      }
+    }
+  }
+}
+
+.charts-container {
+  margin-bottom: 0;
 
   .charts-row {
     display: grid;
@@ -478,5 +678,79 @@ $danger-color: #f44336;
     flex-direction: column;
     align-items: flex-start;
     gap: 10px;
+  }
+}
+
+// Estilos para la botonera de descarga
+.download-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  margin-left: auto; // Alinea los botones a la derecha
+  
+  .download-button {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    font-weight: 500;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s ease;
+    color: white;
+    
+    // Estilo específico para botones small
+    &.btn-small {
+      padding: 4px 12px;
+      font-size: 12px;
+      line-height: 1;
+      height: 28px;
+      
+      mat-icon {
+        font-size: 18px;
+        height: 18px;
+        width: 18px;
+        line-height: 18px;
+      }
+    }
+    
+    &:hover {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      transform: translateY(-2px);
+    }
+    
+    &.download-excel {
+      background-color: #4caf50; // Verde para descargar XLS
+      
+      &:hover {
+        background-color: darken(#4caf50, 8%);
+      }
+    }
+    
+    &.generate-pdf {
+      background-color: #f44336; // Rojo para generar PDF
+      
+      &:hover {
+        background-color: darken(#f44336, 8%);
+      }
+    }
+    
+    mat-icon {
+      font-size: 20px;
+      height: 20px;
+      width: 20px;
+    }
+  }
+}
+
+@media (max-width: 768px) {
+  .download-actions {
+    flex-direction: column;
+    width: 100%;
+    
+    .download-button {
+      width: 100%;
+      justify-content: center;
+    }
   }
 }

@@ -35,6 +35,22 @@ interface CheckListRawItem {
       </mat-card-header>
       <mat-card-content>
         <div class="chart-container">
+          <div class="center-stats" *ngIf="totalActivities > 0">
+            <div class="total-value">{{ totalActivities }}</div>
+            <div class="total-label">Total</div>
+            <div class="stat-row">
+              <div class="stat completed">
+                <span class="value">{{ completedActivities }}</span>
+                <span class="label">Completadas</span>
+                <span class="percent">{{ getPercentage(completedActivities) }}%</span>
+              </div>
+              <div class="stat pending">
+                <span class="value">{{ pendingActivities }}</span>
+                <span class="label">Pendientes</span>
+                <span class="percent">{{ getPercentage(pendingActivities) }}%</span>
+              </div>
+            </div>
+          </div>
           <canvas #chartCanvas></canvas>
         </div>
       </mat-card-content>
@@ -94,6 +110,85 @@ interface CheckListRawItem {
       display: flex;
       justify-content: center;
       align-items: center;
+    }
+
+    .center-stats {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .total-value {
+      font-size: 32px;
+      font-weight: bold;
+      color: #ffffff;
+      line-height: 1;
+      margin-bottom: 0;
+    }
+
+    .total-label {
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 8px;
+    }
+
+    .stat-row {
+      display: flex;
+      justify-content: space-between;
+      width: 100%;
+      gap: 12px;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 4px 8px;
+      border-radius: 4px;
+      min-width: 90px;
+      
+      &.completed {
+        background-color: rgba(16, 185, 129, 0.2); /* Verde semi-transparente */
+      }
+      
+      &.pending {
+        background-color: rgba(244, 63, 94, 0.2); /* Rojo semi-transparente */
+      }
+
+      .value {
+        font-size: 16px;
+        font-weight: bold;
+        color: #ffffff;
+        line-height: 1;
+      }
+
+      .label {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        margin: 2px 0;
+      }
+
+      .percent {
+        font-size: 14px;
+        font-weight: bold;
+        line-height: 1;
+      }
+
+      &.completed .percent {
+        color: #10B981; /* Verde */
+      }
+
+      &.pending .percent {
+        color: #F43F5E; /* Rojo */
+      }
     }
   `]
 })
@@ -177,6 +272,12 @@ export class DonutChartComponent implements OnInit, AfterViewInit, OnChanges {
     // Actualizar datos del gráfico
     this.chart.data = this.getChartData();
     this.chart.update();
+  }
+  
+  // Calcular el porcentaje de un valor con respecto al total
+  getPercentage(value: number): number {
+    if (this.totalActivities <= 0) return 0;
+    return Math.round((value / this.totalActivities) * 100);
   }
 
   private getChartData(): ChartConfiguration['data'] {
@@ -265,7 +366,7 @@ export class DonutChartComponent implements OnInit, AfterViewInit, OnChanges {
     return {
       responsive: true,
       maintainAspectRatio: false,
-      cutout: '70%',
+      cutout: '65%', // Reducimos ligeramente el recorte para que el donut sea más visible
       plugins: {
         legend: {
           position: 'bottom',
@@ -282,11 +383,13 @@ export class DonutChartComponent implements OnInit, AfterViewInit, OnChanges {
           display: false // Quitamos el título duplicado ya que está en el mat-card-header
         },
         tooltip: {
+          enabled: true,
           backgroundColor: 'rgba(20, 20, 30, 0.95)',
           titleColor: '#ffffff',
           bodyColor: '#ffffff',
           padding: 12,
           cornerRadius: 6,
+          displayColors: true,
           callbacks: {
             label: function(context: any) {
               const label = context.label || '';
@@ -298,8 +401,26 @@ export class DonutChartComponent implements OnInit, AfterViewInit, OnChanges {
           }
         },
         datalabels: {
-          display: false // Desactivamos las etiquetas de datos para mantener el gráfico limpio
+          display: true, // Activamos las etiquetas de datos
+          color: '#ffffff',
+          font: {
+            weight: 'bold',
+            size: 12
+          },
+          formatter: (value: number, context: any) => {
+            const total = context.chart.data.datasets[0].data.reduce((a: number, b: number) => a + b, 0);
+            const percentage = Math.round((value / total) * 100);
+            return `${percentage}%`;
+          },
+          textAlign: 'center',
+          align: 'end',
+          anchor: 'end',
+          offset: 5
         }
+      },
+      animation: {
+        animateRotate: true,
+        animateScale: true
       }
     };
   }
