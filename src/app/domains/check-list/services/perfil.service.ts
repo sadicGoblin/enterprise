@@ -135,10 +135,10 @@ export class PerfilService {
     const grabarStr = grabar ? "1" : "0";
     
     const requestData = {
-      caso: 'Modifica', // Cambiado de 'Graba' a 'Modifica' como muestra el ejemplo
-      IdPerfil: String(idPerfil), // Convertir a string
-      IdPantalla: String(idPantalla), // Convertir a string
-      IdPerfilPantalla: String(idPerfilPantalla), // Convertir a string
+      caso: 'Modifica', 
+      IdPerfil: String(idPerfil), 
+      IdPantalla: String(idPantalla), 
+      IdPerfilPantalla: String(idPerfilPantalla), 
       Acceso: accesoStr,
       Grabar: grabarStr,
       Pantalla: null
