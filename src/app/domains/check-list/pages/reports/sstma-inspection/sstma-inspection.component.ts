@@ -12,6 +12,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
@@ -22,6 +23,7 @@ import { ObraService } from '../../../services/obra.service';
 import { ActividadService } from '../../../services/actividad.service';
 import { UserContextService } from '../../../../../core/services/user-context.service';
 import { InspeccionSSTMA } from '../../../models/actividad.models';
+import { InspectionModalComponent } from '../../../components/inspection-modal/inspection-modal.component';
 
 import * as XLSX from 'xlsx';
 
@@ -99,7 +101,8 @@ export class SstmaInspectionComponent implements OnInit, AfterViewInit {
     'potencialGravedad', 
     'ambitoInvolucrado', 
     'empresa',
-    'usuarioCreacion'
+    'usuarioCreacion',
+    'actions' // Columna nueva para acciones/botones
   ];
   isResultsLoading = false;
   hasResults = false;
@@ -114,7 +117,8 @@ export class SstmaInspectionComponent implements OnInit, AfterViewInit {
     private obraService: ObraService,
     private actividadService: ActividadService,
     private userContextService: UserContextService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog // Añadir MatDialog para abrir el modal
   ) {}
   
   ngOnInit(): void {
@@ -355,6 +359,46 @@ export class SstmaInspectionComponent implements OnInit, AfterViewInit {
       duration: 3000,
       horizontalPosition: 'center',
       verticalPosition: 'bottom'
+    });
+  }
+  
+  /**
+   * Abre el modal de inspección para ver detalles de la inspección SSTMA seleccionada
+   * @param inspeccion Objeto de inspección SSTMA seleccionado
+   */
+  openInspectionModal(inspeccion: InspeccionSSTMA): void {
+    console.log('[SSTMA] Abriendo modal de inspección para:', inspeccion);
+    
+    const dialogRef = this.dialog.open(InspectionModalComponent, {
+      width: '90vw',
+      maxWidth: '1400px',
+      disableClose: true,
+      autoFocus: false,
+      data: { 
+        // Convertir los datos de inspección SSTMA al formato esperado por el modal
+        projectId: inspeccion.idObra,
+        idInspeccionSSTMA: inspeccion.idInspeccionSSTMA,
+        // El modal espera estos campos para cargar los datos
+        inspectionData: {
+          idInspeccion: inspeccion.idInspeccionSSTMA,
+          fecha: inspeccion.fecha,
+          obra: inspeccion.Obra,
+          areaTrabajo: inspeccion.areaTrabajo,
+          accion: inspeccion.accion,
+          riesgoAsociado: inspeccion.riesgoAsociado,
+          potencialGravedad: inspeccion.potencialGravedad,
+          ambitoInvolucrado: inspeccion.ambitoInvolucrado,
+          medidaControl: inspeccion.medidaControl,
+          profesionalResponsable: inspeccion.profesionalResponsable,
+          usuarioCreacion: inspeccion.usuarioCreacion
+        },
+        // Modo de visualización (solo lectura)
+        viewMode: true
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('[SSTMA] Modal de inspección cerrado');
     });
   }
 }

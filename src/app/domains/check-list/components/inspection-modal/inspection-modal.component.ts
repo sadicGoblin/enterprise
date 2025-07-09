@@ -19,8 +19,8 @@ import { MatRadioModule } from '@angular/material/radio';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTabsModule } from '@angular/material/tabs';
-import { CustomSelectComponent, ParameterType } from '../../../../../../shared/controls/custom-select/custom-select.component';
-import { ProxyService } from '../../../../../../core/services/proxy.service';
+import { CustomSelectComponent, ParameterType } from '../../../../shared/controls/custom-select/custom-select.component';
+import { ProxyService } from '../../../../core/services/proxy.service';
 import { Observable, catchError, finalize, of, map, throwError, forkJoin } from 'rxjs';
 
 interface InspectionItem {
