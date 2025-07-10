@@ -2,7 +2,7 @@ import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
-import { InspectionModalComponent } from '../../components/planification-table/components/inspection-modal/inspection-modal.component';
+import { InspectionModalComponent } from '../../components/inspection-modal/inspection-modal.component';
 import { CheckListModalComponent } from '../../components/planification-table/components/checklist-modal/checklist-modal.component';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';

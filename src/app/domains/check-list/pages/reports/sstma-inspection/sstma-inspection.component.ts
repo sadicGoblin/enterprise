@@ -12,6 +12,7 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialog } from '@angular/material/dialog';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
 import { MatSortModule, MatSort } from '@angular/material/sort';
@@ -22,6 +23,8 @@ import { ObraService } from '../../../services/obra.service';
 import { ActividadService } from '../../../services/actividad.service';
 import { UserContextService } from '../../../../../core/services/user-context.service';
 import { InspeccionSSTMA } from '../../../models/actividad.models';
+import { InspectionModalComponent } from '../../../components/inspection-modal/inspection-modal.component';
+import { InspectionDetailModalComponent } from '../../../components/inspection-detail-modal/inspection-detail-modal.component';
 
 import * as XLSX from 'xlsx';
 
@@ -99,7 +102,8 @@ export class SstmaInspectionComponent implements OnInit, AfterViewInit {
     'potencialGravedad', 
     'ambitoInvolucrado', 
     'empresa',
-    'usuarioCreacion'
+    'usuarioCreacion',
+    'actions' // Columna nueva para acciones/botones
   ];
   isResultsLoading = false;
   hasResults = false;
@@ -114,7 +118,8 @@ export class SstmaInspectionComponent implements OnInit, AfterViewInit {
     private obraService: ObraService,
     private actividadService: ActividadService,
     private userContextService: UserContextService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private dialog: MatDialog // Añadir MatDialog para abrir el modal
   ) {}
   
   ngOnInit(): void {
@@ -223,6 +228,17 @@ export class SstmaInspectionComponent implements OnInit, AfterViewInit {
     this.filterValue = '';
   }
 
+  /**
+   * Show a snackbar message
+   */
+  private showMessage(message: string): void {
+    this.snackBar.open(message, 'Cerrar', {
+      duration: 3000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom'
+    });
+  }
+  
   /**
    * Filtrar inspecciones basado en el término de búsqueda
    * @param event Evento de teclado del input de filtro
@@ -347,14 +363,37 @@ export class SstmaInspectionComponent implements OnInit, AfterViewInit {
     });
   }
 
+  // Add missing updateFilter method
+  updateFilter(): void {
+    this.buscarReportes();
+  }
+      
   /**
-   * Show a snackbar message
+   * Abre el modal de inspección para ver detalles de la inspección SSTMA seleccionada
+   * @param inspeccion Objeto de inspección SSTMA seleccionado
    */
-  private showMessage(message: string): void {
-    this.snackBar.open(message, 'Cerrar', {
-      duration: 3000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
+  openInspectionModal(inspeccion: InspeccionSSTMA): void {
+    console.log('[SSTMA] Abriendo modal de inspección para:', inspeccion);
+    
+    // Usar el nuevo componente de detalle de inspección
+    const dialogRef = this.dialog.open(InspectionDetailModalComponent, {
+      width: '90vw',
+      maxWidth: '1200px',
+      maxHeight: '90vh',
+      disableClose: true,
+      autoFocus: false,
+      data: { 
+        projectId: inspeccion.idObra,
+        idInspeccionSSTMA: inspeccion.idInspeccionSSTMA,
+        inspectionData: inspeccion
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('[SSTMA] Modal de inspección cerrado');
+      if(result?.reload) {
+        this.updateFilter();
+      }
     });
   }
-}
+} 

@@ -1,0 +1,95 @@
+<div class="dialog-header">
+  <h2 mat-dialog-title>Inspección SSTMA</h2>
+  <div class="header-actions">
+    <button mat-icon-button class="close-button" (click)="onCancel()" matTooltip="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+</div>
+
+<div mat-dialog-content class="inspection-dialog-content">
+  <!-- Indicador de carga -->
+  <div *ngIf="isLoading" class="spinner-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando datos de inspección...</p>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="!isLoading && errorMessage" class="error-message">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{errorMessage}}</p>
+  </div>
+
+  <!-- Contenido principal cuando hay datos -->
+  <div *ngIf="!isLoading && !errorMessage && inspeccion" class="inspection-content">
+    <!-- Información general -->
+    <div class="info-section">
+      <div class="section-header">
+        <h3>Información general</h3>
+      </div>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Fecha:</span>
+          <span class="info-value">{{ fechaFormateada }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Obra:</span>
+          <span class="info-value">{{ inspeccion.Obra }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Área de Trabajo:</span>
+          <span class="info-value">{{ inspeccion.areaTrabajo }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Riesgo Asociado:</span>
+          <span class="info-value">{{ inspeccion.riesgoAsociado }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Potencial Gravedad:</span>
+          <span class="info-value">{{ inspeccion.potencialGravedad }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Ámbito Involucrado:</span>
+          <span class="info-value">{{ inspeccion.ambitoInvolucrado }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Medida Control:</span>
+          <span class="info-value">{{ inspeccion.medidaControl }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Profesional Responsable:</span>
+          <span class="info-value">{{ inspeccion.profesionalResponsable }}</span>
+        </div>
+        <div class="info-item">
+          <span class="info-label">Usuario Creación:</span>
+          <span class="info-value">{{ inspeccion.usuarioCreacion }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tabla de datos de inspección -->
+    <div class="inspection-table-section">
+      <div class="section-header">
+        <h3>Detalles de la inspección</h3>
+      </div>
+      <!-- Aquí usamos nuestro componente de tabla personalizado -->
+      <app-inspection-table [inspectionData]="inspeccion"></app-inspection-table>
+    </div>
+  </div>
+</div>
+
+<div mat-dialog-actions class="dialog-actions">
+  <button mat-button class="exit-button" (click)="onCancel()">
+    <mat-icon>exit_to_app</mat-icon> Salir
+  </button>
+  <div class="spacer"></div>
+  <button 
+    mat-flat-button 
+    color="primary" 
+    (click)="exportToPDF()" 
+    class="pdf-button" 
+    matTooltip="Exportar a PDF"
+    [disabled]="!inspeccion">
+    <mat-icon>picture_as_pdf</mat-icon> Exportar PDF
+  </button>
+</div>

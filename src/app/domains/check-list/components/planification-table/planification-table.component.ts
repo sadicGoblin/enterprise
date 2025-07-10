@@ -10,7 +10,7 @@ import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { ActivityCompletedPipe } from '../../pipes/activity-completed.pipe';
 import { MatDialog } from '@angular/material/dialog';
-import { InspectionModalComponent } from './components/inspection-modal/inspection-modal.component';
+import { InspectionModalComponent } from '../inspection-modal/inspection-modal.component';
 import { CheckListModalComponent } from './components/checklist-modal/checklist-modal.component';
 
 // Interface for Activity
