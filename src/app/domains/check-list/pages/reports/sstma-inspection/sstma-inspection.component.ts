@@ -24,6 +24,7 @@ import { ActividadService } from '../../../services/actividad.service';
 import { UserContextService } from '../../../../../core/services/user-context.service';
 import { InspeccionSSTMA } from '../../../models/actividad.models';
 import { InspectionModalComponent } from '../../../components/inspection-modal/inspection-modal.component';
+import { InspectionDetailModalComponent } from '../../../components/inspection-detail-modal/inspection-detail-modal.component';
 
 import * as XLSX from 'xlsx';
 
@@ -228,6 +229,17 @@ export class SstmaInspectionComponent implements OnInit, AfterViewInit {
   }
 
   /**
+   * Show a snackbar message
+   */
+  private showMessage(message: string): void {
+    this.snackBar.open(message, 'Cerrar', {
+      duration: 3000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom'
+    });
+  }
+  
+  /**
    * Filtrar inspecciones basado en el término de búsqueda
    * @param event Evento de teclado del input de filtro
    */
@@ -351,17 +363,11 @@ export class SstmaInspectionComponent implements OnInit, AfterViewInit {
     });
   }
 
-  /**
-   * Show a snackbar message
-   */
-  private showMessage(message: string): void {
-    this.snackBar.open(message, 'Cerrar', {
-      duration: 3000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom'
-    });
+  // Add missing updateFilter method
+  updateFilter(): void {
+    this.buscarReportes();
   }
-  
+      
   /**
    * Abre el modal de inspección para ver detalles de la inspección SSTMA seleccionada
    * @param inspeccion Objeto de inspección SSTMA seleccionado
@@ -369,36 +375,25 @@ export class SstmaInspectionComponent implements OnInit, AfterViewInit {
   openInspectionModal(inspeccion: InspeccionSSTMA): void {
     console.log('[SSTMA] Abriendo modal de inspección para:', inspeccion);
     
-    const dialogRef = this.dialog.open(InspectionModalComponent, {
+    // Usar el nuevo componente de detalle de inspección
+    const dialogRef = this.dialog.open(InspectionDetailModalComponent, {
       width: '90vw',
-      maxWidth: '1400px',
+      maxWidth: '1200px',
+      maxHeight: '90vh',
       disableClose: true,
       autoFocus: false,
       data: { 
-        // Convertir los datos de inspección SSTMA al formato esperado por el modal
         projectId: inspeccion.idObra,
         idInspeccionSSTMA: inspeccion.idInspeccionSSTMA,
-        // El modal espera estos campos para cargar los datos
-        inspectionData: {
-          idInspeccion: inspeccion.idInspeccionSSTMA,
-          fecha: inspeccion.fecha,
-          obra: inspeccion.Obra,
-          areaTrabajo: inspeccion.areaTrabajo,
-          accion: inspeccion.accion,
-          riesgoAsociado: inspeccion.riesgoAsociado,
-          potencialGravedad: inspeccion.potencialGravedad,
-          ambitoInvolucrado: inspeccion.ambitoInvolucrado,
-          medidaControl: inspeccion.medidaControl,
-          profesionalResponsable: inspeccion.profesionalResponsable,
-          usuarioCreacion: inspeccion.usuarioCreacion
-        },
-        // Modo de visualización (solo lectura)
-        viewMode: true
+        inspectionData: inspeccion
       }
     });
 
     dialogRef.afterClosed().subscribe(result => {
       console.log('[SSTMA] Modal de inspección cerrado');
+      if(result?.reload) {
+        this.updateFilter();
+      }
     });
   }
-}
+} 

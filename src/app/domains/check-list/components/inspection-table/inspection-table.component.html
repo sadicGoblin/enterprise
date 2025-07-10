@@ -1,0 +1,98 @@
+<div class="inspection-table-container">
+  <!-- Indicador de carga -->
+  <div *ngIf="isLoading" class="spinner-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando datos de inspección...</p>
+  </div>
+  
+  <!-- Mensaje de error -->
+  <div *ngIf="!isLoading && errorMessage" class="error-message">
+    <mat-icon color="warn">error</mat-icon>
+    <p>{{errorMessage}}</p>
+  </div>
+
+  <!-- Sin datos -->
+  <div *ngIf="!isLoading && !errorMessage && inspectionItems.length === 0" class="no-data-message">
+    <mat-icon>info</mat-icon>
+    <p>No hay datos de inspección disponibles.</p>
+  </div>
+
+  <!-- Contenido de la tabla -->
+  <div *ngIf="!isLoading && inspectionItems.length > 0" class="table-content">
+    <!-- Filtro de búsqueda -->
+    <div class="filter-container">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Filtrar</mat-label>
+        <input matInput (keyup)="applyFilter($event)" placeholder="Buscar en la tabla">
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+    </div>
+
+    <!-- Tabla de inspección -->
+    <div class="inspection-table-wrapper mat-elevation-z2">
+      <table mat-table [dataSource]="dataSource" matSort class="inspection-table">
+        <!-- Columna Condición Riesgo -->
+        <ng-container matColumnDef="condicionRiesgo">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Condición Riesgo</th>
+          <td mat-cell *matCellDef="let item">{{item.condicionRiesgo || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Columna Incidencia -->
+        <ng-container matColumnDef="incidencia">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Incidencia</th>
+          <td mat-cell *matCellDef="let item">{{item.incidencia || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Columna Potencial Riesgo -->
+        <ng-container matColumnDef="potencialRiesgo">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Potencial Riesgo</th>
+          <td mat-cell *matCellDef="let item">{{item.potencialRiesgo || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Columna Clasificación Hallazgo -->
+        <ng-container matColumnDef="clasificacionHallazgo">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Clasificación Hallazgo</th>
+          <td mat-cell *matCellDef="let item">{{item.clasificacionHallazgo || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Columna Medida Correctiva -->
+        <ng-container matColumnDef="medidaCorrectiva">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Medida Correctiva</th>
+          <td mat-cell *matCellDef="let item">{{item.medidaCorrectiva || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Columna Responsable -->
+        <ng-container matColumnDef="responsable">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Responsable</th>
+          <td mat-cell *matCellDef="let item">{{item.responsable || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Columna Fecha Compromiso -->
+        <ng-container matColumnDef="fechaCompromiso">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Compromiso</th>
+          <td mat-cell *matCellDef="let item">{{item.fechaCompromisoFormateada || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Columna Fecha Cierre -->
+        <ng-container matColumnDef="fechaCierre">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha Cierre</th>
+          <td mat-cell *matCellDef="let item">{{item.fechaCierreFormateada || 'No disponible'}}</td>
+        </ng-container>
+
+        <!-- Definición de filas -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        <!-- Fila para cuando no hay datos filtrados -->
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+            No se encontraron datos que coincidan con el filtro "{{filterValue}}"
+          </td>
+        </tr>
+      </table>
+
+      <!-- Paginador -->
+      <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 20, 50]" showFirstLastButtons></mat-paginator>
+    </div>
+  </div>
+</div>
