@@ -92,7 +92,7 @@ export class LibraryPpComponent implements OnInit {
             year: parseInt(item.Agnio, 10) || new Date().getFullYear(),
             name: item.Nombre,
             type: item.Tipo,
-            documento: item.Documento // Keep the base64 document data if needed
+            documentUrl: item.Documento // This is now a direct URL to the document
           }));
           console.log('Transformed documents:', this.documents);
         } else {
@@ -125,105 +125,40 @@ export class LibraryPpComponent implements OnInit {
     
     // Establecer el ID del documento que está siendo cargado
     this.loadingDocumentId = document.id;
-    console.log('Document ID being sent:', parseInt(document.id));
     
-    // Use the document ID to fetch the full document with base64 data
-    this.bibliotecaService.getDocumentByIdWithBase64Content(parseInt(document.id)).subscribe({
-      next: (response) => {
-        console.log('=== API RESPONSE ===');
-        console.log('Full API response:', response);
-        console.log('Response success:', response.success);
-        console.log('Response data array:', response.data);
-        console.log('Response data length:', response.data ? response.data.length : 0);
-        
-        if (response.success && response.data && response.data.length > 0) {
-          const docData: any = response.data[0];
-          console.log('=== DOCUMENT DATA ===');
-          console.log('First document data:', docData);
-          console.log('All available fields:', Object.keys(docData));
-          console.log('Field values:');
-          Object.keys(docData).forEach(key => {
-            const value = docData[key];
-            if (typeof value === 'string' && value.length > 100) {
-              console.log(`${key}: [String with ${value.length} characters] ${value.substring(0, 50)}...`);
-            } else {
-              console.log(`${key}:`, value);
-            }
-          });
-          
-          // Try different possible field names for base64 data
-          const possibleBase64Fields = ['ArchivoBase64', 'Documento', 'documento', 'Base64', 'base64', 'archivo', 'Archivo', 'content', 'Content'];
-          let base64Data = null;
-          let base64FieldName = null;
-          
-          for (const fieldName of possibleBase64Fields) {
-            if (docData[fieldName] && typeof docData[fieldName] === 'string' && docData[fieldName].trim() !== '') {
-              base64Data = docData[fieldName];
-              base64FieldName = fieldName;
-              break;
-            }
-          }
-          
-          console.log('=== BASE64 SEARCH RESULTS ===');
-          console.log('Base64 field found:', base64FieldName);
-          console.log('Base64 data found:', base64Data ? 'YES' : 'NO');
-          if (base64Data) {
-            console.log('Base64 data length:', base64Data.length);
-            console.log('First 100 characters:', base64Data.substring(0, 100));
-            console.log('Last 100 characters:', base64Data.substring(base64Data.length - 100));
-          }
-          
-          const filename = docData.NombreArchivo || docData.NombreDocumento || docData.Titulo || document.title || 'documento.pdf';
-          
-          if (base64Data && base64Data.trim() !== '') {
-            console.log('=== OPENING MODAL ===');
-            console.log('Filename:', filename);
-            
-            const dialogRef = this.dialog.open(ModalFileComponent, {
-              width: '90vw',
-              height: '90vh',
-              maxWidth: '1200px',
-              maxHeight: '800px',
-              panelClass: 'pdf-dialog',
-              autoFocus: true,
-              restoreFocus: true,
-              disableClose: false,
-              hasBackdrop: true,
-              data: {
-                base64Data: base64Data,
-                filename: filename
-              }
-            });
-
-            // Handle dialog close
-            dialogRef.afterClosed().subscribe(result => {
-              console.log('Dialog closed');
-              // Limpiar el ID del documento cargado
-              this.loadingDocumentId = null;
-            });
-          } else {
-            console.error('=== ERROR: NO BASE64 DATA ===');
-            console.error('No valid base64 data found in any of these fields:', possibleBase64Fields);
-            alert('El documento no contiene datos válidos para mostrar.');
-            // Limpiar el ID del documento cargado en caso de error
-            this.loadingDocumentId = null;
-          }
-        } else {
-          console.error('=== ERROR: NO DOCUMENT DATA ===');
-          console.error('API response structure issue');
-          alert('No se pudo cargar el documento. Intente nuevamente.');
-          // Limpiar el ID del documento cargado en caso de error
-          this.loadingDocumentId = null;
+    // Check if we have a direct document URL
+    if (document.documentUrl && typeof document.documentUrl === 'string' && document.documentUrl.trim() !== '') {
+      console.log('=== DIRECT URL FOUND ===');
+      console.log('Document URL:', document.documentUrl);
+      
+      // Open the modal with the document URL
+      const dialogRef = this.dialog.open(ModalFileComponent, {
+        width: '90vw',
+        height: '90vh',
+        maxWidth: '1200px',
+        maxHeight: '800px',
+        panelClass: 'pdf-dialog',
+        autoFocus: true,
+        restoreFocus: true,
+        disableClose: false,
+        hasBackdrop: true,
+        data: {
+          documentUrl: document.documentUrl,
+          filename: document.name || 'documento.pdf'
         }
-      },
-      error: (error) => {
-        console.error('=== API ERROR ===');
-        console.error('Error fetching document:', error);
-        alert('Error al cargar el documento. Verifique su conexión e intente nuevamente.');
-        // Limpiar el ID del documento cargado en caso de error
+      });
+
+      // Handle dialog close
+      dialogRef.afterClosed().subscribe(result => {
+        console.log('Dialog closed');
+        // Limpiar el ID del documento cargado
         this.loadingDocumentId = null;
-      }
-    });
+      });
+    } else {
+      console.error('=== ERROR: NO DOCUMENT URL ===');
+      this.showMessage('El documento no contiene una URL válida para mostrar.');
+      this.loadingDocumentId = null;
+    }
   }
   
   /**

@@ -232,33 +232,63 @@ export class ActivityFormComponent implements OnInit {
 
   onFrequencySelectionChange(selectedOption: SelectOption): void {
     if (selectedOption) {
+      console.log('✅ Frecuencia seleccionada:', selectedOption);
+      console.log('  ID:', selectedOption.value, '| Tipo:', typeof selectedOption.value);
+      console.log('  Nombre:', selectedOption.label);
+      console.log('  Objeto completo:', selectedOption);
+      
+      // Guardar la selección
       this.selectedFrequency = {
         id: selectedOption.value,
         name: selectedOption.label,
       };
+      
+      // Mostrar información para debugging
+      console.log('💡 Esta frecuencia debe coincidir con idPeriocidad en las actividades');
     } else {
+      console.log('❌ No se seleccionó ninguna frecuencia');
       this.selectedFrequency = null;
     }
   }
 
   onCategorySelectionChange(selectedOption: SelectOption): void {
     if (selectedOption) {
+      console.log('✅ Categoría seleccionada:', selectedOption);
+      console.log('  ID:', selectedOption.value, '| Tipo:', typeof selectedOption.value);
+      console.log('  Nombre:', selectedOption.label);
+      console.log('  Objeto completo:', selectedOption);
+      
+      // Guardar la selección
       this.selectedCategory = {
         id: selectedOption.value,
         name: selectedOption.label,
       };
+      
+      // Mostrar información para debugging
+      console.log('💡 Esta categoría debe coincidir con idCategoriaActividad en las actividades');
     } else {
+      console.log('❌ No se seleccionó ninguna categoría');
       this.selectedCategory = null;
     }
   }
 
   onParameterSelectionChange(selectedOption: SelectOption): void {
     if (selectedOption) {
+      console.log('✅ Parámetro seleccionado:', selectedOption);
+      console.log('  ID:', selectedOption.value, '| Tipo:', typeof selectedOption.value);
+      console.log('  Nombre:', selectedOption.label);
+      console.log('  Objeto completo:', selectedOption);
+      
+      // Guardar la selección
       this.selectedParameter = {
         id: selectedOption.value,
         name: selectedOption.label,
       };
+      
+      // Mostrar información para debugging
+      console.log('💡 Este parámetro debe coincidir con idParametroAsociado en las actividades');
     } else {
+      console.log('❌ No se seleccionó ningún parámetro');
       this.selectedParameter = null;
     }
   }

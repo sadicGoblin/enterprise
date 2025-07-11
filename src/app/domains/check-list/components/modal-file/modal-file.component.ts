@@ -22,17 +22,25 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 })
 export class ModalFileComponent implements AfterViewInit {
   pdfSrc: SafeResourceUrl;
+  isUrlMode = false;
 
   constructor(
     private dialogRef: MatDialogRef<ModalFileComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: { base64Data: string; filename: string },
+    @Inject(MAT_DIALOG_DATA) public data: { base64Data?: string; documentUrl?: string; filename: string },
     private sanitizer: DomSanitizer,
     private elementRef: ElementRef
   ) {
     console.log('Modal data received:', this.data);
     
-    // Validate and process base64 data
-    if (this.data.base64Data && this.data.base64Data.trim() !== '') {
+    // Check if we have a direct URL
+    if (this.data.documentUrl && this.data.documentUrl.trim() !== '') {
+      this.isUrlMode = true;
+      const url = this.data.documentUrl.trim();
+      console.log('Using direct document URL:', url);
+      this.pdfSrc = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+    }
+    // Otherwise try base64 data if available
+    else if (this.data.base64Data && this.data.base64Data.trim() !== '') {
       let base64Data = this.data.base64Data.trim();
       
       // Remove data URL prefix if it exists
@@ -70,7 +78,7 @@ export class ModalFileComponent implements AfterViewInit {
         this.pdfSrc = this.sanitizer.bypassSecurityTrustResourceUrl('data:application/pdf;base64,');
       }
     } else {
-      console.error('Invalid or missing base64 data:', this.data.base64Data);
+      console.error('No valid document source (URL or base64) provided');
       this.pdfSrc = this.sanitizer.bypassSecurityTrustResourceUrl('data:application/pdf;base64,');
     }
   }
@@ -119,8 +127,15 @@ export class ModalFileComponent implements AfterViewInit {
 
   onDownload(): void {
     const link = document.createElement('a');
-    link.href = `data:application/pdf;base64,${this.data.base64Data}`;
-    link.download = this.data.filename || 'document.pdf';
-    link.click();
+    
+    if (this.isUrlMode && this.data.documentUrl) {
+      // For direct URL, just open in new tab as download may not work for cross-origin URLs
+      window.open(this.data.documentUrl, '_blank');
+    } else if (this.data.base64Data) {
+      // For base64 data
+      link.href = `data:application/pdf;base64,${this.data.base64Data}`;
+      link.download = this.data.filename || 'document.pdf';
+      link.click();
+    }
   }
 }

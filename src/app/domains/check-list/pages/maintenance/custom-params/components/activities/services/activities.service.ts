@@ -23,15 +23,8 @@ export class ActivitiesService {
    */
   getActivitiesByScope(scopeId: number): Observable<ApiActivityResponse> {
     const payload = {
-      "caso": "ConsultaActividades",
-      "idActividades": 0,
+      "caso": "ConsultaActividadesParams",
       "idAmbito": scopeId,
-      "codigo": 0,
-      "nombre": null,
-      "idPeriocidad": 0,
-      "idCategoriaActividad": 0,
-      "idParametroAsociado": 0,
-      "idBiblioteca": 0
     };
     
     console.log('Enviando payload a API:', payload);

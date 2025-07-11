@@ -1,92 +1,113 @@
 <form [formGroup]="activityForm" (ngSubmit)="onSubmit()" class="activity-form">
-  <div class="form-fields">
-    <!-- Ámbito -->
-    <app-custom-select
-      #scopeSelect
-      [formControl]="scopeControl"
-      [loadFromApi]="true"
-      [parameterType]="parameterTypes.CUSTOM_API"
-      [customApiEndpoint]="scopeApiEndpoint"
-      [customApiRequestBody]="scopeApiRequestBody"
-      [customOptionValueKey]="'IdAmbito'"
-      [customOptionLabelKey]="'nombre'"
-      label="Ámbito"
-      [appearance]="'fill'"
-      class="form-field"
-      (selectionChange)="onScopeSelectionChange($event)"
-    ></app-custom-select>
+  <div class="form-container">
+    <!-- Primera fila: Ámbito, Nombre y Código -->
+    <div class="form-row">
+      <!-- Ámbito -->
+      <div class="form-field-container">
+        <app-custom-select
+          #scopeSelect
+          [formControl]="scopeControl"
+          [loadFromApi]="true"
+          [parameterType]="parameterTypes.CUSTOM_API"
+          [customApiEndpoint]="scopeApiEndpoint"
+          [customApiRequestBody]="scopeApiRequestBody"
+          [customOptionValueKey]="'IdAmbito'"
+          [customOptionLabelKey]="'nombre'"
+          label="Ámbito"
+          [appearance]="'fill'"
+          class="form-field full-width"
+          (selectionChange)="onScopeSelectionChange($event)"
+        ></app-custom-select>
+      </div>
 
-    <mat-form-field appearance="fill" class="form-field">
-      <mat-label>Nombre</mat-label>
-      <input matInput formControlName="name" placeholder="Nombre" />
-    </mat-form-field>
+      <div class="form-field-container">
+        <mat-form-field appearance="fill" class="form-field full-width">
+          <mat-label>Nombre</mat-label>
+          <input matInput formControlName="name" placeholder="Nombre" />
+        </mat-form-field>
+      </div>
 
-    <mat-form-field appearance="fill" class="form-field">
-      <mat-label>Código</mat-label>
-      <input matInput formControlName="code" placeholder="Código" />
-    </mat-form-field>
-
-    <div class="form-row input-row">
-      <app-custom-select
-        [formControl]="frequencyControl"
-        [loadFromApi]="true"
-        [parameterType]="parameterTypes.CUSTOM_API"
-        [customApiEndpoint]="frequencyApiEndpoint"
-        [customApiRequestBody]="frequencyApiRequestBody"
-        [customOptionValueKey]="'IdSubParam'"
-        [customOptionLabelKey]="'Nombre'"
-        label="Periocidad"
-        [appearance]="'fill'"
-        class="form-field"
-        (selectionChange)="onFrequencySelectionChange($event)"
-      ></app-custom-select>
-
-      <app-custom-select
-        [formControl]="categoryControl"
-        [loadFromApi]="true"
-        [parameterType]="parameterTypes.CUSTOM_API"
-        [customApiEndpoint]="categoryApiEndpoint"
-        [customApiRequestBody]="categoryApiRequestBody"
-        [customOptionValueKey]="'IdSubParam'"
-        [customOptionLabelKey]="'Nombre'"
-        label="Categoría Actividad"
-        [appearance]="'fill'"
-        class="form-field"
-        (selectionChange)="onCategorySelectionChange($event)"
-      ></app-custom-select>
-
-      <app-custom-select
-        [formControl]="parameterControl"
-        [loadFromApi]="true"
-        [parameterType]="parameterTypes.CUSTOM_API"
-        [customApiEndpoint]="parameterApiEndpoint"
-        [customApiRequestBody]="parameterApiRequestBody"
-        [customOptionValueKey]="'IdSubParam'"
-        [customOptionLabelKey]="'Nombre'"
-        label="Parámetro Asociado"
-        [appearance]="'fill'"
-        class="form-field"
-        (selectionChange)="onParameterSelectionChange($event)"
-      ></app-custom-select>
+      <div class="form-field-container">
+        <mat-form-field appearance="fill" class="form-field full-width">
+          <mat-label>Código</mat-label>
+          <input matInput formControlName="code" placeholder="Código" />
+        </mat-form-field>
+      </div>
     </div>
 
-    <div class="form-row input-row">
-      <app-custom-select
-        [formControl]="documentControl"
-        [loadFromApi]="true"
-        [parameterType]="parameterTypes.CUSTOM_API"
-        [customApiEndpoint]="documentApiEndpoint"
-        [customApiRequestBody]="documentApiRequestBody"
-        [customOptionValueKey]="'IdDocumento'"
-        [customOptionLabelKey]="'Nombre'"
-        label="Documento Asociado"
-        [appearance]="'fill'"
-        class="form-field"
-        (selectionChange)="onDocumentSelectionChange($event)"
-      ></app-custom-select>
+    <!-- Segunda fila: Periocidad y Categoría -->
+    <div class="form-row">
+      <div class="form-field-container">
+        <app-custom-select
+          [formControl]="frequencyControl"
+          [loadFromApi]="true"
+          [parameterType]="parameterTypes.CUSTOM_API"
+          [customApiEndpoint]="frequencyApiEndpoint"
+          [customApiRequestBody]="frequencyApiRequestBody"
+          [customOptionValueKey]="'IdSubParam'"
+          [customOptionLabelKey]="'Nombre'"
+          label="Periocidad"
+          [appearance]="'fill'"
+          class="form-field full-width"
+          (selectionChange)="onFrequencySelectionChange($event)"
+        ></app-custom-select>
+      </div>
+
+      <div class="form-field-container">
+        <app-custom-select
+          [formControl]="categoryControl"
+          [loadFromApi]="true"
+          [parameterType]="parameterTypes.CUSTOM_API"
+          [customApiEndpoint]="categoryApiEndpoint"
+          [customApiRequestBody]="categoryApiRequestBody"
+          [customOptionValueKey]="'IdSubParam'"
+          [customOptionLabelKey]="'Nombre'"
+          label="Categoría Actividad"
+          [appearance]="'fill'"
+          class="form-field full-width"
+          (selectionChange)="onCategorySelectionChange($event)"
+        ></app-custom-select>
+      </div>
+    </div>
+
+    <!-- Tercera fila: Parámetro y Documento -->
+    <div class="form-row">
+      <div class="form-field-container">
+        <app-custom-select
+          [formControl]="parameterControl"
+          [loadFromApi]="true"
+          [parameterType]="parameterTypes.CUSTOM_API"
+          [customApiEndpoint]="parameterApiEndpoint"
+          [customApiRequestBody]="parameterApiRequestBody"
+          [customOptionValueKey]="'IdSubParam'"
+          [customOptionLabelKey]="'Nombre'"
+          label="Parámetro Asociado"
+          [appearance]="'fill'"
+          class="form-field full-width"
+          (selectionChange)="onParameterSelectionChange($event)"
+        ></app-custom-select>
+      </div>
+
+      <div class="form-field-container">
+        <app-custom-select
+          [formControl]="documentControl"
+          [loadFromApi]="true"
+          [parameterType]="parameterTypes.CUSTOM_API"
+          [customApiEndpoint]="documentApiEndpoint"
+          [customApiRequestBody]="documentApiRequestBody"
+          [customOptionValueKey]="'IdDocumento'"
+          [customOptionLabelKey]="'Nombre'"
+          label="Documento Asociado"
+          [appearance]="'fill'"
+          class="form-field full-width"
+          (selectionChange)="onDocumentSelectionChange($event)"
+        ></app-custom-select>
+      </div>
     </div>
   </div>
-  <div class="form-row button-row action-buttons-right">
+
+  <!-- Botones de acción -->
+  <div class="form-actions">
     <button
       mat-stroked-button
       type="button"

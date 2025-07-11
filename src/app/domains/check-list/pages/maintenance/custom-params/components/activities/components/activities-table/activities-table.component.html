@@ -27,25 +27,25 @@
   <ng-container matColumnDef="frecuencia">
     <th mat-header-cell *matHeaderCellDef>Periocidad</th>
     <td mat-cell *matCellDef="let element">
-      {{ element.frequencyName }}
+      {{ element.periocidad || element.frequencyName }}
     </td>
   </ng-container>
 
   <ng-container matColumnDef="categoria">
     <th mat-header-cell *matHeaderCellDef>Categoría</th>
-    <td mat-cell *matCellDef="let element">{{ element.categoryName }}</td>
+    <td mat-cell *matCellDef="let element">{{ element.CategoriaActividad || element.categoryName }}</td>
   </ng-container>
 
   <ng-container matColumnDef="parametro">
     <th mat-header-cell *matHeaderCellDef>Parámetro</th>
     <td mat-cell *matCellDef="let element">
-      {{ element.parameterName }}
+      {{ element.parametroAsociado || element.parameterName }}
     </td>
   </ng-container>
 
   <ng-container matColumnDef="documento">
     <th mat-header-cell *matHeaderCellDef>Documento</th>
-    <td mat-cell *matCellDef="let element">{{ element.documentName }}</td>
+    <td mat-cell *matCellDef="let element">{{ element.documentoAsociado || element.documentName || '-' }}</td>
   </ng-container>
 
   <ng-container matColumnDef="edit">
