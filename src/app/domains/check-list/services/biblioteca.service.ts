@@ -18,7 +18,7 @@ export class BibliotecaService {
    */
   getAllDocuments(): Observable<BibliotecaResponse> {
     const request: BibliotecaRequest = {
-      caso: 'ConsultaSinDocumento',
+      caso: 'Consulta',
       iDBiblioteca: 0
     };
 

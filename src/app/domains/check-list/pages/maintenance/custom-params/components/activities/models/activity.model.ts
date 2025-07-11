@@ -2,6 +2,9 @@ export interface ActivityItem {
     id: string;
     code: string;
     name: string;
+    // Propiedades originales para la tabla
+    codigo?: string;
+    nombre?: string;
     frequency: string;
     category: string;
     parameter: string;
@@ -11,6 +14,16 @@ export interface ActivityItem {
     idCategory: string;
     idParameter: string;
     idDocument: string;
+    // Nuevos campos que vienen directamente del backend
+    periocidad?: string;
+    CategoriaActividad?: string;
+    parametroAsociado?: string;
+    documentoAsociado?: string;
+    // Propiedades de nombres resueltos para mostrar en la tabla (compatibilidad)
+    frequencyName?: string;
+    categoryName?: string;
+    parameterName?: string;
+    documentName?: string;
   }
   
   export interface ApiActivityResponse {

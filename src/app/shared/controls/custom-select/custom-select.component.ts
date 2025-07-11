@@ -127,6 +127,8 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
         apiCall = this.proxyService.post<any>(this.customApiEndpoint, this.customApiRequestBody).pipe(
           map((response: any): SelectOption[] => { // Explicit return type for map callback
             if (response && response.success && response.data && Array.isArray(response.data)) {
+              console.log("API ", this.customApiEndpoint)
+              console.log("Body ", this.customApiRequestBody)
               console.log(`CustomSelect: API completa para ${this.label}:`, response);
               console.log(`CustomSelect: Primer elemento de datos para ${this.label}:`, response.data[0]);
               console.log(`CustomSelect: Buscando valores usando las claves [${this.customOptionValueKey}] y [${this.customOptionLabelKey}]`);

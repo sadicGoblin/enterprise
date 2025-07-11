@@ -112,6 +112,41 @@ export class ActivitiesStateService {
 
     console.log('ActivitiesStateService: Iniciando llamada API para obtener actividades del ámbito:', scopeId);
     
+    // Obtener los datos de referencia actuales
+    const referenceData = this._referenceData.getValue();
+    
+    // Mostrar datos de referencia disponibles
+    console.log('📊 DATOS DE REFERENCIA DISPONIBLES:');
+    console.log('Frecuencias:', referenceData.frequencyOptions.length, 'opciones');
+    if (referenceData.frequencyOptions.length > 0) {
+      console.log('Muestra de frecuencias:', referenceData.frequencyOptions.slice(0, 5).map(opt => ({
+        IdSubParam: opt['IdSubParam'],
+        IdDet: opt['IdDet'],
+        Nombre: opt['Nombre'],
+        nombre: opt['nombre']
+      })));
+    }
+    
+    console.log('Categorías:', referenceData.categoryOptions.length, 'opciones');
+    if (referenceData.categoryOptions.length > 0) {
+      console.log('Muestra de categorías:', referenceData.categoryOptions.slice(0, 5).map(opt => ({
+        IdSubParam: opt['IdSubParam'],
+        IdDet: opt['IdDet'],
+        Nombre: opt['Nombre'],
+        nombre: opt['nombre']
+      })));
+    }
+    
+    console.log('Parámetros:', referenceData.parameterOptions.length, 'opciones');
+    if (referenceData.parameterOptions.length > 0) {
+      console.log('Muestra de parámetros:', referenceData.parameterOptions.slice(0, 5).map(opt => ({
+        IdSubParam: opt['IdSubParam'],
+        IdDet: opt['IdDet'],
+        Nombre: opt['Nombre'],
+        nombre: opt['nombre']
+      })));
+    }
+    
     this.activitiesService.getActivitiesByScope(scopeId).pipe(
       tap(response => {
         console.log('API response para actividades:', response);
@@ -120,7 +155,87 @@ export class ActivitiesStateService {
         console.log('Procesando respuesta API:', response);
         if (response.success && response.data) {
           console.log('Datos recibidos de API:', response.data.length, 'actividades');
-          return this.mapActivitiesWithNames(response.data);
+          
+          // Convertir directamente los datos sin mapeo de nombres
+          const mappedActivities = response.data.map((activity: any) => {
+            // Crear un objeto ActivityItem con los datos originales
+            return {
+              id: activity.idActividades?.toString() || activity.idactividad?.toString() || '',
+              code: activity.codigo || '',
+              name: activity.nombre || '',
+              // Mantener las propiedades originales para la tabla
+              codigo: activity.codigo || '',
+              nombre: activity.nombre || '',
+              frequency: activity.idPeriocidad?.toString() || '',
+              category: activity.idCategoriaActividad?.toString() || '',
+              parameter: activity.idParametroAsociado?.toString() || '',
+              document: activity.idBiblioteca?.toString() || '',
+              idAmbito: activity.idAmbito?.toString() || '',
+              idFrequency: activity.idPeriocidad?.toString() || '',
+              idCategory: activity.idCategoriaActividad?.toString() || '',
+              idParameter: activity.idParametroAsociado?.toString() || '',
+              idDocument: activity.idBiblioteca?.toString() || '',
+              // Usar los nombres que vienen directamente del backend si están disponibles
+              periocidad: activity.periocidad || null,
+              CategoriaActividad: activity.CategoriaActividad || null,
+              parametroAsociado: activity.parametroAsociado || null,
+              documentoAsociado: activity.documentoAsociado || null,
+              // Mantener los campos anteriores para compatibilidad
+              frequencyName: activity.periocidad || activity.idPeriocidad?.toString() || 'No disponible',
+              categoryName: activity.CategoriaActividad || activity.idCategoriaActividad?.toString() || 'No disponible',
+              parameterName: activity.parametroAsociado || activity.idParametroAsociado?.toString() || 'No disponible',
+              documentName: activity.documentoAsociado || activity.idBiblioteca?.toString() || 'No disponible'
+            };
+          });
+          
+          // Mostrar un ejemplo de los datos mapeados
+          if (mappedActivities.length > 0) {
+            console.log('Ejemplo de actividad mapeada:', mappedActivities[0]);
+          }
+          
+          // Mostrar información detallada de cada actividad y sus posibles coincidencias
+          console.log('🔍 ANÁLISIS DE ACTIVIDADES Y REFERENCIAS:');
+          mappedActivities.slice(0, 3).forEach((activity: any, index: number) => {
+            console.log(`Actividad ${index + 1}: ${activity.nombre} (ID: ${activity.id})`);
+            
+            // Buscar coincidencias de frecuencia
+            console.log(`  Frecuencia ID: ${activity.idFrequency}`);
+            const matchingFreq = referenceData.frequencyOptions.find(opt => 
+              opt['IdSubParam']?.toString() === activity.idFrequency ||
+              opt['IdDet']?.toString() === activity.idFrequency ||
+              opt['id']?.toString() === activity.idFrequency
+            );
+            console.log(`  Frecuencia encontrada: ${matchingFreq ? 'SÍ' : 'NO'}`);
+            if (matchingFreq) {
+              console.log(`  Nombre de frecuencia: ${matchingFreq['Nombre'] || matchingFreq['nombre'] || 'No disponible'}`);
+            }
+            
+            // Buscar coincidencias de categoría
+            console.log(`  Categoría ID: ${activity.idCategory}`);
+            const matchingCat = referenceData.categoryOptions.find(opt => 
+              opt['IdSubParam']?.toString() === activity.idCategory ||
+              opt['IdDet']?.toString() === activity.idCategory ||
+              opt['id']?.toString() === activity.idCategory
+            );
+            console.log(`  Categoría encontrada: ${matchingCat ? 'SÍ' : 'NO'}`);
+            if (matchingCat) {
+              console.log(`  Nombre de categoría: ${matchingCat['Nombre'] || matchingCat['nombre'] || 'No disponible'}`);
+            }
+            
+            // Buscar coincidencias de parámetro
+            console.log(`  Parámetro ID: ${activity.idParameter}`);
+            const matchingParam = referenceData.parameterOptions.find(opt => 
+              opt['IdSubParam']?.toString() === activity.idParameter ||
+              opt['IdDet']?.toString() === activity.idParameter ||
+              opt['id']?.toString() === activity.idParameter
+            );
+            console.log(`  Parámetro encontrado: ${matchingParam ? 'SÍ' : 'NO'}`);
+            if (matchingParam) {
+              console.log(`  Nombre de parámetro: ${matchingParam['Nombre'] || matchingParam['nombre'] || 'No disponible'}`);
+            }
+          });
+          
+          return mappedActivities;
         }
         console.log('No se recibieron datos de actividades');
         return [];
