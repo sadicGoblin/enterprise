@@ -1,0 +1,51 @@
+<div class="validation-section-container">
+  <div class="observations-section">
+    <div class="table-container">
+      <table mat-table [dataSource]="inspectionElements" class="inspection-table">
+        <!-- Elemento Column -->
+        <ng-container matColumnDef="description">
+          <th mat-header-cell *matHeaderCellDef>Elementos a Inspeccionar</th>
+          <td mat-cell *matCellDef="let element">{{element.description}}</td>
+        </ng-container>
+
+        <!-- Si Column -->
+        <ng-container matColumnDef="yes">
+          <th mat-header-cell *matHeaderCellDef>Sí</th>
+          <td mat-cell *matCellDef="let element">
+            <mat-checkbox 
+              [checked]="element.status === 'yes'"
+              (change)="updateElementStatus(element, 'yes')"
+              color="primary">
+            </mat-checkbox>
+          </td>
+        </ng-container>
+
+        <!-- No Column -->
+        <ng-container matColumnDef="no">
+          <th mat-header-cell *matHeaderCellDef>No</th>
+          <td mat-cell *matCellDef="let element">
+            <mat-checkbox 
+              [checked]="element.status === 'no'"
+              (change)="updateElementStatus(element, 'no')"
+              color="warn">
+            </mat-checkbox>
+          </td>
+        </ng-container>
+
+        <!-- N.A. Column -->
+        <ng-container matColumnDef="na">
+          <th mat-header-cell *matHeaderCellDef>N.A.</th>
+          <td mat-cell *matCellDef="let element">
+            <mat-checkbox 
+              [checked]="element.status === 'na'"
+              (change)="updateElementStatus(element, 'na')">
+            </mat-checkbox>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+  </div>
+</div>

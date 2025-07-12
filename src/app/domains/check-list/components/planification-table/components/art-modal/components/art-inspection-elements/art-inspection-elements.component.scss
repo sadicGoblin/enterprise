@@ -1,0 +1,121 @@
+$scale-factor: 0.9; // Factor de escala global
+
+.validation-section-container {
+  padding: 16px * $scale-factor;
+  
+  .section-title {
+    margin-bottom: 16px * $scale-factor;
+    
+    h3 {
+      font-size: 18px * $scale-factor;
+      font-weight: 500;
+      color: #333;
+      margin: 0;
+    }
+  }
+  
+  .validation-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px * $scale-factor;
+    margin-bottom: 24px * $scale-factor;
+    
+    .validation-column {
+      flex: 1;
+      min-width: 250px;
+      padding: 16px * $scale-factor;
+      background-color: rgba(0, 0, 0, 0.02);
+      border-radius: 4px;
+      
+      .actions {
+        margin-top: 16px * $scale-factor;
+        
+        button {
+          font-size: 14px * $scale-factor;
+          padding: 4px * $scale-factor 16px * $scale-factor;
+          
+          .mat-icon {
+            font-size: 18px * $scale-factor;
+            height: 18px * $scale-factor;
+            width: 18px * $scale-factor;
+            margin-right: 4px * $scale-factor;
+            line-height: 18px * $scale-factor;
+            vertical-align: middle;
+          }
+        }
+      }
+    }
+  }
+  
+  .observations-section {
+    margin-bottom: 20px * $scale-factor;
+    
+    .section-title {
+      font-size: 16px * $scale-factor;
+      font-weight: 500;
+      margin-bottom: 8px * $scale-factor;
+      color: #333;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+      margin-top: 8px * $scale-factor;
+      padding: 16px * $scale-factor;
+      background-color: rgba(0, 0, 0, 0.02);
+      border-radius: 4px;
+      
+      table {
+        width: 100%;
+        
+        ::ng-deep {
+          .mat-mdc-header-cell {
+            background-color: #f5f5f5;
+            font-size: 14px * $scale-factor;
+            font-weight: 500;
+            padding: 12px * $scale-factor;
+          }
+          
+          .mat-mdc-cell {
+            font-size: 14px * $scale-factor;
+            padding: 8px * $scale-factor;
+          }
+          
+          // Hacer que la columna de descripción sea más ancha
+          .mat-column-description {
+            flex: 2;
+            min-width: 200px * $scale-factor;
+          }
+          
+          // Centrar los checkboxes en las celdas
+          .mat-column-yes, .mat-column-no, .mat-column-na {
+            text-align: center;
+            justify-content: center;
+            flex: 0 0 80px * $scale-factor;
+          }
+          
+          .mat-mdc-row:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0.02);
+          }
+          
+          .mat-mdc-row:hover {
+            background-color: rgba(0, 0, 0, 0.04);
+          }
+          
+          .mat-mdc-checkbox {
+            transform: scale($scale-factor);
+          }
+          
+          // Hacer que las filas de la tabla sean más compactas
+          .mat-mdc-row {
+            min-height: 36px * $scale-factor;
+          }
+          
+          // Ajustar el espacio entre filas
+          tr.mat-mdc-row:not(:last-child) {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.12);
+          }
+        }
+      }
+    }
+  }
+}

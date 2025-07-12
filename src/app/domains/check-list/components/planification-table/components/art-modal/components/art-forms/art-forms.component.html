@@ -1,0 +1,113 @@
+<div class="validation-section-container">
+  <!-- Primera sección de formularios -->
+  <div class="validation-row">
+    <div class="validation-column">
+      <h3 class="column-title">Datos del Trabajo</h3>
+      <div class="form-field">
+        <label>Trabajo o Actividad</label>
+        <mat-form-field appearance="outline" class="full-width">
+          <input matInput [formControl]="activityControl" placeholder="Ingrese trabajo o actividad">
+        </mat-form-field>
+      </div>
+      
+      <div class="form-field">
+        <label>Especialidad</label>
+        <app-custom-select
+          [label]="''"
+          [formControl]="specialtyControl"
+          [options]="specialtyOptions"
+          [required]="true"
+          [placeholder]="'Seleccione especialidad'"
+          [appearance]="'outline'">
+        </app-custom-select>
+      </div>
+    </div>
+    
+    <div class="validation-column">
+      <h3 class="column-title">Responsables</h3>
+      <div class="form-field">
+        <label>Unidad/Contratista</label>
+        <app-custom-select
+          [label]="''"
+          [formControl]="contractorControl"
+          [options]="contractorOptions"
+          [required]="true"
+          [placeholder]="'Seleccione unidad/contratista'"
+          [appearance]="'outline'">
+        </app-custom-select>
+      </div>
+      
+      <div class="form-field">
+        <label>Supervisor/Capataz</label>
+        <app-custom-select
+          [label]="''"
+          [formControl]="supervisorControl"
+          [options]="supervisorOptions"
+          [required]="true"
+          [placeholder]="'Seleccione supervisor/capataz'"
+          [appearance]="'outline'">
+        </app-custom-select>
+      </div>
+      
+      <div class="form-field">
+        <label>Fecha</label>
+        <mat-form-field appearance="outline" class="full-width">
+          <input matInput [matDatepicker]="picker" [formControl]="dateControl">
+          <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+          <mat-datepicker #picker></mat-datepicker>
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Sección de Tarea Normada -->
+  <div class="validation-row">
+    <div class="validation-column">
+      <h3 class="column-title">Tarea Normada Por</h3>
+      <div class="normative-container">
+        <div class="option-buttons">
+          <div class="option-button" [class.selected]="sstProcedureControl.value" (click)="toggleOption(sstProcedureControl)">
+            <div class="option-icon">
+              <mat-icon *ngIf="sstProcedureControl.value">check_circle</mat-icon>
+              <div class="empty-circle" *ngIf="!sstProcedureControl.value"></div>
+            </div>
+            <span class="option-text">Procedimiento SST</span>
+          </div>
+          
+          <div class="option-button" [class.selected]="sstStandardControl.value" (click)="toggleOption(sstStandardControl)">
+            <div class="option-icon">
+              <mat-icon *ngIf="sstStandardControl.value">check_circle</mat-icon>
+              <div class="empty-circle" *ngIf="!sstStandardControl.value"></div>
+            </div>
+            <span class="option-text">Estándar SST</span>
+          </div>
+          
+          <div class="option-button" [class.selected]="operationalProcedureControl.value" (click)="toggleOption(operationalProcedureControl)">
+            <div class="option-icon">
+              <mat-icon *ngIf="operationalProcedureControl.value">check_circle</mat-icon>
+              <div class="empty-circle" *ngIf="!operationalProcedureControl.value"></div>
+            </div>
+            <span class="option-text">Procedimiento Operacional</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="validation-column">
+      <h3 class="column-title">Documento de Referencia</h3>
+      <div class="form-field">
+        <label>Nombre Documento</label>
+        <mat-form-field appearance="outline" class="full-width">
+          <input matInput [formControl]="documentNameControl" placeholder="Ingrese nombre del documento">
+        </mat-form-field>
+      </div>
+      
+      <div class="form-field">
+        <label>Código</label>
+        <mat-form-field appearance="outline" class="full-width">
+          <input matInput [formControl]="codeControl" placeholder="Ingrese código">
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+</div>
