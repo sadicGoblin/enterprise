@@ -1,99 +1,49 @@
-<div class="dialog-header">
-  <h2>Análisis de Riesgo de Tarea</h2>
-  <button mat-icon-button class="close-button" [mat-dialog-close]="false">
-    <mat-icon>delete</mat-icon>
-  </button>
-</div>
-
-<div class="art-dialog-content" *ngIf="artForm">
-  <!-- Primera sección de formularios -->
-  <div class="form-section">
-    <div class="form-row">
-      <div class="form-group">
-        <mat-form-field appearance="outline">
-          <mat-label>Trabajo o Actividad</mat-label>
-          <input matInput [formControl]="activityControl" placeholder="Ingrese trabajo o actividad">
-        </mat-form-field>
-      </div>
-
-      <div class="form-group">
-        <app-custom-select
-          [label]="'Especialidad'"
-          [formControl]="specialtyControl"
-          [options]="specialtyOptions"
-          [required]="true">
-        </app-custom-select>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <app-custom-select
-          [label]="'Unidad/Contratista'"
-          [formControl]="contractorControl"
-          [options]="contractorOptions"
-          [required]="true">
-        </app-custom-select>
-      </div>
-
-      <div class="form-group">
-        <app-custom-select
-          [label]="'Supervisor/Capataz'"
-          [formControl]="supervisorControl"
-          [options]="supervisorOptions"
-          [required]="true">
-        </app-custom-select>
-      </div>
-    </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <mat-form-field appearance="outline">
-          <mat-label>Fecha</mat-label>
-          <input matInput [matDatepicker]="picker" [formControl]="dateControl">
-          <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-          <mat-datepicker #picker></mat-datepicker>
-        </mat-form-field>
-      </div>
-    </div>
+<div class="art-modal-container">
+  <!-- Header fijo -->
+  <div class="dialog-header">
+    <h2>Análisis de Riesgo de Tarea (ART)</h2>
+    <button mat-icon-button class="close-button" [mat-dialog-close]="false">
+      <mat-icon>close</mat-icon>
+    </button>
   </div>
 
-  <!-- Sección de Tarea Normada -->
-  <div class="form-section">
-    <h3 class="section-title">Tarea Normada Por</h3>
-    <div class="checkbox-section">
-      <mat-checkbox color="primary" class="circle-checkbox" [formControl]="sstProcedureControl">
-        Proce. SST
-      </mat-checkbox>
-      
-      <mat-checkbox color="primary" class="circle-checkbox" [formControl]="sstStandardControl">
-        Standar SST
-      </mat-checkbox>
-      
-      <mat-checkbox color="primary" class="circle-checkbox" [formControl]="operationalProcedureControl">
-        Proce. Operacional
-      </mat-checkbox>
+  <div class="art-modal-content">
+    <!-- Mensaje de error de validación -->
+    <div *ngIf="showValidationErrors" class="validation-errors">
+      <div class="error-message">
+        <mat-icon color="warn">error</mat-icon>
+        <span>Por favor, corrija los siguientes errores:</span>
+      </div>
+      <ul>
+        <li *ngFor="let error of validationErrors">{{ error }}</li>
+      </ul>
     </div>
-
-    <div class="form-row">
-      <div class="form-group">
-        <mat-form-field appearance="outline">
-          <mat-label>Nombre Documento</mat-label>
-          <input matInput [formControl]="documentNameControl" placeholder="Ingrese nombre del documento">
-        </mat-form-field>
-      </div>
-
-      <div class="form-group">
-        <mat-form-field appearance="outline">
-          <mat-label>Código</mat-label>
-          <input matInput [formControl]="codeControl" placeholder="Ingrese código">
-        </mat-form-field>
-      </div>
+    
+    <!-- Contenido scrolleable -->
+    <div class="scrollable-content">
+      <mat-tab-group>
+        <mat-tab label="Datos Generales">
+          <app-art-forms></app-art-forms>
+        </mat-tab>
+        <mat-tab label="Elementos a Inspeccionar">
+          <app-art-inspection-elements></app-art-inspection-elements>
+        </mat-tab>
+        <mat-tab label="Elementos a Seleccionar">
+          <app-art-items-selection></app-art-items-selection>
+        </mat-tab>
+        <mat-tab label="Validación">
+          <app-art-validation-section></app-art-validation-section>
+        </mat-tab>
+      </mat-tab-group>
+    </div>
+  </div>
+  
+  <!-- Footer fijo con botones -->
+  <div class="art-footer">
+    <mat-divider></mat-divider>
+    <div class="art-actions">
+      <button mat-button [mat-dialog-close]="false">Cancelar</button>
+      <button mat-raised-button color="primary" (click)="saveArt()">Guardar ART</button>
     </div>
   </div>
 </div>
-
-<mat-dialog-actions align="end">
-  <button mat-button [mat-dialog-close]="false">Cancelar</button>
-  <button mat-raised-button color="primary" (click)="onSave()">Guardar</button>
-</mat-dialog-actions>

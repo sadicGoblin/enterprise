@@ -4,6 +4,7 @@ $primary-color: #3f51b5;
 $secondary-color: #f5f5f5;
 $border-color: #e0e0e0;
 $success-color: #4caf50;
+$error-color: #f44336;
 
 // Estilos para el encabezado del diálogo con botón de cierre
 .dialog-header {
@@ -35,87 +36,117 @@ $success-color: #4caf50;
   }
 }
 
-// Estilos para el contenido del modal
-.art-dialog-content {
-  min-height: 400px * $scale-factor;
-  max-height: 80vh;
-  overflow-y: auto;
-  font-size: 14px * $scale-factor;
-  
-  // Ajustar todos los tamaños de texto según el factor de escala
-  h3, h4 {
-    font-size: inherit;
-    margin: 0;
-    font-weight: 500;
-  }
-
-  // Hacer que los inputs sean más pequeños
-  ::ng-deep .mat-form-field-infix {
-    width: auto;
-    font-size: 14px * $scale-factor;
-  }
-  
-  // Secciones de formulario
-  .form-section {
-    margin-bottom: 20px * $scale-factor;
-    padding-bottom: 15px * $scale-factor;
-    border-bottom: 1px dashed $border-color;
-    padding: 20px * $scale-factor;
-    
-    &:last-child {
-      border-bottom: none;
-    }
-    
-    .section-title {
-      font-size: 16px * $scale-factor;
-      font-weight: 500;
-      margin-bottom: 12px * $scale-factor;
-      color: rgba(0, 0, 0, 0.7);
-    }
-    
-    .form-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px * $scale-factor;
-      margin-bottom: 12px * $scale-factor;
-      
-      .form-group {
-        flex: 1;
-        min-width: 200px * $scale-factor;
-        
-        mat-form-field, app-custom-select {
-          width: 100%;
-        }
-      }
-    }
-    
-    .checkbox-section {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 16px * $scale-factor;
-      margin-bottom: 12px * $scale-factor;
-      
-      .circle-checkbox {
-        margin-right: 16px * $scale-factor;
-        
-        ::ng-deep .mat-checkbox-inner-container {
-          border-radius: 50%;
-        }
-      }
-    }
-  }
+// Contenedor principal del modal
+.art-modal-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-height: 80vh; // Altura máxima del 80% del viewport
 }
 
-// Ajustes para botones de acción
-::ng-deep .mat-dialog-actions {
-  padding: 12px * $scale-factor 0;
-  margin-bottom: 0;
+// Estilos para el contenido del modal
+.art-modal-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden; // Evita que el contenido se desborde
   
-  button {
-    font-size: 14px * $scale-factor;
+  // Estilos para los mensajes de error de validación
+  .validation-errors {
+    background-color: rgba($error-color, 0.1);
+    border-radius: 4px;
+    padding: 12px * $scale-factor;
+    margin-bottom: 16px * $scale-factor;
+    border-left: 4px solid $error-color;
     
-    &:not(:last-child) {
-      margin-right: 8px * $scale-factor;
+    .error-message {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px * $scale-factor;
+      font-weight: 500;
+      font-size: 14px * $scale-factor;
+      
+      mat-icon {
+        color: $error-color;
+        margin-right: 8px * $scale-factor;
+        font-size: 18px * $scale-factor;
+        height: 18px * $scale-factor;
+        width: 18px * $scale-factor;
+      }
+    }
+    
+    ul {
+      margin: 0;
+      padding-left: 26px * $scale-factor;
+      
+      li {
+        font-size: 13px * $scale-factor;
+        margin-bottom: 4px * $scale-factor;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+      }
+    }
+  }
+  
+  // Contenedor scrolleable para el contenido principal
+  .scrollable-content {
+    flex: 1;
+    overflow-y: auto;
+    
+    mat-tab-group {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      
+      ::ng-deep .mat-mdc-tab-body-wrapper {
+        flex: 1;
+        overflow-y: auto;
+      }
+      
+      ::ng-deep .mat-mdc-tab-header {
+        margin-bottom: 16px * $scale-factor;
+      }
+      
+      ::ng-deep .mat-mdc-tab-label-container {
+        font-size: 14px * $scale-factor;
+      }
+      
+      ::ng-deep .mat-mdc-tab {
+        height: 40px * $scale-factor;
+        
+        .mdc-tab__text-label {
+          font-size: 14px * $scale-factor;
+        }
+      }
+    }
+  }
+  
+}
+
+// Footer fijo con botones
+.art-footer {
+  flex-shrink: 0;
+  
+  mat-divider {
+    margin: 0;
+  }
+  
+  // Estilos para los botones de acción
+  .art-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px * $scale-factor;
+    padding: 16px * $scale-factor;
+    
+    button {
+      font-size: 14px * $scale-factor;
+      padding: 4px * $scale-factor 16px * $scale-factor;
+      
+      &.mat-mdc-raised-button {
+        background-color: $primary-color;
+      }
     }
   }
 }

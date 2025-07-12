@@ -207,18 +207,38 @@ export class ArtValidationSectionComponent implements OnInit {
    */
   validateForm(): boolean {
     // Verificar si los controles requeridos son válidos
-    const reviewerValid = this.reviewerNameControl.valid && this.reviewerPositionControl.valid;
-    const validatorValid = this.validatorNameControl.valid && this.validatorPositionControl.valid;
+    // Para controles deshabilitados, considerarlos válidos si tienen un valor
+    const reviewerNameValid = this.reviewerNameControl.valid;
+    const reviewerPositionValid = this.reviewerPositionControl.disabled ? 
+      !!this.reviewerPositionControl.value : this.reviewerPositionControl.valid;
+    
+    const validatorNameValid = this.validatorNameControl.valid;
+    const validatorPositionValid = this.validatorPositionControl.disabled ? 
+      !!this.validatorPositionControl.value : this.validatorPositionControl.valid;
+    
+    const reviewerValid = reviewerNameValid && reviewerPositionValid;
+    const validatorValid = validatorNameValid && validatorPositionValid;
+    
+    console.log('reviewerNameValid', reviewerNameValid);
+    console.log('reviewerPositionValid', reviewerPositionValid);
+    console.log('validatorNameValid', validatorNameValid);
+    console.log('validatorPositionValid', validatorPositionValid);
+    console.log('reviewerValid', reviewerValid);
+    console.log('validatorValid', validatorValid);
     
     // Si no son válidos, marcar como tocados para mostrar errores
     if (!reviewerValid) {
       this.reviewerNameControl.markAsTouched();
-      this.reviewerPositionControl.markAsTouched();
+      if (!this.reviewerPositionControl.disabled) {
+        this.reviewerPositionControl.markAsTouched();
+      }
     }
     
     if (!validatorValid) {
       this.validatorNameControl.markAsTouched();
-      this.validatorPositionControl.markAsTouched();
+      if (!this.validatorPositionControl.disabled) {
+        this.validatorPositionControl.markAsTouched();
+      }
     }
     
     return reviewerValid && validatorValid;

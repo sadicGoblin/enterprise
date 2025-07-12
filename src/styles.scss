@@ -1,5 +1,8 @@
 /* You can add global styles to this file, and also import other style files */
 
+// Importar componentes de estilos
+@import './styles/imports';
+
 // Font size variables (smaller than default)
 :root {
   --font-size-xs: 0.75rem; // 12px

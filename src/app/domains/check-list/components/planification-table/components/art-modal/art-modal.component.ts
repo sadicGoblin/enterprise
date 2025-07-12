@@ -1,30 +1,28 @@
-import { Component, Inject, OnInit, CUSTOM_ELEMENTS_SCHEMA } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  CUSTOM_ELEMENTS_SCHEMA,
+  ViewChild,
+} from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormControl } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { ValidationErrorDialogComponent, ValidationErrorDialogData } from '../../../../../../shared/components/validation-error-dialog/validation-error-dialog.component';
+import { MatDividerModule } from '@angular/material/divider';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
-
-// Importamos correctamente el CustomSelectComponent con la ruta relativa adecuada
-import { CustomSelectComponent } from '../../../../../../shared/controls/custom-select/custom-select.component';
-
-// Definimos la interfaz SelectOption para las opciones de los selectores
-interface SelectOption {
-  value: string | number;
-  label: string;
-}
-
-export interface ArtModalData {
-  activityId?: number;
-  projectId?: number;
-  idControl?: string;
-  day?: number;
-}
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTableModule } from '@angular/material/table';
+import { ArtFormsComponent } from './components/art-forms/art-forms.component';
+import { ArtInspectionElementsComponent } from './components/art-inspection-elements/art-inspection-elements.component';
+import { ArtItemsSelectionComponent } from './components/art-items-selection/art-items-selection.component';
+import { ArtValidationSectionComponent } from './components/art-validation-section/art-validation-section.component';
 
 @Component({
   selector: 'app-art-modal',
@@ -40,95 +38,153 @@ export interface ArtModalData {
     MatIconModule,
     MatDatepickerModule,
     MatNativeDateModule,
-    CustomSelectComponent
+    MatTabsModule,
+    MatTableModule,
+    MatDividerModule,
+    ArtFormsComponent,
+    ArtInspectionElementsComponent,
+    ArtItemsSelectionComponent,
+    ArtValidationSectionComponent,
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './art-modal.component.html',
-  styleUrls: ['./art-modal.component.scss']
+  styleUrls: ['./art-modal.component.scss'],
 })
 export class ArtModalComponent implements OnInit {
-  artForm!: FormGroup;
+  @ViewChild(ArtFormsComponent) artFormsComponent!: ArtFormsComponent;
+  @ViewChild(ArtValidationSectionComponent) artValidationComponent!: ArtValidationSectionComponent;
   
-  // Mock options para selectores
-  specialtyOptions: SelectOption[] = [
-    { value: '1', label: 'Construcción Civil' },
-    { value: '2', label: 'Albañilería' },
-    { value: '3', label: 'Estructuras' }
-  ];
+  // Variable para controlar mensajes de error
+  validationErrors: string[] = [];
+  showValidationErrors = false;
   
-  contractorOptions: SelectOption[] = [
-    { value: '1', label: 'Contratista A' },
-    { value: '2', label: 'Contratista B' },
-    { value: '3', label: 'Contratista C' }
-  ];
-  
-  supervisorOptions: SelectOption[] = [
-    { value: '1', label: 'Juan Pérez' },
-    { value: '2', label: 'Maria González' },
-    { value: '3', label: 'Carlos Rodríguez' }
-  ];
-  
-  // Getters para los controles del formulario (soluciona problema de tipado)
-  get activityControl(): FormControl { return this.artForm.get('activity') as FormControl; }
-  get specialtyControl(): FormControl { return this.artForm.get('specialty') as FormControl; }
-  get contractorControl(): FormControl { return this.artForm.get('contractor') as FormControl; }
-  get supervisorControl(): FormControl { return this.artForm.get('supervisor') as FormControl; }
-  get dateControl(): FormControl { return this.artForm.get('date') as FormControl; }
-  get sstProcedureControl(): FormControl { return this.artForm.get('sstProcedure') as FormControl; }
-  get sstStandardControl(): FormControl { return this.artForm.get('sstStandard') as FormControl; }
-  get operationalProcedureControl(): FormControl { return this.artForm.get('operationalProcedure') as FormControl; }
-  get documentNameControl(): FormControl { return this.artForm.get('documentName') as FormControl; }
-  get codeControl(): FormControl { return this.artForm.get('code') as FormControl; }
-
   constructor(
-    private fb: FormBuilder,
-    public dialogRef: MatDialogRef<ArtModalComponent>,
-    @Inject(MAT_DIALOG_DATA) public data: ArtModalData
-  ) { }
-
+    private dialogRef: MatDialogRef<ArtModalComponent>,
+    private dialog: MatDialog
+  ) {}
+  
   ngOnInit(): void {
-    this.initForm();
+    // Inicialización del componente
   }
-
-  initForm() {
-    this.artForm = this.fb.group({
-      activity: ['', Validators.required],
-      specialty: ['', Validators.required],
-      contractor: ['', Validators.required],
-      supervisor: ['', Validators.required],
-      date: [new Date(), Validators.required],
-      sstProcedure: [false],
-      sstStandard: [false],
-      operationalProcedure: [false],
-      documentName: [''],
-      code: ['']
+  
+  /**
+   * Valida todos los formularios y muestra errores si es necesario
+   * @returns true si todos los formularios son válidos, false en caso contrario
+   */
+  validateAllForms(): boolean {
+    this.validationErrors = [];
+    this.showValidationErrors = false;
+    
+    // Validar formulario de datos generales
+    const formsValid = this.artFormsComponent.validateForm();
+    if (!formsValid) {
+      this.validationErrors.push('Hay campos obligatorios sin completar en la sección "Datos Generales"');
+    }
+    
+    // Validar que al menos una opción de tarea normada esté seleccionada
+    const taskSelected = this.artFormsComponent.sstProcedureControl.value || 
+                        this.artFormsComponent.sstStandardControl.value || 
+                        this.artFormsComponent.operationalProcedureControl.value;
+    if (!taskSelected) {
+      this.validationErrors.push('Debe seleccionar al menos una tarea normada');
+    }
+    
+    // Validar sección de validación
+    const validationSectionValid = this.artValidationComponent.validateForm();
+    if (!validationSectionValid) {
+      this.validationErrors.push('Hay campos obligatorios sin completar en la sección "Validación"');
+    }
+    
+    // Mostrar errores si existen
+    if (this.validationErrors.length > 0) {
+      this.showValidationErrors = true;
+      return false;
+    }
+    
+    return true;
+  }
+  
+  /**
+   * Muestra un diálogo de validación con los errores encontrados
+   */
+  showValidationErrorsDialog(): void {
+    const dialogData: ValidationErrorDialogData = {
+      title: 'Por favor, corrija los siguientes errores:',
+      errors: this.validationErrors,
+      confirmText: 'Aceptar'
+    };
+    
+    this.dialog.open(ValidationErrorDialogComponent, {
+      width: '450px',
+      data: dialogData,
+      disableClose: false,
+      panelClass: 'validation-error-dialog'
+    });
+  }
+  
+  /**
+   * Muestra un diálogo de éxito y cierra el modal
+   */
+  showSuccessDialog(): void {
+    const dialogData: ConfirmDialogData = {
+      title: 'Operación exitosa',
+      message: 'ART guardado correctamente',
+      confirmText: 'Aceptar',
+      cancelText: ''
+    };
+    
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: dialogData,
+      disableClose: true
     });
     
-    // Si hay datos preexistentes, cargarlos en el formulario
-    if (this.data && this.data.activityId) {
-      // Aquí podríamos cargar datos desde la API según el activityId
-    }
-  }
-
-  onSave() {
-    if (this.artForm.valid) {
-      this.dialogRef.close(this.artForm.value);
-    } else {
-      // Marcar todos los controles como tocados para mostrar errores
-      Object.keys(this.artForm.controls).forEach(key => {
-        const control = this.artForm.get(key);
-        control?.markAsTouched();
-      });
-    }
-  }
-
-  private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.values(formGroup.controls).forEach(control => {
-      control.markAsTouched();
-
-      if ((control as any).controls) {
-        this.markFormGroupTouched(control as FormGroup);
-      }
+    dialogRef.afterClosed().subscribe(() => {
+      this.dialogRef.close(true);
     });
+  }
+  
+  saveArt(): void {
+    // Validar todos los formularios antes de guardar
+    if (this.validateAllForms()) {
+      // Aquí se implementará la lógica para guardar todos los datos del ART
+      console.log('Guardando datos del ART...');
+      
+      // Recopilar datos de todos los componentes
+      const formData = this.artFormsComponent.artForm.value;
+      const validationData = {
+        reviewer: {
+          id: this.artValidationComponent.reviewerNameControl.value,
+          position: this.artValidationComponent.reviewerPositionControl.value,
+          date: this.artValidationComponent.reviewerDateControl.value
+        },
+        validator: {
+          id: this.artValidationComponent.validatorNameControl.value,
+          position: this.artValidationComponent.validatorPositionControl.value,
+          date: this.artValidationComponent.validatorDateControl.value
+        },
+        observations: {
+          general: {
+            text: this.artValidationComponent.generalObservationsControl.value,
+            attachment: this.artValidationComponent.generalAttachmentFile ? 
+                      this.artValidationComponent.generalAttachmentFile.name : null
+          }
+        }
+      };
+      
+      // Combinar todos los datos
+      const artCompleteData = {
+        ...formData,
+        validation: validationData
+      };
+      
+      console.log('Datos completos del ART:', artCompleteData);
+      
+      // Mostrar mensaje de éxito y cerrar el diálogo
+      this.showSuccessDialog();
+    } else {
+      // Mostrar diálogo con errores de validación
+      this.showValidationErrorsDialog();
+    }
   }
 }

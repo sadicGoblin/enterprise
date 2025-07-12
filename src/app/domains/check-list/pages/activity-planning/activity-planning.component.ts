@@ -799,7 +799,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   openArtModal(activityId?: number): void {
     const dialogRef = this.dialog.open(ArtModalComponent, {
       width: '90vw',
-      maxWidth: '1400px', // Aumentado a 1400px para mejor visualización
+      maxWidth: '100%', // Aumentado a 1400px para mejor visualización
       disableClose: true,
       autoFocus: false,
       data: { 
