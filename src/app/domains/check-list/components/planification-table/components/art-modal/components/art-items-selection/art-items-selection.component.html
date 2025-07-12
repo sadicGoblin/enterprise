@@ -5,7 +5,26 @@
       <div class="form-field">
         <label>Equipo Protección Personal a Utilizar</label>
         <mat-form-field appearance="outline" class="full-width">
-          <mat-select [formControl]="protectionEquipmentControl" multiple>
+          <mat-select [formControl]="protectionEquipmentControl" multiple [disabled]="isLoadingProtection">
+            <!-- Indicador de carga -->
+            <mat-option *ngIf="isLoadingProtection" disabled>
+              <div class="loading-option">
+                <mat-spinner diameter="20"></mat-spinner>
+                <span>Cargando opciones...</span>
+              </div>
+            </mat-option>
+            
+            <!-- Mensaje de error -->
+            <mat-option *ngIf="hasErrorProtection && !isLoadingProtection" disabled>
+              <div class="error-option">
+                <span>Error al cargar datos</span>
+                <button mat-button color="primary" (click)="loadProtectionEquipment(); $event.stopPropagation()">
+                  <mat-icon>refresh</mat-icon> Reintentar
+                </button>
+              </div>
+            </mat-option>
+            
+            <!-- Opciones normales -->
             <mat-option
               *ngFor="let item of protectionEquipmentOptions"
               [value]="item.value"
@@ -26,7 +45,26 @@
       <div class="form-field">
         <label>Control de Riesgo</label>
         <mat-form-field appearance="outline" class="full-width">
-          <mat-select [formControl]="riskControlControl" multiple>
+          <mat-select [formControl]="riskControlControl" multiple [disabled]="isLoadingRiskControl">
+            <!-- Indicador de carga -->
+            <mat-option *ngIf="isLoadingRiskControl" disabled>
+              <div class="loading-option">
+                <mat-spinner diameter="20"></mat-spinner>
+                <span>Cargando opciones...</span>
+              </div>
+            </mat-option>
+            
+            <!-- Mensaje de error -->
+            <mat-option *ngIf="hasErrorRiskControl && !isLoadingRiskControl" disabled>
+              <div class="error-option">
+                <span>Error al cargar datos</span>
+                <button mat-button color="primary" (click)="loadRiskControl(); $event.stopPropagation()">
+                  <mat-icon>refresh</mat-icon> Reintentar
+                </button>
+              </div>
+            </mat-option>
+            
+            <!-- Opciones normales -->
             <mat-option
               *ngFor="let item of riskControlOptions"
               [value]="item.value"
@@ -47,7 +85,26 @@
       <div class="form-field">
         <label>Herramientas y/o Equipo a utilizar</label>
         <mat-form-field appearance="outline" class="full-width">
-          <mat-select [formControl]="toolsEquipmentControl" multiple>
+          <mat-select [formControl]="toolsEquipmentControl" multiple [disabled]="isLoadingTools">
+            <!-- Indicador de carga -->
+            <mat-option *ngIf="isLoadingTools" disabled>
+              <div class="loading-option">
+                <mat-spinner diameter="20"></mat-spinner>
+                <span>Cargando opciones...</span>
+              </div>
+            </mat-option>
+            
+            <!-- Mensaje de error -->
+            <mat-option *ngIf="hasErrorTools && !isLoadingTools" disabled>
+              <div class="error-option">
+                <span>Error al cargar datos</span>
+                <button mat-button color="primary" (click)="loadToolsEquipment(); $event.stopPropagation()">
+                  <mat-icon>refresh</mat-icon> Reintentar
+                </button>
+              </div>
+            </mat-option>
+            
+            <!-- Opciones normales -->
             <mat-option
               *ngFor="let item of toolsEquipmentOptions"
               [value]="item.value"
@@ -89,11 +146,6 @@
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-
-        <!-- Fila para mostrar cuando no hay datos -->
-        <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" colspan="3">No hay datos disponibles</td>
-        </tr>
       </table>
     </div>
   </div>

@@ -1,15 +1,24 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormControl, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelectModule } from '@angular/material/select';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+
+import { catchError, finalize, of } from 'rxjs';
+import { UsuarioService } from '../../services/usuario.service';
+import { Usuario } from '../../models/usuario.model';
 
 interface Person {
   id: string;
   name: string;
+  position?: string;
+  positionId?: string;
 }
 
 interface Position {
@@ -27,81 +36,224 @@ interface Position {
     MatSelectModule,
     MatInputModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    MatProgressSpinnerModule,
+    MatIconModule,
+    MatButtonModule
   ],
   templateUrl: './art-validation-section.component.html',
   styleUrl: './art-validation-section.component.scss'
 })
 export class ArtValidationSectionComponent implements OnInit {
   // Form controls para los selects y inputs
-  reviewerNameControl = new FormControl<string>('');
-  reviewerPositionControl = new FormControl<string>('');
-  reviewerDateControl = new FormControl<Date | null>(new Date());
+  reviewerNameControl = new FormControl<string>('', Validators.required);
+  reviewerPositionControl = new FormControl<string>({value: '', disabled: false}, Validators.required);
+  reviewerDateControl = new FormControl<Date | null>(new Date(), Validators.required);
   
-  validatorNameControl = new FormControl<string>('');
-  validatorPositionControl = new FormControl<string>('');
-  validatorDateControl = new FormControl<Date | null>(new Date());
+  validatorNameControl = new FormControl<string>('', Validators.required);
+  validatorPositionControl = new FormControl<string>({value: '', disabled: false}, Validators.required);
+  validatorDateControl = new FormControl<Date | null>(new Date(), Validators.required);
   
   ssomaObservationsControl = new FormControl<string>('');
   generalObservationsControl = new FormControl<string>('');
   
-  // Datos de ejemplo para los selects
-  reviewersList: Person[] = [
-    { id: '1', name: 'Juan Pérez' },
-    { id: '2', name: 'María González' },
-    { id: '3', name: 'Carlos Rodríguez' },
-    { id: '4', name: 'Ana Martínez' }
-  ];
+  // Archivos adjuntos
+  ssomaAttachmentName: string = '';
+  generalAttachmentName: string = '';
+  ssomaAttachmentFile: File | null = null;
+  generalAttachmentFile: File | null = null;
   
-  validatorsList: Person[] = [
-    { id: '1', name: 'Juan Pérez' },
-    { id: '2', name: 'María González' },
-    { id: '3', name: 'Carlos Rodríguez' },
-    { id: '4', name: 'Ana Martínez' },
-    { id: '5', name: 'Roberto Sánchez' }
-  ];
+  // Listas para los selects
+  reviewersList: Person[] = [];
+  validatorsList: Person[] = [];
+  positionsList: Position[] = [];
   
-  positionsList: Position[] = [
-    { id: '1', name: 'Supervisor de Obra' },
-    { id: '2', name: 'Jefe de Seguridad' },
-    { id: '3', name: 'Inspector SSOMA' },
-    { id: '4', name: 'Gerente de Proyecto' },
-    { id: '5', name: 'Coordinador de Calidad' }
-  ];
+  // Estado de carga
+  isLoading = false;
+  hasError = false;
   
-  constructor() {}
+  // Mapeo de usuarios por ID para acceso rápido
+  private usuariosMap: Map<string, Usuario> = new Map();
+  
+  constructor(private usuarioService: UsuarioService) {}
   
   ngOnInit(): void {
-    // Escuchar cambios en los controles si es necesario
-    this.reviewerNameControl.valueChanges.subscribe(value => {
-      console.log('Nombre del revisor seleccionado:', value);
+    // Cargar usuarios desde la API
+    this.loadUsuarios();
+    
+    // Escuchar cambios en los controles para actualizar cargos
+    this.reviewerNameControl.valueChanges.subscribe(userId => {
+      if (userId) {
+        const usuario = this.usuariosMap.get(userId);
+        if (usuario) {
+          // Deshabilitar el control de cargo y establecer el valor
+          this.reviewerPositionControl.disable();
+          this.reviewerPositionControl.setValue(usuario.IdCargo);
+        } else {
+          // Si no hay usuario seleccionado, habilitar el control
+          this.reviewerPositionControl.enable();
+          this.reviewerPositionControl.setValue('');
+        }
+      } else {
+        // Si no hay usuario seleccionado, habilitar el control
+        this.reviewerPositionControl.enable();
+        this.reviewerPositionControl.setValue('');
+      }
     });
     
-    this.validatorNameControl.valueChanges.subscribe(value => {
-      console.log('Nombre del validador seleccionado:', value);
+    this.validatorNameControl.valueChanges.subscribe(userId => {
+      if (userId) {
+        const usuario = this.usuariosMap.get(userId);
+        if (usuario) {
+          // Deshabilitar el control de cargo y establecer el valor
+          this.validatorPositionControl.disable();
+          this.validatorPositionControl.setValue(usuario.IdCargo);
+        } else {
+          // Si no hay usuario seleccionado, habilitar el control
+          this.validatorPositionControl.enable();
+          this.validatorPositionControl.setValue('');
+        }
+      } else {
+        // Si no hay usuario seleccionado, habilitar el control
+        this.validatorPositionControl.enable();
+        this.validatorPositionControl.setValue('');
+      }
     });
   }
   
-  // Método para guardar los datos de validación
-  saveValidation(): void {
-    const validationData = {
-      reviewer: {
-        name: this.reviewerNameControl.value,
-        position: this.reviewerPositionControl.value,
-        date: this.reviewerDateControl.value
-      },
-      validator: {
-        name: this.validatorNameControl.value,
-        position: this.validatorPositionControl.value,
-        date: this.validatorDateControl.value
-      },
-      observations: {
-        ssoma: this.ssomaObservationsControl.value,
-        general: this.generalObservationsControl.value
-      }
-    };
+  /**
+   * Carga los usuarios desde la API
+   */
+  loadUsuarios(): void {
+    this.isLoading = true;
+    this.hasError = false;
     
-    console.log('Datos de validación:', validationData);
-    // Aquí se implementaría la llamada a la API para guardar los datos
+    this.usuarioService.getUsuarios()
+      .pipe(
+        catchError(error => {
+          console.error('Error al cargar usuarios:', error);
+          this.hasError = true;
+          return of({ success: false, code: -1, message: 'Error', data: [] });
+        }),
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe(response => {
+        if (response.success && response.data && response.data.length > 0) {
+          // Mapear los usuarios a la estructura Person
+          const usuarios = response.data.map(usuario => ({
+            id: usuario.IdUsuario,
+            name: usuario.Nombre,
+            positionId: usuario.IdCargo,
+            position: usuario.Cargo
+          }));
+          
+          // Actualizar las listas
+          this.reviewersList = [...usuarios];
+          this.validatorsList = [...usuarios];
+          
+          // Crear un mapa de usuarios por ID para acceso rápido
+          response.data.forEach(usuario => {
+            this.usuariosMap.set(usuario.IdUsuario, usuario);
+          });
+          
+          // Extraer cargos únicos para la lista de posiciones
+          const uniquePositions = new Map<string, Position>();
+          response.data.forEach(usuario => {
+            if (!uniquePositions.has(usuario.IdCargo)) {
+              uniquePositions.set(usuario.IdCargo, {
+                id: usuario.IdCargo,
+                name: usuario.Cargo
+              });
+            }
+          });
+          
+          this.positionsList = Array.from(uniquePositions.values());
+        }
+      });
+  }
+  
+  /**
+   * Método para recargar los usuarios desde la API
+   */
+  reloadUsuarios(): void {
+    this.loadUsuarios();
+  }
+  
+  /**
+   * Maneja la selección de archivo para observaciones generales
+   * @param event Evento del input file
+   */
+  onGeneralFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.generalAttachmentFile = input.files[0];
+      this.generalAttachmentName = this.generalAttachmentFile.name;
+    }
+  }
+
+  /**
+   * Elimina el archivo adjunto general
+   */
+  removeGeneralAttachment(): void {
+    this.generalAttachmentFile = null;
+    this.generalAttachmentName = '';
+  }
+  
+  /**
+   * Valida el formulario de validación y marca los campos como tocados para mostrar errores
+   * @returns true si el formulario es válido, false en caso contrario
+   */
+  validateForm(): boolean {
+    // Verificar si los controles requeridos son válidos
+    const reviewerValid = this.reviewerNameControl.valid && this.reviewerPositionControl.valid;
+    const validatorValid = this.validatorNameControl.valid && this.validatorPositionControl.valid;
+    
+    // Si no son válidos, marcar como tocados para mostrar errores
+    if (!reviewerValid) {
+      this.reviewerNameControl.markAsTouched();
+      this.reviewerPositionControl.markAsTouched();
+    }
+    
+    if (!validatorValid) {
+      this.validatorNameControl.markAsTouched();
+      this.validatorPositionControl.markAsTouched();
+    }
+    
+    return reviewerValid && validatorValid;
+  }
+  
+  /**
+   * Método para guardar los datos de validación
+   */
+  saveValidation(): void {
+    if (this.validateForm()) {
+      const validationData = {
+        reviewer: {
+          id: this.reviewerNameControl.value,
+          position: this.reviewerPositionControl.value,
+          date: this.reviewerDateControl.value
+        },
+        validator: {
+          id: this.validatorNameControl.value,
+          position: this.validatorPositionControl.value,
+          date: this.validatorDateControl.value
+        },
+        observations: {
+          ssoma: {
+            text: this.ssomaObservationsControl.value,
+            attachment: this.ssomaAttachmentFile ? this.ssomaAttachmentFile.name : null
+          },
+          general: {
+            text: this.generalObservationsControl.value,
+            attachment: this.generalAttachmentFile ? this.generalAttachmentFile.name : null
+          }
+        }
+      };
+      
+      console.log('Datos de validación:', validationData);
+      // Aquí se implementaría la llamada a la API para guardar los datos
+    }
   }
 }

@@ -2,10 +2,10 @@ $scale-factor: 0.9; // Factor de escala global
 
 .validation-section-container {
   padding: 16px * $scale-factor;
-  
+  height: 100%;
   .section-title {
     margin-bottom: 16px * $scale-factor;
-    
+
     h3 {
       font-size: 18px * $scale-factor;
       font-weight: 500;
@@ -13,27 +13,27 @@ $scale-factor: 0.9; // Factor de escala global
       margin: 0;
     }
   }
-  
+
   .validation-row {
     display: flex;
     flex-wrap: wrap;
     gap: 20px * $scale-factor;
     margin-bottom: 24px * $scale-factor;
-    
+
     .validation-column {
       flex: 1;
       min-width: 250px;
       padding: 16px * $scale-factor;
       background-color: rgba(0, 0, 0, 0.02);
       border-radius: 4px;
-      
+
       .actions {
         margin-top: 16px * $scale-factor;
-        
+
         button {
           font-size: 14px * $scale-factor;
           padding: 4px * $scale-factor 16px * $scale-factor;
-          
+
           .mat-icon {
             font-size: 18px * $scale-factor;
             height: 18px * $scale-factor;
@@ -46,24 +46,18 @@ $scale-factor: 0.9; // Factor de escala global
       }
     }
   }
-  
+
   .observations-section {
-    margin-bottom: 20px * $scale-factor;
-    
     .section-title {
       font-size: 16px * $scale-factor;
       font-weight: 500;
       margin-bottom: 8px * $scale-factor;
       color: #333;
     }
-    
+
     .table-container {
       overflow-x: auto;
-      margin-top: 8px * $scale-factor;
-      padding: 8px * $scale-factor;
-      background-color: rgba(0, 0, 0, 0.02);
-      border-radius: 4px;
-      
+
       // Estilos para el contenedor de carga
       .loading-container {
         display: flex;
@@ -71,13 +65,13 @@ $scale-factor: 0.9; // Factor de escala global
         align-items: center;
         justify-content: center;
         padding: 20px * $scale-factor;
-        
+
         p {
           margin-top: 10px * $scale-factor;
           font-size: 14px * $scale-factor;
           color: #666;
         }
-        
+
         mat-spinner {
           ::ng-deep svg {
             width: 40px * $scale-factor !important;
@@ -85,7 +79,7 @@ $scale-factor: 0.9; // Factor de escala global
           }
         }
       }
-      
+
       // Estilos para el contenedor de error
       .error-container {
         display: flex;
@@ -95,26 +89,26 @@ $scale-factor: 0.9; // Factor de escala global
         padding: 20px * $scale-factor;
         background-color: #fff5f5;
         border-radius: 4px;
-        
+
         mat-icon {
           font-size: 24px * $scale-factor;
           height: 24px * $scale-factor;
           width: 24px * $scale-factor;
           margin-bottom: 8px * $scale-factor;
         }
-        
+
         p {
           margin-bottom: 10px * $scale-factor;
           font-size: 14px * $scale-factor;
           color: #d32f2f;
           text-align: center;
         }
-        
+
         button {
           font-size: 12px * $scale-factor;
         }
       }
-      
+
       // Estilos para el mensaje de no hay datos
       .no-data-container {
         display: flex;
@@ -122,7 +116,7 @@ $scale-factor: 0.9; // Factor de escala global
         align-items: center;
         justify-content: center;
         padding: 20px * $scale-factor;
-        
+
         mat-icon {
           font-size: 24px * $scale-factor;
           height: 24px * $scale-factor;
@@ -130,42 +124,16 @@ $scale-factor: 0.9; // Factor de escala global
           margin-bottom: 8px * $scale-factor;
           color: #2196f3;
         }
-        
+
         p {
           font-size: 14px * $scale-factor;
           color: #666;
         }
       }
-      
-      // Contenedor con scroll para la tabla
-      .table-scroll-container {
-        max-height: 450px * $scale-factor;
-        overflow-y: auto;
-        border: 1px solid rgba(0, 0, 0, 0.08);
-        border-radius: 4px;
-        // Estilizar la barra de desplazamiento para navegadores webkit
-        &::-webkit-scrollbar {
-          width: 6px * $scale-factor;
-        }
-        
-        &::-webkit-scrollbar-track {
-          background: #f1f1f1;
-          border-radius: 3px;
-        }
-        
-        &::-webkit-scrollbar-thumb {
-          background: #c1c1c1;
-          border-radius: 3px;
-        }
-        
-        &::-webkit-scrollbar-thumb:hover {
-          background: #a8a8a8;
-        }
-      }
-      
+
       table {
         width: 100%;
-        
+
         ::ng-deep {
           .mat-mdc-header-cell {
             background-color: #f5f5f5;
@@ -176,13 +144,13 @@ $scale-factor: 0.9; // Factor de escala global
             top: 0;
             z-index: 10;
           }
-          
+
           .mat-mdc-cell {
             font-size: 13px * $scale-factor;
             padding: 4px * $scale-factor 8px * $scale-factor;
             line-height: 1.2;
           }
-          
+
           // Hacer que la columna de descripción sea más ancha
           .mat-column-description {
             flex: 2;
@@ -191,40 +159,43 @@ $scale-factor: 0.9; // Factor de escala global
             word-wrap: break-word;
             font-size: 12px * $scale-factor;
           }
-          
+
           // Centrar los checkboxes en las celdas
-          .mat-column-yes, .mat-column-no, .mat-column-na {
+          .mat-column-yes,
+          .mat-column-no,
+          .mat-column-na {
             text-align: center;
             justify-content: center;
             flex: 0 0 60px * $scale-factor;
           }
-          
+
           .mat-mdc-row:nth-child(even) {
             background-color: rgba(0, 0, 0, 0.02);
           }
-          
+
           .mat-mdc-row:hover {
             background-color: rgba(0, 0, 0, 0.04);
           }
-          
+
           .mat-mdc-checkbox {
             transform: scale($scale-factor * 0.9);
             margin: 0;
           }
-          
+
           // Hacer que las filas de la tabla sean más compactas
           .mat-mdc-row {
             min-height: 28px * $scale-factor;
             height: 28px * $scale-factor;
           }
-          
+
           // Ajustar el espacio entre filas
           tr.mat-mdc-row:not(:last-child) {
             border-bottom: 1px solid rgba(0, 0, 0, 0.06);
           }
-          
+
           // Reducir padding vertical en las celdas
-          .mat-mdc-cell, .mat-mdc-header-cell {
+          .mat-mdc-cell,
+          .mat-mdc-header-cell {
             padding-top: 2px * $scale-factor;
             padding-bottom: 2px * $scale-factor;
           }

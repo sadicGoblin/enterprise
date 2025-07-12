@@ -2,6 +2,56 @@ $scale-factor: 0.9; // Factor de escala global
 
 .validation-section-container {
   padding: 16px * $scale-factor;
+  position: relative;
+  
+  // Estilos para el indicador de carga
+  .loading-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px * $scale-factor;
+    margin-bottom: 16px * $scale-factor;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-radius: 4px;
+    
+    span {
+      margin-left: 12px * $scale-factor;
+      font-size: 14px * $scale-factor;
+      color: #666;
+    }
+  }
+  
+  // Estilos para el mensaje de error
+  .error-container {
+    padding: 12px * $scale-factor;
+    margin-bottom: 16px * $scale-factor;
+    background-color: #fff4f4;
+    border: 1px solid #ffcdd2;
+    border-radius: 4px;
+    
+    .error-message {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      
+      span {
+        color: #d32f2f;
+        font-size: 14px * $scale-factor;
+      }
+      
+      button {
+        font-size: 12px * $scale-factor;
+        line-height: 24px * $scale-factor;
+        padding: 0 8px * $scale-factor;
+        
+        mat-icon {
+          font-size: 16px * $scale-factor;
+          height: 16px * $scale-factor;
+          width: 16px * $scale-factor;
+        }
+      }
+    }
+  }
   
   .validation-row {
     display: flex;
@@ -83,6 +133,12 @@ $scale-factor: 0.9; // Factor de escala global
       color: #333;
     }
     
+    .observation-content {
+      display: flex;
+      flex-direction: column;
+      gap: 8px * $scale-factor;
+    }
+    
     .full-width {
       width: 100%;
       
@@ -93,7 +149,59 @@ $scale-factor: 0.9; // Factor de escala global
         
         textarea {
           resize: vertical;
-          min-height: 80px * $scale-factor;
+          min-height: 40px * $scale-factor; // Altura reducida
+        }
+      }
+    }
+    
+    .attachment-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px * $scale-factor;
+      
+      .attach-button {
+        align-self: flex-start;
+        font-size: 12px * $scale-factor;
+        line-height: 24px * $scale-factor;
+        padding: 0 8px * $scale-factor;
+        height: 32px * $scale-factor;
+        
+        mat-icon {
+          font-size: 16px * $scale-factor;
+          height: 16px * $scale-factor;
+          width: 16px * $scale-factor;
+          margin-right: 4px * $scale-factor;
+        }
+      }
+      
+      .file-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background-color: rgba(0, 0, 0, 0.04);
+        padding: 4px * $scale-factor 8px * $scale-factor;
+        border-radius: 4px;
+        
+        .file-name {
+          font-size: 12px * $scale-factor;
+          color: #555;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          max-width: 200px * $scale-factor;
+        }
+        
+        button {
+          padding: 0;
+          height: 24px * $scale-factor;
+          width: 24px * $scale-factor;
+          line-height: 24px * $scale-factor;
+          
+          mat-icon {
+            font-size: 16px * $scale-factor;
+            height: 16px * $scale-factor;
+            width: 16px * $scale-factor;
+          }
         }
       }
     }

@@ -12,14 +12,9 @@
       
       <div class="form-field">
         <label>Especialidad</label>
-        <app-custom-select
-          [label]="''"
-          [formControl]="specialtyControl"
-          [options]="specialtyOptions"
-          [required]="true"
-          [placeholder]="'Seleccione especialidad'"
-          [appearance]="'outline'">
-        </app-custom-select>
+        <mat-form-field appearance="outline" class="full-width">
+          <input matInput [formControl]="specialtyControl" placeholder="Ingrese especialidad" required>
+        </mat-form-field>
       </div>
     </div>
     
@@ -27,26 +22,16 @@
       <h3 class="column-title">Responsables</h3>
       <div class="form-field">
         <label>Unidad/Contratista</label>
-        <app-custom-select
-          [label]="''"
-          [formControl]="contractorControl"
-          [options]="contractorOptions"
-          [required]="true"
-          [placeholder]="'Seleccione unidad/contratista'"
-          [appearance]="'outline'">
-        </app-custom-select>
+        <mat-form-field appearance="outline" class="full-width">
+          <input matInput [formControl]="contractorControl" placeholder="Ingrese unidad/contratista" required>
+        </mat-form-field>
       </div>
       
       <div class="form-field">
         <label>Supervisor/Capataz</label>
-        <app-custom-select
-          [label]="''"
-          [formControl]="supervisorControl"
-          [options]="supervisorOptions"
-          [required]="true"
-          [placeholder]="'Seleccione supervisor/capataz'"
-          [appearance]="'outline'">
-        </app-custom-select>
+        <mat-form-field appearance="outline" class="full-width">
+          <input matInput [formControl]="supervisorControl" placeholder="Ingrese supervisor/capataz" required>
+        </mat-form-field>
       </div>
       
       <div class="form-field">

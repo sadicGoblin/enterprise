@@ -2,10 +2,10 @@ $scale-factor: 0.9; // Factor de escala global
 
 .validation-section-container {
   padding: 16px * $scale-factor;
-  
+  height: 80vh;
   .section-title {
     margin-bottom: 16px * $scale-factor;
-    
+
     h3 {
       font-size: 18px * $scale-factor;
       font-weight: 500;
@@ -13,37 +13,44 @@ $scale-factor: 0.9; // Factor de escala global
       margin: 0;
     }
   }
-  
+
+  .no-data-row {
+    color: #666;
+    font-size: 14px * $scale-factor;
+    padding: 26px;
+    text-align: center;
+  }
+
   .validation-row {
     display: flex;
     flex-wrap: wrap;
     gap: 20px * $scale-factor;
     margin-bottom: 24px * $scale-factor;
-    
+
     .validation-column {
       flex: 1;
       min-width: 250px;
       padding: 16px * $scale-factor;
       background-color: rgba(0, 0, 0, 0.02);
       border-radius: 4px;
-      
+
       .column-title {
         font-size: 16px * $scale-factor;
         font-weight: 500;
         margin-bottom: 16px * $scale-factor;
         color: #333;
       }
-      
+
       .form-field {
         margin-bottom: 12px * $scale-factor;
-        
+
         label {
           display: block;
           font-size: 14px * $scale-factor;
           margin-bottom: 4px * $scale-factor;
           color: #555;
         }
-        
+
         .selection-count {
           display: flex;
           align-items: center;
@@ -53,7 +60,7 @@ $scale-factor: 0.9; // Factor de escala global
           padding: 4px * $scale-factor 8px * $scale-factor;
           background-color: #e8f0fe;
           border-radius: 4px;
-          
+
           mat-icon {
             font-size: 16px * $scale-factor;
             height: 16px * $scale-factor;
@@ -62,53 +69,88 @@ $scale-factor: 0.9; // Factor de escala global
             color: #3f51b5;
           }
         }
-        
+
         ::ng-deep {
           .mat-mdc-form-field {
             width: 100%;
             font-size: 14px * $scale-factor;
-            
+
             .mat-mdc-text-field-wrapper {
               padding-top: 0;
               padding-bottom: 0;
             }
-            
+
+            // Estilos para los indicadores de carga y mensajes de error
+            .loading-option,
+            .error-option {
+              display: flex;
+              align-items: center;
+              padding: 8px * $scale-factor;
+
+              span {
+                margin-left: 8px * $scale-factor;
+                font-size: 14px * $scale-factor;
+              }
+            }
+
+            .loading-option {
+              color: #666;
+            }
+
+            .error-option {
+              color: #f44336;
+              justify-content: space-between;
+
+              button {
+                margin-left: 8px * $scale-factor;
+                font-size: 12px * $scale-factor;
+                line-height: 24px * $scale-factor;
+                padding: 0 8px * $scale-factor;
+
+                mat-icon {
+                  font-size: 16px * $scale-factor;
+                  height: 16px * $scale-factor;
+                  width: 16px * $scale-factor;
+                }
+              }
+            }
+
             .mat-mdc-form-field-infix {
               padding: 8px * $scale-factor 0;
               min-height: 36px * $scale-factor;
             }
-            
+
             .mat-mdc-select-value-text {
               font-size: 14px * $scale-factor;
             }
-            
+
             .mat-mdc-select-arrow-wrapper {
               transform: scale($scale-factor);
             }
-            
+
             .mat-mdc-form-field-subscript-wrapper {
               font-size: 12px * $scale-factor;
             }
-            
+
             .mat-mdc-option {
               font-size: 14px * $scale-factor;
               min-height: 36px * $scale-factor;
             }
           }
-          
+
           .full-width {
             width: 100%;
           }
         }
       }
-      
+
       .actions {
         margin-top: 16px * $scale-factor;
-        
+
         button {
           font-size: 14px * $scale-factor;
           padding: 4px * $scale-factor 16px * $scale-factor;
-          
+
           .mat-icon {
             font-size: 18px * $scale-factor;
             height: 18px * $scale-factor;
@@ -119,24 +161,24 @@ $scale-factor: 0.9; // Factor de escala global
       }
     }
   }
-  
+
   .observations-section {
     margin-bottom: 20px * $scale-factor;
-    
+
     .section-title {
       font-size: 16px * $scale-factor;
       font-weight: 500;
       margin-bottom: 8px * $scale-factor;
       color: #333;
     }
-    
+
     .table-container {
       overflow-x: auto;
       margin-top: 8px * $scale-factor;
-      
+
       table {
         width: 100%;
-        
+
         ::ng-deep {
           .mat-mdc-header-cell {
             background-color: #f5f5f5;
@@ -144,20 +186,20 @@ $scale-factor: 0.9; // Factor de escala global
             font-weight: 500;
             padding: 12px * $scale-factor;
           }
-          
+
           .mat-mdc-cell {
             font-size: 14px * $scale-factor;
             padding: 8px * $scale-factor;
           }
-          
+
           .mat-mdc-row:nth-child(even) {
             background-color: rgba(0, 0, 0, 0.02);
           }
-          
+
           .mat-mdc-row:hover {
             background-color: rgba(0, 0, 0, 0.04);
           }
-          
+
           .mat-mdc-checkbox {
             transform: scale($scale-factor);
           }

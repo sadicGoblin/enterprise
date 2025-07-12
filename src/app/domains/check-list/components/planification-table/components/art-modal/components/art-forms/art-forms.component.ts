@@ -2,7 +2,6 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatDialogModule } from '@angular/material/dialog';
-import { CustomSelectComponent } from '../../../../../../../../shared/controls/custom-select/custom-select.component';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -30,7 +29,6 @@ export interface ArtModalData {
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    CustomSelectComponent,
     MatFormFieldModule,
     MatInputModule,
     MatDatepickerModule,
@@ -55,8 +53,8 @@ export class ArtFormsComponent implements OnInit {
   sstProcedureControl = new FormControl(false);
   sstStandardControl = new FormControl(false);
   operationalProcedureControl = new FormControl(false);
-  documentNameControl = new FormControl('');
-  codeControl = new FormControl('');
+  documentNameControl = new FormControl('', Validators.required);
+  codeControl = new FormControl('', Validators.required);
   
   // Mock options para selectores
   specialtyOptions: SelectOption[] = [
@@ -106,15 +104,42 @@ export class ArtFormsComponent implements OnInit {
     control.setValue(!control.value);
   }
 
-  onSave(): void {
+  /**
+   * Valida el formulario y marca todos los campos como tocados para mostrar errores
+   * @returns true si el formulario es válido, false en caso contrario
+   */
+  validateForm(): boolean {
+    // Validar que al menos una opción de tarea normada esté seleccionada
+    const taskSelected = this.sstProcedureControl.value || 
+                        this.sstStandardControl.value || 
+                        this.operationalProcedureControl.value;
+    
+    // Si no hay tarea seleccionada, marcar un error personalizado
+    if (!taskSelected) {
+      // Marcar todos los controles como tocados para mostrar errores
+      Object.keys(this.artForm.controls).forEach(key => {
+        const control = this.artForm.get(key);
+        control?.markAsTouched();
+      });
+      return false;
+    }
+    
+    // Validar el resto del formulario
     if (this.artForm.valid) {
-      console.log('Formulario válido:', this.artForm.value);
+      return true;
     } else {
       // Marcar todos los controles como tocados para mostrar errores
       Object.keys(this.artForm.controls).forEach(key => {
         const control = this.artForm.get(key);
         control?.markAsTouched();
       });
+      return false;
+    }
+  }
+  
+  onSave(): void {
+    if (this.validateForm()) {
+      console.log('Formulario válido:', this.artForm.value);
     }
   }
 }
