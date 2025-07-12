@@ -3,7 +3,6 @@
     <h2 class="title">Planificación Actividades</h2>
 
     <div class="filters-container">
-
       <app-custom-select
         label="Proyecto"
         [formControl]="projectControl"
@@ -36,10 +35,10 @@
 
       <mat-form-field appearance="fill">
         <mat-label>Periodo (Actual)</mat-label>
-        <input 
-          matInput 
-          [matDatepicker]="picker" 
-          [(ngModel)]="selectedPeriod" 
+        <input
+          matInput
+          [matDatepicker]="picker"
+          [(ngModel)]="selectedPeriod"
           [value]="selectedPeriod"
           (dateChange)="onPeriodChange($event)"
           [placeholder]="formattedPeriod || 'MM/YYYY'"
@@ -55,16 +54,19 @@
         ></mat-datepicker>
       </mat-form-field>
 
-
       <div class="button-container">
-        <button mat-raised-button color="primary" class="consultar-btn" (click)="onConsultarClick()">
+        <button
+          mat-raised-button
+          color="primary"
+          class="consultar-btn"
+          (click)="onConsultarClick()"
+        >
           <mat-icon>search</mat-icon>
           Consultar
         </button>
-<!--         
         <button mat-raised-button color="accent" class="inspection-button" (click)="openArtModal()">
           <mat-icon>assignment</mat-icon> ART
-        </button> -->
+        </button>
       </div>
     </div>
 
@@ -82,15 +84,14 @@
       </div>
 
       <app-planification-table
-          [activities]="activities"
-          [days]="days"
-          [selectedPeriod]="selectedPeriod"
-          [projectId]="selectedProjectId"
-          [selectedCollaboratorName]="selectedCollaboratorName"
-          (activityStatusChanged)="handleActivityStatusChanged($event)"
-          (saveChanges)="saveAllChanges()"
+        [activities]="activities"
+        [days]="days"
+        [selectedPeriod]="selectedPeriod"
+        [projectId]="selectedProjectId"
+        [selectedCollaboratorName]="selectedCollaboratorName"
+        (activityStatusChanged)="handleActivityStatusChanged($event)"
+        (saveChanges)="saveAllChanges()"
       ></app-planification-table>
     </div>
-
   </mat-card>
 </div>

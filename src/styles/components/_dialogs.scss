@@ -1,0 +1,34 @@
+// Estilos globales para diálogos
+$scale-factor: 0.9; // Factor de escala global
+
+// Estilos para el diálogo de validación de errores
+.validation-error-dialog {
+  .mat-mdc-dialog-container {
+    .mdc-dialog__surface {
+      padding: 16px * $scale-factor;
+      border-radius: 8px;
+      
+      // Aplicar escala a los elementos del diálogo
+      .mat-mdc-dialog-title {
+        font-size: 18px * $scale-factor;
+        line-height: 1.4;
+      }
+      
+      .mat-mdc-dialog-content {
+        font-size: 14px * $scale-factor;
+        padding: 8px * $scale-factor 16px * $scale-factor;
+        max-height: 60vh;
+        overflow-y: auto;
+      }
+      
+      .mat-mdc-dialog-actions {
+        padding: 8px * $scale-factor;
+        
+        button {
+          font-size: 14px * $scale-factor;
+          line-height: 36px * $scale-factor;
+        }
+      }
+    }
+  }
+}

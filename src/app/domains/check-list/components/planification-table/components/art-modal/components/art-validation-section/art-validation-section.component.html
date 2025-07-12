@@ -1,0 +1,129 @@
+<div class="validation-section-container">
+  <!-- Indicador de carga global -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="30"></mat-spinner>
+    <span>Cargando usuarios...</span>
+  </div>
+  
+  <!-- Mensaje de error global -->
+  <div *ngIf="hasError && !isLoading" class="error-container">
+    <div class="error-message">
+      <span>Error al cargar los datos de usuarios</span>
+      <button mat-button color="primary" (click)="reloadUsuarios()">
+        <mat-icon>refresh</mat-icon> Reintentar
+      </button>
+    </div>
+  </div>
+  <div class="validation-row">
+    <!-- Columna Revisado Por -->
+    <div class="validation-column">
+      <h3 class="column-title">Revisado Por</h3>
+      
+      <div class="form-field">
+        <label>Nombre</label>
+        <mat-form-field appearance="outline">
+          <mat-select [formControl]="reviewerNameControl" [disabled]="isLoading">
+            <mat-option value="">Seleccione...</mat-option>
+            <mat-option *ngFor="let person of reviewersList" [value]="person.id">
+              {{ person.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      
+      <div class="form-field">
+        <label>Cargo</label>
+        <mat-form-field appearance="outline">
+          <mat-select [formControl]="reviewerPositionControl" [disabled]="isLoading || reviewerPositionControl.disabled">
+            <mat-option value="">Seleccione...</mat-option>
+            <mat-option *ngFor="let position of positionsList" [value]="position.id">
+              {{ position.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      
+      <div class="form-field">
+        <label>Fecha</label>
+        <mat-form-field appearance="outline">
+          <input matInput [matDatepicker]="reviewerDatepicker" [formControl]="reviewerDateControl">
+          <mat-datepicker-toggle matIconSuffix [for]="reviewerDatepicker"></mat-datepicker-toggle>
+          <mat-datepicker #reviewerDatepicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+    </div>
+    
+    <!-- Columna Validado Por -->
+    <div class="validation-column">
+      <h3 class="column-title">Validado Por</h3>
+      
+      <div class="form-field">
+        <label>Nombre</label>
+        <mat-form-field appearance="outline">
+          <mat-select [formControl]="validatorNameControl" [disabled]="isLoading">
+            <mat-option value="">Seleccione...</mat-option>
+            <mat-option *ngFor="let person of validatorsList" [value]="person.id">
+              {{ person.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      
+      <div class="form-field">
+        <label>Cargo</label>
+        <mat-form-field appearance="outline">
+          <mat-select [formControl]="validatorPositionControl" [disabled]="isLoading || validatorPositionControl.disabled">
+            <mat-option value="">Seleccione...</mat-option>
+            <mat-option *ngFor="let position of positionsList" [value]="position.id">
+              {{ position.name }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      
+      <div class="form-field">
+        <label>Fecha</label>
+        <mat-form-field appearance="outline">
+          <input matInput [matDatepicker]="validatorDatepicker" [formControl]="validatorDateControl">
+          <mat-datepicker-toggle matIconSuffix [for]="validatorDatepicker"></mat-datepicker-toggle>
+          <mat-datepicker #validatorDatepicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Observaciones de SSOMA -->
+  <div class="observations-section">
+    <h3 class="section-title">Observaciones de SSOMA</h3>
+    <div class="observation-content">
+      <mat-form-field appearance="outline" class="full-width">
+        <textarea matInput [formControl]="ssomaObservationsControl" rows="2"></textarea>
+      </mat-form-field>
+    </div>
+  </div>
+  
+  <!-- Observaciones generales -->
+  <div class="observations-section">
+    <h3 class="section-title">Observaciones</h3>
+    <div class="observation-content">
+      <mat-form-field appearance="outline" class="full-width">
+        <textarea matInput [formControl]="generalObservationsControl" rows="2"></textarea>
+      </mat-form-field>
+      
+      <div class="attachment-container">
+        <input type="file" #generalFileInput style="display: none" (change)="onGeneralFileSelected($event)">
+        <button mat-stroked-button type="button" class="attach-button" (click)="generalFileInput.click()">
+          <mat-icon>attach_file</mat-icon>
+          <span>Adjuntar archivo</span>
+        </button>
+        
+        <div *ngIf="generalAttachmentName" class="file-info">
+          <span class="file-name">{{ generalAttachmentName }}</span>
+          <button mat-icon-button color="warn" (click)="removeGeneralAttachment()">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
