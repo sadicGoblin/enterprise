@@ -241,7 +241,7 @@ export class CheckListDashboardComponent implements OnInit, AfterViewInit {
     console.log(`[Dashboard] Cargando datos de planificación para el período: ${this.selectedPeriod}`);
     
     // Llamar al servicio de planificación
-    this.planificationService.getControlPlanificacion(this.selectedPeriod).subscribe(
+    this.planificationService.getControlPlanificacion(this.selectedPeriod, '', '').subscribe(
       (response) => {
         
         if (response) {

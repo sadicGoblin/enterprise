@@ -8,6 +8,8 @@ import { ProxyService } from '../../../core/services/proxy.service';
 export interface PlanificationRequest {
   caso: string;
   periodo: number;
+  usuarioId?: string ;
+  pendiente?: string;
 }
 
 /**
@@ -33,12 +35,15 @@ export class PlanificationService {
    * @param periodo Período en formato YYYYMM (ejemplo: 202507)
    * @returns Observable con los datos de planificación
    */
-  getControlPlanificacion(periodo: string): Observable<any> {
+  getControlPlanificacion(periodo: string, usuarioId: string, pendiente:string): Observable<any> {
     const request: PlanificationRequest = {
       caso: 'ControlPlanificacion',
-      periodo: parseInt(periodo, 10)  // Convertir a número
+      periodo: parseInt(periodo, 10),  // Convertir a número
+      usuarioId: usuarioId,
+      pendiente: pendiente
     };
-    
+    console.log(`[PlanificationService] usuarioId: ${usuarioId}`);
+    console.log(`[PlanificationService] pendiente: ${pendiente}`);
     console.log(`[PlanificationService] Consultando planificación para período ${periodo} con request:`, request);
     return this.proxyService.post<any>(this.apiUrl, request);
   }
