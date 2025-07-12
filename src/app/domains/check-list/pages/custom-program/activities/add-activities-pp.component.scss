@@ -23,7 +23,7 @@
 }
 
 .form-card {
-  padding: 24px;
+  padding: 16px; /* Reducir el padding de la tarjeta del formulario */
 }
 
 .table-card {
@@ -56,18 +56,18 @@
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  margin-bottom: 24px;
+  gap: 1rem; /* Reducir el espacio entre columnas */
+  margin-bottom: 16px; /* Reducir el margen inferior de la cuadrícula */
   
   mat-form-field {
     width: 100%;
-    margin-bottom: 1rem;
+    margin-bottom: 0.5rem; /* Reducir el margen inferior de los campos de formulario */
   }
   
   .column {
     display: flex;
     flex-direction: column;
-    gap: 16px;
+    gap: 8px; /* Reducir el espacio entre elementos dentro de cada columna */
   }
 }
 
@@ -210,4 +210,31 @@
   padding: 2rem 1rem;
   font-style: italic;
   color: #777;
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000; /* Asegura que esté por encima de otros elementos */
+
+  mat-spinner {
+    margin-bottom: 10px;
+  }
+
+  span {
+    font-size: 1.2em;
+    color: #333;
+  }
+}
+
+.table-card {
+  position: relative; /* Necesario para que el overlay se posicione correctamente */
 }

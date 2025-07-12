@@ -175,6 +175,10 @@
   <!-- Tabla en un card separado -->
   <mat-card class="mat-container table-card">
     <h2 class="title">Actividades Registradas</h2>
+    <div class="loading-overlay" *ngIf="loadingExistingControls">
+      <mat-spinner diameter="50"></mat-spinner>
+      <span>Cargando actividades...</span>
+    </div>
     <div class="table-container">
       <table
         mat-table

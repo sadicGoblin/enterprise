@@ -12,7 +12,7 @@ import { ProxyService } from '../../../../../core/services/proxy.service';
 import { CustomSelectComponent, SelectOption } from '../../../../../shared/controls/custom-select/custom-select.component';
 import { ParameterType } from '../../../../../shared/controls/custom-select/custom-select.component';
 import { catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { forkJoin, Observable, of } from 'rxjs';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
@@ -238,6 +238,7 @@ export class AddActivitiesPpComponent implements OnInit {
 
   // Properties for activity multi-select
   activityOptions: Array<ActivityOption> = [];
+  activityItems: any[] = [];
   // Definición con tipado explícito para selectedActivities
   selectedActivities: Array<ActivityOption> = [];
   activityApiEndpoint = '/ws/AmbitosSvcImpl.php';
@@ -496,7 +497,11 @@ export class AddActivitiesPpComponent implements OnInit {
         this.loadingStages = false;
 
         if (response && response.success && response.data) {
-          this.stageOptions = response.data;
+          // order alphabetically by name
+          let result = response.data;
+          console.log('Stages loaded:', result);
+          result.sort((a: any, b: any) => a.nombre.localeCompare(b.nombre));
+          this.stageOptions = result;
           // console.log('Stages loaded:', this.stageOptions);
         } else {
           this.stageOptions = [];
@@ -597,6 +602,7 @@ export class AddActivitiesPpComponent implements OnInit {
 
         if (response && response.success && response.data) {
           this.activityOptions = response.data;
+          this.activityItems = response.data;
          // console.log('Activities loaded:', this.activityOptions);
         } else {
           this.activityOptions = [];
@@ -879,75 +885,82 @@ export class AddActivitiesPpComponent implements OnInit {
       if (result === 'SÍ') {
         // Proceder con el guardado
         // Extraer el periodo en formato YYYYMM a partir de la fecha seleccionada
-        const periodoFormateado = this.selectedDate ?
-          (this.selectedDate.getFullYear() * 100 + (this.selectedDate.getMonth() + 1)) :
-          202506;
+          const periodoFormateado = this.selectedDate ?
+            (this.selectedDate.getFullYear() * 100 + (this.selectedDate.getMonth() + 1)) :
+            202506;
 
-        // Contador para un seguimiento más claro
-        let totalControles = 0;
-        const totalCombinaciones = this.selectedSubprocesses.length * this.selectedActivities.length;
+          this.loadingExistingControls = true; // Activar loader
 
-        // console.log(`Creando ${totalCombinaciones} controles para ${this.selectedSubprocesses.length} subprocesos y ${this.selectedActivities.length} actividades`);
+            // Contador para un seguimiento más claro
+            let totalControles = 0;
+            const totalCombinaciones = this.selectedSubprocesses.length * this.selectedActivities.length;
+            const controlObservables: Array<Observable<any>> = [];
 
-        // Bucle anidado: para cada subproceso, crear controles para todas las actividades
-        this.selectedSubprocesses.forEach((subproceso: SubprocessOption) => {
-          this.selectedActivities.forEach((actividad: { idActividades?: number; nombre: string }) => {
-            totalControles++;
+            // Bucle anidado: para cada subproceso, crear controles para todas las actividades
+            this.selectedSubprocesses.forEach((subproceso: SubprocessOption) => {
+              this.selectedActivities.forEach((actividad: { idActividades?: number; nombre: string }) => {
+                totalControles++;
 
-            // Crear objeto de control con la combinación actual de subproceso y actividad
-            const controlBody = {
-              "caso": "Crea",
-              "IdControl": 0,
-              "idObra": this.projectSelectedId ? Number(this.projectSelectedId) : 0,
-              "obra": null,
-              "idUsuario": this.selectedUser ? Number(this.selectedUser) : 0,
-              "usuario": null,
-              "periodo": periodoFormateado,
-              "idEtapaConst": this.stageSelectedId ? Number(this.stageSelectedId) : 0,
-              "etapaConst": null,
-              "idSubProceso": subproceso?.idSubproceso ? Number(subproceso.idSubproceso) : 0,
-              "subProceso": null,
-              "idAmbito": this.scopeSelectedId ? Number(this.scopeSelectedId) : 0,
-              "ambito": null,
-              "idActividad": actividad.idActividades ? Number(actividad.idActividades) : 0,
-              "actividad": null,
-              "idPeriocidad": this.selectedPeriodicity ?
-                (this.selectedPeriodicity === 'DIARIA' ? 7 :
-                  this.selectedPeriodicity === 'SEMANAL' ? 8 :
-                    this.selectedPeriodicity === 'MENSUAL' ? 6 : 0) : 0,
-              "periocidad": null,
-              "idCategoria": this.selectedCategory ?
-                (this.selectedCategory === 'ALTA' ? 2 :
-                  this.selectedCategory === 'MEDIA' ? 1 :
-                    this.selectedCategory === 'BAJA' ? 0 : 0) : 0,
-              "idParam": 0,
-              "dias": null,
-              "fechaControl": "0001-01-01T00:00:00"
-            };
+                const actividadSeleccionada = this.activityItems.find((activity) => activity.idActividades === actividad.idActividades);
+                // Crear objeto de control con la combinación actual de subproceso y actividad
+                const controlBody = {
+                  "caso": "Crea",
+                  "IdControl": 0,
+                  "idObra": this.projectSelectedId ? Number(this.projectSelectedId) : 0,
+                  "obra": null,
+                  "idUsuario": this.selectedUser ? Number(this.selectedUser) : 0,
+                  "usuario": null,
+                  "periodo": periodoFormateado,
+                  "idEtapaConst": this.stageSelectedId ? Number(this.stageSelectedId) : 0,
+                  "etapaConst": null,
+                  "idSubProceso": subproceso?.idSubproceso ? Number(subproceso.idSubproceso) : 0,
+                  "subProceso": null,
+                  "idAmbito": this.scopeSelectedId ? Number(this.scopeSelectedId) : 0,
+                  "ambito": null,
+                  "idActividad": actividad.idActividades ? Number(actividad.idActividades) : 0,
+                  "actividad": null,
+                  "idPeriocidad": actividadSeleccionada.idPeriocidad ? Number(actividadSeleccionada.idPeriocidad) : 0,
+                  "periocidad": null,
+                  "idCategoria": this.selectedCategory ?
+                    (this.selectedCategory === 'ALTA' ? 2 :
+                      this.selectedCategory === 'MEDIA' ? 1 : 
+                        this.selectedCategory === 'BAJA' ? 0 : 0) : 0,
+                  "idParam": 0,
+                  "dias": null,
+                  "fechaControl": "0001-01-01T00:00:00"
+                };
 
-            // Mostrar información en consola
-            // console.log(`Control ${totalControles}/${totalCombinaciones}: Subproceso [${subproceso.nombre} (${subproceso.idSubproceso})] + Actividad [${actividad.nombre} (${actividad.idActividades})]`);
+                // Mostrar información en consola
+                // console.log(`Control ${totalControles}/${totalCombinaciones}: Subproceso [${subproceso.nombre} (${subproceso.idSubproceso})] + Actividad [${actividad.nombre} (${actividad.idActividades})]`);
 
-            // Enviar objeto al servicio POST usando controlService
-            this.controlService.createControl(controlBody).subscribe({
-              next: (response: any) => {
-                console.log(`Respuesta del servicio para control ${totalControles}/${totalCombinaciones}:`, response);
+                // Recolectar observables
+                controlObservables.push(this.controlService.createControl(controlBody).pipe(
+                  catchError(error => {
+                    console.error(`Error al enviar la solicitud para control ${totalControles}/${totalCombinaciones}:`, error);
+                    return of(null); // Retornar un observable que emita null en caso de error
+                  })
+                ));
+              });
+            });
+
+            // Usar forkJoin para esperar a que todas las llamadas se completen
+            forkJoin(controlObservables).subscribe({
+              next: (responses: any[]) => {
+                console.log('Todas las llamadas al servicio de control han finalizado:', responses);
+                // Agregar los items a la tabla solo una vez después de que todas las llamadas hayan terminado
+                tableItems.forEach(item => {
+                  this.tableData.push(item);
+                });
+                // Cargar los controles existentes después de guardar una sola vez
+                console.log('Recargando controles existentes después de guardar...');
                 this.loadExistingControls();
+                this.loadingExistingControls = false; // Desactivar loader
               },
               error: (error: any) => {
-                console.error(`Error al enviar la solicitud para control ${totalControles}/${totalCombinaciones}:`, error);
+                console.error('Error en alguna de las llamadas al servicio de control:', error);
+                this.loadingExistingControls = false; // Desactivar loader en caso de error
               }
             });
-          });
-        });
-
-        // Agregar los items a la tabla
-        tableItems.forEach(item => {
-          this.tableData.push(item);
-        });
-
-        // Cargar los controles existentes después de guardar
-        console.log('Recargando controles existentes después de guardar...');
 
       } else {
         // Si el usuario cancela, no hacer nada
@@ -982,6 +995,7 @@ export class AddActivitiesPpComponent implements OnInit {
     this.selectedActivities = [];
     this.subprocessOptions = [];
     this.activityOptions = [];
+    this.activityItems = [];
 
     // Resetear dropdowns
     this.selectedPeriodicity = '';
