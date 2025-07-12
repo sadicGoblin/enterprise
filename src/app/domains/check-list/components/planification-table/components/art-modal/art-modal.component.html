@@ -42,8 +42,13 @@
   <div class="art-footer">
     <mat-divider></mat-divider>
     <div class="art-actions">
-      <button mat-button [mat-dialog-close]="false">Cancelar</button>
-      <button mat-raised-button color="primary" (click)="saveArt()">Guardar ART</button>
+      <button mat-button [mat-dialog-close]="false" [disabled]="isSaving">Cancelar</button>
+      <button mat-raised-button color="primary" (click)="saveArt()" [disabled]="isSaving">
+        <span *ngIf="!isSaving">Guardar ART</span>
+        <span *ngIf="isSaving" class="loading-indicator">
+          <mat-icon class="spinner">sync</mat-icon> Guardando...
+        </span>
+      </button>
     </div>
   </div>
 </div>

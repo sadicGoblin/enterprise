@@ -133,12 +133,28 @@ $error-color: #f44336;
     margin: 0;
   }
   
-  // Estilos para los botones de acción
+  // Estilos para los botones de acción en el footer
   .art-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 12px * $scale-factor;
     padding: 16px * $scale-factor;
+    gap: 8px * $scale-factor;
+    
+    .loading-indicator {
+      display: flex;
+      align-items: center;
+      gap: 8px * $scale-factor;
+      
+      .spinner {
+        animation: spin 1.5s linear infinite;
+        font-size: 18px * $scale-factor;
+      }
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
     
     button {
       font-size: 14px * $scale-factor;
