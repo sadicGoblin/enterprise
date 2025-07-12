@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../../../../../../../environments/environment';
+import { ProxyService } from '../../../../../../../core/services/proxy.service';
 
 export interface ArtResponse {
   success: boolean;
@@ -14,9 +13,7 @@ export interface ArtResponse {
   providedIn: 'root'
 })
 export class ArtService {
-  private apiUrl = environment.apiBaseUrl;
-
-  constructor(private http: HttpClient) { }
+  constructor(private proxyService: ProxyService) { }
 
   /**
    * Guarda un ART en la API
@@ -24,6 +21,6 @@ export class ArtService {
    * @returns Observable con la respuesta de la API
    */
   saveArt(artData: any): Observable<ArtResponse> {
-    return this.http.post<ArtResponse>(`${this.apiUrl}/ws/ARTSvcImpl.php`, artData);
+    return this.proxyService.post<ArtResponse>('/ws/ARTSvcImpl.php', artData);
   }
 }
