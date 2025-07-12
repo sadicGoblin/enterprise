@@ -14,8 +14,12 @@ import { MatNativeDateModule, MAT_DATE_FORMATS } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatDialogModule, MatDialog } from '@angular/material/dialog';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { CustomSelectComponent, SelectOption, ParameterType } from '../../../../../shared/controls/custom-select/custom-select.component';
 import { ProxyService } from '../../../../../core/services/proxy.service';
+import { ReportsTableComponent } from './components/reports-table/reports-table.component';
+import { ArtModalComponent } from '../../../components/planification-table/components/art-modal/art-modal.component';
+import { InspectionModalComponent } from '../../../components/inspection-modal/inspection-modal.component';
 
 // Definir formato de fecha personalizado para solo mes/año
 export const MY_FORMATS = {
@@ -74,7 +78,9 @@ interface ReporteIncidente {
     MatProgressSpinnerModule,
     MatDividerModule,
     MatDialogModule,
-    CustomSelectComponent
+    MatSnackBarModule,
+    CustomSelectComponent,
+    ReportsTableComponent
   ],
   templateUrl: './add-reports.component.html',
   styleUrl: './add-reports.component.scss',
@@ -89,7 +95,7 @@ export class AddReportsComponent implements OnInit {
   isFormVisible: boolean = false;
   projectControl = new FormControl('');
   typeControl = new FormControl('');
-  period: Date | null = null;
+  period: Date = new Date(); // Inicializar con la fecha actual
   selectedProjectId: string | null = null;
   errorMessage: string | null = null;
   
@@ -97,16 +103,16 @@ export class AddReportsComponent implements OnInit {
   projectParameterType: ParameterType = ParameterType.OBRA;
   typeParameterType: ParameterType = ParameterType.CUSTOM_API;
   projectApiEndpoint = '/ws/ObrasSvcImpl.php';
-  projectApiCaso = 'ObrasFiltro';
+  projectApiCaso = 'Consulta';
   projectApiRequestBody: any;
-  projectOptionValue = 'IdObra';
-  projectOptionLabel = 'NombreObra';
+  projectOptionValueKey = 'IdObra';
+  projectOptionLabelKey = 'Obra';
 
   // Options for dropdowns
   projects = [];
   types = ['ART', 'INSPECCIÓN SSTMA', 'REPORTE INCIDENTES'];
   typesOptions: SelectOption[] = [];
-
+  
   displayedColumns = ['project', 'name', 'period', 'view'];
 
   tableData1 = [
@@ -117,7 +123,11 @@ export class AddReportsComponent implements OnInit {
     { project: 'Proyecto C', name: 'Luis Vega', period: '2025-02' }
   ];
 
-  constructor(private proxyService: ProxyService, private dialog: MatDialog) {
+  constructor(
+    private proxyService: ProxyService, 
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar
+  ) {
     // Configurar las opciones del tipo de reporte
     this.typesOptions = this.types.map((type, index) => ({
       value: index.toString(),
@@ -134,6 +144,7 @@ export class AddReportsComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.toggleFormVisibility();
     this.setupForm();
     this.loadAppReports();
   }
@@ -272,19 +283,116 @@ export class AddReportsComponent implements OnInit {
     this.isFormVisible = !this.isFormVisible;
   }
 
-  limpiarForm(): void {
+  cleanForm(): void {
     this.projectControl.reset();
     this.typeControl.reset();
-    this.period = null;
+    this.period = new Date(); // Restablecer a la fecha actual
   }
 
-  buscarReportes(): void {
-    console.log('Buscando reportes con los siguientes criterios:');
-    console.log('Proyecto:', this.selectedProjectId);
-    console.log('Tipo:', this.typeControl.value);
-    console.log('Periodo:', this.period ? this.formatPeriod(this.period.toISOString()) : null);
-    // Aquí irá la lógica para buscar reportes con los filtros seleccionados
-    // Refresh app reports
-    this.loadAppReports();
+  /**
+   * Muestra un mensaje en un snackbar
+   */
+  showMessage(message: string): void {
+    this.snackBar.open(message, 'Cerrar', {
+      duration: 3000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom'
+    });
+  }
+
+  /**
+   * Validar formulario y crear reporte según el tipo seleccionado
+   */
+  createReport(): void {
+    // Validar que todos los campos requeridos estén completos
+    if (!this.selectedProjectId) {
+      this.showMessage('Debe seleccionar un proyecto');
+      return;
+    }
+
+    if (!this.typeControl.value) {
+      this.showMessage('Debe seleccionar un tipo de reporte');
+      return;
+    }
+
+    if (!this.period) {
+      this.showMessage('Debe seleccionar un período');
+      return;
+    }
+
+    // Log para depuración
+    console.log('Creando reporte con los siguientes datos:');
+    console.log('Proyecto ID:', this.selectedProjectId);
+    console.log('Tipo:', this.typeControl.value, '- Label:', this.types[parseInt(this.typeControl.value as string)]);
+    console.log('Periodo:', this.formatPeriod(this.period.toISOString()));
+
+    // Determinar qué hacer según el tipo de reporte seleccionado
+    const tipoSeleccionado = parseInt(this.typeControl.value as string);
+    
+    if (tipoSeleccionado === 0) { // 0 = ART
+      // Abrir modal ART
+      this.openArtModal();
+    } else if (tipoSeleccionado === 1) { // 1 = INSPECCIÓN SSTMA
+      // Abrir modal de Inspección SSTMA
+      this.openInspectionModal();
+    } else if (tipoSeleccionado === 2) { // 2 = REPORTE INCIDENTES
+      // Implementar en el futuro
+      this.showMessage('Funcionalidad de Reporte de Incidentes en desarrollo');
+    }
+  }
+
+  /**
+   * Abre el modal de ART con el proyecto seleccionado
+   */
+  openArtModal(): void {
+    const dialogRef = this.dialog.open(ArtModalComponent, {
+      width: '90vw',
+      maxWidth: '100%',
+      disableClose: true,
+      autoFocus: false,
+      data: { 
+        projectId: this.selectedProjectId,
+        artData: null
+      }
+    });
+
+    // Registrar para depuración
+    console.log('Abriendo modal de ART con projectId:', this.selectedProjectId);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('ART guardada:', result);
+        this.showMessage('ART creada exitosamente');
+        // Recargar la tabla de reportes si es necesario
+        this.loadAppReports();
+      }
+    });
+  }
+
+  /**
+   * Abre el modal de Inspección SSTMA con el proyecto seleccionado
+   */
+  openInspectionModal(): void {
+    const dialogRef = this.dialog.open(InspectionModalComponent, {
+      width: '90vw',
+      maxWidth: '1400px',
+      disableClose: true,
+      autoFocus: false,
+      data: { 
+        projectId: this.selectedProjectId,
+        inspectionData: null
+      }
+    });
+    
+    console.log('Abriendo modal de Inspección SSTMA con projectId:', this.selectedProjectId);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Inspección guardada:', result);
+        this.showMessage('Inspección SSTMA creada exitosamente');
+        // Recargar la tabla de reportes si es necesario
+        this.loadAppReports();
+      }
+    });
   }
 }

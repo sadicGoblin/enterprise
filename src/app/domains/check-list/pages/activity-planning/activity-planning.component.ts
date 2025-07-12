@@ -23,7 +23,6 @@ import { ControlService } from '../../services/control.service';
 import { ControlApiRequest, ControlApiResponse } from '../../models/control-api.models';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { ArtModalComponent } from '../../components/planification-table/components/art-modal/art-modal.component';
 
 // Activity interface definition - extended from the one used in PlanificationTableComponent
 export interface Activity extends PlanificationActivity {
@@ -794,34 +793,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
         // y actualizar las actividades completadas si es necesario
       }
     });
-  }
-
-  openArtModal(activityId?: number): void {
-    const dialogRef = this.dialog.open(ArtModalComponent, {
-      width: '90vw',
-      maxWidth: '100%', // Aumentado a 1400px para mejor visualización
-      disableClose: true,
-      autoFocus: false,
-      data: { 
-        activityId: activityId,
-        projectId: this.selectedProjectId,  // Agregar el ID del proyecto seleccionado
-        artData: null
-      }
-    });
-
-    // Registrar para depuración
-    console.log('Abriendo modal de art con projectId:', this.selectedProjectId);
-
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        console.log('Art guardada:', result);
-        // Aquí iría la lógica para guardar la art en el backend
-        // y actualizar las actividades completadas si es necesario
-      }
-    });
-  }
-  
-
+  }  
 
   /**
    * Process API response into our model
