@@ -4,11 +4,17 @@ import { MatTableModule } from '@angular/material/table';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { TrabajoAlturaService } from '../../services/trabajo-altura.service';
+import { ElementoInspeccion } from '../../models/trabajo-altura.model';
+import { catchError, finalize } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 interface InspectionElement {
   id: string;
   description: string;
   status: 'yes' | 'no' | 'na' | null;
+  apiId?: string; // ID del elemento en la API
 }
 
 @Component({
@@ -19,7 +25,8 @@ interface InspectionElement {
     MatTableModule,
     MatCheckboxModule,
     MatButtonModule,
-    MatIconModule
+    MatIconModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './art-inspection-elements.component.html',
   styleUrl: './art-inspection-elements.component.scss'
@@ -28,25 +35,62 @@ export class ArtInspectionElementsComponent implements OnInit {
   // Columnas a mostrar
   displayedColumns: string[] = ['description', 'yes', 'no', 'na'];
   
-  // Elementos de inspección predefinidos
-  inspectionElements: InspectionElement[] = [
-    { id: '1', description: 'Verificación de equipo de protección personal', status: null },
-    { id: '2', description: 'Inspección de herramientas y equipos', status: null },
-    { id: '3', description: 'Revisión de área de trabajo', status: null },
-    { id: '4', description: 'Verificación de procedimientos de seguridad', status: null },
-    { id: '5', description: 'Control de riesgos ambientales', status: null },
-    { id: '6', description: 'Señalización de seguridad en el área', status: null },
-    { id: '7', description: 'Condiciones de iluminación adecuadas', status: null },
-    { id: '8', description: 'Ventilación apropiada en el espacio de trabajo', status: null },
-    { id: '9', description: 'Equipos contra incendios disponibles', status: null },
-    { id: '10', description: 'Vías de evacuación despejadas', status: null }
-  ];
+  // Elementos de inspección
+  inspectionElements: InspectionElement[] = [];
+  
+  // Estado de carga
+  isLoading = false;
+  hasError = false;
+  errorMessage = '';
 
-  constructor() {}
+  constructor(private trabajoAlturaService: TrabajoAlturaService) {}
 
   ngOnInit(): void {
-    // Inicialización del componente
-    console.log('Componente de elementos de inspección inicializado');
+    this.loadInspectionElements();
+  }
+  
+  /**
+   * Carga los elementos de inspección desde la API
+   */
+  loadInspectionElements(): void {
+    this.isLoading = true;
+    this.hasError = false;
+    
+    this.trabajoAlturaService.getElementosInspeccion()
+      .pipe(
+        catchError(error => {
+          this.hasError = true;
+          this.errorMessage = 'Error al cargar los elementos de inspección. Por favor, intente nuevamente.';
+          console.error('Error al cargar elementos de inspección:', error);
+          return of({ codigo: -1, glosa: 'Error', data: [] });
+        }),
+        finalize(() => {
+          this.isLoading = false;
+        })
+      )
+      .subscribe(response => {
+        console.log('Response from ART inspection elements:', response);
+        if (response.data.length > 0) {
+          // Mapear los datos de la API al formato del componente
+          this.inspectionElements = response.data.map((item, index) => {
+            // Determinar el estado basado en los valores de la API
+            let status: 'yes' | 'no' | 'na' | null = null;
+            if (item.si === '1') status = 'yes';
+            else if (item.no === '1') status = 'no';
+            else if (item.na === '1') status = 'na';
+            
+            return {
+              id: (index + 1).toString(),
+              apiId: item.idElementoInspeccionar,
+              description: item.elementoInspeccionar,
+              status: status
+            };
+          });
+        } else if (response.data && response.data.length === 0) {
+          this.hasError = true;
+          this.errorMessage = 'No se encontraron elementos de inspección.';
+        }
+      });
   }
 
   /**
@@ -59,10 +103,43 @@ export class ArtInspectionElementsComponent implements OnInit {
     if (element.status === status) {
       element.status = null;
     } else {
-      // Actualizamos al nuevo estado
+      // Si no, actualizamos al nuevo estado
       element.status = status;
     }
-    console.log(`Elemento ${element.id} actualizado a estado: ${element.status}`);
+    
+    console.log(`Elemento ${element.id} (${element.description}) actualizado a: ${element.status}`);
+    
+    // Preparamos los datos para enviar al backend
+    // Por ahora solo actualizamos en la UI, pero dejamos el código preparado para cuando
+    // se requiera la integración completa con el backend
+    
+    /* Descomentar cuando se requiera la integración completa
+    const updateData = {
+      idElementoInspeccionar: element.apiId,
+      idTrabajoAltura: '0', // Este valor debe venir del contexto del formulario padre
+      si: element.status === 'yes' ? '1' : '0',
+      no: element.status === 'no' ? '1' : '0',
+      na: element.status === 'na' ? '1' : '0'
+    };
+    
+    // Llamada al servicio para actualizar en el backend
+    this.trabajoAlturaService.updateElementoInspeccion(updateData)
+      .pipe(
+        catchError(error => {
+          console.error('Error al actualizar elemento:', error);
+          // Si hay error, revertimos el cambio en la UI
+          element.status = status === element.status ? null : element.status;
+          return of({ codigo: -1, glosa: 'Error', data: [] });
+        })
+      )
+      .subscribe(response => {
+        if (response.codigo !== 0) {
+          console.error('Error en la respuesta del servidor:', response.glosa);
+          // Si hay error, revertimos el cambio en la UI
+          element.status = status === element.status ? null : element.status;
+        }
+      });
+    */
   }
 
   /**

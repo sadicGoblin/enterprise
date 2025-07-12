@@ -1,7 +1,25 @@
 <div class="validation-section-container">
   <div class="observations-section">
     <div class="table-container">
-      <table mat-table [dataSource]="inspectionElements" class="inspection-table">
+      <!-- Indicador de carga -->
+      <div *ngIf="isLoading" class="loading-container">
+        <mat-spinner diameter="40"></mat-spinner>
+        <p>Cargando elementos de inspección...</p>
+      </div>
+      
+      <!-- Mensaje de error -->
+      <div *ngIf="hasError && !isLoading" class="error-container">
+        <mat-icon color="warn">error_outline</mat-icon>
+        <p>{{ errorMessage }}</p>
+        <button mat-button color="primary" (click)="loadInspectionElements()">
+          <mat-icon>refresh</mat-icon> Reintentar
+        </button>
+      </div>
+      
+      <!-- Tabla de elementos de inspección -->
+      <div class="table-scroll-container">
+        <table *ngIf="!isLoading && !hasError && inspectionElements.length > 0" 
+               mat-table [dataSource]="inspectionElements" class="inspection-table">
         <!-- Elemento Column -->
         <ng-container matColumnDef="description">
           <th mat-header-cell *matHeaderCellDef>Elementos a Inspeccionar</th>
@@ -43,9 +61,16 @@
           </td>
         </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
         <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
-      </table>
+        </table>
+      </div>
+      
+      <!-- Mensaje cuando no hay elementos -->
+      <div *ngIf="!isLoading && !hasError && inspectionElements.length === 0" class="no-data-container">
+        <mat-icon>info</mat-icon>
+        <p>No hay elementos de inspección disponibles.</p>
+      </div>
     </div>
   </div>
 </div>
