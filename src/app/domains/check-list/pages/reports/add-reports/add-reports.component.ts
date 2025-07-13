@@ -145,7 +145,7 @@ export class AddReportsComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.toggleFormVisibility();
+    // this.toggleFormVisibility();
     this.setupForm();
     this.loadAppReports();
   }
@@ -331,14 +331,11 @@ export class AddReportsComponent implements OnInit {
     const tipoSeleccionado = parseInt(this.typeControl.value as string);
     
     if (tipoSeleccionado === 0) { // 0 = ART
-      // Abrir modal ART
       this.openArtModal();
     } else if (tipoSeleccionado === 1) { // 1 = INSPECCIÓN SSTMA
-      // Abrir modal de Inspección SSTMA
       this.openInspectionModal();
     } else if (tipoSeleccionado === 2) { // 2 = REPORTE INCIDENTES
-      // Implementar en el futuro
-      this.showMessage('Funcionalidad de Reporte de Incidentes en desarrollo');
+      this.openReportModal();
     }
   }
 
