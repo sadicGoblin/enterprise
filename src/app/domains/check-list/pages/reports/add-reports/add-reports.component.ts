@@ -20,6 +20,7 @@ import { ProxyService } from '../../../../../core/services/proxy.service';
 import { ReportsTableComponent } from './components/reports-table/reports-table.component';
 import { ArtModalComponent } from '../../../components/planification-table/components/art-modal/art-modal.component';
 import { InspectionModalComponent } from '../../../components/inspection-modal/inspection-modal.component';
+import { IncidentReportModalComponent } from '../../../components/incident-report-modal/incident-report-modal.component';
 
 // Definir formato de fecha personalizado para solo mes/año
 export const MY_FORMATS = {
@@ -390,6 +391,30 @@ export class AddReportsComponent implements OnInit {
       if (result) {
         console.log('Inspección guardada:', result);
         this.showMessage('Inspección SSTMA creada exitosamente');
+        // Recargar la tabla de reportes si es necesario
+        this.loadAppReports();
+      }
+    });
+  }
+
+  openReportModal(): void {
+    const dialogRef = this.dialog.open(IncidentReportModalComponent, {
+      width: '90vw',
+      maxWidth: '100%',
+      disableClose: true,
+      autoFocus: false,
+      data: { 
+        projectId: this.selectedProjectId,
+        reportData: null
+      }
+    });
+    
+    console.log('Abriendo modal de Reporte con projectId:', this.selectedProjectId);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('Reporte guardado:', result);
+        this.showMessage('Reporte creado exitosamente');
         // Recargar la tabla de reportes si es necesario
         this.loadAppReports();
       }

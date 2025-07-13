@@ -1,0 +1,237 @@
+// Variables globales para el componente
+$scale-factor: 0.9; // Factor de escala global
+$primary-color: #3f51b5;
+$secondary-color: #f5f5f5;
+$border-color: #e0e0e0;
+$category-border: #ccc;
+$category-header-bg: #eef1f7;
+
+.label {
+  font-weight: bold;
+  color: black;
+}
+
+.origin-selection-container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 10px * $scale-factor;
+  font-size: 14px * $scale-factor;
+
+  .origin-section {
+    width: 100%;
+    
+    h3 {
+      font-size: 16px * $scale-factor;
+      font-weight: 500;
+      margin-top: 20px * $scale-factor;
+      margin-bottom: 12px * $scale-factor;
+      color: #333;
+      border-bottom: 1px solid $border-color;
+      padding-bottom: 8px * $scale-factor;
+    }
+
+    h3:first-child {
+      margin-top: 0;
+    }
+  }
+
+  .validation-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px * $scale-factor;
+    margin-bottom: 20px * $scale-factor;
+
+    .validation-column {
+      flex: 1;
+      min-width: 250px;
+      padding: 16px * $scale-factor;
+      background-color: rgba(0, 0, 0, 0.02);
+      border-radius: 4px;
+      border: 1px solid #eee;
+    }
+  }
+  
+  .select-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px * $scale-factor;
+    margin-bottom: 24px * $scale-factor;
+    
+    &.single-column {
+      grid-template-columns: 1fr;
+    }
+    
+    @media (max-width: 992px) {
+      grid-template-columns: repeat(2, 1fr);
+      
+      &.single-column {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  .form-field {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 12px * $scale-factor;
+    
+    label {
+      display: block;
+      font-size: 14px * $scale-factor;
+      margin-bottom: 4px * $scale-factor;
+      color: #555;
+      font-weight: 500;
+    }
+    
+    .radio-container {
+      display: flex;
+      align-items: center;
+      gap: 16px * $scale-factor;
+      margin-top: 8px * $scale-factor;
+      
+      ::ng-deep .mat-radio-label-content {
+        font-size: 13px * $scale-factor;
+      }
+      
+      mat-radio-button {
+        margin-right: 12px * $scale-factor;
+      }
+    }
+  }
+  
+  .action-options {
+    display: flex;
+    flex-direction: column;
+    gap: 16px * $scale-factor;
+    margin-bottom: 24px * $scale-factor;
+    padding: 16px * $scale-factor;
+    background-color: $secondary-color;
+    border-radius: 4px;
+    border: 1px solid $border-color;
+    
+    .action-row {
+      display: flex;
+      gap: 24px * $scale-factor;
+      
+      .radio-option {
+        ::ng-deep .mat-radio-label-content {
+          font-size: 14px * $scale-factor;
+        }
+      }
+    }
+  }
+  
+  .description-field {
+    width: 100%;
+    margin-bottom: 16px * $scale-factor;
+  }
+  
+  .loading-option {
+    display: flex;
+    align-items: center;
+    gap: 10px * $scale-factor;
+    padding: 6px * $scale-factor 4px * $scale-factor;
+    
+    mat-spinner {
+      margin: 0;
+    }
+    
+    span {
+      font-size: 13px * $scale-factor;
+    }
+  }
+  
+  .error-option {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #f44336;
+  }
+  
+  .selection-count {
+    display: flex;
+    align-items: center;
+    gap: 6px * $scale-factor;
+    margin-top: -20px * $scale-factor;
+    color: $primary-color;
+    font-size: 12px * $scale-factor;
+    
+    mat-icon {
+      font-size: 14px * $scale-factor;
+      height: 14px * $scale-factor;
+      width: 14px * $scale-factor;
+      line-height: 14px * $scale-factor;
+    }
+  }
+  
+  .full-width {
+    width: 100%;
+  }
+  
+  ::ng-deep {
+    .mat-form-field-wrapper {
+      padding-bottom: 0.75em * $scale-factor;
+    }
+    
+    .mat-form-field-infix {
+      padding: 0.5em * $scale-factor 0;
+      font-size: 14px * $scale-factor;
+    }
+    
+    .mat-checkbox {
+      font-size: 13px * $scale-factor;
+    }
+    
+    .mat-checkbox-layout .mat-checkbox-label {
+      line-height: 1.2;
+      white-space: normal;
+    }
+    
+    .mat-radio-button {
+      margin-right: 12px * $scale-factor;
+    }
+    
+    .mat-select-value {
+      font-size: 14px * $scale-factor;
+    }
+    
+    .mat-option-text {
+      font-size: 14px * $scale-factor;
+    }
+    
+    .mat-form-field-label {
+      font-size: 14px * $scale-factor;
+    }
+    
+    textarea {
+      font-size: 14px * $scale-factor;
+    }
+
+    .mat-mdc-form-field-infix {
+      padding: 8px * $scale-factor 0;
+      min-height: 36px * $scale-factor;
+    }
+
+    .mat-mdc-select-value-text {
+      font-size: 14px * $scale-factor;
+    }
+
+    .mat-mdc-select-arrow-wrapper {
+      transform: scale($scale-factor);
+    }
+
+    .mat-mdc-form-field-subscript-wrapper {
+      font-size: 12px * $scale-factor;
+    }
+
+    .mat-mdc-option {
+      font-size: 14px * $scale-factor;
+      min-height: 36px * $scale-factor;
+    }
+  }
+}

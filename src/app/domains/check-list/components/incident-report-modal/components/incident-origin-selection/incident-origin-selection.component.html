@@ -1,0 +1,207 @@
+<div class="origin-selection-container" [formGroup]="origenForm">
+  <div class="origin-section">
+    <h4>5 - ORIGINADO POR</h4>
+    
+    <div class="validation-row">
+      <div class="validation-column">
+        <div class="select-grid">
+          <!-- CATEGORÍA A: TRABAJADORES -->
+          <div class="form-field">
+            <label>A) TRABAJADORES</label>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-select formControlName="trabajadores" multiple [disabled]="isLoading.trabajadores">
+                <!-- Indicador de carga -->
+                <mat-option *ngIf="isLoading.trabajadores" disabled>
+                  <div class="loading-option">
+                    <mat-spinner diameter="20"></mat-spinner>
+                    <span>Cargando opciones...</span>
+                  </div>
+                </mat-option>
+                
+                <!-- Opciones normales -->
+                <mat-option
+                  *ngFor="let item of trabajadoresOptions"
+                  [value]="item.value"
+                >
+                  {{ item.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <div class="selection-count" *ngIf="origenForm.get('trabajadores')?.value?.length">
+              <mat-icon>check_circle</mat-icon>
+              <span>{{ origenForm.get('trabajadores')?.value?.length }} elemento(s)</span>
+            </div>
+          </div>
+
+          <!-- CATEGORÍA B: EQUIPOS FIJOS -->
+          <div class="form-field">
+            <label>B) EQUIPOS FIJOS</label>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-select formControlName="equiposFijos" multiple [disabled]="isLoading.equiposFijos">
+                <!-- Indicador de carga -->
+                <mat-option *ngIf="isLoading.equiposFijos" disabled>
+                  <div class="loading-option">
+                    <mat-spinner diameter="20"></mat-spinner>
+                    <span>Cargando opciones...</span>
+                  </div>
+                </mat-option>
+                
+                <!-- Opciones normales -->
+                <mat-option
+                  *ngFor="let item of equiposFijosOptions"
+                  [value]="item.value"
+                >
+                  {{ item.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <div class="selection-count" *ngIf="origenForm.get('equiposFijos')?.value?.length">
+              <mat-icon>check_circle</mat-icon>
+              <span>{{ origenForm.get('equiposFijos')?.value?.length }} elemento(s)</span>
+            </div>
+          </div>
+
+          <!-- CATEGORÍA C: EDIFICIOS -->
+          <div class="form-field">
+            <label>C) EDIFICIOS</label>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-select formControlName="edificios" multiple [disabled]="isLoading.edificios">
+                <!-- Indicador de carga -->
+                <mat-option *ngIf="isLoading.edificios" disabled>
+                  <div class="loading-option">
+                    <mat-spinner diameter="20"></mat-spinner>
+                    <span>Cargando opciones...</span>
+                  </div>
+                </mat-option>
+                
+                <!-- Opciones normales -->
+                <mat-option
+                  *ngFor="let item of edificiosOptions"
+                  [value]="item.value"
+                >
+                  {{ item.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <div class="selection-count" *ngIf="origenForm.get('edificios')?.value?.length">
+              <mat-icon>check_circle</mat-icon>
+              <span>{{ origenForm.get('edificios')?.value?.length }} elemento(s)</span>
+            </div>
+          </div>
+
+          <!-- CATEGORÍA D: VEHÍCULOS -->
+          <div class="form-field">
+            <label>D) VEHÍCULOS</label>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-select formControlName="vehiculos" multiple [disabled]="isLoading.vehiculos">
+                <!-- Indicador de carga -->
+                <mat-option *ngIf="isLoading.vehiculos" disabled>
+                  <div class="loading-option">
+                    <mat-spinner diameter="20"></mat-spinner>
+                    <span>Cargando opciones...</span>
+                  </div>
+                </mat-option>
+                
+                <!-- Opciones normales -->
+                <mat-option
+                  *ngFor="let item of vehiculosOptions"
+                  [value]="item.value"
+                >
+                  {{ item.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <div class="selection-count" *ngIf="origenForm.get('vehiculos')?.value?.length">
+              <mat-icon>check_circle</mat-icon>
+              <span>{{ origenForm.get('vehiculos')?.value?.length }} elemento(s)</span>
+            </div>
+          </div>
+
+          <!-- CATEGORÍA E: AMBIENTALES -->
+          <div class="form-field">
+            <label>E) AMBIENTALES</label>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-select formControlName="ambientales" multiple [disabled]="isLoading.ambientales">
+                <!-- Indicador de carga -->
+                <mat-option *ngIf="isLoading.ambientales" disabled>
+                  <div class="loading-option">
+                    <mat-spinner diameter="20"></mat-spinner>
+                    <span>Cargando opciones...</span>
+                  </div>
+                </mat-option>
+                
+                <!-- Opciones normales -->
+                <mat-option
+                  *ngFor="let item of ambientalesOptions"
+                  [value]="item.value"
+                >
+                  {{ item.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <div class="selection-count" *ngIf="origenForm.get('ambientales')?.value?.length">
+              <mat-icon>check_circle</mat-icon>
+              <span>{{ origenForm.get('ambientales')?.value?.length }} elemento(s)</span>
+            </div>
+          </div>
+          
+          <!-- PARTES INTERESADAS -->
+          <div class="form-field">
+            <label class="label">6) PARTES INTERESADAS</label>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-select formControlName="interesados" [disabled]="isLoading.interesados">
+                <!-- Indicador de carga -->
+                <mat-option *ngIf="isLoading.interesados" disabled>
+                  <div class="loading-option">
+                    <mat-spinner diameter="20"></mat-spinner>
+                    <span>Cargando opciones...</span>
+                  </div>
+                </mat-option>
+                
+                <!-- Opciones normales -->
+                <mat-option
+                  *ngFor="let item of interesadosOptions"
+                  [value]="item.value"
+                >
+                  {{ item.label }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <div class="selection-count" *ngIf="origenForm.get('interesados')?.value">
+              <mat-icon>check_circle</mat-icon>
+              <span>Seleccionado</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- SECCIÓN: ACCIONES A REALIZAR -->
+    <div class="origin-section">
+      <div class="validation-row">
+        <div class="validation-column">
+          <!-- OPCIÓN DE ACCIÓN -->
+          <div class="form-field">
+            <h4> 7. TIPO DE ACCIÓN</h4>
+            <div class="radio-container">
+              <mat-radio-group formControlName="accionRealizar">
+                <mat-radio-button value="reportar" class="radio-option">OBSERVAR</mat-radio-button>
+                <mat-radio-button value="corregir" class="radio-option">CORREGIR</mat-radio-button>
+                <mat-radio-button value="reportar" class="radio-option">DETENER TRABAJO</mat-radio-button>
+                <mat-radio-button value="reportar" class="radio-option">INFORME INVESTIGACIÓN</mat-radio-button>
+              </mat-radio-group>
+            </div>
+          </div>
+          
+          <!-- DESCRIPCIÓN -->
+          <div class="form-field">
+            <h4>8. DESCRIPCIÓN DE LA ACCIÓN</h4>
+            <mat-form-field appearance="outline" class="full-width">
+              <textarea matInput formControlName="descripcionAccion" rows="3" placeholder="Describa la acción a realizar"></textarea>
+            </mat-form-field>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

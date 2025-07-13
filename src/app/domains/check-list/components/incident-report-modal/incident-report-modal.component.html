@@ -1,7 +1,7 @@
 <div class="art-modal-container">
   <!-- Header fijo -->
   <div class="dialog-header">
-    <h2>Análisis de Riesgo de Tarea (ART)</h2>
+    <h2>Reporte de Incidente</h2>
     <button mat-icon-button class="close-button" [mat-dialog-close]="false">
       <mat-icon>close</mat-icon>
     </button>
@@ -18,34 +18,37 @@
         <li *ngFor="let error of validationErrors">{{ error }}</li>
       </ul>
     </div>
-    
+
     <!-- Contenido scrolleable -->
     <div class="scrollable-content">
       <mat-tab-group>
-        <mat-tab label="Datos Generales">
-          <app-art-forms></app-art-forms>
+        <mat-tab label="Datos de Reporte">
+          <app-incident-form [projectId]="data?.projectId"></app-incident-form>
         </mat-tab>
-        <mat-tab label="Elementos a Inspeccionar">
-          <app-art-inspection-elements></app-art-inspection-elements>
-        </mat-tab>
-        <mat-tab label="Elementos a Seleccionar">
-          <app-art-items-selection></app-art-items-selection>
+        <mat-tab label="Origen">
+          <app-incident-origin-selection></app-incident-origin-selection>
         </mat-tab>
         <mat-tab label="Validación">
-          <app-art-validation-section></app-art-validation-section>
+          <app-incident-validation></app-incident-validation>
         </mat-tab>
       </mat-tab-group>
     </div>
   </div>
 
-  
   <!-- Footer fijo con botones -->
   <div class="art-footer">
     <mat-divider></mat-divider>
     <div class="art-actions">
-      <button mat-button [mat-dialog-close]="false" [disabled]="isSaving">Cancelar</button>
-      <button mat-raised-button color="primary" (click)="saveArt()" [disabled]="isSaving">
-        <span *ngIf="!isSaving">Guardar ART</span>
+      <button mat-button [mat-dialog-close]="false" [disabled]="isSaving">
+        Cancelar
+      </button>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="saveReport()"
+        [disabled]="isSaving"
+      >
+        <span *ngIf="!isSaving">Guardar Reporte</span>
         <span *ngIf="isSaving" class="loading-indicator">
           <mat-icon class="spinner">sync</mat-icon> Guardando...
         </span>
