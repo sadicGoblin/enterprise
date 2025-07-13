@@ -1,0 +1,228 @@
+$scale-factor: 0.9; // Factor de escala global
+
+.validation-section-container {
+  padding: 16px * $scale-factor;
+
+  .section-title {
+    margin-bottom: 16px * $scale-factor;
+
+    h3 {
+      font-size: 14px * $scale-factor !important;
+      font-weight: 500;
+      color: #333;
+      margin: 0;
+    }
+  }
+
+  .validation-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px * $scale-factor;
+    margin-bottom: 24px * $scale-factor;
+
+    &.full-width {
+      width: 100%;
+    }
+
+    .validation-column {
+      flex: 1;
+      min-width: 250px;
+      padding: 16px * $scale-factor;
+      background-color: rgba(0, 0, 0, 0.02);
+      border-radius: 4px;
+
+      &.full-width {
+        width: 100%;
+      }
+
+      h3 {
+        font-size: 14px * $scale-factor;
+        font-weight: 500;
+        margin-bottom: 12px * $scale-factor;
+        color: #333;
+      }
+
+      .column-title {
+        font-size: 14px * $scale-factor;
+        font-weight: 500;
+        margin-bottom: 16px * $scale-factor;
+        color: #333;
+      }
+
+      .form-field {
+        margin-bottom: 16px * $scale-factor;
+
+        label {
+          display: block;
+          font-size: 14px * $scale-factor;
+          margin-bottom: 4px * $scale-factor;
+          color: rgba(0, 0, 0, 0.6);
+        }
+
+        .full-width {
+          width: 100%;
+        }
+
+        .radio-group {
+          margin: 10px * $scale-factor 0;
+
+          .radio-options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px * $scale-factor;
+
+            &.horizontal {
+              flex-direction: row;
+              flex-wrap: wrap;
+              gap: 16px * $scale-factor;
+            }
+
+            ::ng-deep .mat-radio-label {
+              font-size: 14px * $scale-factor;
+            }
+
+            ::ng-deep .mat-radio-button {
+              margin-right: 12px * $scale-factor;
+            }
+          }
+        }
+
+        .horizontal-radio {
+          margin-top: 8px * $scale-factor;
+          margin-bottom: 16px * $scale-factor;
+        }
+
+        ::ng-deep {
+          .mat-mdc-form-field {
+            width: 100%;
+            font-size: 14px * $scale-factor;
+          }
+
+          .mat-mdc-text-field-wrapper {
+            padding-top: 0;
+            padding-bottom: 0;
+          }
+
+          .mat-mdc-form-field-infix {
+            padding: 12px * $scale-factor 0;
+            min-height: auto;
+          }
+
+          app-custom-select {
+            width: 100%;
+
+            ::ng-deep .mat-mdc-form-field {
+              width: 100%;
+            }
+          }
+        }
+      }
+
+      .normative-container {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 16px * $scale-factor;
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04);
+
+        .option-buttons {
+          display: flex;
+          flex-direction: column;
+          gap: 12px * $scale-factor;
+
+          .option-button {
+            display: flex;
+            align-items: center;
+            padding: 10px * $scale-factor;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: white;
+            border: 1px solid #e0e0e0;
+
+            &:hover {
+              background-color: #f0f4ff;
+              border-color: #d0d9ff;
+            }
+
+            &.selected {
+              background-color: #e8f0fe;
+              border-color: #3f51b5;
+
+              .option-text {
+                color: #3f51b5;
+                font-weight: 500;
+              }
+
+              .option-icon {
+                mat-icon {
+                  color: #3f51b5;
+                }
+              }
+            }
+
+            .option-icon {
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin-right: 12px * $scale-factor;
+
+              mat-icon {
+                font-size: 20px * $scale-factor;
+                height: 20px * $scale-factor;
+                width: 20px * $scale-factor;
+                line-height: 20px * $scale-factor;
+                color: #3f51b5;
+              }
+
+              .empty-circle {
+                width: 18px * $scale-factor;
+                height: 18px * $scale-factor;
+                border: 2px solid #bdbdbd;
+                border-radius: 50%;
+              }
+            }
+
+            .option-text {
+              font-size: 14px * $scale-factor;
+              color: rgba(0, 0, 0, 0.7);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .observations-section {
+    margin-bottom: 20px * $scale-factor;
+
+    .section-title {
+      font-size: 16px * $scale-factor;
+      font-weight: 500;
+      margin-bottom: 8px * $scale-factor;
+      color: #333;
+    }
+
+    .mat-mdc-form-field {
+      width: 100%;
+    }
+  }
+}
+
+.extended {
+  width: 100%;
+}
+
+// Ajustes para botones de acción
+::ng-deep .mat-dialog-actions {
+  padding: 12px * $scale-factor 0;
+  margin-bottom: 0;
+
+  button {
+    font-size: 14px * $scale-factor;
+
+    &:not(:last-child) {
+      margin-right: 8px * $scale-factor;
+    }
+  }
+}

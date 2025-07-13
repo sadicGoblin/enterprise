@@ -1,0 +1,112 @@
+<div class="validation-section-container">
+  <!-- Primera sección de formularios -->
+  <div class="validation-row">
+    <div class="validation-column">
+      <div class="form-field">
+        <label>Responsable del Área</label>
+        <app-custom-select
+          [label]="'Responsable del Área'"
+          [formControl]="responsableAreaControl"
+          [parameterType]="parameterType"
+          [loadFromApi]="true"
+          [customApiEndpoint]="customApiEndpoint"
+          [customApiRequestBody]="customApiRequestBody"
+          [customOptionValueKey]="customOptionValueKey"
+          [customOptionLabelKey]="customOptionLabelKey"
+          [placeholder]="'Seleccione...'"
+          [required]="true"
+          [appearance]="'outline'"
+          class="compact-field full-width"
+        ></app-custom-select>
+      </div>
+    </div>
+
+    <div class="validation-column">
+      <div class="form-field">
+        <label>Fecha/Hora</label>
+        <mat-form-field appearance="outline" class="full-width">
+          <input
+            matInput
+            [matDatepicker]="fechaPicker"
+            [formControl]="fechaControl"
+            placeholder="DD/MM/AAAA"
+          />
+          <mat-datepicker-toggle
+            matSuffix
+            [for]="fechaPicker"
+          ></mat-datepicker-toggle>
+          <mat-datepicker #fechaPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+    </div>
+  </div>
+
+  <!-- Segunda sección de formularios -->
+  <div class="validation-row">
+    <div class="validation-column">
+      <h4 class="column-title">1 - POTENCIAL DE GRAVEDAD</h4>
+      <div class="radio-group">
+        <mat-radio-group
+          [formControl]="potencialGravedadControl"
+          class="radio-options"
+        >
+          <mat-radio-button value="alto">ALTO</mat-radio-button>
+          <mat-radio-button value="medio">MEDIO</mat-radio-button>
+          <mat-radio-button value="leve">LEVE</mat-radio-button>
+        </mat-radio-group>
+      </div>
+    </div>
+
+    <div class="validation-column">
+      <h4 class="column-title">2 - AMERITA</h4>
+      <div class="radio-group">
+        <mat-radio-group [formControl]="ameritaControl" class="radio-options">
+          <mat-radio-button value="investigacion"
+            >Investigación</mat-radio-button
+          >
+          <mat-radio-button value="seguimiento">Seguimiento</mat-radio-button>
+        </mat-radio-group>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de situación observada -->
+  <div class="validation-row full-width">
+    <div class="validation-column full-width">
+      <h4 class="column-title">3 - SITUACIÓN OBSERVADA</h4>
+      <mat-form-field appearance="outline" class="full-width extended">
+        <textarea
+          matInput
+          [formControl]="situacionObservadaControl"
+          placeholder="Describa la situación observada"
+          rows="5"
+        ></textarea>
+      </mat-form-field>
+    </div>
+  </div>
+
+  <!-- Sección de tipo de incidente -->
+  <div class="validation-row full-width">
+    <div class="validation-column full-width">
+      <h4 class="column-title">4 - TIPO DE INCIDENTE</h4>
+      <div class="radio-group horizontal-radio">
+        <mat-radio-group
+          [formControl]="tipoIncidenteControl"
+          class="radio-options horizontal"
+        >
+          <mat-radio-button value="cuasi_acc">CUASI ACC</mat-radio-button>
+          <mat-radio-button value="acc_ctp">ACC CTP</mat-radio-button>
+          <mat-radio-button value="dano_material"
+            >DAÑO MATERIAL</mat-radio-button
+          >
+          <mat-radio-button value="dano_ambiental"
+            >DAÑO AMBIENTAL</mat-radio-button
+          >
+          <mat-radio-button value="falla_operacional"
+            >FALLA OPERACIONAL</mat-radio-button
+          >
+        </mat-radio-group>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,99 @@
+<div class="validation-container" [formGroup]="validationForm">
+  <div class="validation-section">
+    <h4>9 - COMUNICACIÓN</h4>
+
+    <div class="validation-row">
+      <div class="validation-column">
+        <div class="form-field">
+          <label class="label">REPORTADO POR</label>
+          <app-custom-select
+            formControlName="comunicadoPor"
+            [required]="true"
+            [disabled]="isLoading.comunicadoPor"
+            [parameterType]="parameterType.CUSTOM_API"
+            [loadFromApi]="true"
+            [customApiEndpoint]="usuariosApiEndpoint"
+            [customApiRequestBody]="usuariosApiRequestBody"
+            [customOptionValueKey]="'IdUsuario'"
+            [customOptionLabelKey]="'Nombre'"
+            [appearance]="'outline'"
+            placeholder="Seleccione a la persona que reporta"
+          ></app-custom-select>
+        </div>
+      </div>
+
+      <div class="validation-column">
+        <div class="form-field">
+          <label class="label">COMUNICADO A</label>
+          <mat-form-field appearance="outline" class="full-width">
+            <mat-select
+              formControlName="comunicadoA"
+              multiple
+              [disabled]="isLoading.comunicadoA"
+            >
+              <!-- Indicador de carga -->
+              <mat-option *ngIf="isLoading.comunicadoA" disabled>
+                <div class="loading-option">
+                  <mat-spinner diameter="20"></mat-spinner>
+                  <span>Cargando opciones...</span>
+                </div>
+              </mat-option>
+
+              <mat-option
+                *ngFor="let persona of personasOptions"
+                [value]="persona.value"
+              >
+                {{ persona.label }}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+          <div
+            class="selection-count"
+            *ngIf="validationForm.get('comunicadoA')?.value?.length"
+          >
+            <mat-icon>check_circle</mat-icon>
+            <span
+              >{{ validationForm.get("comunicadoA")?.value?.length }} persona(s)
+              seleccionada(s)</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="validation-column">
+        <div class="form-field">
+          <label class="label">ADJUNTOS</label>
+          <div class="file-upload-container">
+            <button
+              type="button"
+              mat-stroked-button
+              (click)="fileInput.click()"
+              class="upload-button"
+            >
+              <mat-icon>attach_file</mat-icon>
+              <span>Adjuntar archivos</span>
+            </button>
+            <input
+              hidden
+              type="file"
+              #fileInput
+              (change)="onFileSelected($event)"
+              multiple
+            />
+          </div>
+          <div class="file-list" *ngIf="selectedFiles.length > 0">
+            <div
+              class="file-item"
+              *ngFor="let file of selectedFiles; let i = index"
+            >
+              <span class="file-name">{{ file.name }}</span>
+              <button mat-icon-button color="warn" (click)="removeFile(i)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
