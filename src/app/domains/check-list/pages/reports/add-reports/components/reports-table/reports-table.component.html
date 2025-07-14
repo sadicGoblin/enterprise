@@ -1,4 +1,37 @@
 <div class="reports-table-container">
+  <!-- Period filter -->
+  <div class="filter-container">
+    <div class="period-selector">
+      <mat-form-field appearance="outline" class="month-year-picker">
+        <mat-label>Período</mat-label>
+        <input
+          matInput
+          [matDatepicker]="picker"
+          placeholder="MM/YYYY"
+          [formControl]="dateControl"
+          (dateChange)="onDateChange($event)"
+        >
+        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+        <mat-datepicker #picker
+          startView="year"
+          (monthSelected)="setMonthAndYear($event, picker)">
+        </mat-datepicker>
+      </mat-form-field>
+      <button
+        mat-raised-button
+        color="primary"
+        class="search-button"
+        (click)="loadReports()"
+        [disabled]="isLoading"
+      >
+        <mat-icon>search</mat-icon> Buscar
+      </button>
+    </div>
+    <div class="period-display" *ngIf="displayPeriod">
+      <span>Período actual: {{ displayPeriod }}</span>
+    </div>
+  </div>
+
   <!-- Loading spinner overlay -->
   <div *ngIf="isLoading" class="spinner-overlay">
     <mat-spinner></mat-spinner>
@@ -12,12 +45,85 @@
     </button>
   </div>
 
+  <!-- Search bar and filter toggle -->
+  <div class="search-container">
+    <div class="search-filter-header">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar en todos los campos</mat-label>
+        <input matInput 
+          placeholder="Escriba para buscar..." 
+          [formControl]="searchControl"
+          (keyup)="applyFilters()">
+        <button mat-icon-button matSuffix (click)="clearSearch()" *ngIf="searchControl.value">
+          <mat-icon>close</mat-icon>
+        </button>
+        <mat-icon matSuffix>search</mat-icon>
+      </mat-form-field>
+      
+      <button mat-stroked-button color="primary" (click)="toggleFilters()" class="filter-toggle-btn">
+        <mat-icon>{{ showFilters ? 'filter_list_off' : 'filter_list' }}</mat-icon>
+        {{ showFilters ? 'Ocultar filtros' : 'Mostrar filtros' }}
+      </button>
+    </div>
+    
+    <!-- Dropdown filters section -->
+    <div class="filters-section" *ngIf="showFilters" [@slideInOut]>
+      <div class="filters-grid">
+        <!-- Tipo filter -->
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Filtrar por Tipo</mat-label>
+          <mat-select [formControl]="tipoFilter" (selectionChange)="applyFilters()">
+            <mat-option value="">Todos</mat-option>
+            <mat-option *ngFor="let option of tipoOptions" [value]="option">{{ option }}</mat-option>
+          </mat-select>
+          <button mat-icon-button matSuffix (click)="tipoFilter.setValue(''); applyFilters()" 
+                  *ngIf="tipoFilter.value">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+        
+        <!-- Obra filter -->
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Filtrar por Obra</mat-label>
+          <mat-select [formControl]="obraFilter" (selectionChange)="applyFilters()">
+            <mat-option value="">Todas</mat-option>
+            <mat-option *ngFor="let option of obraOptions" [value]="option">{{ option }}</mat-option>
+          </mat-select>
+          <button mat-icon-button matSuffix (click)="obraFilter.setValue(''); applyFilters()" 
+                  *ngIf="obraFilter.value">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+        
+        <!-- Responsable filter -->
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Filtrar por Responsable</mat-label>
+          <mat-select [formControl]="responsableFilter" (selectionChange)="applyFilters()">
+            <mat-option value="">Todos</mat-option>
+            <mat-option *ngFor="let option of responsableOptions" [value]="option">{{ option }}</mat-option>
+          </mat-select>
+          <button mat-icon-button matSuffix (click)="responsableFilter.setValue(''); applyFilters()" 
+                  *ngIf="responsableFilter.value">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+      </div>
+      
+      <div class="filters-actions">
+        <button mat-stroked-button (click)="clearAllFilters()">
+          <mat-icon>filter_alt_off</mat-icon>
+          Limpiar filtros
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Table with data -->
   <div
     class="table-container"
     *ngIf="!isLoading && !error && reports.length > 0"
   >
-    <table mat-table [dataSource]="reports" matSort class="reports-table">
+    <table mat-table [dataSource]="filteredReports" matSort class="reports-table">
       <!-- Tipo Column -->
       <ng-container matColumnDef="tipo">
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo</th>
