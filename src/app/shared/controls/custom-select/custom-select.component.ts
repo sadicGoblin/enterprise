@@ -161,7 +161,7 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
                   }
                 }
                 
-                console.log(`CustomSelect: Mapeando item con ${this.customOptionValueKey}=${value}, ${this.customOptionLabelKey}=${label}`);
+                // console.log(`CustomSelect: Mapeando item con ${this.customOptionValueKey}=${value}, ${this.customOptionLabelKey}=${label}`);
                 
                 if (value === undefined || value === null) {
                   // console.warn(`CustomSelect: Valor no encontrado para ${this.label} usando clave ${this.customOptionValueKey}`, item);

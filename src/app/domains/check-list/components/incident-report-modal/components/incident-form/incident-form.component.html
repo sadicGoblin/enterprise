@@ -3,17 +3,36 @@
   <div class="validation-row">
     <div class="validation-column">
       <div class="form-field">
-        <label>Responsable del Área</label>
+        <label>Seleccione una obra</label>
         <app-custom-select
-          [label]="'Responsable del Área'"
+        [formControl]="projectControl"
+        [customApiEndpoint]="projectApiEndpoint"
+        [customApiRequestBody]="projectApiRequestBody"
+        [customOptionValueKey]="projectOptionValueKey"
+        [customOptionLabelKey]="projectOptionLabelKey"
+        [parameterType]="projectParameterType"
+        [loadFromApi]="true"
+        (selectionChange)="onProjectSelectionChange($event)"
+        [label]="'Obra'"
+        [placeholder]="'Seleccione una obra'"
+        [appearance]="'outline'"
+        class="compact-field"
+      ></app-custom-select>
+      </div>
+    </div>
+    
+    <div class="validation-column">
+      <div class="form-field">
+        <label>Responsable del Área</label>
+        <app-custom-select *ngIf="loadResponsableApi"
           [formControl]="responsableAreaControl"
           [parameterType]="parameterType"
-          [loadFromApi]="true"
+          [loadFromApi]="loadResponsableApi"
           [customApiEndpoint]="customApiEndpoint"
           [customApiRequestBody]="customApiRequestBody"
           [customOptionValueKey]="customOptionValueKey"
           [customOptionLabelKey]="customOptionLabelKey"
-          [placeholder]="'Seleccione...'"
+          [placeholder]="'Seleccione primero una obra'"
           [required]="true"
           [appearance]="'outline'"
           class="compact-field full-width"
