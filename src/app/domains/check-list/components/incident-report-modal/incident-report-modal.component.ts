@@ -22,6 +22,7 @@ import { IncidentValidationComponent } from './components/incident-validation/in
 import { ProxyService } from '../../../../core/services/proxy.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-incident-report-modal',
@@ -66,7 +67,6 @@ export class IncidentReportModalComponent implements OnInit {
 
   // Obtener los usuarios disponibles para buscar por ID
   private personasMap: { [key: string]: string } = {};
-  private personasOptions: { value: any; label: string }[] = [];
 
   // Mapeos para convertir strings a IDs numéricos
   private gravedadMap: Record<string, number> = {
@@ -133,22 +133,11 @@ export class IncidentReportModalComponent implements OnInit {
   };
 
   constructor(
-    private dialogRef: MatDialogRef<IncidentReportModalComponent>,
     private proxyService: ProxyService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     @Inject(MAT_DIALOG_DATA) public data: any
-  ) {
-    // Inicializar el mapa de personas base (se complementará con datos dinámicos)
-    this.personasMap = {
-      '1': 'RAUL ALBORNOZ',
-      '5': 'MANUEL RODRIGUEZ',
-      '10': 'CARLOS SILVA',
-      '31': 'FELIPE GALLARDO',
-      '147': 'SEBASTIAN LUNA', // Agregado para el caso específico
-      '478': 'FELIPE GALLARDO',
-    };
-  }
+  ) {}
 
   ngOnInit() {
     // Inicializar datos si se recibieron del diálogo
@@ -394,7 +383,7 @@ export class IncidentReportModalComponent implements OnInit {
       dialogRef.afterClosed().subscribe((result) => {
         if (result) {
           this.proxyService
-          .post('/ws/ReporteIncidenteSvcImpl.php', requestData)
+          .post(environment.apiBaseUrl + '/ws/ReporteIncidenteSvcImpl.php', requestData)
           .subscribe({
             next: (response) => {
               this.isSaving = false;

@@ -5,13 +5,7 @@ import { EnvironmentConfig } from './environment.config';
  */
 export const environment: EnvironmentConfig = {
   production: true,
-  apiBaseUrl: 'https://inarco-ssoma.favric.cl/',
-  apis: {
-    // Use full URLs for production to avoid proxy issues
-    usuario: 'https://inarco-ssoma.favric.cl/ws/UsuarioSvcImpl.php',
-    perfil: 'https://inarco-ssoma.favric.cl/ws/PerfilSvcImpl.php',
-    // Add more API endpoints as needed
-  },
+  apiBaseUrl: 'https://inarco-ssoma.favric.cl',
   firebase: {
     apiKey: "AIzaSyDC-BfxEZioD2VEgmjtQjrxiYD9ib7ulo4",
     authDomain: "inarco-web.firebaseapp.com",

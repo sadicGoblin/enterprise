@@ -5,6 +5,7 @@ import {
   SubParametroRequest, 
   SubParametroResponse 
 } from '../models/sub-parametro.model';
+import { environment } from '../../../../../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,6 @@ export class SubParametroService {
       idEnt: idEnt
     };
 
-    return this.proxyService.post<SubParametroResponse>(this.API_ENDPOINT, requestBody);
+    return this.proxyService.post<SubParametroResponse>(environment.apiBaseUrl + this.API_ENDPOINT, requestBody);
   }
 }

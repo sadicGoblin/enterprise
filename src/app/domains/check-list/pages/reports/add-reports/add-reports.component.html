@@ -3,85 +3,26 @@
     <div *ngIf="isLoading" class="spinner-overlay">
       <mat-spinner></mat-spinner>
     </div>
-    
+
     <div class="map-card-header">
       <h2 class="title">Ingreso Reporte</h2>
-      <button 
-        mat-flat-button 
-        color="primary" 
-        class="add-user-button" 
-        (click)="crearNuevoReporte()"
-        *ngIf="!isFormVisible">
+      <button
+        mat-flat-button
+        color="primary"
+        class="add-user-button"
+        *ngIf="!isFormVisible"
+        [matMenuTriggerFor]="createReportMenu"
+      >
         <mat-icon>add_circle</mat-icon> Crear Reporte
       </button>
-    </div>
-    
-    <div class="map-card-content" [class.form-collapsed]="!isFormVisible">
-      <div class="form-container" *ngIf="isFormVisible">
-        <div class="form-header">
-          <h3>Datos del Reporte</h3>
-          <button mat-icon-button color="primary" (click)="toggleFormVisibility()">
-            <mat-icon>close</mat-icon>
-          </button>
-        </div>
-        <mat-divider></mat-divider>
-        <div class="form-grid">
-          <app-custom-select
-            [label]="'Proyecto'"
-            [formControl]="projectControl"
-            [parameterType]="projectParameterType"
-            [loadFromApi]="true"
-            [customApiEndpoint]="projectApiEndpoint"
-            [customApiRequestBody]="projectApiRequestBody"
-            [customOptionValueKey]="projectOptionValueKey"
-            [customOptionLabelKey]="projectOptionLabelKey"
-            (selectionChange)="onProjectSelectionChange($event)"
-            [placeholder]="'Seleccionar Proyecto'"
-            [required]="true"
-            [appearance]="'outline'"
-            class="compact-field"
-          ></app-custom-select>
-  
-          <app-custom-select
-            label="Tipo"
-            [formControl]="typeControl"
-            [parameterType]="typeParameterType"
-            [options]="typesOptions"
-            (selectionChange)="onTypeSelectionChange($event)"
-            placeholder="Seleccionar Tipo"
-            [required]="true"
-            [appearance]="'outline'"
-            class="compact-field"
-          ></app-custom-select>
-        </div>
 
-        <div class="select-grid">
-          <mat-form-field appearance="outline" class="compact-field">
-            <mat-label>Período</mat-label>
-            <input matInput [matDatepicker]="picker" [(ngModel)]="period" placeholder="MM/YYYY" />
-            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker
-                startView="multi-year"
-                (monthSelected)="closeMonthPicker($event, picker)">
-            </mat-datepicker>
-          </mat-form-field>
-        </div>
-  
-        <div class="button-row">
-          <button mat-stroked-button type="button" (click)="cleanForm()">
-            <mat-icon>refresh</mat-icon> Limpiar
-          </button>
-          <button mat-raised-button color="primary" (click)="createReport()">
-            <mat-icon>add_circle</mat-icon> Crear Reporte
-          </button>
-        </div>
-      </div>
+      <mat-menu #createReportMenu="matMenu">
+        <button mat-menu-item (click)="createReport('0')">ART</button>
+        <button mat-menu-item (click)="createReport('1')">Inspección</button>
+        <button mat-menu-item (click)="createReport('2')">Reporte de Incidentes</button>
+      </mat-menu>
     </div>
 
-      <hr />
-      <div class="map-card-header">
-        <h2 class="title">Reportes Ingresados</h2>
-      </div>
-      <app-reports-table></app-reports-table>
+    <app-reports-table></app-reports-table>
   </mat-card>
 </div>

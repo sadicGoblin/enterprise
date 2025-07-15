@@ -169,7 +169,7 @@ export class SubParametroService {
     // Use Angular's proxy system to avoid CORS issues
     console.log("calling subparametros api with endpoint: ",this.apiEndpoint)
     console.log("calling subparametros api with request: ",request)
-    return this.proxyService.post<SubParametroResponse>(this.apiEndpoint, request)
+    return this.proxyService.post<SubParametroResponse>(environment.apiBaseUrl + this.apiEndpoint, request)
       .pipe(
         map(response => {
           console.log(`[SubParametroService] API Response for idEnt=${idEnt}:`, response);
@@ -214,7 +214,7 @@ export class SubParametroService {
     
     console.log('[SubParametroService] Adding Etapa Constructiva with body:', requestBody);
     
-    return this.proxyService.post<any>(endpoint, requestBody).pipe(
+    return this.proxyService.post<any>(environment.apiBaseUrl + endpoint, requestBody).pipe(
       map(response => {
         console.log('[SubParametroService] Add Etapa Constructiva response:', response);
         if (response && response.success) {
@@ -246,7 +246,7 @@ updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
   
   console.log('[SubParametroService] Updating Etapa Constructiva with body:', requestBody);
   
-  return this.proxyService.post<any>(endpoint, requestBody).pipe(
+  return this.proxyService.post<any>(environment.apiBaseUrl + endpoint, requestBody).pipe(
     map(response => {
       console.log('[SubParametroService] Update Etapa Constructiva response:', response);
       if (response && response.success) {
@@ -268,7 +268,7 @@ updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
       idEtapaConstructiva: parseInt(idEtapaConstructiva, 10) // API might expect number
     };
     console.log('[SubParametroService] Deleting Etapa Constructiva with body:', requestBody);
-    return this.proxyService.post<any>(endpoint, requestBody).pipe(
+    return this.proxyService.post<any>(environment.apiBaseUrl + endpoint, requestBody).pipe(
       map(response => {
         console.log('[SubParametroService] Delete Etapa Constructiva response:', response);
         if (response && response.success) {
@@ -293,7 +293,7 @@ updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
       nombre: null,
     };
     return this.proxyService
-      .post<EtapasConstructivasResponse>(endpoint, requestBody)
+      .post<EtapasConstructivasResponse>(environment.apiBaseUrl + endpoint, requestBody)
       .pipe(
         map((response) => {
           if (response && response.success && response.data) {
@@ -326,7 +326,7 @@ updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
     nombre: subprocesoData.nombre
   };
   console.log('[SubParametroService] Creando subproceso con datos:', requestBody);
-  return this.proxyService.post<any>(endpoint, requestBody).pipe(
+  return this.proxyService.post<any>(environment.apiBaseUrl + endpoint, requestBody).pipe(
     map(response => {
       console.log('[SubParametroService] Respuesta de creación de subproceso:', response);
       if (response) {
@@ -347,7 +347,7 @@ updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
       idSubproceso: parseInt(idSubproceso, 10) // API might expect number
     };
     console.log('[SubParametroService] Deleting Subproceso with body:', requestBody);
-    return this.proxyService.post<any>(endpoint, requestBody).pipe(
+    return this.proxyService.post<any>(environment.apiBaseUrl + endpoint, requestBody).pipe(
       map(response => {
         console.log('[SubParametroService] Delete Subproceso response:', response);
         if (response && response.success) {
@@ -375,7 +375,7 @@ updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
   };
 
   console.log('[SubParametroService] Actualizando subproceso con datos:', requestBody);
-  return this.proxyService.post<any>(endpoint, requestBody).pipe(
+  return this.proxyService.post<any>(environment.apiBaseUrl + endpoint, requestBody).pipe(
     map(response => {
       console.log('[SubParametroService] Respuesta de actualización de subproceso:', response);
       if (response) {
@@ -399,7 +399,7 @@ updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
       nombre: null,
     };
     return this.proxyService
-      .post<SubprocesoResponse>(endpoint, requestBody)
+      .post<SubprocesoResponse>(environment.apiBaseUrl + endpoint, requestBody)
       .pipe(
         map((response) => {
           if (response && response.success && response.data) {
@@ -439,7 +439,7 @@ updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
     console.log('[SubParametroService] Fetching Ambitos with body:', requestBody);
     
     return this.proxyService
-      .post<AmbitosResponse>(endpoint, requestBody)
+      .post<AmbitosResponse>(environment.apiBaseUrl + endpoint, requestBody)
       .pipe(
         tap(response => console.log('[SubParametroService] Raw Ambitos API response:', response)),
         map((response) => {
@@ -480,7 +480,7 @@ updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
 
     console.log('[SubParametroService] Creating sub-parameter with request:', requestBody);
     
-    return this.proxyService.post<SubParametroApiResponse>(this.apiEndpoint, requestBody)
+    return this.proxyService.post<SubParametroApiResponse>(environment.apiBaseUrl + this.apiEndpoint, requestBody)
       .pipe(
         tap(response => console.log('[SubParametroService] Create sub-parameter response:', response)),
         map(response => {
@@ -510,7 +510,7 @@ updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
 
     console.log('[SubParametroService] Deleting sub-parameter with request:', requestBody);
     
-    return this.proxyService.post<SubParametroApiResponse>(this.apiEndpoint, requestBody)
+    return this.proxyService.post<SubParametroApiResponse>(environment.apiBaseUrl + this.apiEndpoint, requestBody)
       .pipe(
         tap(response => console.log('[SubParametroService] Delete sub-parameter response:', response)),
         map(response => {
@@ -544,7 +544,7 @@ updateEtapaConstructiva(etapaData: EtapaConstructivaItem): Observable<any> {
 
     console.log('[SubParametroService] Updating sub-parameter with request:', requestBody);
     
-    return this.proxyService.post<SubParametroApiResponse>(this.apiEndpoint, requestBody)
+    return this.proxyService.post<SubParametroApiResponse>(environment.apiBaseUrl + this.apiEndpoint, requestBody)
       .pipe(
         tap(response => console.log('[SubParametroService] Update sub-parameter response:', response)),
         map(response => {

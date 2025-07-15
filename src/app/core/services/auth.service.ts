@@ -11,8 +11,8 @@ import { ProxyService } from './proxy.service';
 })
 export class AuthService {
   // API endpoints
-  private readonly usuarioEndpoint = environment.apis.usuario;
-  private readonly perfilEndpoint = environment.apis.perfil;
+  private readonly usuarioEndpoint = '/ws/UsuarioSvcImpl.php';
+  private readonly perfilEndpoint = '/ws/PerfilSvcImpl.php';
 
   // Store user information
   private currentUserId: number | null = null;
@@ -34,7 +34,7 @@ export class AuthService {
     };
 
     console.log(`[AuthService] Login request for user: ${username}`, request);
-    return this.proxyService.post<LoginResponse>(this.usuarioEndpoint, request)
+    return this.proxyService.post<LoginResponse>(environment.apiBaseUrl + this.usuarioEndpoint, request)
       .pipe(
         tap(response => {
           console.log('[AuthService] Login response:', response);

@@ -5,11 +5,6 @@
 export interface EnvironmentConfig {
   production: boolean;
   apiBaseUrl: string;
-  apis: {
-    usuario: string;
-    perfil: string;
-    // Add more API endpoints as needed
-  };
   firebase: {
     apiKey: string;
     authDomain: string;

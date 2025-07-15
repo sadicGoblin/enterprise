@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ProxyService } from '../../../core/services/proxy.service';
 import { ObraRequest, ObrasFullResponse, ObrasSimpleResponse } from '../models/obra.models';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -24,7 +25,7 @@ export class ObraService {
     };
     
     console.log('[ObraService] Fetching obras with request:', request);
-    return this.proxyService.post<ObrasFullResponse>(this.apiUrl, request);
+    return this.proxyService.post<ObrasFullResponse>(environment.apiBaseUrl + this.apiUrl, request);
   }
 
   /**
@@ -40,7 +41,7 @@ export class ObraService {
     };
     
     console.log(`[ObraService] Fetching obras for user ${userId} with request:`, request);
-    return this.proxyService.post<ObrasSimpleResponse>(this.apiUrl, request);
+    return this.proxyService.post<ObrasSimpleResponse>(environment.apiBaseUrl + this.apiUrl, request);
   }
 
   /**
@@ -62,7 +63,7 @@ export class ObraService {
     };
     
     console.log('[ObraService] Creating obra with request:', request);
-    return this.proxyService.post<ObrasFullResponse>(this.apiUrl, request);
+    return this.proxyService.post<ObrasFullResponse>(environment.apiBaseUrl + this.apiUrl, request);
   }
   
   /**
@@ -86,7 +87,7 @@ export class ObraService {
     };
     
     console.log('[ObraService] Updating obra with request:', request);
-    return this.proxyService.post<ObrasFullResponse>(this.apiUrl, request);
+    return this.proxyService.post<ObrasFullResponse>(environment.apiBaseUrl + this.apiUrl, request);
   }
 
   /**
@@ -102,6 +103,6 @@ export class ObraService {
     };
     
     console.log('[ObraService] Deleting obra with request:', request);
-    return this.proxyService.post<ObrasFullResponse>(this.apiUrl, request);
+    return this.proxyService.post<ObrasFullResponse>(environment.apiBaseUrl + this.apiUrl, request);
   }
 }

@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ProxyService } from '../../../core/services/proxy.service';
+import { environment } from '../../../../environments/environment';
 
 /**
  * Interface para la solicitud de control de planificación
@@ -45,6 +46,6 @@ export class PlanificationService {
     console.log(`[PlanificationService] usuarioId: ${usuarioId}`);
     console.log(`[PlanificationService] pendiente: ${pendiente}`);
     console.log(`[PlanificationService] Consultando planificación para período ${periodo} con request:`, request);
-    return this.proxyService.post<any>(this.apiUrl, request);
+    return this.proxyService.post<any>(environment.apiBaseUrl + this.apiUrl, request);
   }
 }

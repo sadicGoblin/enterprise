@@ -20,6 +20,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { CustomSelectComponent } from '../../../../../../shared/controls/custom-select/custom-select.component';
 import { ProxyService } from '../../../../../../core/services/proxy.service';
 import { Observable, catchError, finalize, of } from 'rxjs';
+import { environment } from '../../../../../../../environments/environment';
 
 // Interfaces para las respuestas de API
 export interface ApiResponse<T> {
@@ -302,7 +303,7 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
     console.log('Consultando elementos a inspeccionar:', consultaDetalleBody);
     
     // Primer paso: cargar los elementos a inspeccionar
-    this.proxyService.post<ConsultaDetalleResponse>('/ws/TrabajoAlturaSvcImpl.php', consultaDetalleBody)
+    this.proxyService.post<ConsultaDetalleResponse>(environment.apiBaseUrl + '/ws/TrabajoAlturaSvcImpl.php', consultaDetalleBody)
       .pipe(
         catchError(error => {
           console.error('Error al cargar elementos del checklist:', error);
@@ -367,7 +368,7 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
     
     console.log('Consultando valores de checks:', consultaListaBody);
     
-    this.proxyService.post<ConsultaListaResponse>('/ws/TrabajoAlturaSvcImpl.php', consultaListaBody)
+    this.proxyService.post<ConsultaListaResponse>(environment.apiBaseUrl + '/ws/TrabajoAlturaSvcImpl.php', consultaListaBody)
       .pipe(
         finalize(() => this.isLoading = false),
         catchError(error => {

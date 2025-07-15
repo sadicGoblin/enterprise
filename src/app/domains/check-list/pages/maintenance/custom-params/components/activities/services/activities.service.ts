@@ -3,6 +3,7 @@ import { Observable } from 'rxjs';
 import { ProxyService } from '../../../../../../../../core/services/proxy.service';
 import { ApiActivityResponse, NewActivityRequest, UpdateActivityRequest } from '../models/activity.model';
 import { CategoryOption, DocumentOption, FrequencyOption, ParameterOption } from '../models/reference-data.model';
+import { environment } from '../../../../../../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -28,7 +29,7 @@ export class ActivitiesService {
     };
     
     console.log('Enviando payload a API:', payload);
-    return this.proxyService.post<ApiActivityResponse>(this.activitiesEndpoint, payload);
+    return this.proxyService.post<ApiActivityResponse>(environment.apiBaseUrl + this.activitiesEndpoint, payload);
   }
 
   /**
@@ -39,7 +40,7 @@ export class ActivitiesService {
       method: 'crearActividad',
       data: activity
     };
-    return this.proxyService.post<ApiActivityResponse>(this.activitiesEndpoint, payload);
+    return this.proxyService.post<ApiActivityResponse>(environment.apiBaseUrl + this.activitiesEndpoint, payload);
   }
 
   /**
@@ -50,7 +51,7 @@ export class ActivitiesService {
       method: 'actualizarActividad',
       data: activity
     };
-    return this.proxyService.post<ApiActivityResponse>(this.activitiesEndpoint, payload);
+    return this.proxyService.post<ApiActivityResponse>(environment.apiBaseUrl + this.activitiesEndpoint, payload);
   }
 
   /**
@@ -61,7 +62,7 @@ export class ActivitiesService {
       method: 'eliminarActividad',
       data: { idActividad: activityId }
     };
-    return this.proxyService.post<ApiActivityResponse>(this.activitiesEndpoint, payload);
+    return this.proxyService.post<ApiActivityResponse>(environment.apiBaseUrl + this.activitiesEndpoint, payload);
   }
 
   /**
@@ -72,7 +73,7 @@ export class ActivitiesService {
       method: 'obtenerSubParametros',
       data: { idParametro: 1 }
     };
-    return this.proxyService.post<{ success: boolean, data: FrequencyOption[] }>(this.frequencyEndpoint, payload);
+    return this.proxyService.post<{ success: boolean, data: FrequencyOption[] }>(environment.apiBaseUrl + this.frequencyEndpoint, payload);
   }
 
   /**
@@ -83,7 +84,7 @@ export class ActivitiesService {
       method: 'obtenerSubParametros',
       data: { idParametro: 2 }
     };
-    return this.proxyService.post<{ success: boolean, data: CategoryOption[] }>(this.categoryEndpoint, payload);
+    return this.proxyService.post<{ success: boolean, data: CategoryOption[] }>(environment.apiBaseUrl + this.categoryEndpoint, payload);
   }
 
   /**
@@ -93,7 +94,7 @@ export class ActivitiesService {
     const payload = {
       method: 'obtenerParametros'
     };
-    return this.proxyService.post<{ success: boolean, data: ParameterOption[] }>(this.parameterEndpoint, payload);
+    return this.proxyService.post<{ success: boolean, data: ParameterOption[] }>(environment.apiBaseUrl + this.parameterEndpoint, payload);
   }
 
   /**
@@ -103,7 +104,7 @@ export class ActivitiesService {
     const payload = {
       method: 'obtenerDocumentos'
     };
-    return this.proxyService.post<{ success: boolean, data: DocumentOption[] }>(this.documentEndpoint, payload);
+    return this.proxyService.post<{ success: boolean, data: DocumentOption[] }>(environment.apiBaseUrl + this.documentEndpoint, payload);
   }
 
   /**
@@ -113,6 +114,6 @@ export class ActivitiesService {
     const payload = {
       method: 'obtenerAmbitos'
     };
-    return this.proxyService.post<{ success: boolean, data: any[] }>(this.scopeEndpoint, payload);
+    return this.proxyService.post<{ success: boolean, data: any[] }>(environment.apiBaseUrl + this.scopeEndpoint, payload);
   }
 }

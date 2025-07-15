@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatButtonModule } from '@angular/material/button';
 import { ProxyService } from '../../../../../../core/services/proxy.service';
 import { CustomSelectComponent, ParameterType } from '../../../../../../shared/controls/custom-select/custom-select.component';
+import { environment } from '../../../../../../../environments/environment';
 
 @Component({
   selector: 'app-incident-validation',
@@ -81,7 +82,7 @@ export class IncidentValidationComponent implements OnInit {
     this.isLoading.comunicadoA = true;
     
     // Llamar a la API para obtener los usuarios
-    this.proxyService.post(this.usuariosApiEndpoint, this.usuariosApiRequestBody).subscribe({
+    this.proxyService.post(environment.apiBaseUrl + this.usuariosApiEndpoint, this.usuariosApiRequestBody).subscribe({
       next: (response: any) => {
         // Verificar si la respuesta es válida
         if (response && response.code === 200 && response.data) {

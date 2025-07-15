@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ProxyService } from '../../../core/services/proxy.service';
 import { ActividadRequest, InspeccionSSTMAResponse } from '../models/actividad.models';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -24,6 +25,6 @@ export class ActividadService {
     };
     
     console.log(`[ActividadService] Consultando inspecciones SSTMA para obra ${idObra}:`, request);
-    return this.proxyService.post<InspeccionSSTMAResponse>(this.apiUrl, request);
+    return this.proxyService.post<InspeccionSSTMAResponse>(environment.apiBaseUrl + this.apiUrl, request);
   }
 }
