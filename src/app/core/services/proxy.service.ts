@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
+import { environment } from '../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -21,12 +22,31 @@ export class ProxyService {
       'Accept': 'application/json'
     });
     
-    // We'll always use the relative URL and rely on Angular's proxy
-    // This completely avoids CORS issues in development
-    console.log('%c Using relative URL with Angular proxy:', 'color: blue; font-weight: bold', endpoint, JSON.stringify(body));
+    let url: string;
     
-    // Let Angular's development server proxy handle the request
-    return this.http.post<T>(endpoint, body, { headers }).pipe(
+    // Use different URL strategies based on environment
+    if (environment.production) {
+      // In production: use absolute URLs
+      // Check if it's already a full URL (starts with http:// or https://)
+      if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+        // Already a complete URL, use as is
+        url = endpoint;
+      } else if (endpoint.startsWith('/ws/')) {
+        // If endpoint already includes /ws/, use it with the base domain
+        url = `https://inarco-ssoma.favric.cl${endpoint}`;
+      } else {
+        // Otherwise, construct the full URL
+        url = `https://inarco-ssoma.favric.cl/ws/${endpoint}`;
+      }
+      console.log('%c Using absolute URL in production:', 'color: green; font-weight: bold', url);
+    } else {
+      // In development: use relative URL with Angular proxy
+      url = endpoint;
+      console.log('%c Using relative URL with Angular proxy:', 'color: blue; font-weight: bold', url);
+    }
+    
+    // Make the HTTP request
+    return this.http.post<T>(url, body, { headers }).pipe(
       catchError(error => {
         console.error('API Error:', error);
         return throwError(() => error);

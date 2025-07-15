@@ -7,6 +7,7 @@ import {
   ParametroResponse, 
   ParametroItem 
 } from '../models/parametro.models';
+import { environment } from '../../../../environments/environment';
 
 // Interfaz para la creación de parámetros
 export interface CreateParametroRequest {
@@ -53,7 +54,7 @@ export class ParametroService {
     console.log("Calling parametros API with endpoint:", this.apiEndpoint);
     console.log("Calling parametros API with request:", request);
     
-    return this.proxyService.post<ParametroResponse>(this.apiEndpoint, request)
+    return this.proxyService.post<ParametroResponse>(environment.apiBaseUrl + this.apiEndpoint, request)
       .pipe(
         map(response => {
           console.log(`[ParametroService] API Response:`, response);
@@ -91,7 +92,7 @@ export class ParametroService {
 
     console.log('Request body for creating parameter:', requestBody);
     
-    return this.proxyService.post('/ws/ParametrosSvcImpl.php', requestBody);
+    return this.proxyService.post(environment.apiBaseUrl + '/ws/ParametrosSvcImpl.php', requestBody);
   }
   
   /**
@@ -107,7 +108,7 @@ export class ParametroService {
 
     console.log('Request body for deleting parameter:', requestBody);
     
-    return this.proxyService.post('/ws/ParametrosSvcImpl.php', requestBody);
+    return this.proxyService.post(environment.apiBaseUrl + '/ws/ParametrosSvcImpl.php', requestBody);
   }
   
   /**
@@ -118,6 +119,6 @@ export class ParametroService {
   updateParametro(requestBody: UpdateParametroRequest): Observable<any> {
     console.log('Request body for updating parameter:', requestBody);
     
-    return this.proxyService.post('/ws/ParametrosSvcImpl.php', requestBody);
+    return this.proxyService.post(environment.apiBaseUrl + '/ws/ParametrosSvcImpl.php', requestBody);
   }
 }

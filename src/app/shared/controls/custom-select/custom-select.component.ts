@@ -11,6 +11,7 @@ import { finalize, map } from 'rxjs/operators'; // Ensure map is imported
 // Import the service for API calls - use the relative path based on project structure
 import { SubParametroService } from '../../../domains/check-list/services/sub-parametro.service';
 import { ProxyService } from '../../../core/services/proxy.service'; // Import ProxyService
+import { environment } from '../../../../environments/environment';
 
 export interface SelectOption {
   value: any;
@@ -124,7 +125,7 @@ export class CustomSelectComponent implements ControlValueAccessor, OnInit {
         }
         // console.log(`CustomSelect: Calling custom API for ${this.parameterType} at ${this.customApiEndpoint} with body:`, this.customApiRequestBody);
         // Directly use proxyService for the custom call
-        apiCall = this.proxyService.post<any>(this.customApiEndpoint, this.customApiRequestBody).pipe(
+        apiCall = this.proxyService.post<any>(environment.apiBaseUrl + this.customApiEndpoint, this.customApiRequestBody).pipe(
           map((response: any): SelectOption[] => { // Explicit return type for map callback
             if (response && response.success && response.data && Array.isArray(response.data)) {
               console.log("API ", this.customApiEndpoint)

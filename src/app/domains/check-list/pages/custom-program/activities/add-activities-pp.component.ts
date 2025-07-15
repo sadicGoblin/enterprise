@@ -27,6 +27,7 @@ import { ControlService } from '../../../services/control.service';
 import { ConfirmationDialogComponent } from './confirmation-dialog.component';
 import { CalendarDialogComponent } from '../../../../../shared/controls/multi-date-calendar/calendar-dialog.component';
 import { CalendarSelectComponent } from '../../../../../shared/controls/multi-date-calendar/calendar-select.component';
+import { environment } from '../../../../../../environments/environment';
 
 // Interfaces para los diferentes tipos de objetos usados en el componente
 interface ProjectApiRequestBody {
@@ -485,7 +486,7 @@ export class AddActivitiesPpComponent implements OnInit {
     this.stageApiRequestBody.idObra = Number(this.projectSelectedId);
     console.log('Loading stages for service2:', this.stageApiRequestBody);
 
-    this.proxyService.post(this.stageApiEndpoint, this.stageApiRequestBody)
+    this.proxyService.post(environment.apiBaseUrl + this.stageApiEndpoint, this.stageApiRequestBody)
       .pipe(
         catchError(error => {
           console.error('Error loading stages:', error);
@@ -526,7 +527,7 @@ export class AddActivitiesPpComponent implements OnInit {
     };
 
     // Call the API to get users for the selected project
-    this.proxyService.post('ws/UsuarioSvcImpl.php', requestBody)
+    this.proxyService.post(environment.apiBaseUrl + '/ws/UsuarioSvcImpl.php', requestBody)
       .pipe(
         catchError(error => {
           console.error('Error loading users:', error);
@@ -558,7 +559,7 @@ export class AddActivitiesPpComponent implements OnInit {
     this.loadingSubprocesses = true;
     this.subprocessApiRequestBody.idEtapaConstructiva = Number(this.stageSelectedId);
     // console.log('Loading subprocesses for stage:', this.subprocessApiEndpoint, this.subprocessApiRequestBody);
-    this.proxyService.post(this.subprocessApiEndpoint, this.subprocessApiRequestBody)
+    this.proxyService.post(environment.apiBaseUrl + this.subprocessApiEndpoint, this.subprocessApiRequestBody)
       .pipe(
         catchError(error => {
           console.error('Error loading subprocesses:', error);
@@ -589,7 +590,7 @@ export class AddActivitiesPpComponent implements OnInit {
 
     this.loadingActivities = true;
 
-    this.proxyService.post(this.activityApiEndpoint, this.activityApiRequestBody)
+    this.proxyService.post(environment.apiBaseUrl + this.activityApiEndpoint, this.activityApiRequestBody)
       .pipe(
         catchError(error => {
           console.error('Error loading activities:', error);

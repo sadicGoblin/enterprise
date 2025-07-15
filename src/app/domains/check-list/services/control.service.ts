@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ProxyService } from '../../../core/services/proxy.service';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -42,7 +43,7 @@ export class ControlService {
     fechaControl: string
   }): Observable<any> {
     console.log('Creando nuevo control:', controlData);
-    return this.proxyService.post<any>(this.apiEndpoint, controlData);
+    return this.proxyService.post<any>(environment.apiBaseUrl + this.apiEndpoint, controlData);
   }
 
   /**
@@ -57,7 +58,7 @@ export class ControlService {
     periodo: number
   }): Observable<any> {
     console.log('Consultando controles con parámetros:', queryParams);
-    return this.proxyService.post<any>(this.apiEndpoint, queryParams);
+    return this.proxyService.post<any>(environment.apiBaseUrl + this.apiEndpoint, queryParams);
   }
 
   /**
@@ -71,7 +72,7 @@ export class ControlService {
     dias: string
   }): Observable<any> {
     console.log('Actualizando días del control:', updateData);
-    return this.proxyService.post<any>(this.apiEndpoint, updateData);
+    return this.proxyService.post<any>(environment.apiBaseUrl + this.apiEndpoint, updateData);
   }
   
   /**
@@ -87,7 +88,7 @@ export class ControlService {
   }): Observable<any> {
     // Mantener exactamente el mismo formato que se usaba originalmente
     console.log('Consultando actividades para planificación:', requestParams);
-    return this.proxyService.post<any>(this.apiEndpoint, {
+    return this.proxyService.post<any>(environment.apiBaseUrl + this.apiEndpoint, {
       caso: requestParams.caso,
       idObra: requestParams.idObra,
       idUsuario: requestParams.idUsuario,
@@ -107,7 +108,7 @@ export class ControlService {
   }): Observable<any> {
     console.log('Consultando actividades completadas:', requestParams);
     // Usamos el endpoint específico para planificaciones
-    return this.proxyService.post<any>(this.planificacionApiEndpoint, {
+    return this.proxyService.post<any>(environment.apiBaseUrl + this.planificacionApiEndpoint, {
       caso: requestParams.caso,
       IdUsuario: requestParams.idUsuario, // Mantener mayúscula en IdUsuario como en el original
       Periodo: requestParams.periodo // Mantener mayúscula en Periodo como en el original

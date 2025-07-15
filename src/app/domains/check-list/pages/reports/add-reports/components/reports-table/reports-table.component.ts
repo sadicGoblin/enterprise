@@ -17,6 +17,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { MatOptionModule } from '@angular/material/core';
 import { ProxyService } from '../../../../../../../core/services/proxy.service';
 import { MatCardModule } from '@angular/material/card';
+import { environment } from '../../../../../../../../environments/environment';
 
 // Interface for the API response
 interface ReportResponse {
@@ -226,7 +227,7 @@ export class ReportsTableComponent implements OnInit {
     };
 
     this.proxyService
-      .post<ReportResponse>('/ws/ReporteSvcImpl.php', requestBody)
+      .post<ReportResponse>(environment.apiBaseUrl + '/ws/ReporteSvcImpl.php', requestBody)
       .subscribe({
         next: (response: ReportResponse) => {
           if (response.success && response.data) {

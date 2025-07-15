@@ -14,6 +14,7 @@ import { catchError, of } from 'rxjs';
 import { SharedDataService } from '../../../../../services/shared-data.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { environment } from '../../../../../../../../environments/environment';
 
 // Interfaz para los ámbitos
 interface AmbitItem {
@@ -121,7 +122,7 @@ export class AmbitsComponent implements OnInit {
       codigo: 0
     };
     
-    this.proxyService.post<ApiResponse>('/ws/AmbitosSvcImpl.php', requestBody).subscribe({
+    this.proxyService.post<ApiResponse>(environment.apiBaseUrl + '/ws/AmbitosSvcImpl.php', requestBody).subscribe({
       next: (response: ApiResponse) => {
         console.log('📥 Respuesta de API de ámbitos:', response);
         
@@ -191,7 +192,7 @@ export class AmbitsComponent implements OnInit {
       
       console.log('📤 ENVIANDO DATOS PARA ACTUALIZACIÓN DE ÁMBITO:', payload);
       
-      this.proxyService.post<ApiResponse>('/ws/AmbitosSvcImpl.php', payload).subscribe({
+      this.proxyService.post<ApiResponse>(environment.apiBaseUrl + '/ws/AmbitosSvcImpl.php', payload).subscribe({
         next: (response: ApiResponse) => {
           console.log('📥 RESPUESTA DE ACTUALIZACIÓN DE ÁMBITO:', response);
           
@@ -238,7 +239,7 @@ export class AmbitsComponent implements OnInit {
       
       console.log('📤 ENVIANDO DATOS PARA CREACIÓN DE ÁMBITO:', payload);
       
-      this.proxyService.post<ApiResponse>('/ws/AmbitosSvcImpl.php', payload).subscribe({
+      this.proxyService.post<ApiResponse>(environment.apiBaseUrl + '/ws/AmbitosSvcImpl.php', payload).subscribe({
         next: (response: ApiResponse) => {
           console.log('📥 RESPUESTA DE CREACIÓN DE ÁMBITO:', response);
           
@@ -352,7 +353,7 @@ export class AmbitsComponent implements OnInit {
       
       console.log('🚀 ENVIANDO DATOS PARA ELIMINACIÓN DE ÁMBITO:', requestBody);
       
-      this.proxyService.post<any>('/ws/AmbitosSvcImpl.php', requestBody)
+      this.proxyService.post<any>(environment.apiBaseUrl + '/ws/AmbitosSvcImpl.php', requestBody)
         .pipe(
           catchError(err => {
             console.error('❌ Error al eliminar ámbito:', err);

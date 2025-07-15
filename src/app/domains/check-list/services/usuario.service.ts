@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { UsuarioRequest, UsuarioResponse, UsuarioItem } from '../models/usuario.models';
 import { ProxyService } from '../../../core/services/proxy.service';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -25,7 +26,7 @@ export class UsuarioService {
     console.log('Calling usuario API endpoint:', this.apiEndpoint);
     
     // Use Angular's proxy system to avoid CORS issues
-    return this.proxyService.post<UsuarioResponse>(this.apiEndpoint, request);
+    return this.proxyService.post<UsuarioResponse>(environment.apiBaseUrl + this.apiEndpoint, request);
   }
 
   /**
@@ -43,7 +44,7 @@ export class UsuarioService {
     console.log('Fetching works for user ID:', userId, 'with endpoint:', this.apiEndpoint);
     
     // Use Angular's proxy system to avoid CORS issues
-    return this.proxyService.post<any>(this.apiEndpoint, request);
+    return this.proxyService.post<any>(environment.apiBaseUrl + this.apiEndpoint, request);
   }
   
   /**
@@ -55,7 +56,7 @@ export class UsuarioService {
     console.log('Saving user works:', requestBody);
     
     // El endpoint es el mismo que para getUserWorks
-    return this.proxyService.post<any>(this.apiEndpoint, requestBody);
+    return this.proxyService.post<any>(environment.apiBaseUrl + this.apiEndpoint, requestBody);
   }
   
   /**
@@ -100,7 +101,7 @@ export class UsuarioService {
     }
     
     console.log('Sending user create/update request:', request);
-    return this.proxyService.post<any>(this.apiEndpoint, request);
+    return this.proxyService.post<any>(environment.apiBaseUrl + this.apiEndpoint, request);
   }
   
   // El método createControl ha sido movido a control.service.ts
@@ -121,6 +122,6 @@ export class UsuarioService {
     console.log('[UsuarioService] Request body:', JSON.stringify(request));
     
     // Usar proxyService para aplicar la configuración de proxy de Angular
-    return this.proxyService.post<any>(this.apiEndpoint, request);
+    return this.proxyService.post<any>(environment.apiBaseUrl + this.apiEndpoint, request);
   }
 }

@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BibliotecaRequest, BibliotecaResponse } from '../models/biblioteca.models';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -22,21 +23,16 @@ export class BibliotecaService {
       iDBiblioteca: 0
     };
 
-    return this.http.post<BibliotecaResponse>(this.apiUrl, request);
+    return this.http.post<BibliotecaResponse>(environment.apiBaseUrl + this.apiUrl, request);
   }
 
-  /**
-   * Get a specific document from the library by ID
-   * @param id The document ID to fetch
-   * @returns Observable with biblioteca data
-   */
   getDocumentById(id: number): Observable<BibliotecaResponse> {
     const request: BibliotecaRequest = {
       caso: 'ConsultaSinDocumento',
       iDBiblioteca: id
     };
 
-    return this.http.post<BibliotecaResponse>(this.apiUrl, request);
+    return this.http.post<BibliotecaResponse>(environment.apiBaseUrl + this.apiUrl, request);
   }
 
   /**
@@ -50,7 +46,7 @@ export class BibliotecaService {
       idBiblioteca: id
     };
 
-    return this.http.post<BibliotecaResponse>(this.apiUrl, request);
+    return this.http.post<BibliotecaResponse>(environment.apiBaseUrl + this.apiUrl, request);
   }
 
   // Additional methods for CRUD operations can be added here

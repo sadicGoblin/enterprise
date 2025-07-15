@@ -22,6 +22,7 @@ import { IncidentValidationComponent } from './components/incident-validation/in
 import { ProxyService } from '../../../../core/services/proxy.service';
 import { ConfirmDialogComponent } from '../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-incident-report-modal',
@@ -382,7 +383,7 @@ export class IncidentReportModalComponent implements OnInit {
       dialogRef.afterClosed().subscribe((result) => {
         if (result) {
           this.proxyService
-          .post('/ws/ReporteIncidenteSvcImpl.php', requestData)
+          .post(environment.apiBaseUrl + '/ws/ReporteIncidenteSvcImpl.php', requestData)
           .subscribe({
             next: (response) => {
               this.isSaving = false;

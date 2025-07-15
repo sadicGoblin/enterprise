@@ -10,6 +10,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { ProxyService } from '../../../../../../core/services/proxy.service';
+import { environment } from '../../../../../../../environments/environment';
 
 /**
  * Interfaz para las opciones de selección
@@ -350,7 +351,7 @@ export class IncidentOriginSelectionComponent implements OnInit {
     const requestBody = this.categoryConfig[category].requestBody;
     
     // Llamar a la API
-    this.proxyService.post(this.apiEndpoint, requestBody).subscribe({
+    this.proxyService.post(environment.apiBaseUrl + this.apiEndpoint, requestBody).subscribe({
       next: (response: any) => {
         if (response.code === 200 && response.data) {
           // Mapear la respuesta de la API al formato que necesitamos

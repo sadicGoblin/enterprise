@@ -22,6 +22,7 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { CustomSelectComponent, ParameterType } from '../../../../shared/controls/custom-select/custom-select.component';
 import { ProxyService } from '../../../../core/services/proxy.service';
 import { Observable, catchError, finalize, of, map, throwError, forkJoin } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
 
 interface InspectionItem {
   id?: number;
@@ -144,7 +145,7 @@ export class InspectionModalComponent implements OnInit {
     };
 
     // Realizar la llamada a la API usando el método post
-    return this.proxyService.post<{success: boolean, data: any[]}>('/ws/SubParametrosSvcImpl.php', requestBody)
+    return this.proxyService.post<{success: boolean, data: any[]}>(environment.apiBaseUrl + '/ws/SubParametrosSvcImpl.php', requestBody)
       .pipe(
         map((response: {success: boolean, data: any[]}) => {
           if (response && response.success && response.data) {
@@ -204,7 +205,7 @@ export class InspectionModalComponent implements OnInit {
     console.log(`URL completa: /ws/UsuarioSvcImpl.php`);
     
     // Realizar la llamada a la API
-    return this.proxyService.post<{success: boolean, data: Array<{IdUsuario: string, nombre: string}>}>('/ws/UsuarioSvcImpl.php', requestBody)
+    return this.proxyService.post<{success: boolean, data: Array<{IdUsuario: string, nombre: string}>}>(environment.apiBaseUrl + '/ws/UsuarioSvcImpl.php', requestBody)
       .pipe(
         map((response: {success: boolean, data: Array<{IdUsuario: string, nombre: string}>}) => {
           console.log('Respuesta de ConsultaUsuariosObra:', response);
@@ -358,7 +359,7 @@ export class InspectionModalComponent implements OnInit {
     
     console.log('Enviando request a ActividadSvcImpl.php:', requestBody);
     
-    this.proxyService.post<InspeccionSSOMAResponse>('/ws/ActividadSvcImpl.php', requestBody)
+    this.proxyService.post<InspeccionSSOMAResponse>(environment.apiBaseUrl + '/ws/ActividadSvcImpl.php', requestBody)
       .pipe(
         catchError(error => {
           console.error('Error al cargar datos de inspección SSOMA:', error);

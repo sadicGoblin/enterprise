@@ -5,6 +5,7 @@ import {
   UsuarioRequest, 
   UsuarioResponse 
 } from '../models/usuario.model';
+import { environment } from '../../../../../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,6 @@ export class UsuarioService {
       usuario: null
     };
 
-    return this.proxyService.post<UsuarioResponse>(this.API_ENDPOINT, requestBody);
+    return this.proxyService.post<UsuarioResponse>(environment.apiBaseUrl + this.API_ENDPOINT, requestBody);
   }
 }

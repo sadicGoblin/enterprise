@@ -6,6 +6,7 @@ import {
   TrabajoAlturaResponse,
   ElementoInspeccion
 } from '../models/trabajo-altura.model';
+import { environment } from '../../../../../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -38,7 +39,7 @@ export class TrabajoAlturaService {
       idInspeccionadoPor: 0
     };
 
-    return this.proxyService.post<TrabajoAlturaResponse>(this.API_ENDPOINT, requestBody);
+    return this.proxyService.post<TrabajoAlturaResponse>(environment.apiBaseUrl + this.API_ENDPOINT, requestBody);
   }
   
   /**
@@ -74,7 +75,7 @@ export class TrabajoAlturaService {
       na: elementoInspeccion.na
     };
 
-    return this.proxyService.post<TrabajoAlturaResponse>(this.API_ENDPOINT, payload);
+    return this.proxyService.post<TrabajoAlturaResponse>(environment.apiBaseUrl + this.API_ENDPOINT, payload);
   }
   
   /**
@@ -107,6 +108,6 @@ export class TrabajoAlturaService {
       elementos: elementos
     };
 
-    return this.proxyService.post<TrabajoAlturaResponse>(this.API_ENDPOINT, payload);
+    return this.proxyService.post<TrabajoAlturaResponse>(environment.apiBaseUrl + this.API_ENDPOINT, payload);
   }
 }

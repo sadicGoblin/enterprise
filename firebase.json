@@ -8,6 +8,10 @@
     ],
     "rewrites": [
       {
+        "source": "/ws/**",
+        "destination": "https://inarco-ssoma.favric.cl/ws/**"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }

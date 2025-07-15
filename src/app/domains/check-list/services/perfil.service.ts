@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ProxyService } from '../../../core/services/proxy.service';
+import { environment } from '../../../../environments/environment';
 
 export interface PerfilPantallaRequest {
   caso: string;
@@ -67,7 +68,7 @@ export class PerfilService {
     console.log(`[PerfilService] Request data:`, JSON.stringify(requestData));
     console.log(`[PerfilService] CRITICAL: IdPerfil being sent to API:`, requestData.IdPerfil);
     
-    return this.proxyService.post<PerfilPantallaResponse>(this.apiEndpoint, requestData)
+    return this.proxyService.post<PerfilPantallaResponse>(environment.apiBaseUrl + this.apiEndpoint, requestData)
       .pipe(
         map(response => {
           console.log('[PerfilService] API response:', response);
@@ -146,7 +147,7 @@ export class PerfilService {
     
     console.log(`PerfilService: Updating screen permission:`, requestData);
     
-    return this.proxyService.post<PerfilPantallaResponse>(this.apiEndpoint, requestData)
+    return this.proxyService.post<PerfilPantallaResponse>(environment.apiBaseUrl + this.apiEndpoint, requestData)
       .pipe(
         map(response => {
           console.log('PerfilService: Update response:', response);

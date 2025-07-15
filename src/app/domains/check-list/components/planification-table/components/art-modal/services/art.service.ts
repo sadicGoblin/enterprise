@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { ProxyService } from '../../../../../../../core/services/proxy.service';
+import { environment } from '../../../../../../../../environments/environment';
 
 export interface ArtResponse {
   success: boolean;
@@ -21,6 +22,6 @@ export class ArtService {
    * @returns Observable con la respuesta de la API
    */
   saveArt(artData: any): Observable<ArtResponse> {
-    return this.proxyService.post<ArtResponse>('/ws/ARTSvcImpl.php', artData);
+    return this.proxyService.post<ArtResponse>(environment.apiBaseUrl + '/ws/ARTSvcImpl.php', artData);
   }
 }

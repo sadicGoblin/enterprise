@@ -9,6 +9,7 @@ import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
 import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { ProxyService } from '../../../../../core/services/proxy.service';
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-change-passwords',
@@ -116,7 +117,7 @@ export class ChangePasswordsComponent {
     };
     
     // Call API to change password
-    this.proxyService.post('/ws/UsuarioSvcImpl.php', requestBody).subscribe({
+    this.proxyService.post(environment.apiBaseUrl + '/ws/UsuarioSvcImpl.php', requestBody).subscribe({
       next: (response: any) => {
         this.loading = false;
         if (response) {
