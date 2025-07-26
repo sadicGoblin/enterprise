@@ -804,8 +804,10 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   
     // Group activities by both ID and SubProceso to keep subprocesses distinct
     const activitiesMap = new Map<string, Activity>();
+
+    const filteredData = apiData.filter(item => item.dias && item.dias !== '');
   
-    apiData.forEach(item => {
+    filteredData.forEach(item => {
       const activityId = item.IdActividad;
       const subProceso = item.SubProceso || 'SIN SUBPROCESO';
       
