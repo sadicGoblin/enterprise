@@ -65,7 +65,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     this._days = data;
   }
   get days(): number[] {
-    console.log('Planification Table days:', this._days);
+    //console.log('Planification Table days:', this._days);
     return this._days;
   }
 
