@@ -252,11 +252,11 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
     
     // Obtener los parámetros necesarios de los datos pasados al modal
     const idControl = this.data?.idControl || 0;
-    const dia = this.data?.dia || 0;
+    const dia = this.data?.day || 0;
     
-    // Cuerpo de solicitud para la API de ConsultaDetalle
-    const consultaDetalleBody = {
-      "caso": "ConsultaDetalle",
+    // Primero: Consultar el idTrabajoAltura usando el endpoint con caso "Consulta"
+    const consultaTrabajoAlturaBody = {
+      "caso": "Consulta",
       "idTrabajoAltura": 0,
       "idControl": idControl,
       "dia": dia,
@@ -269,15 +269,71 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
       "idRevisadoPorCargo": 0,
       "RevisadoPorFecha": "0001-01-01T00:00:00",
       "observaciones": null,
+      "idSubParametro": 0,
+      "idInspeccionadoPor": 0
+    };
+    
+    console.log('Consultando idTrabajoAltura:', consultaTrabajoAlturaBody);
+    
+    // Realizar la consulta para obtener el idTrabajoAltura
+    this.proxyService.post<any>(environment.apiBaseUrl + '/ws/TrabajoAlturaSvcImpl.php', consultaTrabajoAlturaBody)
+      .pipe(
+        catchError(error => {
+          console.error('Error al consultar idTrabajoAltura:', error);
+          this.errorLoading = 'Error al cargar los datos. Intente nuevamente.';
+          this.isLoading = false;
+          return of(null);
+        })
+      )
+      .subscribe(trabajoAlturaResponse => {
+        console.log('Respuesta Consulta TrabajoAltura:', trabajoAlturaResponse);
+        
+        // Si tenemos una respuesta exitosa y hay datos
+        if (trabajoAlturaResponse && trabajoAlturaResponse.success && trabajoAlturaResponse.data && trabajoAlturaResponse.data.length > 0) {
+          // Guardar el idTrabajoAltura en los datos del componente
+          const idTrabajoAltura = trabajoAlturaResponse.data[0].idTrabajoAltura;
+          console.log('idTrabajoAltura obtenido:', idTrabajoAltura);
+          
+          // Actualizar los datos del componente con el idTrabajoAltura
+          if (this.data) {
+            this.data.idTrabajoAltura = idTrabajoAltura;
+          } else {
+            this.data = { idTrabajoAltura };
+          }
+          
+          // Ahora procedemos a cargar los elementos del checklist
+          this.loadCheckListElements(idControl, dia);
+        } else {
+          console.error('No se pudo obtener idTrabajoAltura:', trabajoAlturaResponse);
+          this.errorLoading = 'No se pudo obtener la información del trabajo en altura.';
+          this.isLoading = false;
+        }
+      });
+  }
+
+  // Método separado para cargar los elementos del checklist una vez tenemos el idTrabajoAltura
+  private loadCheckListElements(idControl: number | string, dia: number | string): void {
+    // Cuerpo de solicitud para la API de ConsultaDetalle
+    const consultaDetalleBody = {
+      "caso": "ConsultaDetalle",
+      "idTrabajoAltura": this.data?.idTrabajoAltura || 0,
+      "idControl": idControl,
+      "dia": dia,
+      "idArea": 0,
+      "fecha": "0001-01-01T00:00:00",
+      "idRealizadoPor": 0,
+      "idRealizadoPorCargo": 0,
+      "RealizadoPorfecha": "0001-01-01T00:00:00",
+      "idRevisadoPor": 0,
+      "idRevisadoPorCargo": 0,
+      "RevisadoPorFecha": "0001-01-01T00:00:00",
+      "observaciones": null,
       "idSubParametro": this.data?.idParam ? Number(this.data.idParam) : 0,
-      // Depuración de idParam
-      // "idSubParametroRaw": this.data?.idParam || 'no-idParam',
       "idInspeccionadoPor": 0
     };
     
     console.log('Consultando elementos a inspeccionar:', consultaDetalleBody);
     
-    // Primer paso: cargar los elementos a inspeccionar
     this.proxyService.post<ConsultaDetalleResponse>(environment.apiBaseUrl + '/ws/TrabajoAlturaSvcImpl.php', consultaDetalleBody)
       .pipe(
         catchError(error => {
@@ -307,11 +363,9 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
           // Cargar los items en el formulario pasando los items creados
           this.loadCheckListItems(checklistItems);
           
-          // Segundo paso: cargar los valores de los checks (si/no/na) para cada elemento
-          // Pasamos el id de trabajo en altura que viene de los datos del modal
-          // this.loadCheckValues(this.data?.idTrabajoAltura || '');
-          this.loadCheckValues("11118");
-
+          // Cargar los valores de los checks (si/no/na) para cada elemento usando el idTrabajoAltura obtenido
+          this.loadCheckValues(this.data?.idTrabajoAltura || '');
+          
         } else {
           this.errorLoading = 'No se pudieron cargar los elementos a inspeccionar';
           this.isLoading = false;
@@ -449,140 +503,6 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
   // Acciones de los botones
   onCancel(): void {
     this.dialogRef.close(null);
-  }
-
-  /**
-   * Genera un PDF con los datos del checklist
-   */
-  saveAsPDF(): void {
-    // Crear el contenido HTML para el PDF
-    const reportTitle = 'CHECK LIST BODEGA DE GASES';
-    const projectName = this.data.projectName || 'Proyecto';
-    const currentDate = new Date().toLocaleDateString('es-CL');
-    
-    // Obtener los datos del formulario
-    const formData = this.checkListForm.value;
-    const inspectionDate = formData.inspectionDate2 ? new Date(formData.inspectionDate2).toLocaleDateString('es-CL') : 'No disponible';
-    const inspectionTime = formData.inspectionTime || '';
-    const inspectedBy = this.inspectionByControl.value || 'No especificado';
-    const reviewDate = formData.reviewDate ? new Date(formData.reviewDate).toLocaleDateString('es-CL') : 'No disponible';
-    const reviewTime = formData.reviewTime || '';
-    const reviewedBy = this.reviewedByControl.value || 'No especificado';
-    const observations = formData.observations || 'No hay observaciones';
-    
-    // Crear el contenido HTML para el PDF
-    let reportHtml = `
-      <div class="pdf-container" style="font-family: Arial, sans-serif; padding: 20px;">
-        <div class="pdf-header" style="text-align: center; margin-bottom: 20px;">
-          <h1 style="margin: 0; color: #0066cc; font-size: 20px;">ZONAS COMUNES :: ${reportTitle}</h1>
-          <p style="margin: 5px 0;">Proyecto: ${projectName}</p>
-          <p style="margin: 5px 0;">Fecha de emisión: ${currentDate}</p>
-        </div>
-
-        <div class="pdf-info" style="margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; border-radius: 4px;">
-          <table style="width: 100%; border-collapse: collapse;">
-            <tr>
-              <td style="padding: 5px; width: 50%;"><strong>Fecha inspección:</strong> ${inspectionDate}</td>
-              <td style="padding: 5px;"><strong>Hora:</strong> ${inspectionTime}</td>
-            </tr>
-            <tr>
-              <td style="padding: 5px;"><strong>Inspeccionado por:</strong> ${inspectedBy}</td>
-              <td style="padding: 5px;"><strong>Revisado por:</strong> ${reviewedBy}</td>
-            </tr>
-            <tr>
-              <td style="padding: 5px;"><strong>Fecha revisión:</strong> ${reviewDate}</td>
-              <td style="padding: 5px;"><strong>Hora revisión:</strong> ${reviewTime}</td>
-            </tr>
-          </table>
-        </div>
-    `;
-    
-    // Añadir tabla de items de checklist si hay datos
-    if (this.checkItemsControls.length > 0) {
-      reportHtml += `
-        <div class="pdf-items" style="margin-bottom: 20px;">
-          <h3 style="margin-top: 0; color: #333; font-size: 16px;">Elementos inspeccionados</h3>
-          <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
-            <thead>
-              <tr style="background-color: #f2f2f2;">
-                <th style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">Elemento a inspeccionar</th>
-                <th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">Si</th>
-                <th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">No</th>
-                <th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">N.A.</th>
-                <th style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">Fecha</th>
-              </tr>
-            </thead>
-            <tbody>
-      `;
-      
-      // Agregar filas de datos
-      this.checkItemsControls.forEach((item, index) => {
-        const itemValue = item.value;
-        reportHtml += `
-          <tr style="${index % 2 === 0 ? 'background-color: #f9f9f9;' : ''}">
-            <td style="padding: 8px; text-align: left; border-bottom: 1px solid #ddd;">${itemValue.description || 'No disponible'}</td>
-            <td style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">${itemValue.yes ? '✓' : ''}</td>
-            <td style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">${itemValue.no ? '✓' : ''}</td>
-            <td style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">${itemValue.na ? '✓' : ''}</td>
-            <td style="padding: 8px; text-align: center; border-bottom: 1px solid #ddd;">${itemValue.date || 'No disponible'}</td>
-          </tr>
-        `;
-      });
-      
-      reportHtml += `
-            </tbody>
-          </table>
-        </div>
-      `;
-    }
-    
-    // Añadir observaciones
-    reportHtml += `
-      <div class="pdf-observations" style="margin-bottom: 20px;">
-        <h3 style="margin-top: 0; color: #333; font-size: 16px;">Observaciones</h3>
-        <div style="border: 1px solid #ddd; padding: 10px; border-radius: 4px; background-color: #f9f9f9;">
-          ${observations}
-        </div>
-      </div>
-    `;
-    
-    // Cerrar el contenedor principal
-    reportHtml += `
-      <div class="pdf-footer" style="margin-top: 30px; text-align: center; font-size: 12px; color: #666;">
-        <p>Este documento fue generado automáticamente por el sistema.</p>
-        <p>© ${new Date().getFullYear()} SSTMA - Todos los derechos reservados.</p>
-      </div>
-    </div>`;
-    
-    // Crear un elemento temporal para generar el PDF
-    const printWindow = window.open('', '_blank');
-    printWindow?.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Check List - Bodega de Gases</title>
-        <style>
-          @media print {
-            body { font-family: Arial, sans-serif; }
-            @page { size: A4; margin: 2cm; }
-          }
-        </style>
-      </head>
-      <body>
-        ${reportHtml}
-        <script>
-          window.onload = function() {
-            setTimeout(function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            }, 500);
-          }
-        </script>
-      </body>
-      </html>
-    `);
-    
-    printWindow?.document.close();
   }
 
   onSave(): void {
