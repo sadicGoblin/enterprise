@@ -13,12 +13,15 @@
         <div class="form-group inspector">
           <div class="label-field">Inspeccionada Por</div>
           <app-custom-select
+            #inspectionBySelect
             [formControl]="inspectionByControl"
+            [parameterType]="collaboratorParameterType"
             [loadFromApi]="true"
-            [customApiEndpoint]="'/ws/UsuarioSvcImpl.php'"
-            [customApiRequestBody]="usuariosObraRequestBody"
-            [customOptionValueKey]="'idUsuario'"
-            [customOptionLabelKey]="'nombre'"
+            [customApiEndpoint]="collaboratorApiConfig.endpoint"
+            [customApiRequestBody]="collaboratorApiConfig.requestBody"
+            [customOptionValueKey]="collaboratorApiConfig.valueKey"
+            [customOptionLabelKey]="collaboratorApiConfig.labelKey"
+            (optionsLoaded)="onInspectionOptionsLoaded($event)"
             appearance="outline"
             class="select-field"
           ></app-custom-select>
@@ -42,12 +45,15 @@
         <div class="form-group reviewer">
           <div class="label-field">Revisado Por</div>
           <app-custom-select
+            #reviewedBySelect
             [formControl]="reviewedByControl"
+            [parameterType]="collaboratorParameterType"
             [loadFromApi]="true"
-            [customApiEndpoint]="'/ws/UsuarioSvcImpl.php'"
-            [customApiRequestBody]="usuariosObraRequestBody"
-            [customOptionValueKey]="'idUsuario'"
-            [customOptionLabelKey]="'nombre'"
+            [customApiEndpoint]="collaboratorApiConfig.endpoint"
+            [customApiRequestBody]="collaboratorApiConfig.requestBody"
+            [customOptionValueKey]="collaboratorApiConfig.valueKey"
+            [customOptionLabelKey]="collaboratorApiConfig.labelKey"
+            (optionsLoaded)="onReviewOptionsLoaded($event)"
             appearance="outline"
             class="select-field"
           ></app-custom-select>

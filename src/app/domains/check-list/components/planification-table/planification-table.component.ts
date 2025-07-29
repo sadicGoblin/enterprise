@@ -83,6 +83,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
 
   @Input() projectId: string | null = null;
   @Input() selectedCollaboratorName: string | null = null;
+  @Input() selectedCollaboratorId: string | null = null;
 
   private _activities: Activity[] = [];
   private _days: number[] = [];
@@ -535,7 +536,19 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
         day: day,
         checklistData: null,
         idParam: idParam,
-        name: selectedActivity?.name || 'Check List'
+        name: selectedActivity?.name || 'Check List',
+        selectedCollaboratorId: this.selectedCollaboratorId,
+        selectedCollaboratorName: this.selectedCollaboratorName,
+        collaboratorApiConfig: {
+          endpoint: '/ws/UsuarioSvcImpl.php',
+          requestBody: {
+            caso: 'ConsultaUsuariosObra',
+            idObra: this.projectId ? parseInt(this.projectId) : 1,
+            idUsuario: 0
+          },
+          valueKey: 'IdUsuario',
+          labelKey: 'nombre'
+        }
       }
     });
     

@@ -17,7 +17,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { CustomSelectComponent } from '../../../../../../shared/controls/custom-select/custom-select.component';
+import { CustomSelectComponent, ParameterType } from '../../../../../../shared/controls/custom-select/custom-select.component';
 import { ProxyService } from '../../../../../../core/services/proxy.service';
 import { Observable, catchError, finalize, of } from 'rxjs';
 import { environment } from '../../../../../../../environments/environment';
@@ -121,15 +121,27 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
   errorLoading = '';
   isReviewed = false; // Propiedad para controlar si el checklist ha sido revisado
   name = '';
+  defaultCollaboratorId: string | null = null;
+  defaultCollaboratorName: string | null = null;
+  collaboratorParameterType = ParameterType.CUSTOM_API;
 
-  @ViewChild(CustomSelectComponent) reviewedBySelect!: CustomSelectComponent;
+  @ViewChild('reviewedBySelect') reviewedBySelect!: CustomSelectComponent;
+  @ViewChild('inspectionBySelect') inspectionBySelect!: CustomSelectComponent;
 
-  // Objeto de solicitud para cargar usuarios por obra
-  usuariosObraRequestBody = {
-    caso: 'ConsultaUsuariosObra',
-    idObra: 1, // ID predeterminado, actualizar según sea necesario
-    idUsuario: 0
+  // Configuración de API para usuarios (se actualizará con datos del modal)
+  collaboratorApiConfig: any = {
+    endpoint: '/ws/UsuarioSvcImpl.php',
+    requestBody: {
+      caso: 'ConsultaUsuariosObra',
+      idObra: 1,
+      idUsuario: 0
+    },
+    valueKey: 'IdUsuario',
+    labelKey: 'nombre'
   };
+  
+  // Mantengo el objeto original para compatibilidad
+  usuariosObraRequestBody = this.collaboratorApiConfig.requestBody;
   
   constructor(
     private fb: FormBuilder,
@@ -156,6 +168,24 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
     
     // Configurar el formato de fecha en español
     this.dateAdapter.setLocale('es');
+    
+    // Actualizar la configuración de API con los datos pasados desde el modal
+    if (this.data?.collaboratorApiConfig) {
+      this.collaboratorApiConfig = this.data.collaboratorApiConfig;
+      this.usuariosObraRequestBody = this.collaboratorApiConfig.requestBody;
+      console.log('Configuración de colaboradores actualizada:', this.collaboratorApiConfig);
+    } else if (this.data?.projectId) {
+      // Fallback: actualizar solo el ID del proyecto
+      this.usuariosObraRequestBody.idObra = parseInt(this.data.projectId);
+      console.log('ID de obra actualizado en usuariosObraRequestBody:', this.usuariosObraRequestBody.idObra);
+    }
+    
+    // Almacenar el ID del colaborador para establecerlo después de que se carguen las opciones
+    if (this.data?.selectedCollaboratorId) {
+      this.defaultCollaboratorId = this.data.selectedCollaboratorId;
+      this.defaultCollaboratorName = this.data.selectedCollaboratorName;
+      console.log('Colaborador por defecto almacenado para configuración posterior:', this.data.selectedCollaboratorName, 'ID:', this.data.selectedCollaboratorId);
+    }
     
     // Inicializar elementos del check list
     this.loadDefaultData();
@@ -498,6 +528,37 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
     this.inspectionByControl.valueChanges.subscribe(value => {
       this.checkListForm.get('inspectedBy')?.setValue(value);
     });
+  }
+  
+  // Métodos para manejar la carga de opciones de usuarios
+  onInspectionOptionsLoaded(options: any[]): void {
+    console.log('Opciones de inspección cargadas:', options);
+    if (this.defaultCollaboratorId && options.length > 0) {
+      // Buscar si el colaborador por defecto existe en las opciones
+      const defaultOption = options.find(option => option.value === this.defaultCollaboratorId);
+      if (defaultOption) {
+        console.log('Estableciendo colaborador por defecto para inspección:', defaultOption.label);
+        this.inspectionByControl.setValue(this.defaultCollaboratorId);
+      } else {
+        console.log('Colaborador por defecto no encontrado en opciones de inspección, ID:', this.defaultCollaboratorId);
+        console.log('Opciones disponibles:', options.map(o => ({ id: o.value, name: o.label })));
+      }
+    }
+  }
+  
+  onReviewOptionsLoaded(options: any[]): void {
+    console.log('Opciones de revisión cargadas:', options);
+    if (this.defaultCollaboratorId && options.length > 0) {
+      // Buscar si el colaborador por defecto existe en las opciones
+      const defaultOption = options.find(option => option.value === this.defaultCollaboratorId);
+      if (defaultOption) {
+        console.log('Estableciendo colaborador por defecto para revisión:', defaultOption.label);
+        this.reviewedByControl.setValue(this.defaultCollaboratorId);
+      } else {
+        console.log('Colaborador por defecto no encontrado en opciones de revisión, ID:', this.defaultCollaboratorId);
+        console.log('Opciones disponibles:', options.map(o => ({ id: o.value, name: o.label })));
+      }
+    }
   }
   
   // Método auxiliar para formatear fechas consistentemente
