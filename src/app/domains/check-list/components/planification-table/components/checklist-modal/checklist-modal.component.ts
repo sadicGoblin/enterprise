@@ -120,7 +120,8 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
   isLoading = false;
   errorLoading = '';
   isReviewed = false; // Propiedad para controlar si el checklist ha sido revisado
-  
+  name = '';
+
   @ViewChild(CustomSelectComponent) reviewedBySelect!: CustomSelectComponent;
 
   // Objeto de solicitud para cargar usuarios por obra
@@ -139,7 +140,7 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
   ) {
     // Inicializar el formulario
     const defaultDate = this.formatDate(new Date('2025-04-22')); // Formatear como string YYYY-MM-DD
-
+    this.name = this.data?.name || '';
     this.checkListForm = this.fb.group({
       inspectedBy: [defaultDate, Validators.required],
       inspectionDate: [defaultDate, Validators.required], // Usar string ya formateado
@@ -287,11 +288,11 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
       )
       .subscribe(trabajoAlturaResponse => {
         console.log('Respuesta Consulta TrabajoAltura:', trabajoAlturaResponse);
-        
         // Si tenemos una respuesta exitosa y hay datos
         if (trabajoAlturaResponse && trabajoAlturaResponse.success && trabajoAlturaResponse.data && trabajoAlturaResponse.data.length > 0) {
           // Guardar el idTrabajoAltura en los datos del componente
-          const idTrabajoAltura = trabajoAlturaResponse.data[0].idTrabajoAltura;
+          const responseData = trabajoAlturaResponse.data[0];
+          const idTrabajoAltura = responseData.idTrabajoAltura;
           console.log('idTrabajoAltura obtenido:', idTrabajoAltura);
           
           // Actualizar los datos del componente con el idTrabajoAltura
@@ -299,6 +300,30 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
             this.data.idTrabajoAltura = idTrabajoAltura;
           } else {
             this.data = { idTrabajoAltura };
+          }
+          
+          // Extraer las fechas de la respuesta API
+          const inspectionDate = responseData.fecha;
+          const reviewDate = responseData.RevisadoPorFecha;
+          
+          console.log('Fechas obtenidas - Inspección:', inspectionDate, 'Revisión:', reviewDate);
+          
+          // Actualizar los campos de fecha en el formulario
+          if (inspectionDate && inspectionDate !== '0001-01-01') {
+            // Convertir string a objeto Date para el datepicker
+            const inspDate = new Date(inspectionDate);
+            this.checkListForm.get('inspectionDate2')?.setValue(inspDate);
+            console.log('Fecha de inspección establecida:', inspDate);
+          }
+          
+          if (reviewDate && reviewDate !== '0001-01-01') {
+            // Convertir string a objeto Date para el datepicker
+            const revDate = new Date(reviewDate);
+            this.checkListForm.get('reviewDate')?.setValue(revDate);
+            console.log('Fecha de revisión establecida:', revDate);
+            
+            // Si hay fecha de revisión, marcar como revisado
+            this.isReviewed = true;
           }
           
           // Ahora procedemos a cargar los elementos del checklist

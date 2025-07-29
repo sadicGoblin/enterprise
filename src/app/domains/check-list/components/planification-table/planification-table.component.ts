@@ -534,7 +534,8 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
         idControl: idControl,
         day: day,
         checklistData: null,
-        idParam: idParam
+        idParam: idParam,
+        name: selectedActivity?.name || 'Check List'
       }
     });
     

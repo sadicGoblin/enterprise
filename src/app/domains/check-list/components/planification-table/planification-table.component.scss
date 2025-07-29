@@ -79,9 +79,7 @@
     left: 0 !important;
     background-color: white !important;
     z-index: 1000 !important;
-    width: 225px !important; /* Valor absoluto para evitar cálculos */
-    min-width: 225px !important;
-    max-width: 225px !important;
+    width: auto !important; 
     box-shadow: 6px 0 10px -4px rgba(0,0,0,0.2) !important;
     border-right: 2px solid #ccc !important;
   }
@@ -244,8 +242,6 @@
     color: #444;
     padding: 8px 16px;
     text-align: left;
-    display: flex;
-    align-items: center;
     white-space: nowrap;
   }
   
