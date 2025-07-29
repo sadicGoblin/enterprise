@@ -28,14 +28,15 @@ import { of } from 'rxjs';
 export interface Activity extends PlanificationActivity {
   id: number;
   name: string;
-  periodicity: string;
-  assigned: number;
+  periodicity?: string;
+  assigned?: number;
   realized: number;
   compliance: number;
-  scheduledDays: number[];
+  scheduledDays?: number[];
   completedDays?: number[];
-  dailyChecks?: boolean[]; // For backward compatibility
+  dailyChecks: boolean[]; // Required for compatibility
   idControl?: string;
+  ambit?: string; // Use ambit instead of ambito
 }
 
 @Component({
@@ -625,13 +626,18 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
    */
   toggleScheduledDay(activity: Activity, day: number, checked: boolean): void {
     console.log('Toggling scheduled day:', day, 'Checked:', checked);
+    // Inicializar scheduledDays si no existe
+    if (!activity.scheduledDays) {
+      activity.scheduledDays = [];
+    }
+    
     if (checked) {
-      if (!activity.scheduledDays.includes(day)) {
-        activity.scheduledDays.push(day);
-        activity.scheduledDays.sort((a, b) => a - b);
+      if (!activity.scheduledDays!.includes(day)) {
+        activity.scheduledDays!.push(day);
+        activity.scheduledDays!.sort((a, b) => a - b);
       }
     } else {
-      activity.scheduledDays = activity.scheduledDays.filter(d => d !== day);
+      activity.scheduledDays = activity.scheduledDays!.filter(d => d !== day);
     }
     
     // Update dailyChecks for backward compatibility
@@ -652,19 +658,24 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
       activity.completedDays = [];
     }
     
+    // Initialize scheduledDays array if it doesn't exist
+    if (!activity.scheduledDays) {
+      activity.scheduledDays = [];
+    }
+    
     // Check current status and cycle to next status
-    if (!activity.scheduledDays.includes(day)) {
+    if (!activity.scheduledDays!.includes(day)) {
       // Not scheduled -> Scheduled (not completed)
-      activity.scheduledDays.push(day);
-      activity.scheduledDays.sort((a, b) => a - b);
-    } else if (activity.scheduledDays.includes(day) && !activity.completedDays.includes(day)) {
+      activity.scheduledDays!.push(day);
+      activity.scheduledDays!.sort((a, b) => a - b);
+    } else if (activity.scheduledDays!.includes(day) && !activity.completedDays!.includes(day)) {
       // Scheduled (not completed) -> Completed
-      activity.completedDays.push(day);
-      activity.completedDays.sort((a, b) => a - b);
+      activity.completedDays!.push(day);
+      activity.completedDays!.sort((a, b) => a - b);
     } else {
       // Completed -> Not scheduled
-      activity.scheduledDays = activity.scheduledDays.filter(d => d !== day);
-      activity.completedDays = activity.completedDays.filter(d => d !== day);
+      activity.scheduledDays = activity.scheduledDays!.filter(d => d !== day);
+      activity.completedDays = activity.completedDays!.filter(d => d !== day);
     }
     
     // Update realized and compliance metrics
@@ -676,28 +687,16 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
    */
   updateActivityMetrics(activity: Activity): void {
     console.log("id controol ", activity);
+    
+    // Initialize scheduledDays array if it doesn't exist
+    if (!activity.scheduledDays) {
+      activity.scheduledDays = [];
+    }
+    
     activity.assigned = activity.scheduledDays.length;
     activity.realized = activity.completedDays?.length || 0;
     activity.compliance = activity.assigned > 0 ? Math.round((activity.realized / activity.assigned) * 100) : 0;
     activity.idControl = activity.idControl || '';
-  }
-  
-  /**
-   * Save changes for a specific activity
-   */
-  saveActivityChanges(activity: Activity): void {
-    // In a real app, this would save to backend
-    console.log('Saved changes for activity:', activity);
-    
-    // Update compliance metrics
-    this.updateCompliance(activity);
-    
-    // Toast notification
-    this.toastMessage = 'Cambios guardados correctamente';
-    this.showToast = true;
-    setTimeout(() => {
-      this.showToast = false;
-    }, 3000);
   }
   
   /**
@@ -709,7 +708,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     
     // Update compliance for all activities
     this.activities.forEach(activity => {
-      this.updateCompliance(activity);
+      this.updateActivityMetrics(activity);
     });
     
     // Toast notification
@@ -728,25 +727,8 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     this.cycleActivityStatus(event.activity, event.day);
   }
   
-  /**
-   * Update compliance metrics for an activity
-   * @param activity The activity to update compliance for
-   */
-  updateCompliance(activity: Activity): void {
-    const totalScheduled = activity.scheduledDays.length;
-    const realized = activity.completedDays?.length || 0;
-    activity.realized = realized;
-    
-    // Calculate compliance percentage
-    activity.compliance = totalScheduled > 0 ? Math.round((realized / totalScheduled) * 100) : 0;
-  }
-  
-  /**
-   * Abre el modal de inspección SSTMA
-   * @param activityId ID opcional de la actividad seleccionada
-   */
-  openInspectionModal(activityId?: number): void {
-    const dialogRef = this.dialog.open(InspectionModalComponent, {
+  openInspectionModal(activityId?: number): void {  
+  const dialogRef = this.dialog.open(InspectionModalComponent, {
       width: '90vw',
       maxWidth: '1400px', // Aumentado a 1400px para mejor visualización
       disableClose: true,
@@ -823,14 +805,15 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
           id: Number(activityId),
           name: displayName, // Use the combined name format
           periodicity: item.Periocidad,
-          ambito: item.Ambito || 'SIN CLASIFICAR',
+          ambit: item.Ambito || 'SIN CLASIFICAR',
           scheduledDays: [],
           completedDays: [],
           assigned: 0,
           realized: 0,
           compliance: 0,
           dailyChecks: Array(31).fill(false), // Initialize dailyChecks array
-          idControl: item.IdControl || ''
+          idControl: item.IdControl || '',
+          idParam: item.idParam || ''
         };
         activitiesMap.set(uniqueKey, activity);
         console.log(`Created activity: ID=${uniqueKey}, Name="${displayName}", SubProceso="${subProceso}", Ambito="${item.Ambito}"`);
@@ -841,8 +824,8 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
 
       const scheduledDay = item.dias.split('-').map(Number);
       scheduledDay.forEach(day => {
-        if (!activity.scheduledDays.includes(day)) {
-          activity.scheduledDays.push(day);
+        if (!activity.scheduledDays?.includes(day)) {
+          activity.scheduledDays?.push(day);
           console.log(`Added day ${day} to activity "${activity.name}"`);
         }
       });
@@ -859,13 +842,13 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     console.log(`Extracted ${this.activities.length} unique activities from ${apiData.length} API data items`);
   
     // Get unique ámbitos for reporting
-    const uniqueAmbitos = new Set(this.activities.map(a => a.ambito));
+    const uniqueAmbitos = new Set(this.activities.map(a => a.ambit));
     console.log('Unique ámbitos found:', Array.from(uniqueAmbitos));
   
     // Process each activity
     this.activities.forEach(activity => {
       // Sort scheduled days numerically
-      activity.scheduledDays.sort((a, b) => a - b);
+      activity.scheduledDays?.sort((a, b) => a - b);
   
       // Update metrics
       this.updateActivityMetrics(activity);

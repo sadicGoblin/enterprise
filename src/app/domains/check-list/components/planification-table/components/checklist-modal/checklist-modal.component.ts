@@ -130,37 +130,6 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
     idUsuario: 0
   };
   
-  // Opciones para los selectores
-  userOptions: UserOption[] = [
-    { id: '1', name: 'FELIPE GALLARDO' },
-    { id: '2', name: 'GERMAN MEDINA' },
-    { id: '3', name: 'JUAN PÉREZ' },
-  ];
-  
-  positionOptions: string[] = [
-    'Jefe de Obra',
-    'Supervisor de Seguridad',
-    'Inspector de Calidad',
-    'Encargado de Bodega',
-    'Prevencionista',
-    'Ingeniero Residente'
-  ];
-
-  // Datos de muestra para los elementos del check list
-  defaultCheckItems: CheckListItem[] = [
-    { id: 1, description: '¿Los gases comprimidos se almacenan en una bodega exclusiva?', yes: true, no: false, na: false, date: '2023-09-15' },
-    { id: 2, description: '¿Los gases comprimidos se encuentran identificados de acuerdo a la norma?', yes: true, no: false, na: false, date: '2023-09-15' },
-    { id: 3, description: '¿La bodega de gases comprimidos se encuentra separada de las otras bodegas?', yes: false, no: false, na: true, date: '2023-09-15' },
-    { id: 4, description: '¿La bodega de gases comprimidos se encuentra señalizada?', yes: true, no: false, na: false, date: '2023-09-15' },
-    { id: 5, description: '¿La bodega de gases comprimidos, está construida de acuerdo al estándar?', yes: true, no: true, na: false, date: '2023-09-15' },
-    { id: 6, description: '¿Los gases comprimidos se encuentran almacenados en forma vertical?', yes: true, no: false, na: false, date: '2023-09-15' },
-    { id: 7, description: '¿Existe un encargado de la bodega?', yes: true, no: false, na: false, date: '2023-09-15' },
-    { id: 8, description: '¿Existe extintor en la bodega?', yes: true, no: false, na: false, date: '2023-09-15' },
-    { id: 9, description: '¿Existe un inventario de la bodega de gases comprimidos?', yes: true, no: false, na: false, date: '2023-09-15' },
-    { id: 10, description: '¿Los cilindros de gases comprimidos se encuentran en buen estado?', yes: true, no: false, na: false, date: '2023-09-15' },
-    { id: 11, description: 'SE ENCUENTRAN DISPONIBLES LAS HOJAS DE SEGURIDAD DE CADA UNO DE LOS CILINDROS DE GASES COMPRIMIDOS ALMACENADOS?', yes: true, no: false, na: false, date: '2023-09-15' }
-  ];
-
   constructor(
     private fb: FormBuilder,
     public dialogRef: MatDialogRef<CheckListModalComponent>,
@@ -200,6 +169,7 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
     
     // Mostrar los datos recibidos por el modal para depuración
     console.log('Datos recibidos por el modal:', this.data);
+    console.log('DEBUG IDPARAM - Valor específico recibido:', this.data?.idParam, 'Tipo:', typeof this.data?.idParam);
     
     // Cargar los elementos del checklist
     if (this.data?.idTrabajoAltura || this.data?.idControl) {
@@ -208,7 +178,7 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
     } else {
       console.warn('No se proporcionaron parámetros para cargar datos del checklist');
       // Si no hay parámetros, cargar elementos de muestra
-      this.loadCheckListItems(this.defaultCheckItems);
+      this.loadCheckListItems();
     }
   }
 
@@ -249,7 +219,7 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
   }
 
   // Cargar los elementos del checklist
-  loadCheckListItems(items: CheckListItem[]): void {
+  loadCheckListItems(items?: CheckListItem[]): void {
     const itemsArray = this.checkListForm.get('checkItems') as FormArray;
     
     // Limpiar elementos existentes
@@ -257,19 +227,22 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
       itemsArray.removeAt(0);
     }
     
-    // Agregar nuevos elementos
-    items.forEach(item => {
-      itemsArray.push(
-        this.fb.group({
+    // Si recibimos items, agregarlos al FormArray
+    if (items && items.length > 0) {
+      items.forEach(item => {
+        itemsArray.push(this.fb.group({
           id: [item.id],
-          description: [item.description, Validators.required],
+          description: [item.description],
           yes: [item.yes],
           no: [item.no],
           na: [item.na],
           date: [item.date]
-        })
-      );
-    });
+        }));
+      });
+      console.log(`Se agregaron ${items.length} elementos al formulario`);
+    } else {
+      console.warn('No se proporcionaron elementos para agregar al checklist');
+    }
   }
 
   // Cargar datos del checklist desde la API
@@ -296,7 +269,9 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
       "idRevisadoPorCargo": 0,
       "RevisadoPorFecha": "0001-01-01T00:00:00",
       "observaciones": null,
-      "idSubParametro": 100,
+      "idSubParametro": this.data?.idParam ? Number(this.data.idParam) : 0,
+      // Depuración de idParam
+      // "idSubParametroRaw": this.data?.idParam || 'no-idParam',
       "idInspeccionadoPor": 0
     };
     
@@ -329,7 +304,7 @@ export class CheckListModalComponent implements OnInit, AfterViewInit {
           
           console.log('Items de checklist creados:', checklistItems);
           
-          // Cargar los items en el formulario
+          // Cargar los items en el formulario pasando los items creados
           this.loadCheckListItems(checklistItems);
           
           // Segundo paso: cargar los valores de los checks (si/no/na) para cada elemento
