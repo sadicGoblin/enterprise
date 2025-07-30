@@ -28,6 +28,8 @@ import { of } from 'rxjs';
 export interface Activity extends PlanificationActivity {
   id: number;
   name: string;
+  subProcess?: string; // SubProceso separado
+  activityName?: string; // Actividad separada
   periodicity?: string;
   assigned?: number;
   realized: number;
@@ -792,18 +794,21 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     filteredData.forEach(item => {
       const activityId = item.IdActividad;
       const subProceso = item.SubProceso || 'SIN SUBPROCESO';
+      const actividad = item.Actividad || 'SIN ACTIVIDAD';
       
       // Create a unique key combining activity ID and subprocess
       const uniqueKey = `${activityId}_${item.IdSubProceso}`;
       
-      // Create a formatted display name that includes the subprocess
-      const displayName = `${subProceso} :: ${item.Actividad}`;
+      // Mantener el displayName para compatibilidad, pero agregar campos separados
+      const displayName = `${subProceso} :: ${actividad}`;
       
       // Create new activity if we haven't seen this combination before
       if (!activitiesMap.has(uniqueKey)) {
         const activity: Activity = {
           id: Number(activityId),
-          name: displayName, // Use the combined name format
+          name: displayName, // Mantener para compatibilidad
+          subProcess: subProceso, // SubProceso separado
+          activityName: actividad, // Actividad separada
           periodicity: item.Periocidad,
           ambit: item.Ambito || 'SIN CLASIFICAR',
           scheduledDays: [],

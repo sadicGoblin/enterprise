@@ -17,6 +17,8 @@ import { CheckListModalComponent } from './components/checklist-modal/checklist-
 export interface Activity {
   id: number;
   name: string;
+  subProcess?: string; // SubProceso separado
+  activityName?: string; // Actividad separada
   percentage?: number;
   periodicity?: string;
   assigned?: number;

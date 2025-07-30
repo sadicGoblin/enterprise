@@ -193,15 +193,29 @@
   }
   
   .activity-name-container {
-    white-space: nowrap;
+    white-space: normal; /* Permitir múltiples líneas */
     overflow: hidden;
-    text-overflow: ellipsis;
     max-width: 100%;
     display: block;
-    font-size: calc(11px * var(--scale-factor, 0.9)); /* Smaller text for activity names */
-    line-height: 1.3;
     text-align: left; /* Ensure text is left-aligned */
-    font-weight: 500; /* Medium font weight */
+    padding: 2px 0;
+    
+    .subprocess-line {
+      font-size: 8px;
+      font-weight: 600;
+      color: #919191;
+      line-height: 1.2;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    
+    .activity-line {
+      font-size: calc(11px * var(--scale-factor, 0.9));
+      font-weight: 500;
+      color: #333;
+      line-height: 1.3;
+    }
   }
   
   .day-column {
@@ -242,6 +256,7 @@
   }
   
   .ambito-header {
+    display: flex;
     font-weight: 500;
     font-size: 0.9em;
     color: #444;

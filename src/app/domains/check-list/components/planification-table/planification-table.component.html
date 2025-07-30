@@ -39,7 +39,10 @@
         <!-- Activities in this group -->
         <tr *ngFor="let activity of group.activities" class="calendar-row">
           <td class="fixed-first-column activity-column">
-            <div class="activity-name-container">{{ activity.name }}</div>
+            <div class="activity-name-container">
+              <div class="subprocess-line">{{ activity.subProcess }}</div>
+              <div class="activity-line">{{ activity.activityName }}</div>
+            </div>
           </td>
           <td class="fixed-second-column periodicity-column">
             {{
