@@ -28,6 +28,7 @@ import { ConfirmationDialogComponent } from './confirmation-dialog.component';
 import { CalendarDialogComponent } from '../../../../../shared/controls/multi-date-calendar/calendar-dialog.component';
 import { CalendarSelectComponent } from '../../../../../shared/controls/multi-date-calendar/calendar-select.component';
 import { environment } from '../../../../../../environments/environment';
+import { ActividadService } from '../../../services/actividad.service';
 
 // Interfaces para los diferentes tipos de objetos usados en el componente
 interface ProjectApiRequestBody {
@@ -275,6 +276,7 @@ export class AddActivitiesPpComponent implements OnInit {
     private proxyService: ProxyService,
     private usuarioService: UsuarioService,
     private controlService: ControlService,
+    private actividadService: ActividadService,
     private dateAdapter: DateAdapter<Date>,
     @Inject(MAT_DATE_LOCALE) private _locale: string,
     private dialog: MatDialog,
@@ -668,6 +670,7 @@ export class AddActivitiesPpComponent implements OnInit {
 
   // Columnas a mostrar en la tabla
   displayedColumns: string[] = [
+    'expand',
     'project',
     'assignee',
     'period',
@@ -679,6 +682,11 @@ export class AddActivitiesPpComponent implements OnInit {
     'periodicity',
     'delete'
   ];
+
+  // Propiedades para manejar expansión de filas
+  expandedElements = new Set<number>();
+  planificationData: { [controlId: number]: any[] } = {};
+  loadingPlanification: { [controlId: number]: boolean } = {};
 
   /**
    * Aplica estilo a filas alternadas
@@ -1283,5 +1291,78 @@ export class AddActivitiesPpComponent implements OnInit {
     // La tabla se actualiza automáticamente porque estamos modificando
     // directamente el objeto element que ya está en el array tableData
     console.log('Datos actualizados en la tabla:', this.tableData);
+  }
+
+  /**
+   * Alternar expansión de fila y cargar datos de planificación si es necesario
+   */
+  toggleRowExpansion(element: any): void {
+    const controlId = element.id;
+    
+    if (this.expandedElements.has(controlId)) {
+      // Si ya está expandido, colapsar
+      this.expandedElements.delete(controlId);
+    } else {
+      // Si no está expandido, expandir y cargar datos si no los tiene
+      this.expandedElements.add(controlId);
+      
+      if (!this.planificationData[controlId]) {
+        this.loadPlanificationData(controlId, element.period);
+      }
+    }
+  }
+
+  /**
+   * Verificar si una fila está expandida
+   */
+  isExpanded(element: any): boolean {
+    return this.expandedElements.has(element.id);
+  }
+
+  /**
+   * Cargar datos de planificación desde la API
+   */
+  loadPlanificationData(idControl: number, period: string): void {
+    this.loadingPlanification[idControl] = true;
+    
+    this.actividadService.getcontrolPlanificacion(idControl, period).subscribe({
+      next: (response: any) => {
+        this.loadingPlanification[idControl] = false;
+        
+        if (response && response.success && response.data && Array.isArray(response.data)) {
+          this.planificationData[idControl] = response.data;
+          console.log(`Datos de planificación cargados para control ${idControl}:`, response.data);
+        } else {
+          console.warn('No se encontraron datos de planificación o la respuesta no tiene el formato esperado');
+          this.planificationData[idControl] = [];
+        }
+      },
+      error: (error) => {
+        this.loadingPlanification[idControl] = false;
+        console.error('Error al cargar datos de planificación:', error);
+        this.planificationData[idControl] = [];
+        
+        this.snackBar.open('Error al cargar datos de planificación', 'Cerrar', {
+          duration: 3000,
+          horizontalPosition: 'center',
+          verticalPosition: 'bottom',
+          panelClass: ['error-snackbar']
+        });
+      }
+    });
+  }
+
+  /**
+   * Obtener datos de planificación para un control específico
+   */
+  getPlanificationData(controlId: number): any[] {
+    return this.planificationData[controlId] || [];
+  }
+
+  /**
+   * Verificar si está cargando datos de planificación
+   */
+  isLoadingPlanification(controlId: number): boolean {
+    return this.loadingPlanification[controlId] || false;
   }
 }
