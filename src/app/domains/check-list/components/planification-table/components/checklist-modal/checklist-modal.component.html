@@ -1,7 +1,7 @@
 <div class="dialog-header">
-  <h2 mat-dialog-title>ZONAS COMUNES :: CHECK LIST BODEGA DE GASES</h2>
+  <h2 mat-dialog-title>{{name}}</h2>
   <button mat-icon-button class="close-button" (click)="onCancel()">
-    <mat-icon>delete</mat-icon>
+    <mat-icon>close</mat-icon>
   </button>
 </div>
 
@@ -13,12 +13,15 @@
         <div class="form-group inspector">
           <div class="label-field">Inspeccionada Por</div>
           <app-custom-select
+            #inspectionBySelect
             [formControl]="inspectionByControl"
+            [parameterType]="collaboratorParameterType"
             [loadFromApi]="true"
-            [customApiEndpoint]="'/ws/UsuarioSvcImpl.php'"
-            [customApiRequestBody]="usuariosObraRequestBody"
-            [customOptionValueKey]="'idUsuario'"
-            [customOptionLabelKey]="'nombre'"
+            [customApiEndpoint]="collaboratorApiConfig.endpoint"
+            [customApiRequestBody]="collaboratorApiConfig.requestBody"
+            [customOptionValueKey]="collaboratorApiConfig.valueKey"
+            [customOptionLabelKey]="collaboratorApiConfig.labelKey"
+            (optionsLoaded)="onInspectionOptionsLoaded($event)"
             appearance="outline"
             class="select-field"
           ></app-custom-select>
@@ -42,12 +45,15 @@
         <div class="form-group reviewer">
           <div class="label-field">Revisado Por</div>
           <app-custom-select
+            #reviewedBySelect
             [formControl]="reviewedByControl"
+            [parameterType]="collaboratorParameterType"
             [loadFromApi]="true"
-            [customApiEndpoint]="'/ws/UsuarioSvcImpl.php'"
-            [customApiRequestBody]="usuariosObraRequestBody"
-            [customOptionValueKey]="'idUsuario'"
-            [customOptionLabelKey]="'nombre'"
+            [customApiEndpoint]="collaboratorApiConfig.endpoint"
+            [customApiRequestBody]="collaboratorApiConfig.requestBody"
+            [customOptionValueKey]="collaboratorApiConfig.valueKey"
+            [customOptionLabelKey]="collaboratorApiConfig.labelKey"
+            (optionsLoaded)="onReviewOptionsLoaded($event)"
             appearance="outline"
             class="select-field"
           ></app-custom-select>
@@ -158,10 +164,12 @@
     <mat-icon>exit_to_app</mat-icon> Salir
   </button>
   <span class="spacer"></span>
-  <button mat-stroked-button class="pdf-button" (click)="saveAsPDF()">
+  <button mat-stroked-button class="pdf-button" (click)="printAsPdf()">
     <mat-icon class="pdf-icon">picture_as_pdf</mat-icon> Exportar PDF
   </button>
   <button mat-raised-button color="primary" class="save-button" (click)="onSave()">
     <mat-icon>save</mat-icon> Guardar
   </button>
 </div>
+
+

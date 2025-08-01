@@ -12,19 +12,26 @@ import { ActivityCompletedPipe } from '../../pipes/activity-completed.pipe';
 import { MatDialog } from '@angular/material/dialog';
 import { InspectionModalComponent } from '../inspection-modal/inspection-modal.component';
 import { CheckListModalComponent } from './components/checklist-modal/checklist-modal.component';
+import { ARTViewModalComponent } from './components/art-view-modal/art-view-modal.component';
 
 // Interface for Activity
 export interface Activity {
   id: number;
   name: string;
-  periodicity: string;
-  assigned: number;
+  subProcess?: string; // SubProceso separado
+  activityName?: string; // Actividad separada
+  percentage?: number;
+  periodicity?: string;
+  assigned?: number;
   realized: number;
   compliance: number;
-  scheduledDays: number[];
+  scheduledDays?: number[];
   completedDays?: number[];
-  ambito?: string; // Category/scope of the activity
-  idControl?: string; // Control ID for matching with completions API
+  subProceso?: string;
+  ambit?: string;
+  dailyChecks: boolean[];
+  idControl?: string;
+  idParam?: string;
 }
 
 @Component({
@@ -79,6 +86,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
 
   @Input() projectId: string | null = null;
   @Input() selectedCollaboratorName: string | null = null;
+  @Input() selectedCollaboratorId: string | null = null;
 
   private _activities: Activity[] = [];
   private _days: number[] = [];
@@ -90,7 +98,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
   /**
    * Group activities by ámbito/scope
    */
-  groupedActivities: {ambito: string, activities: Activity[]}[] = [];
+  groupedActivities: {ambit: string, activities: Activity[]}[] = [];
 
   // Summary totals for the footer row
   totalAssigned: number = 0;
@@ -98,7 +106,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
   totalCompliancePercentage: number = 0;
 
   /**
-   * Group activities by ambito
+   * Group activities by ambit
    */
   /**
    * Updates the groupedActivities array by extracting unique ámbitos first 
@@ -115,8 +123,8 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     this.totalRealized = 0;
     this.totalCompliancePercentage = 0;
     
-    // Default ambito for activities without one
-    const defaultAmbito = 'SIN CLASIFICAR';
+    // Default ambit for activities without one
+    const defaultAmbit = 'SIN CLASIFICAR';
     
     // Handle possible undefined activities array
     if (!this._activities || this._activities.length === 0) {
@@ -125,28 +133,28 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     }
     
     // STEP 1: Extract all unique ámbitos from the activities
-    const uniqueAmbitos = new Set<string>();
+    const uniqueAmbits = new Set<string>();
     
     this._activities.forEach(activity => {
-      const ambito = activity.ambito || defaultAmbito;
-      uniqueAmbitos.add(ambito);
+      const ambit = activity.ambit || defaultAmbit;
+      uniqueAmbits.add(ambit);
     });
     
-    console.log('Found unique ámbitos:', Array.from(uniqueAmbitos));
+    console.log('Found unique ámbitos:', Array.from(uniqueAmbits));
     
     // STEP 2: Create a group for each unique ámbito
-    Array.from(uniqueAmbitos).forEach(ambito => {
+    Array.from(uniqueAmbits).forEach(ambit => {
       this.groupedActivities.push({ 
-        ambito: ambito, 
+        ambit: ambit, 
         activities: [] 
       });
-      console.log(`Created group for ámbito: "${ambito}"`);
+      console.log(`Created group for ámbito: "${ambit}"`);
     });
     
     // STEP 3: Assign activities to their corresponding groups
     this._activities.forEach(activity => {
-      const ambito = activity.ambito || defaultAmbito;
-      const group = this.groupedActivities.find(g => g.ambito === ambito);
+      const ambito = activity.ambit || defaultAmbit;
+      const group = this.groupedActivities.find(g => g.ambit === ambito);
       
       if (group) {
         group.activities.push(activity);
@@ -157,8 +165,8 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
       }
     });
     
-    // STEP 4: Sort groups alphabetically by ambito
-    this.groupedActivities.sort((a, b) => a.ambito.localeCompare(b.ambito));
+    // STEP 4: Sort groups alphabetically by ambit
+    this.groupedActivities.sort((a, b) => a.ambit.localeCompare(b.ambit));
     
     // STEP 5: Sort activities within each group by name
     this.groupedActivities.forEach(group => {
@@ -169,7 +177,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     this.calculateTotals();
     
     // Final logging
-    console.log(`Processed ${this.activities.length} activities with ${Array.from(uniqueAmbitos).length} ámbitos`);
+    console.log(`Processed ${this.activities.length} activities with ${Array.from(uniqueAmbits).length} ámbitos`);
     console.log(`Totals - Assigned: ${this.totalAssigned}, Realized: ${this.totalRealized}, Compliance: ${this.totalCompliancePercentage.toFixed(1)}%`);
     
     // Log the first few activities to see the new name format
@@ -188,10 +196,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
    * Angular lifecycle hooks
    */
   ngOnInit() {
-    console.log('PlanificationTable component initialized');
-    console.log('Initial activities:', this._activities);
-    console.log('Initial days:', this._days);
-    console.log('Initial selectedPeriod:', this._selectedPeriod);
+    console.log('PlanificationTable component initialized', this.activities);
     this.updateGroupedActivities();
   }
 
@@ -389,7 +394,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
   updateActivityMetrics(activity: Activity): void {
     console.log('Updating metrics for activity:', activity.scheduledDays);
     // Count total scheduled days
-    activity.assigned = activity.scheduledDays.length;
+    activity.assigned = activity.scheduledDays?.length || 0;
     
     // Count completed days
     if (activity.completedDays) {
@@ -419,7 +424,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     if (this._activities && this._activities.length > 0) {
       // Sum up assigned and realized values
       this._activities.forEach(activity => {
-        this.totalAssigned += activity.assigned;
+        this.totalAssigned += activity.assigned || 0;
       });
       
       // Calculate overall compliance percentage
@@ -467,11 +472,12 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     // Verificar si el nombre de la actividad contiene "CHECK LIST"
     else if (activity.name.includes('CHECK LIST')) {
       console.log('Actividad CHECK LIST completada. Abriendo modal de checklist...');
-      console.log(`idControl: ${activity.idControl}, día: ${day}`);
+      console.log(`idControl: ${activity.idControl}, día: ${day}, idParam: ${activity.idParam}`);
       this.openChecklistModal(activity.id, activity.idControl, day);
     } else {
       console.log('Actividad completada pero no es de tipo SSOMA ni CHECK LIST');
-      // Aquí podría agregarse lógica para otros tipos de actividades en el futuro
+      console.log('Abriendo modal ART...');
+      this.openArtModal(activity.id, activity.idControl, day);
     }
   }
 
@@ -517,6 +523,11 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
    * @param day Día seleccionado de la actividad
    */
   openChecklistModal(activityId?: number, idControl?: string, day?: number): void {
+    // Buscar la actividad para obtener su idParam
+    const selectedActivity = this._activities.find(a => a.id === activityId);
+    const idParam = selectedActivity?.idParam || '';
+    console.log('DEBUG IDPARAM - Actividad seleccionada:', selectedActivity);
+    console.log('DEBUG IDPARAM - Valor extraído:', idParam);
     const dialogRef = this.dialog.open(CheckListModalComponent, {
       width: '90vw',
       maxWidth: '1400px',
@@ -527,7 +538,21 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
         projectId: this.projectId,
         idControl: idControl,
         day: day,
-        checklistData: null
+        checklistData: null,
+        idParam: idParam,
+        name: selectedActivity?.name || 'Check List',
+        selectedCollaboratorId: this.selectedCollaboratorId,
+        selectedCollaboratorName: this.selectedCollaboratorName,
+        collaboratorApiConfig: {
+          endpoint: '/ws/UsuarioSvcImpl.php',
+          requestBody: {
+            caso: 'ConsultaUsuariosObra',
+            idObra: this.projectId ? parseInt(this.projectId) : 1,
+            idUsuario: 0
+          },
+          valueKey: 'IdUsuario',
+          labelKey: 'nombre'
+        }
       }
     });
     
@@ -539,6 +564,41 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
         console.log('Checklist guardado:', result);
         // Aquí iría la lógica para guardar el checklist en el backend
         // y actualizar las actividades completadas si es necesario
+      }
+    });
+  }
+
+  /**
+   * Abre el modal de ART (Activity Report Tool)
+   * @param activityId ID de la actividad seleccionada (opcional)
+   * @param idControl ID de control asociado a la actividad
+   * @param day Día seleccionado de la actividad
+   */
+  openArtModal(activityId?: number, idControl?: string, day?: number): void {
+    const selectedActivity = this._activities.find(a => a.id === activityId);
+    const idParam = selectedActivity?.idParam || '';
+    
+    const dialogRef = this.dialog.open(ARTViewModalComponent, {
+      width: '90vw',
+      maxWidth: '900px',
+      height: 'auto',
+      maxHeight: '90vh',
+      data: { 
+        activityId,
+        projectId: this.projectId,
+        idControl,
+        day,
+        idParam,
+        name: selectedActivity?.name || 'ART View'
+      }
+    });
+    
+    console.log('PlanificationTable: abriendo modal ART con projectId:', this.projectId);
+    console.log('PlanificationTable: idControl:', idControl, 'day:', day);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('ART modal cerrado:', result);
       }
     });
   }
