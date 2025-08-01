@@ -1,0 +1,82 @@
+<div class="art-modal-container">
+  <!-- Header -->
+  <div class="modal-header">
+    <h2 mat-dialog-title>
+      <mat-icon>article</mat-icon>
+      ART - Activity Report Tool
+    </h2>
+    <button mat-icon-button (click)="close()" class="close-button">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Content -->
+  <div mat-dialog-content class="modal-content">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-container">
+      <mat-spinner diameter="50"></mat-spinner>
+      <p>Cargando datos de ART...</p>
+    </div>
+
+    <!-- Error State -->
+    <div *ngIf="hasError && !isLoading" class="error-container">
+      <mat-icon color="warn">error</mat-icon>
+      <h3>Error al cargar datos</h3>
+      <p>{{ errorMessage }}</p>
+      <button mat-raised-button color="primary" (click)="retry()">
+        <mat-icon>refresh</mat-icon>
+        Reintentar
+      </button>
+    </div>
+
+    <!-- Data Content -->
+    <div *ngIf="artData && !isLoading && !hasError" class="art-content">
+      <!-- Basic Info Bar -->
+      <div class="basic-info-bar">
+        <div class="info-item">
+          <div class="info-details">
+            <span class="info-label">PERÍODO</span>
+            <span class="info-value">{{ artData.periodo }}</span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-details">
+            <span class="info-label">Descripción</span>
+            <span class="info-value"> {{ artData.descripcion }} </span>
+          </div>
+        </div>
+        <div class="info-item">
+          <div class="info-details">
+            <span class="info-label">FECHA</span>
+            <span class="info-value">{{ formatDate(artData.fecha) }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Images Section -->
+      <div
+        *ngIf="artData.files && artData.files.length > 0"
+        class="images-section"
+      >
+        <div class="section-header">
+          <mat-icon>photo_library</mat-icon>
+          <h3>Evidencias Fotográficas</h3>
+          <span class="image-count">{{ artData.files.length }} imagen(es)</span>
+        </div>
+        <div class="images-container">
+          <app-img-viewer
+            [images]="artData.files"
+            [showThumbnails]="true"
+            [autoPlay]="false"
+          >
+          </app-img-viewer>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div mat-dialog-actions class="modal-actions">
+    <button mat-button (click)="close()" class="cancel-button">Cerrar</button>
+  </div>
+</div>

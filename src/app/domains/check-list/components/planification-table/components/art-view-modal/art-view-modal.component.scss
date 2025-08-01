@@ -1,0 +1,284 @@
+/* Main Container */
+.art-modal-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 400px;
+  max-height: 90vh;
+}
+
+/* Header */
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+
+  h2 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #333;
+    font-size: 18px;
+    font-weight: 500;
+
+    mat-icon {
+      color: #1976d2;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  .close-button {
+    width: 40px;
+    height: 40px;
+    color: #666;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+      color: #333;
+    }
+  }
+}
+
+/* Content */
+.modal-content {
+  padding: 24px;
+  flex: 1;
+  overflow-y: auto;
+  min-height: 850px;
+}
+
+/* Loading State */
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 32px;
+  color: #666;
+
+  mat-spinner {
+    margin-bottom: 24px;
+  }
+
+  p {
+    margin: 0;
+    font-size: 16px;
+  }
+}
+
+/* Error State */
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 32px;
+  text-align: center;
+
+  mat-icon {
+    font-size: 48px;
+    width: 48px;
+    height: 48px;
+    margin-bottom: 16px;
+    color: #f44336;
+  }
+
+  h3 {
+    margin: 0 0 8px 0;
+    color: #f44336;
+    font-size: 18px;
+  }
+
+  p {
+    margin: 0 0 24px 0;
+    color: #666;
+    font-size: 14px;
+  }
+
+  button {
+    min-width: 120px;
+
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      margin-right: 8px;
+      color: white;
+    }
+  }
+}
+
+/* ART Content */
+.art-content {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Basic Info Bar */
+.basic-info-bar {
+  display: flex;
+  justify-content: space-around;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e3f2fd 100%);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+
+  mat-icon {
+    color: #1976d2;
+    background: white;
+    padding: 8px;
+    border-radius: 50%;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+
+  .info-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+
+    .info-label {
+      font-size: 12px;
+      color: #666;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-value {
+      font-size: 16px;
+      color: #333;
+      font-weight: 600;
+      margin-top: 2px;
+    }
+  }
+}
+
+/* Section Headers */
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  mat-icon {
+    color: #1976d2;
+    font-size: 24px;
+  }
+
+  h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 500;
+    color: #333;
+    flex: 1;
+  }
+
+  .image-count {
+    background: #e3f2fd;
+    color: #1976d2;
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+  }
+}
+
+/* Images Section */
+.images-section {
+  margin-top: -35px;
+}
+
+.images-container {
+  background: white;
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e0e0e0;
+}
+
+/* Actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+
+  .cancel-button {
+    min-width: 100px;
+    color: #666;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.04);
+    }
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .art-modal-container {
+    max-height: 95vh;
+  }
+
+  .modal-header {
+    padding: 12px 16px;
+
+    h2 {
+      font-size: 16px;
+    }
+  }
+
+  .modal-content {
+    padding: 16px;
+  }
+
+  .basic-info-bar {
+    flex-direction: column;
+    gap: 16px;
+    padding: 16px;
+    margin-top: -10px;
+  }
+
+  .info-item {
+    justify-content: center;
+
+    .info-details {
+      align-items: center;
+      text-align: center;
+    }
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+
+    .image-count {
+      align-self: flex-start;
+    }
+  }
+
+  .description-content {
+    padding: 16px;
+    font-size: 14px;
+  }
+
+  .modal-actions {
+    padding: 12px 16px;
+  }
+}

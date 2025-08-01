@@ -1,0 +1,91 @@
+<div class="img-viewer-container" *ngIf="images && images.length > 0">
+  <!-- Main Image Display -->
+  <div class="main-image-container">
+    <div class="image-wrapper">
+      <!-- Loading Spinner -->
+      <div *ngIf="isLoading" class="loading-overlay">
+        <div class="spinner"></div>
+      </div>
+      
+      <!-- Error Message -->
+      <div *ngIf="imageError" class="error-overlay">
+        <mat-icon>broken_image</mat-icon>
+        <p>Error al cargar la imagen</p>
+      </div>
+      
+      <!-- Main Image -->
+      <img 
+        *ngIf="currentImage && !imageError"
+        [src]="currentImage" 
+        [alt]="'Imagen ' + (currentIndex + 1) + ' de ' + images.length"
+        class="main-image"
+        (load)="onImageLoad()"
+        (error)="onImageError()"
+        (loadstart)="onImageLoadStart()"
+      />
+    </div>
+    
+    <!-- Navigation Buttons -->
+    <div *ngIf="hasMultipleImages" class="navigation-buttons">
+      <button 
+        mat-fab 
+        color="primary" 
+        class="nav-button prev-button"
+        (click)="previousImage()"
+        [attr.aria-label]="'Imagen anterior'"
+      >
+        <mat-icon>chevron_left</mat-icon>
+      </button>
+      
+      <button 
+        mat-fab 
+        color="primary" 
+        class="nav-button next-button"
+        (click)="nextImage()"
+        [attr.aria-label]="'Siguiente imagen'"
+      >
+        <mat-icon>chevron_right</mat-icon>
+      </button>
+    </div>
+    
+    <!-- Image Counter -->
+    <div *ngIf="hasMultipleImages" class="image-counter">
+      {{ currentIndex + 1 }} / {{ images.length }}
+    </div>
+  </div>
+  
+  <!-- Thumbnail Navigation (Optional) -->
+  <div *ngIf="showThumbnails && hasMultipleImages" class="thumbnails-container">
+    <div class="thumbnails-wrapper">
+      <div 
+        *ngFor="let image of images; let i = index" 
+        class="thumbnail"
+        [class.active]="i === currentIndex"
+        (click)="goToImage(i)"
+      >
+        <img 
+          [src]="image" 
+          [alt]="'Miniatura ' + (i + 1)"
+          class="thumbnail-image"
+        />
+      </div>
+    </div>
+  </div>
+  
+  <!-- Dots Indicator (when thumbnails are hidden) -->
+  <div *ngIf="!showThumbnails && hasMultipleImages" class="dots-container">
+    <button 
+      *ngFor="let image of images; let i = index"
+      class="dot"
+      [class.active]="i === currentIndex"
+      (click)="goToImage(i)"
+      [attr.aria-label]="'Ir a imagen ' + (i + 1)"
+    ></button>
+  </div>
+</div>
+
+<!-- No Images Message -->
+<div *ngIf="!images || images.length === 0" class="no-images">
+  <mat-icon>image</mat-icon>
+  <p>No hay imágenes para mostrar</p>
+</div>

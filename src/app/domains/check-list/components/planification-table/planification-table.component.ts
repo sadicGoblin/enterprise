@@ -12,6 +12,7 @@ import { ActivityCompletedPipe } from '../../pipes/activity-completed.pipe';
 import { MatDialog } from '@angular/material/dialog';
 import { InspectionModalComponent } from '../inspection-modal/inspection-modal.component';
 import { CheckListModalComponent } from './components/checklist-modal/checklist-modal.component';
+import { ARTViewModalComponent } from './components/art-view-modal/art-view-modal.component';
 
 // Interface for Activity
 export interface Activity {
@@ -475,7 +476,8 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
       this.openChecklistModal(activity.id, activity.idControl, day);
     } else {
       console.log('Actividad completada pero no es de tipo SSOMA ni CHECK LIST');
-      // Aquí podría agregarse lógica para otros tipos de actividades en el futuro
+      console.log('Abriendo modal ART...');
+      this.openArtModal(activity.id, activity.idControl, day);
     }
   }
 
@@ -562,6 +564,41 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
         console.log('Checklist guardado:', result);
         // Aquí iría la lógica para guardar el checklist en el backend
         // y actualizar las actividades completadas si es necesario
+      }
+    });
+  }
+
+  /**
+   * Abre el modal de ART (Activity Report Tool)
+   * @param activityId ID de la actividad seleccionada (opcional)
+   * @param idControl ID de control asociado a la actividad
+   * @param day Día seleccionado de la actividad
+   */
+  openArtModal(activityId?: number, idControl?: string, day?: number): void {
+    const selectedActivity = this._activities.find(a => a.id === activityId);
+    const idParam = selectedActivity?.idParam || '';
+    
+    const dialogRef = this.dialog.open(ARTViewModalComponent, {
+      width: '90vw',
+      maxWidth: '900px',
+      height: 'auto',
+      maxHeight: '90vh',
+      data: { 
+        activityId,
+        projectId: this.projectId,
+        idControl,
+        day,
+        idParam,
+        name: selectedActivity?.name || 'ART View'
+      }
+    });
+    
+    console.log('PlanificationTable: abriendo modal ART con projectId:', this.projectId);
+    console.log('PlanificationTable: idControl:', idControl, 'day:', day);
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        console.log('ART modal cerrado:', result);
       }
     });
   }
