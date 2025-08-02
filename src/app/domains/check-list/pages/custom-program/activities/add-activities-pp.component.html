@@ -296,19 +296,16 @@
                   <table class="expansion-table">
                     <thead>
                       <tr>
-                        <th>ID Form</th>
-                        <th>Usuario</th>
                         <th>Día</th>
                         <th>Estado</th>
                         <th>Tipo</th>
-                        <th>Sticker</th>
+                        <th>Periocidad</th>
                         <th>Completado</th>
+                        <th>Acciones</th>
                       </tr>
                     </thead>
                     <tbody>
                       <tr *ngFor="let planItem of getPlanificationData(row.id)">
-                        <td>{{ planItem.idForm }}</td>
-                        <td>{{ planItem.Usuario }}</td>
                         <td>{{ planItem.dia }}</td>
                         <td>
                           <span class="status-badge" [ngClass]="'status-' + planItem.estado">
@@ -316,15 +313,16 @@
                           </span>
                         </td>
                         <td>{{ planItem.tipo }}</td>
-                        <td>
-                          <span class="sticker-badge" [ngClass]="'sticker-' + planItem.sticker">
-                            {{ planItem.sticker }}
-                          </span>
-                        </td>
+                        <td>{{ planItem.Periocidad }}</td>
                         <td>
                           <mat-icon [ngClass]="planItem.diaCompletado === '1' ? 'completed' : 'pending'">
                             {{ planItem.diaCompletado === '1' ? 'check_circle' : 'radio_button_unchecked' }}
                           </mat-icon>
+                        </td>
+                        <td>
+                          <button mat-icon-button color="warn" (click)="deletePlanItem(planItem, row)">
+                            <mat-icon>delete</mat-icon>
+                          </button>
                         </td>
                       </tr>
                     </tbody>

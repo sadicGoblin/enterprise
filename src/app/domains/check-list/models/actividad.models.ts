@@ -49,5 +49,5 @@ export interface InspeccionSSTMA {
 export interface ControlPlanification {
   caso: string;
   idControl: number;
-  periodo: number;
+  // periodo: number;
 }

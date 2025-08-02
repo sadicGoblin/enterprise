@@ -1365,4 +1365,78 @@ export class AddActivitiesPpComponent implements OnInit {
   isLoadingPlanification(controlId: number): boolean {
     return this.loadingPlanification[controlId] || false;
   }
+
+  /**
+   * Eliminar un elemento de planificación
+   */
+  deletePlanItem(planItem: any, parentRow: any): void {
+    // Mostrar diálogo de confirmación
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '400px',
+      data: { 
+        title: 'Confirmar eliminación', 
+        message: `¿Está seguro que desea eliminar esta planificación? Esta acción no se puede deshacer.`,
+        confirmText: 'Eliminar',
+        cancelText: 'Cancelar'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (result) {
+        // Proceder con la eliminación
+        this.loadingPlanification[parentRow.id] = true;
+        
+        // Preparar request para eliminar la planificación
+        const requestBody = {
+          caso: 'EliminarPlanificacion',
+          idForm: planItem.idForm
+        };
+
+        console.log('Eliminando planificación:', requestBody);
+        
+        // Llamada a la API para eliminar
+        this.proxyService.post('/ws/PlanificacionSvcImpl.php', requestBody).subscribe({
+          next: (response: any) => {
+            this.loadingPlanification[parentRow.id] = false;
+            
+            if (response && response.success) {
+              // Mostrar mensaje de éxito
+              this.snackBar.open('Planificación eliminada correctamente', 'Cerrar', {
+                duration: 3000,
+                horizontalPosition: 'center',
+                verticalPosition: 'bottom',
+                panelClass: ['success-snackbar']
+              });
+              
+              // Actualizar datos en memoria
+              if (this.planificationData[parentRow.id]) {
+                this.planificationData[parentRow.id] = this.planificationData[parentRow.id].filter(
+                  (item: any) => item.idForm !== planItem.idForm
+                );
+              }
+            } else {
+              console.error('Error al eliminar planificación:', response);
+              this.snackBar.open('Error al eliminar planificación', 'Cerrar', {
+                duration: 3000,
+                horizontalPosition: 'center',
+                verticalPosition: 'bottom',
+                panelClass: ['error-snackbar']
+              });
+            }
+          },
+          error: (error) => {
+            this.loadingPlanification[parentRow.id] = false;
+            console.error('Error al eliminar planificación:', error);
+            
+            this.snackBar.open('Error al eliminar planificación', 'Cerrar', {
+              duration: 3000,
+              horizontalPosition: 'center',
+              verticalPosition: 'bottom',
+              panelClass: ['error-snackbar']
+            });
+          }
+        });
+      }
+    });
+  }
 }
