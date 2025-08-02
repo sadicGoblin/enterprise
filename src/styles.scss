@@ -34,7 +34,7 @@ body {
 
 .mat-form-field, .mat-form-field-wrapper {
   font-size: var(--font-size-sm) !important;
-  zoom: 0.8 !important;
+  /* Eliminado zoom: 0.8 !important; para permitir tamaño normal de los campos */
 }
 
 // Global text size adjustments

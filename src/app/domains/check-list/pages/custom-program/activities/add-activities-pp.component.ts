@@ -679,8 +679,7 @@ export class AddActivitiesPpComponent implements OnInit {
     'scope',
     'name',
     'days',
-    'periodicity',
-    'delete'
+    'periodicity'
   ];
 
   // Propiedades para manejar expansión de filas
