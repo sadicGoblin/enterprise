@@ -262,10 +262,10 @@
 
 /* Contenedor de la expansión */
 .expansion-container {
-  padding: 16px 24px;
+  padding: 8px 16px;
   background-color: #ffffff;
   border-left: 4px solid #2196f3;
-  margin: 8px;
+  margin: 4px;
   border-radius: 4px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 
@@ -285,15 +285,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 24px;
+  gap: 8px;
+  padding: 12px;
   color: #666;
-  font-size: 14px;
+  font-size: 13px;
 }
 
 /* Tabla de planificación */
 .planification-data {
   overflow-x: auto;
+  margin-top: 0;
 }
 
 .expansion-table {
@@ -310,12 +311,12 @@
     background-color: #f5f5f5;
     
     th {
-      padding: 12px 8px;
+      padding: 6px 8px;
       text-align: left;
       font-weight: 600;
       color: #333;
-      border-bottom: 2px solid #e0e0e0;
-      font-size: 12px;
+      border-bottom: 1px solid #e0e0e0;
+      font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -336,9 +337,10 @@
     }
 
     td {
-      padding: 10px 8px;
+      padding: 4px 8px;
       color: #555;
       vertical-align: middle;
+      font-size: 12px;
     }
   }
 }
