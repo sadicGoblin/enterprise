@@ -45,3 +45,9 @@ export interface InspeccionSSTMA {
   usuarioCreacion: string;
   correoA: string;
 }
+
+export interface ControlPlanification {
+  caso: string;
+  idControl: number;
+  // periodo: number;
+}
