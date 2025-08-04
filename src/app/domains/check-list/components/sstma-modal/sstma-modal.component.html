@@ -16,9 +16,14 @@
     <!-- Header con título y botón de cierre -->
     <div class="modal-header">
       <h2>INSPECCIÓN SSTMA</h2>
-      <button mat-icon-button (click)="closeDialog()" class="close-button" aria-label="Cerrar modal">
-        <mat-icon>close</mat-icon>
-      </button>
+      <div class="header-actions">
+        <button mat-icon-button (click)="exportToPdf()" class="export-button" aria-label="Exportar a PDF">
+          <mat-icon>picture_as_pdf</mat-icon>
+        </button>
+        <button mat-icon-button (click)="closeDialog()" class="close-button" aria-label="Cerrar modal">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
     </div>
     
     <!-- Contenido principal del modal con scroll -->
@@ -40,11 +45,6 @@
           <div class="info-row">
             <div class="info-label">Área trabajo</div>
             <div class="info-value">{{ sstmaData.workArea }}</div>
-          </div>
-
-          <div class="info-row">
-            <div class="info-label">Acción o cond. detectada</div>
-            <div class="info-value">{{ sstmaData.detectedCondition }}</div>
           </div>
 
           <div class="info-row">

@@ -1,9 +1,14 @@
 <div class="art-modal-container">
   <div class="art-modal-header">
     <h2>REPORTE ART</h2>
-    <button mat-icon-button (click)="closeDialog()" class="close-button" aria-label="Cerrar modal">
-      <mat-icon>close</mat-icon>
-    </button>
+    <div class="header-actions">
+      <button mat-icon-button (click)="exportToPdf()" class="export-button" aria-label="Exportar a PDF">
+        <mat-icon>picture_as_pdf</mat-icon>
+      </button>
+      <button mat-icon-button (click)="closeDialog()" class="close-button" aria-label="Cerrar modal">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
   </div>
 
   <!-- Estado de carga -->

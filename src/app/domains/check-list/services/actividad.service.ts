@@ -33,7 +33,7 @@ export class ActividadService {
     const request: ControlPlanification = {
       caso: 'ControlPlanificacion',
       idControl: idControl,
-      // periodo: parseInt(period)
+      periodo: parseInt(period)
     };
     console.log(`[ActividadService] Consultando control planificación para control ${idControl}:`, request);
     return this.proxyService.post<any>(environment.apiBaseUrl + apiUrl, request);

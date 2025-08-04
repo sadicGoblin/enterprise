@@ -76,7 +76,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   // Toast notification properties
   showToast = false;
   toastMessage = '';
-  
+  noActivities = false;
   // API related properties
   isLoading = false;
   selectedProjectId: string | null = null;
@@ -407,6 +407,12 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
         // Check if the response is an object with a data property containing an array
         const activitiesData = response.data || [];
         console.log('Activities data extracted:', activitiesData);
+
+        if (activitiesData.length === 0) {
+          this.noActivities = true;
+        } else {
+          this.noActivities = false;
+        }
         
         if (Array.isArray(activitiesData) && activitiesData.length > 0) {
           console.log(`Processing ${activitiesData.length} activities from API response`);

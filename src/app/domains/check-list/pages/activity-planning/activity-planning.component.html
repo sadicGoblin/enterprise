@@ -75,6 +75,11 @@
       <p>Cargando actividades...</p>
     </div>
 
+
+    <div class="no-activities" *ngIf="noActivities">
+      <p>No se encontraron actividades para este proyecto y/o colaborador.</p>
+    </div>
+
     <div *ngIf="showPlanificationTable">
       <div class="cronograma-header">
         <h3>DETALLE CRONOGRAMA MENSUAL</h3>

@@ -55,13 +55,22 @@ $scale-factor: 0.9;
   // Estilos para el header
   .modal-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     background-color: #0c4790;
-    padding: 1rem;
+    color: white;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid #0c4790;
     position: sticky;
     top: 0;
     z-index: 10;
+    
+    // Contenedor para botones de acción en el header
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
     
     h2 {
       color: white;
@@ -70,8 +79,13 @@ $scale-factor: 0.9;
       font-size: calc(1.4rem * #{$scale-factor});
     }
     
-    .close-button {
+    .close-button,
+    .export-button {
       color: white;
+    }
+    
+    .export-button:hover {
+      color: #e0e0e0;
     }
   }
 

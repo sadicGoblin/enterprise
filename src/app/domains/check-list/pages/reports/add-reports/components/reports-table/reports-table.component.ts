@@ -226,8 +226,10 @@ export class ReportsTableComponent implements OnInit {
 
     const requestBody = {
       caso: 'ReportAll',
-      periodo: periodToUse,
+      periodo: String(periodToUse),
     };
+
+    console.log('Cargando reportes con el siguiente periodo:', requestBody);
 
     this.proxyService
       .post<ReportResponse>(environment.apiBaseUrl + '/ws/ReporteSvcImpl.php', requestBody)

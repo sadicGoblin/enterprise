@@ -43,23 +43,35 @@
   // Estilos para el header
   .report-modal-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     background-color: #0c4790;
-    padding: 1rem;
+    color: white;
+    padding: 0.7rem 1rem;
     position: sticky;
     top: 0;
     z-index: 10;
     
     h2 {
-      color: white;
       margin: 0;
       font-weight: 500;
-      font-size: calc(1.4rem * 0.9);
+      font-size: 1.4rem;
     }
     
-    .close-button {
+    // Contenedor para botones de acción en el header
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .close-button,
+    .export-button {
       color: white;
+    }
+    
+    .export-button:hover {
+      color: #e0e0e0;
     }
   }
   

@@ -68,6 +68,13 @@ $compact-scale: 0.9;
   }
 }
 
+.no-activities {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
 // Custom styles for month-year picker
 ::ng-deep .month-picker {
   .mat-calendar-period-button {
