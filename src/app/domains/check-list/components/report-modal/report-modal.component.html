@@ -1,0 +1,115 @@
+<div class="report-modal-container">
+  <div class="report-modal-header">
+    <h2>REPORTE DE INCIDENTE</h2>
+    <button mat-icon-button (click)="closeDialog()" class="close-button" aria-label="Cerrar modal">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando datos del reporte...</p>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="error" class="error-container">
+    <mat-icon color="warn">error_outline</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Contenido principal (sólo se muestra si no hay error y no está cargando) -->
+  <div *ngIf="!loading && !error" class="report-modal-content">
+    <div class="info-container">
+      <div class="info-header">
+        <span class="fecha">Fecha reporte: {{ reportData.reportDate }}</span>
+      </div>
+
+    <div class="info-grid">
+      <!-- Tipo de incidente y gravedad potencial -->
+      <div class="info-row">
+        <div class="info-label">Tipo de incidente</div>
+        <div class="info-value">{{ reportData.incidentType }}</div>
+        <div class="info-label">Potencial gravedad</div>
+        <div class="info-value">{{ reportData.potentialSeverity }}</div>
+      </div>
+
+      <!-- Profesional responsable y reportado por -->
+      <div class="info-row">
+        <div class="info-label">Profesional resp.</div>
+        <div class="info-value">{{ reportData.professionalResponsible }}</div>
+        <div class="info-label">Reportado por</div>
+        <div class="info-value">{{ reportData.reportedBy }}</div>
+      </div>
+
+      <!-- Acción a realizar y requiere -->
+      <div class="info-row">
+        <div class="info-label">Acción a realizar</div>
+        <div class="info-value">{{ reportData.action }}</div>
+        <div class="info-label">Requiere</div>
+        <div class="info-value">{{ reportData.requires }}</div>
+      </div>
+
+      <!-- Descripción -->
+      <div class="info-row" *ngIf="reportData.description">
+        <div class="info-label">Descripción</div>
+        <div class="info-value">{{ reportData.description }}</div>
+      </div>
+
+      <!-- Originado por Trabajadores -->
+      <div class="info-row" *ngIf="reportData.originatedBy.workers">
+        <div class="info-label">Originado por Trabajadores</div>
+        <div class="info-value">{{ reportData.originatedBy.workers }}</div>
+      </div>
+
+      <!-- Originado por Equipos Fijos -->
+      <div class="info-row" *ngIf="reportData.originatedBy.fixedEquipment">
+        <div class="info-label">Originado por Equipos Fijos</div>
+        <div class="info-value">{{ reportData.originatedBy.fixedEquipment }}</div>
+      </div>
+
+      <!-- Originado por Edificios -->
+      <div class="info-row" *ngIf="reportData.originatedBy.buildings">
+        <div class="info-label">Originado por Edificios</div>
+        <div class="info-value">{{ reportData.originatedBy.buildings }}</div>
+      </div>
+
+      <!-- Originado por Vehículos -->
+      <div class="info-row" *ngIf="reportData.originatedBy.vehicles">
+        <div class="info-label">Originado por Vehículos</div>
+        <div class="info-value">{{ reportData.originatedBy.vehicles }}</div>
+      </div>
+
+      <!-- Originado por Ambientales -->
+      <div class="info-row" *ngIf="reportData.originatedBy.environmental">
+        <div class="info-label">Originado por Ambientales</div>
+        <div class="info-value">{{ reportData.originatedBy.environmental }}</div>
+      </div>
+
+      <!-- Interesados afectados -->
+      <div class="info-row" *ngIf="reportData.affectedInterested">
+        <div class="info-label">Interesados / Afectados</div>
+        <div class="info-value">{{ reportData.affectedInterested }}</div>
+      </div>
+
+      <!-- Comunicado a -->
+      <div class="info-row" *ngIf="reportData.communicatedTo && reportData.communicatedTo.length > 0">
+        <div class="info-label">Comunicado a</div>
+        <div class="info-value people-list">
+          {{ reportData.communicatedTo.join(", ") }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección de evidencia fotográfica -->
+    <div class="photo-evidence-section" *ngIf="reportData.photos && reportData.photos.length > 0">
+      <h3>Evidencia fotográfica</h3>
+
+      <!-- Componente visualizador de imágenes -->
+      <app-img-viewer
+        [images]="reportData.photos"
+        [showThumbnails]="false"
+      ></app-img-viewer>
+    </div>
+  </div>
+</div>

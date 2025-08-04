@@ -18,6 +18,10 @@ import { MatOptionModule } from '@angular/material/core';
 import { ProxyService } from '../../../../../../../core/services/proxy.service';
 import { MatCardModule } from '@angular/material/card';
 import { environment } from '../../../../../../../../environments/environment';
+import { MatDialog } from '@angular/material/dialog';
+import { SstmaModalComponent } from '../../../../../components/sstma-modal/sstma-modal.component';
+import { ReportModalComponent } from '../../../../../components/report-modal/report-modal.component';
+import { ARTReportModalComponent } from '../../../../../components/art-report-modal/art-report-modal.component';
 
 // Interface for the API response
 interface ReportResponse {
@@ -27,17 +31,17 @@ interface ReportResponse {
   data: Report[];
 }
 
-// Interface for a report item
+// Interface for a report item  
 interface Report {
   tipo: string;
   idActividad: string;
+  origen: string;
   idObra: string;
   Obra: string;
   fecha: string;
   creador: string;
   profesionalResponsable: string;
   ambitoInvolucrado: string;
-  comunicadoA: string;
 }
 
 @Component({
@@ -108,20 +112,19 @@ export class ReportsTableComponent implements OnInit {
   // Define columns to display in the table
   displayedColumns: string[] = [
     'tipo',
-    'idActividad',
+    'origen',
     'Obra',
     'fecha',
     'creador',
     'profesionalResponsable',
-    'ambitoInvolucrado',
-    'comunicadoA',
+    'view'
   ];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
   constructor(private proxyService: ProxyService,
-    private fb: FormBuilder
+    private dialog: MatDialog
   ) {
   }
 
@@ -234,7 +237,7 @@ export class ReportsTableComponent implements OnInit {
             this.reports = response.data;
             this.updateFilterOptions(); // Update dropdown options
             this.applyFilters(); // Apply any existing filters
-
+            console.log('Reportes cargados:', this.reports);
             console.log(`Se cargaron ${this.reports.length} reportes`);
           } else {
             this.reports = [];
@@ -307,7 +310,6 @@ export class ReportsTableComponent implements OnInit {
         report.creador,
         report.profesionalResponsable,
         report.ambitoInvolucrado,
-        report.comunicadoA,
         this.formatDate(report.fecha)
       ].some(fieldValue => 
         fieldValue && String(fieldValue).toLowerCase().includes(searchTerm)
@@ -353,15 +355,24 @@ export class ReportsTableComponent implements OnInit {
    * View report details
    */
   viewReport(report: Report): void {
-    // Open report detail view or PDF if available
     console.log('View report:', report);
-    // Check if there's a PDF URL or navigate to detail view
-    if (report.idActividad) {
-      // You would implement PDF viewing or detail navigation here
-      // Example: this.router.navigate(['/report-detail', report.idActividad]);
-      window.alert(
-        `Ver detalle del reporte: ${report.tipo} - ${report.idActividad}`
-      );
+    let idActivity = report.idActividad;
+    if(report.tipo.toUpperCase().includes('INCIDENTE')){
+      this.dialog.open(ReportModalComponent, {
+        data: idActivity
+      });
+    }else{
+      if(report.tipo.toUpperCase().includes('SSTMA')){
+        this.dialog.open(SstmaModalComponent, {
+          data: idActivity
+        });
+      }else{
+        if(report.tipo.toUpperCase().includes('ART')){
+          this.dialog.open(ARTReportModalComponent, {
+            data: idActivity
+          });
+        }
+      }
     }
   }
 

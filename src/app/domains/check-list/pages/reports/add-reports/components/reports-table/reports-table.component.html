@@ -130,10 +130,9 @@
         <td mat-cell *matCellDef="let report">{{ report.tipo }}</td>
       </ng-container>
 
-      <!-- ID Actividad Column -->
-      <ng-container matColumnDef="idActividad">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
-        <td mat-cell *matCellDef="let report">{{ report.idActividad }}</td>
+      <ng-container matColumnDef="origen">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Origen</th>
+        <td mat-cell *matCellDef="let report">{{ report.origen }}</td>
       </ng-container>
 
       <!-- Obra Column -->
@@ -162,20 +161,6 @@
         <td mat-cell *matCellDef="let report">
           {{ report.profesionalResponsable }}
         </td>
-      </ng-container>
-
-      <!-- Ámbito Involucrado Column -->
-      <ng-container matColumnDef="ambitoInvolucrado">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Ámbito</th>
-        <td mat-cell *matCellDef="let report">
-          {{ report.ambitoInvolucrado }}
-        </td>
-      </ng-container>
-
-      <!-- Comunicado A Column -->
-      <ng-container matColumnDef="comunicadoA">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header>Comunicado a</th>
-        <td mat-cell *matCellDef="let report">{{ report.comunicadoA }}</td>
       </ng-container>
 
       <!-- View Action Column -->

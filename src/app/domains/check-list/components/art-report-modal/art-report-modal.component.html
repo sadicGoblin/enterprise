@@ -1,0 +1,63 @@
+<div class="art-modal-container">
+  <div class="art-modal-header">
+    <h2>REPORTE ART</h2>
+    <button mat-icon-button (click)="closeDialog()" class="close-button" aria-label="Cerrar modal">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <!-- Estado de carga -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="50"></mat-spinner>
+    <p>Cargando datos del reporte ART...</p>
+  </div>
+
+  <!-- Estado de error -->
+  <div *ngIf="error" class="error-container">
+    <mat-icon class="error-icon">error</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Contenido del reporte -->
+  <div *ngIf="!loading && !error" class="art-modal-content">
+    <div class="info-container">
+      <div class="info-header">
+        <span class="fecha">Fecha reporte: {{ artData.fecha }}</span>
+      </div>
+      
+      <!-- Datos principales -->
+      <div class="info-row">
+        <div class="info-label">ID ART</div>
+        <div class="info-value">{{ artData.idArtApp }}</div>
+        <div class="info-label">ID Control</div>
+        <div class="info-value">{{ artData.idControl }}</div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">Periodo</div>
+        <div class="info-value">{{ artData.periodo }}</div>
+        <div class="info-label">Día</div>
+        <div class="info-value">{{ artData.dia }}</div>
+      </div>
+
+      <div class="info-row">
+        <div class="info-label">ID Trabajador</div>
+        <div class="info-value">{{ artData.idTrabajador }}</div>
+      </div>
+      
+      <!-- Descripción -->
+      <div class="info-row">
+        <div class="info-label">Descripción</div>
+        <div class="info-value">{{ artData.descripcion }}</div>
+      </div>
+
+      <!-- Evidencia fotográfica -->
+      <mat-divider *ngIf="artData.photos && artData.photos.length > 0" class="divider"></mat-divider>
+      
+      <div *ngIf="artData.photos && artData.photos.length > 0" class="photos-section">
+        <h3>Evidencia fotográfica</h3>
+        <app-img-viewer [images]="artData.photos"></app-img-viewer>
+      </div>
+    </div>
+  </div>
+</div>
