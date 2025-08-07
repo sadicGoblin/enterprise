@@ -16,6 +16,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
 import { FormControl } from '@angular/forms';
 import { CustomSelectComponent, ParameterType, SelectOption } from '../../../../shared/controls/custom-select/custom-select.component';
 import { PlanificationTableComponent, Activity as PlanificationActivity } from '../../components/planification-table/planification-table.component';
@@ -23,6 +25,8 @@ import { ControlService } from '../../services/control.service';
 import { ControlApiRequest, ControlApiResponse } from '../../models/control-api.models';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { ProxyService } from '../../../../core/services/proxy.service';
 
 // Activity interface definition - extended from the one used in PlanificationTableComponent
 export interface Activity extends PlanificationActivity {
@@ -59,6 +63,8 @@ export interface Activity extends PlanificationActivity {
     MatDatepickerModule,
     MatNativeDateModule,
     MatProgressSpinnerModule,
+    MatSnackBarModule,
+    HttpClientModule,
     CustomSelectComponent,
     PlanificationTableComponent,
   ],
@@ -80,6 +86,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   // API related properties
   isLoading = false;
   selectedProjectId: string | null = null;
+  selectedProjectName: string | null = null;
   selectedCollaboratorId: string | null = null;
   selectedCollaboratorName: string | null = null;
   
@@ -93,7 +100,10 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   @ViewChild(PlanificationTableComponent) planificationTable!: PlanificationTableComponent;
   constructor(
     private controlService: ControlService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar,
+    private http: HttpClient,
+    private proxyService: ProxyService
   ) {
     // Initialize with current date as default
     const now = new Date();
@@ -263,8 +273,9 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   onProjectSelectionChange(selectedProject: SelectOption | null): void {
     console.log('Selected project:', selectedProject);
     
-    // Store the selected project ID
+    // Store the selected project ID and name
     this.selectedProjectId = selectedProject ? selectedProject.value : null;
+    this.selectedProjectName = selectedProject ? selectedProject.label : null;
     
     // Reset activities when project changes
     this.activities = [];
@@ -590,6 +601,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   
   // Mock data for now - would come from an API in real app
   activities: Activity[] = [];
+  exportingPdf = false;
 
   /**
    * Track expanded activities
@@ -878,5 +890,230 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
         console.log(`- ${a.name}`);
       });
     }
+  }
+
+  /**
+   * Exporta el cronograma completo a PDF
+   */
+  exportCronogramaToPdf(): void {
+    if (this.exportingPdf) {
+      return;
+    }
+
+    this.exportingPdf = true;
+    this.snackBar.open('Generando PDF del cronograma...', '', { duration: 2000 });
+
+    // Obtener el contenido HTML del cronograma
+    const cronogramaContent = document.querySelector('#cronograma-content');
+    if (!cronogramaContent) {
+      this.snackBar.open('Error: No se pudo obtener el contenido del cronograma', 'Cerrar', { duration: 3000 });
+      this.exportingPdf = false;
+      return;
+    }
+    
+    // Crear una copia del HTML para manipularlo
+    const contentClone = cronogramaContent.cloneNode(true) as HTMLElement;
+    
+    // Eliminar botones y elementos no necesarios del clon
+    const buttons = contentClone.querySelectorAll('button');
+    buttons.forEach(button => {
+      if (button.parentNode) {
+        button.parentNode.removeChild(button);
+      }
+    });
+    
+    // Eliminar iconos mat-icon que no se renderizan bien en PDF
+    const matIcons = contentClone.querySelectorAll('mat-icon');
+    matIcons.forEach(icon => {
+      if (icon.parentNode) {
+        icon.parentNode.removeChild(icon);
+      }
+    });
+    
+    // Crear el encabezado del PDF con información del período y proyecto
+    const headerInfo = this.createPdfHeader();
+    
+    // Obtener los estilos CSS relevantes
+    const styles = this.getStyles();
+    
+    // Crear el HTML completo con estilos
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Cronograma Mensual - ${this.formattedPeriod}</title>
+        <style>
+          ${styles}
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+          }
+          .pdf-header {
+            background-color: #0c4790;
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            text-align: center;
+          }
+          .pdf-header h1 {
+            margin: 0;
+            font-size: 24px;
+          }
+          .pdf-header p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+          }
+          th, td {
+            border: 1px solid #ddd;
+            padding: 4px;
+            text-align: center;
+          }
+          th {
+            background-color: #f5f5f5;
+            font-weight: bold;
+          }
+          .activity-row {
+            background-color: #fafafa;
+          }
+          .weekend {
+            background-color: #ffe6e6;
+          }
+          .completed-icon {
+            color: #4fad56;
+            font-size: 12px;
+          }
+          .pending-icon {
+            color: #ffbc00;
+            font-size: 12px;
+          }
+          .metrics-column {
+            font-weight: bold;
+          }
+          @media print {
+            body { margin: 0; }
+            .pdf-header { break-inside: avoid; }
+            table { break-inside: avoid; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="pdf-header">
+          <h1>CRONOGRAMA MENSUAL</h1>
+          <p>${headerInfo}</p>
+        </div>
+        ${contentClone.innerHTML}
+      </body>
+      </html>
+    `;
+    
+    // Crear el objeto para enviar a la API
+    const requestBody = {
+      html: htmlContent,
+      filename: `cronograma-${this.formattedPeriod?.replace(/\s+/g, '-')}-${Date.now()}.pdf`,
+      title: `Cronograma Mensual - ${this.formattedPeriod}`,
+      sheet_type: 'H' // Landscape para tablas anchas
+    };
+
+    // Enviar a la API usando ProxyService como en los otros modales
+    this.proxyService
+      .post(
+        environment.apiBaseUrl + '/bucket/api/v1/files/html-to-pdf',
+        requestBody
+      )
+      .subscribe({
+        next: (response: any) => {
+          this.exportingPdf = false;
+          if (response && response.url) {
+            console.log('PDF del cronograma generado correctamente', response);
+            window.open(response.url, '_blank');
+            this.snackBar.open('PDF del cronograma generado correctamente', '', {
+              duration: 3000,
+            });
+          } else {
+            console.log('Error al generar PDF del cronograma', response);
+            this.snackBar.open('Error al generar PDF del cronograma', 'Cerrar', {
+              duration: 3000,
+            });
+          }
+        },
+        error: (error) => {
+          console.error('Error al generar PDF del cronograma:', error);
+          this.snackBar.open('Error al generar el PDF del cronograma', 'Cerrar', {
+            duration: 3000,
+          });
+          this.exportingPdf = false;
+        }
+      });
+  }
+
+  /**
+   * Crea el encabezado con información del PDF
+   */
+  private createPdfHeader(): string {
+    let headerParts = [];
+    
+    if (this.formattedPeriod) {
+      headerParts.push(`Período: ${this.formattedPeriod}`);
+    }
+    
+    if (this.selectedCollaboratorName) {
+      headerParts.push(`Colaborador: ${this.selectedCollaboratorName}`);
+    }
+    
+    if (this.selectedProjectName) {
+      headerParts.push(`Proyecto: ${this.selectedProjectName}`);
+    }
+    
+    headerParts.push(`Generado: ${new Date().toLocaleDateString('es-ES')}`);
+    
+    return headerParts.join(' | ');
+  }
+
+  /**
+   * Obtiene los estilos CSS relevantes para el PDF
+   */
+  private getStyles(): string {
+    const styleSheets = document.styleSheets;
+    let styles = '';
+    
+    // Filtrar los estilos relevantes para el cronograma
+    for (let i = 0; i < styleSheets.length; i++) {
+      try {
+        const rules = styleSheets[i].cssRules || styleSheets[i].rules;
+        if (!rules) continue;
+        
+        for (let j = 0; j < rules.length; j++) {
+          const rule = rules[j];
+          if (rule.cssText && (
+              rule.cssText.includes('.planification-table') ||
+              rule.cssText.includes('.activity-row') ||
+              rule.cssText.includes('.activity-name') ||
+              rule.cssText.includes('.day-cell') ||
+              rule.cssText.includes('.weekend') ||
+              rule.cssText.includes('.completed') ||
+              rule.cssText.includes('.pending') ||
+              rule.cssText.includes('mat-icon') ||
+              rule.cssText.includes('table') ||
+              rule.cssText.includes('th') ||
+              rule.cssText.includes('td')
+            )) {
+            styles += rule.cssText + '\n';
+          }
+        }
+      } catch (e) {
+        // Algunos navegadores restringen acceso a ciertos stylesheets
+        console.warn('No se pudo acceder a la hoja de estilo', e);
+      }
+    }
+    
+    return styles;
   }
 }

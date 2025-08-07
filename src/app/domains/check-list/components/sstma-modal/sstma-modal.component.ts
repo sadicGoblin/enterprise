@@ -232,10 +232,10 @@ export class SstmaModalComponent implements OnInit {
     if (headerActions && headerActions.parentNode) {
       headerActions.parentNode.removeChild(headerActions);
     }
-    
+
     // Convertir las imágenes en enlaces clickeables
     const images = contentClone.querySelectorAll('img');
-    images.forEach(img => {
+    images.forEach((img) => {
       const imgSrc = img.getAttribute('src');
       if (imgSrc) {
         // Crear un enlace que envuelva la imagen
@@ -243,7 +243,7 @@ export class SstmaModalComponent implements OnInit {
         link.href = imgSrc;
         link.target = '_blank'; // Abrir en nueva pestaña
         link.title = 'Haga clic para ver la imagen original';
-        
+
         // Reemplazar la imagen con el enlace + imagen
         const parent = img.parentNode;
         if (parent) {
@@ -351,14 +351,14 @@ export class SstmaModalComponent implements OnInit {
         next: (response: any) => {
           this.exporting = false;
           if (response) {
-            console.log("PDF generado correctamente", response);
+            console.log('PDF generado correctamente', response);
             let url = response.url;
             window.open(url, '_blank');
             this.snackBar.open('PDF generado correctamente', '', {
               duration: 3000,
             });
           } else {
-            console.log("Error al generar PDF", response);
+            console.log('Error al generar PDF', response);
             this.snackBar.open('Error al generar PDF', '', {
               duration: 3000,
             });

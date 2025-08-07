@@ -83,18 +83,23 @@
     <div *ngIf="showPlanificationTable">
       <div class="cronograma-header">
         <h3>DETALLE CRONOGRAMA MENSUAL</h3>
+        <button mat-icon-button (click)="exportCronogramaToPdf()" class="export-button" aria-label="Exportar cronograma a PDF" [disabled]="exportingPdf">
+          <mat-icon>picture_as_pdf</mat-icon>
+        </button>
       </div>
 
-      <app-planification-table
-        [activities]="activities"
-        [days]="days"
-        [selectedPeriod]="selectedPeriod"
-        [projectId]="selectedProjectId"
-        [selectedCollaboratorName]="selectedCollaboratorName"
-        [selectedCollaboratorId]="selectedCollaboratorId"
-        (activityStatusChanged)="handleActivityStatusChanged($event)"
-        (saveChanges)="saveAllChanges()"
-      ></app-planification-table>
+      <div class="cronograma-content" id="cronograma-content">
+        <app-planification-table
+          [activities]="activities"
+          [days]="days"
+          [selectedPeriod]="selectedPeriod"
+          [projectId]="selectedProjectId"
+          [selectedCollaboratorName]="selectedCollaboratorName"
+          [selectedCollaboratorId]="selectedCollaboratorId"
+          (activityStatusChanged)="handleActivityStatusChanged($event)"
+          (saveChanges)="saveAllChanges()"
+        ></app-planification-table>
+      </div>
     </div>
   </mat-card>
 </div>

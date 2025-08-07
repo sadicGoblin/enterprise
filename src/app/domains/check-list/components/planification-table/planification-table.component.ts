@@ -18,8 +18,8 @@ import { ARTViewModalComponent } from './components/art-view-modal/art-view-moda
 export interface Activity {
   id: number;
   name: string;
-  subProcess?: string; // SubProceso separado
-  activityName?: string; // Actividad separada
+  subProcess?: string; 
+  activityName?: string; 
   percentage?: number;
   periodicity?: string;
   assigned?: number;

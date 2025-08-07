@@ -183,7 +183,7 @@ export class ARTReportModalComponent implements OnInit {
     this.snackBar.open('Generando PDF...', '', { duration: 2000 });
 
     // Obtener el contenido HTML del modal
-    const modalContent = document.querySelector('.art-modal-content-container');
+    const modalContent = document.querySelector('.art-modal-content');
     if (!modalContent) {
       this.snackBar.open('Error: No se pudo obtener el contenido del modal', 'Cerrar', { duration: 3000 });
       this.exporting = false;
@@ -198,6 +198,26 @@ export class ARTReportModalComponent implements OnInit {
     if (headerActions && headerActions.parentNode) {
       headerActions.parentNode.removeChild(headerActions);
     }
+    
+    // Convertir las imágenes en enlaces clickeables
+    const images = contentClone.querySelectorAll('img');
+    images.forEach(img => {
+      const imgSrc = img.getAttribute('src');
+      if (imgSrc) {
+        // Crear un enlace que envuelva la imagen
+        const link = document.createElement('a');
+        link.href = imgSrc;
+        link.target = '_blank'; // Abrir en nueva pestaña
+        link.title = 'Haga clic para ver la imagen original';
+        
+        // Reemplazar la imagen con el enlace + imagen
+        const parent = img.parentNode;
+        if (parent) {
+          parent.replaceChild(link, img);
+          link.appendChild(img);
+        }
+      }
+    });
     
     // Obtener los estilos
     const styles = this.getStyles();
@@ -260,6 +280,16 @@ export class ARTReportModalComponent implements OnInit {
             height: auto;
             margin-bottom: 10px;
             page-break-inside: avoid;
+            cursor: pointer;
+          }
+          a {
+            color: inherit;
+            text-decoration: none;
+            display: inline-block;
+            border: 2px solid transparent;
+          }
+          a:hover img {
+            border: 2px solid #0c4790;
           }
         </style>
       </head>
@@ -272,39 +302,59 @@ export class ARTReportModalComponent implements OnInit {
     // Crear el objeto para enviar a la API
     const requestBody = {
       html: htmlContent,
-      filename: `reporte-actividad-${this.artData.idControl}-${this.artData.dia}.pdf`,
+      filename: `reporte-actividad-${this.artData.fecha}.pdf`,
       title: 'Reporte de Actividad',
       sheet_type: 'V'
     };
+
+    // Call API to change password
+    this.proxyService
+      .post(
+        environment.apiBaseUrl + '/bucket/api/v1/files/html-to-pdf',
+        requestBody
+      )
+      .subscribe({
+        next: (response: any) => {
+          this.exporting = false;
+          if (response) {
+            console.log('PDF generado correctamente', response);
+            let url = response.url;
+            window.open(url, '_blank');
+            this.snackBar.open('PDF generado correctamente', '', {
+              duration: 3000,
+            });
+          } else {
+            console.log('Error al generar PDF', response);
+            this.snackBar.open('Error al generar PDF', '', {
+              duration: 3000,
+            });
+          }
+        },
+      });
     
-    // Configuración de encabezados para la solicitud HTTP
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json'
-    });
-    
-    // Enviar a la API
-    this.http.post('/bucket/api/v1/files/html-to-pdf', requestBody, {
-      headers: headers,
-      responseType: 'blob'
-    }).subscribe(
-      (response: Blob) => {
-        // Crear URL para descargar
-        const url = window.URL.createObjectURL(response);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = requestBody.filename;
-        link.click();
+    // // Enviar a la API
+    // this.http.post(environment.apiBaseUrl + '/bucket/api/v1/files/html-to-pdf', requestBody, {
+    //   headers: headers,
+    //   responseType: 'blob'
+    // }).subscribe(
+    //   (response: Blob) => {
+    //     // Crear URL para descargar
+    //     const url = window.URL.createObjectURL(response);
+    //     const link = document.createElement('a');
+    //     link.href = url;
+    //     link.download = requestBody.filename;
+    //     link.click();
         
-        window.URL.revokeObjectURL(url);
-        this.snackBar.open('PDF generado correctamente', '', { duration: 3000 });
-        this.exporting = false;
-      },
-      (error) => {
-        console.error('Error al generar PDF:', error);
-        this.snackBar.open('Error al generar el PDF', 'Cerrar', { duration: 3000 });
-        this.exporting = false;
-      }
-    );
+    //     window.URL.revokeObjectURL(url);
+    //     this.snackBar.open('PDF generado correctamente', '', { duration: 3000 });
+    //     this.exporting = false;
+    //   },
+    //   (error) => {
+    //     console.error('Error al generar PDF:', error);
+    //     this.snackBar.open('Error al generar el PDF', 'Cerrar', { duration: 3000 });
+    //     this.exporting = false;
+    //   }
+    // );
   }
   
   /**
