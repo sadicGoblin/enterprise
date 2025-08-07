@@ -1,0 +1,86 @@
+<div class="sstma-modal-container">
+  <!-- Estado de carga -->
+  <div *ngIf="loading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando datos de inspección...</p>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="error" class="error-container">
+    <mat-icon color="warn">error_outline</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Contenido principal (sólo se muestra si no hay error y no está cargando) -->
+  <div *ngIf="!loading && !error" class="modal-main-content">
+    <!-- Header con título y botón de cierre -->
+    <div class="modal-header">
+      <h2>INSPECCIÓN SSTMA</h2>
+      <div class="header-actions">
+        <button mat-icon-button (click)="exportToPdf()" class="export-button" aria-label="Exportar a PDF">
+          <mat-icon>picture_as_pdf</mat-icon>
+        </button>
+        <button mat-icon-button (click)="closeDialog()" class="close-button" aria-label="Cerrar modal">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Contenido principal del modal con scroll -->
+    <div class="modal-content">
+      <div class="info-container">
+        <!-- Fecha del reporte -->
+        <div class="info-header">
+          <span class="fecha">Fecha reporte: {{ sstmaData.reportDate }}</span>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-row">
+            <div class="info-label">Nombre Empresa</div>
+            <div class="info-value">{{ sstmaData.companyName }}</div>
+            <div class="info-label">Profesional resp.</div>
+            <div class="info-value">{{ sstmaData.professionalResponsible }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">Área trabajo</div>
+            <div class="info-value">{{ sstmaData.workArea }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">Trabajo asociado</div>
+            <div class="info-value">{{ sstmaData.associatedWork }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">Riesgo asociado</div>
+            <div class="info-value">{{ sstmaData.associatedRisk }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">Medida control propuesta</div>
+            <div class="info-value">{{ sstmaData.proposedControlMeasure }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">Comunicado a</div>
+            <div class="info-value people-list">
+              {{ sstmaData.communicatedTo.join(", ") }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Sección de evidencia fotográfica -->
+        <div class="photo-evidence-section">
+          <h3>Evidencia fotográfica</h3>
+
+          <!-- Componente visualizador de imágenes -->
+          <app-img-viewer
+            [images]="sstmaData.photos"
+            [showThumbnails]="false"
+          ></app-img-viewer>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

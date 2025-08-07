@@ -168,7 +168,9 @@
     background-color: white;
     z-index: 2; /* Mayor z-index para las columnas sticky de la derecha */
     font-size: calc(13px * var(--scale-factor, 0.9));
-    min-width: calc(70px * var(--scale-factor, 0.9));
+    width: calc(70px * var(--scale-factor, 0.9)) !important;
+    min-width: calc(70px * var(--scale-factor, 0.9)) !important;
+    max-width: calc(70px * var(--scale-factor, 0.9)) !important;
     box-shadow: -2px 0 5px rgba(0,0,0,0.05);
     border-left: 1px solid #e0e0e0;
     
@@ -187,9 +189,14 @@
   }
   
   .ambito-header-cell.sticky-end-column {
-    background-color: #eaeaea;
+    background-color: #eaeaea !important;
     border-left: 1px solid #d0d0d0;
     z-index: 11;
+  }
+  
+  /* Asegurar que todas las celdas de ámbito tengan el fondo correcto */
+  .ambito-header-row .sticky-end-column {
+    background-color: #eaeaea !important;
   }
   
   .activity-name-container {
@@ -219,8 +226,9 @@
   }
   
   .day-column {
-    min-width: calc(40px * var(--scale-factor, 0.9));
-    max-width: calc(40px * var(--scale-factor, 0.9));
+    width: calc(40px * var(--scale-factor, 0.9)) !important;
+    min-width: calc(40px * var(--scale-factor, 0.9)) !important;
+    max-width: calc(40px * var(--scale-factor, 0.9)) !important;
     padding: 4px 2px;
   }
   
@@ -253,6 +261,11 @@
   
   .ambito-header-row {
     background-color: #eaeaea;
+    
+    /* Asegurar que el fondo se extienda a todas las celdas */
+    td, th {
+      background-color: #eaeaea !important;
+    }
   }
   
   .ambito-header {

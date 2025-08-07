@@ -1,0 +1,212 @@
+// Variable de escala global para textos más pequeños como prefiere el usuario
+$scale-factor: 1;
+
+// Modal contenedor
+.art-modal-container {
+  display: flex;
+  flex-direction: column;
+  width: 800px;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow: hidden;
+  position: relative;
+  padding: 0;
+  font-size: calc(1rem * #{$scale-factor});
+
+  // Estilos para el header
+  .art-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #0c4790;
+    color: white;
+    padding: 0.7rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    
+    h2 {
+      margin: 0;
+      font-weight: 500;
+      font-size: calc(1.4rem * #{$scale-factor});
+      text-align: center;
+      flex-grow: 1;
+    }
+    
+    // Contenedor para botones de acción en el header
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .close-button,
+    .export-button {
+      color: white;
+    }
+    
+    .export-button:hover {
+      color: #e0e0e0;
+    }
+  }
+  
+  // Estado de carga
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    min-height: 200px;
+    
+    p {
+      margin-top: 1rem;
+      color: #555;
+      font-size: calc(1rem * #{$scale-factor});
+    }
+  }
+  
+  // Estado de error
+  .error-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    min-height: 200px;
+    color: #f44336;
+    
+    .error-icon {
+      font-size: 3rem;
+      height: 3rem;
+      width: 3rem;
+      margin-bottom: 1rem;
+    }
+    
+    p {
+      text-align: center;
+      font-size: calc(1rem * #{$scale-factor});
+    }
+  }
+  
+  // Contenido del reporte
+  .art-modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+    
+    // Contenedor de la información
+    .info-container {
+      display: flex;
+      flex-direction: column;
+      
+      // Header con fecha
+      .info-header {
+        display: flex;
+        justify-content: start;
+        padding: 0.5rem 1rem;
+        background-color: #f5f5f5;
+        border-bottom: 1px solid #e0e0e0;
+        
+        .fecha {
+          font-weight: 500;
+          color: #333;
+          font-size: calc(0.9rem * #{$scale-factor});
+        }
+      }
+      
+      // Filas de información
+      .info-row {
+        display: grid;
+        grid-template-columns: 1fr 1.5fr 1fr 1.5fr;
+        border-bottom: 1px solid #eee;
+        
+        &:nth-child(odd) {
+          background-color: rgba(0, 0, 0, 0.01);
+        }
+        
+        .info-label {
+          padding: 0.8rem 1rem;
+          background-color: rgba(0, 0, 0, 0.03);
+          font-weight: 500;
+          color: #444;
+          border-right: 1px solid #eee;
+          font-size: calc(0.9rem * #{$scale-factor});
+        }
+        
+        .info-value {
+          padding: 0.8rem 1rem;
+          color: #333;
+          font-size: calc(0.9rem * #{$scale-factor});
+        }
+      }
+
+      // Para filas con datos largos
+      .info-row.full-width {
+        grid-template-columns: 1fr 5fr;
+        
+        .info-label {
+          background-color: rgba(0, 0, 0, 0.03);
+        }
+      }
+      
+      // Divisor
+      .divider {
+        margin: 1rem 0;
+      }
+      
+      // Sección de fotos
+      .photos-section {
+        padding: 1rem;
+        
+        h3 {
+          color: #0c4790;
+          margin-bottom: 1rem;
+          font-weight: 500;
+          font-size: calc(1.1rem * #{$scale-factor});
+        }
+      }
+    }
+  }
+}
+
+// Estilos responsivos
+@media screen and (max-width: 768px) {
+  .art-modal-container {
+    .info-container {
+      .info-row {
+        grid-template-columns: 1fr 2fr;
+      }
+    }
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .art-modal-container {
+    .art-modal-header {
+      h2 {
+        font-size: calc(1.2rem * #{$scale-factor});
+      }
+    }
+    
+    .info-container {
+      .info-row {
+        grid-template-columns: 1fr;
+        
+        .info-label {
+          border-right: none;
+          border-bottom: 1px solid #eee;
+          padding: 0.6rem 1rem;
+        }
+        
+        .info-value {
+          padding: 0.6rem 1rem;
+        }
+      }
+      
+      .info-row.full-width {
+        grid-template-columns: 1fr;
+      }
+    }
+  }
+}

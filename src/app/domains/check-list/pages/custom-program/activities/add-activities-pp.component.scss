@@ -1,12 +1,9 @@
-
-
 /* Contenedor principal */
 .container {
   display: flex;
   flex-direction: column;
   gap: 24px;
   padding: 24px;
-  background-color: #f5f5f5;
   min-height: calc(100vh - 64px);
 }
 
@@ -16,7 +13,7 @@
   max-width: 1200px;
   margin: 0 auto;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   background-color: white;
   border: 1px solid #e0e0e0;
   overflow: hidden;
@@ -24,7 +21,7 @@
 }
 
 .form-card {
-  padding: 16px; /* Reducir el padding de la tarjeta del formulario */
+  padding: 16px; 
 }
 
 .table-card {
@@ -44,7 +41,7 @@
 }
 
 .title::before {
-  content: '';
+  content: "";
   display: inline-block;
   width: 4px;
   height: 18px;
@@ -57,18 +54,18 @@
 .form-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 1rem; /* Reducir el espacio entre columnas */
-  margin-bottom: 16px; /* Reducir el margen inferior de la cuadrícula */
-  
+  gap: 1rem; 
+  margin-bottom: 16px; 
+
   mat-form-field {
     width: 100%;
-    margin-bottom: 0.5rem; /* Reducir el margen inferior de los campos de formulario */
+    margin-bottom: 0.5rem;
   }
-  
+
   .column {
     display: flex;
     flex-direction: column;
-    gap: 8px; /* Reducir el espacio entre elementos dentro de cada columna */
+    gap: 8px; 
   }
 }
 
@@ -182,7 +179,7 @@
   color: white;
   background-color: #f44336;
   border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 /* Estilos para spinners de carga */
@@ -192,7 +189,7 @@
   justify-content: center;
   padding: 1rem;
   gap: 0.5rem;
-  
+
   .loading-text {
     font-size: 0.9rem;
     color: #666;
@@ -224,7 +221,7 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 1000; /* Asegura que esté por encima de otros elementos */
+  z-index: 1000; 
 
   mat-spinner {
     margin-bottom: 10px;
@@ -237,7 +234,7 @@
 }
 
 .table-card {
-  position: relative; /* Necesario para que el overlay se posicione correctamente */
+  position: relative; 
 }
 
 /* ===== ESTILOS PARA FILAS EXPANDIBLES ===== */
@@ -309,7 +306,7 @@
 
   thead {
     background-color: #f5f5f5;
-    
+
     th {
       padding: 2px 8px;
       text-align: left;
@@ -356,19 +353,19 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  
+
   &.status-pendiente {
     background-color: #fff3cd;
     color: #856404;
     border: 1px solid #ffeaa7;
   }
-  
+
   &.status-completado {
     background-color: #d4edda;
     color: #155724;
     border: 1px solid #b8daff;
   }
-  
+
   &.status-en-progreso {
     background-color: #cce5f0;
     color: #004085;
@@ -385,19 +382,19 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  
+
   &.sticker-PP {
     background-color: #e3f2fd;
     color: #1565c0;
     border: 1px solid #90caf9;
   }
-  
+
   &.sticker-ART {
     background-color: #f3e5f5;
     color: #7b1fa2;
     border: 1px solid #ce93d8;
   }
-  
+
   &.sticker-CHECK {
     background-color: #e8f5e8;
     color: #2e7d32;
@@ -423,7 +420,7 @@
   padding: 24px;
   color: #666;
   font-style: italic;
-  
+
   mat-icon {
     color: #999;
   }
@@ -435,20 +432,20 @@
     margin: 4px;
     padding: 12px 16px;
   }
-  
+
   .expansion-table {
     font-size: 12px;
-    
+
     thead th {
       padding: 8px 4px;
       font-size: 11px;
     }
-    
+
     tbody td {
       padding: 8px 4px;
     }
   }
-  
+
   .status-badge,
   .sticker-badge {
     font-size: 10px;

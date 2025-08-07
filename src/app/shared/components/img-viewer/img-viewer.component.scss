@@ -6,7 +6,7 @@
   background: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow-y: auto;
 }
 
 /* Main Image Container */
@@ -311,5 +311,19 @@
   
   .thumbnails-container {
     padding: 12px;
+  }
+}
+
+
+.image-pdf {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 32px;
+  color: #666;
+
+  img {
+    max-width: 300px;
   }
 }

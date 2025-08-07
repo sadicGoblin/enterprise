@@ -16,6 +16,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
 import { FormControl } from '@angular/forms';
 import { CustomSelectComponent, ParameterType, SelectOption } from '../../../../shared/controls/custom-select/custom-select.component';
 import { PlanificationTableComponent, Activity as PlanificationActivity } from '../../components/planification-table/planification-table.component';
@@ -23,6 +25,8 @@ import { ControlService } from '../../services/control.service';
 import { ControlApiRequest, ControlApiResponse } from '../../models/control-api.models';
 import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+import { ProxyService } from '../../../../core/services/proxy.service';
 
 // Activity interface definition - extended from the one used in PlanificationTableComponent
 export interface Activity extends PlanificationActivity {
@@ -59,6 +63,8 @@ export interface Activity extends PlanificationActivity {
     MatDatepickerModule,
     MatNativeDateModule,
     MatProgressSpinnerModule,
+    MatSnackBarModule,
+    HttpClientModule,
     CustomSelectComponent,
     PlanificationTableComponent,
   ],
@@ -76,10 +82,11 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   // Toast notification properties
   showToast = false;
   toastMessage = '';
-  
+  noActivities = false;
   // API related properties
   isLoading = false;
   selectedProjectId: string | null = null;
+  selectedProjectName: string | null = null;
   selectedCollaboratorId: string | null = null;
   selectedCollaboratorName: string | null = null;
   
@@ -93,7 +100,10 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   @ViewChild(PlanificationTableComponent) planificationTable!: PlanificationTableComponent;
   constructor(
     private controlService: ControlService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private snackBar: MatSnackBar,
+    private http: HttpClient,
+    private proxyService: ProxyService
   ) {
     // Initialize with current date as default
     const now = new Date();
@@ -263,8 +273,9 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   onProjectSelectionChange(selectedProject: SelectOption | null): void {
     console.log('Selected project:', selectedProject);
     
-    // Store the selected project ID
+    // Store the selected project ID and name
     this.selectedProjectId = selectedProject ? selectedProject.value : null;
+    this.selectedProjectName = selectedProject ? selectedProject.label : null;
     
     // Reset activities when project changes
     this.activities = [];
@@ -407,6 +418,12 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
         // Check if the response is an object with a data property containing an array
         const activitiesData = response.data || [];
         console.log('Activities data extracted:', activitiesData);
+
+        if (activitiesData.length === 0) {
+          this.noActivities = true;
+        } else {
+          this.noActivities = false;
+        }
         
         if (Array.isArray(activitiesData) && activitiesData.length > 0) {
           console.log(`Processing ${activitiesData.length} activities from API response`);
@@ -584,6 +601,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   
   // Mock data for now - would come from an API in real app
   activities: Activity[] = [];
+  exportingPdf = false;
 
   /**
    * Track expanded activities
@@ -872,5 +890,316 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
         console.log(`- ${a.name}`);
       });
     }
+  }
+
+  /**
+   * Exporta el cronograma completo a PDF
+   */
+  exportCronogramaToPdf(): void {
+    if (this.exportingPdf) {
+      return;
+    }
+
+    this.exportingPdf = true;
+    this.snackBar.open('Generando PDF del cronograma...', '', { duration: 2000 });
+
+    // Obtener el contenido HTML del cronograma
+    const cronogramaContent = document.querySelector('#cronograma-content');
+    if (!cronogramaContent) {
+      this.snackBar.open('Error: No se pudo obtener el contenido del cronograma', 'Cerrar', { duration: 3000 });
+      this.exportingPdf = false;
+      return;
+    }
+    
+    // Crear una copia del HTML para manipularlo
+    const contentClone = cronogramaContent.cloneNode(true) as HTMLElement;
+    
+    // Eliminar botones y elementos no necesarios del clon
+    const buttons = contentClone.querySelectorAll('button');
+    buttons.forEach(button => {
+      if (button.parentNode) {
+        button.parentNode.removeChild(button);
+      }
+    });
+    
+    // Eliminar iconos mat-icon que no se renderizan bien en PDF (pero mantener material-symbols-outlined)
+    const matIcons = contentClone.querySelectorAll('mat-icon');
+    matIcons.forEach(icon => {
+      if (icon.parentNode) {
+        icon.parentNode.removeChild(icon);
+      }
+    });
+    
+    // Limpiar texto de iconos material-symbols-outlined para usar nuestros estilos CSS
+    const materialIcons = contentClone.querySelectorAll('.material-symbols-outlined');
+    materialIcons.forEach(icon => {
+      icon.textContent = ''; // Vaciar contenido para que funcionen los estilos CSS :after
+    });
+    
+    // Crear el encabezado del PDF con información del período y proyecto
+    const headerInfo = this.createPdfHeader();
+    
+    // Obtener los estilos CSS relevantes
+    const styles = this.getStyles();
+    
+    // Crear el HTML completo con estilos
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Cronograma Mensual - ${this.formattedPeriod}</title>
+        <style>
+          ${styles}
+          body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            font-size: 12px;
+          }
+          .pdf-header {
+            background-color: #0c4790;
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            text-align: center;
+          }
+          .pdf-header h1 {
+            margin: 0;
+            font-size: 24px;
+          }
+          .pdf-header p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+          }
+          th, td {
+            border: 1px solid #ccc;
+            padding: 6px 4px;
+            text-align: center;
+          }
+          th {
+            background-color: #e8e8e8;
+            font-weight: bold;
+            color: #333;
+          }
+          .activity-row {
+            background-color: #fafafa;
+          }
+          .weekend {
+            background-color: #ffe6e6;
+          }
+          /* Estilos para días asignados (pendientes) */
+          .day-assigned {
+            background-color: #fff3cd !important;
+            border: 2px solid #f57c00 !important;
+          }
+          .day-assigned .status-icon,
+          .day-assigned .material-symbols-outlined,
+          .day-assigned span {
+            color: #f57c00 !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+          }
+          
+          /* Estilos para días completados */
+          .day-completed {
+            background-color: #d4edda !important;
+            border: 2px solid #2e7d32 !important;
+          }
+          .day-completed .status-icon,
+          .day-completed .material-symbols-outlined,
+          .day-completed span {
+            color: #2e7d32 !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+          }
+          
+          /* Reemplazar iconos con símbolos Unicode */
+          .day-assigned .material-symbols-outlined:after {
+            content: "○" !important;
+            font-size: 18px !important;
+            font-weight: bold !important;
+          }
+          .day-completed .material-symbols-outlined:after {
+            content: "✓" !important;
+            font-size: 18px !important;
+            font-weight: bold !important;
+          }
+          
+          /* Ocultar el contenido original de los iconos */
+          .material-symbols-outlined {
+            font-size: 0 !important;
+            position: relative;
+          }
+          .material-symbols-outlined:after {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+          }
+          .metrics-column {
+            font-weight: bold;
+          }
+          /* Estilos para filas de ámbito */
+          .ambito-header-row {
+            background-color: #eaeaea !important;
+          }
+          .ambito-header-row td,
+          .ambito-header-row th {
+            background-color: #eaeaea !important;
+          }
+          .ambito-header {
+            background-color: #eaeaea !important;
+            font-weight: bold;
+            color: #0c4790;
+            text-align: left !important;
+            padding-left: 15px !important;
+          }
+          .ambito-header-cell {
+            background-color: #eaeaea !important;
+          }
+          
+          /* Asegurar anchos consistentes para todas las columnas */
+          .day-column {
+            width: 40px !important;
+            min-width: 40px !important;
+            max-width: 40px !important;
+          }
+          .sticky-end-column {
+            width: 70px !important;
+            min-width: 70px !important;
+            max-width: 70px !important;
+          }
+          @media print {
+            body { margin: 0; }
+            .pdf-header { break-inside: avoid; }
+            table { break-inside: avoid; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="pdf-header">
+          <h1>CRONOGRAMA MENSUAL</h1>
+          <p>${headerInfo}</p>
+        </div>
+        ${contentClone.innerHTML}
+      </body>
+      </html>
+    `;
+    
+    // Crear el objeto para enviar a la API
+    const requestBody = {
+      html: htmlContent,
+      filename: `cronograma-${this.formattedPeriod?.replace(/\s+/g, '-')}-${Date.now()}.pdf`,
+      title: `Cronograma Mensual - ${this.formattedPeriod}`,
+      sheet_type: 'H' // Landscape para tablas anchas
+    };
+
+    // Enviar a la API usando ProxyService como en los otros modales
+    this.proxyService
+      .post(
+        environment.apiBaseUrl + '/bucket/api/v1/files/html-to-pdf',
+        requestBody
+      )
+      .subscribe({
+        next: (response: any) => {
+          this.exportingPdf = false;
+          if (response && response.url) {
+            console.log('PDF del cronograma generado correctamente', response);
+            window.open(response.url, '_blank');
+            this.snackBar.open('PDF del cronograma generado correctamente', '', {
+              duration: 3000,
+            });
+          } else {
+            console.log('Error al generar PDF del cronograma', response);
+            this.snackBar.open('Error al generar PDF del cronograma', 'Cerrar', {
+              duration: 3000,
+            });
+          }
+        },
+        error: (error) => {
+          console.error('Error al generar PDF del cronograma:', error);
+          this.snackBar.open('Error al generar el PDF del cronograma', 'Cerrar', {
+            duration: 3000,
+          });
+          this.exportingPdf = false;
+        }
+      });
+  }
+
+  /**
+   * Crea el encabezado con información del PDF
+   */
+  private createPdfHeader(): string {
+    let headerParts = [];
+    
+    // Formatear período para PDF (ej: "AGOSTO 2024")
+    if (this.selectedPeriod) {
+      const year = this.selectedPeriod.getFullYear();
+      const month = this.selectedPeriod.getMonth();
+      const monthNames = [
+        'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+        'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+      ];
+      const formattedPeriodForPdf = `${monthNames[month]} ${year}`;
+      headerParts.push(`Período: ${formattedPeriodForPdf}`);
+    }
+    
+    if (this.selectedCollaboratorName) {
+      headerParts.push(`Colaborador: ${this.selectedCollaboratorName}`);
+    }
+    
+    if (this.selectedProjectName) {
+      headerParts.push(`Proyecto: ${this.selectedProjectName}`);
+    }
+    
+    headerParts.push(`Generado: ${new Date().toLocaleDateString('es-ES')}`);
+    
+    return headerParts.join(' | ');
+  }
+
+  /**
+   * Obtiene los estilos CSS relevantes para el PDF
+   */
+  private getStyles(): string {
+    const styleSheets = document.styleSheets;
+    let styles = '';
+    
+    // Filtrar los estilos relevantes para el cronograma
+    for (let i = 0; i < styleSheets.length; i++) {
+      try {
+        const rules = styleSheets[i].cssRules || styleSheets[i].rules;
+        if (!rules) continue;
+        
+        for (let j = 0; j < rules.length; j++) {
+          const rule = rules[j];
+          if (rule.cssText && (
+              rule.cssText.includes('.planification-table') ||
+              rule.cssText.includes('.activity-row') ||
+              rule.cssText.includes('.activity-name') ||
+              rule.cssText.includes('.day-cell') ||
+              rule.cssText.includes('.weekend') ||
+              rule.cssText.includes('.completed') ||
+              rule.cssText.includes('.pending') ||
+              rule.cssText.includes('mat-icon') ||
+              rule.cssText.includes('table') ||
+              rule.cssText.includes('th') ||
+              rule.cssText.includes('td')
+            )) {
+            styles += rule.cssText + '\n';
+          }
+        }
+      } catch (e) {
+        // Algunos navegadores restringen acceso a ciertos stylesheets
+        console.warn('No se pudo acceder a la hoja de estilo', e);
+      }
+    }
+    
+    return styles;
   }
 }
