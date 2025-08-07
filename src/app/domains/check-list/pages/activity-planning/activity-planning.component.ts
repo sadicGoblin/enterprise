@@ -922,12 +922,18 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
       }
     });
     
-    // Eliminar iconos mat-icon que no se renderizan bien en PDF
+    // Eliminar iconos mat-icon que no se renderizan bien en PDF (pero mantener material-symbols-outlined)
     const matIcons = contentClone.querySelectorAll('mat-icon');
     matIcons.forEach(icon => {
       if (icon.parentNode) {
         icon.parentNode.removeChild(icon);
       }
+    });
+    
+    // Limpiar texto de iconos material-symbols-outlined para usar nuestros estilos CSS
+    const materialIcons = contentClone.querySelectorAll('.material-symbols-outlined');
+    materialIcons.forEach(icon => {
+      icon.textContent = ''; // Vaciar contenido para que funcionen los estilos CSS :after
     });
     
     // Crear el encabezado del PDF con información del período y proyecto
@@ -972,13 +978,14 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
             font-size: 10px;
           }
           th, td {
-            border: 1px solid #ddd;
-            padding: 4px;
+            border: 1px solid #ccc;
+            padding: 6px 4px;
             text-align: center;
           }
           th {
-            background-color: #f5f5f5;
+            background-color: #e8e8e8;
             font-weight: bold;
+            color: #333;
           }
           .activity-row {
             background-color: #fafafa;
@@ -986,16 +993,87 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
           .weekend {
             background-color: #ffe6e6;
           }
-          .completed-icon {
-            color: #4fad56;
-            font-size: 12px;
+          /* Estilos para días asignados (pendientes) */
+          .day-assigned {
+            background-color: #fff3cd !important;
+            border: 2px solid #f57c00 !important;
           }
-          .pending-icon {
-            color: #ffbc00;
-            font-size: 12px;
+          .day-assigned .status-icon,
+          .day-assigned .material-symbols-outlined,
+          .day-assigned span {
+            color: #f57c00 !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+          }
+          
+          /* Estilos para días completados */
+          .day-completed {
+            background-color: #d4edda !important;
+            border: 2px solid #2e7d32 !important;
+          }
+          .day-completed .status-icon,
+          .day-completed .material-symbols-outlined,
+          .day-completed span {
+            color: #2e7d32 !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+          }
+          
+          /* Reemplazar iconos con símbolos Unicode */
+          .day-assigned .material-symbols-outlined:after {
+            content: "○" !important;
+            font-size: 18px !important;
+            font-weight: bold !important;
+          }
+          .day-completed .material-symbols-outlined:after {
+            content: "✓" !important;
+            font-size: 18px !important;
+            font-weight: bold !important;
+          }
+          
+          /* Ocultar el contenido original de los iconos */
+          .material-symbols-outlined {
+            font-size: 0 !important;
+            position: relative;
+          }
+          .material-symbols-outlined:after {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
           }
           .metrics-column {
             font-weight: bold;
+          }
+          /* Estilos para filas de ámbito */
+          .ambito-header-row {
+            background-color: #eaeaea !important;
+          }
+          .ambito-header-row td,
+          .ambito-header-row th {
+            background-color: #eaeaea !important;
+          }
+          .ambito-header {
+            background-color: #eaeaea !important;
+            font-weight: bold;
+            color: #0c4790;
+            text-align: left !important;
+            padding-left: 15px !important;
+          }
+          .ambito-header-cell {
+            background-color: #eaeaea !important;
+          }
+          
+          /* Asegurar anchos consistentes para todas las columnas */
+          .day-column {
+            width: 40px !important;
+            min-width: 40px !important;
+            max-width: 40px !important;
+          }
+          .sticky-end-column {
+            width: 70px !important;
+            min-width: 70px !important;
+            max-width: 70px !important;
           }
           @media print {
             body { margin: 0; }
@@ -1060,8 +1138,16 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   private createPdfHeader(): string {
     let headerParts = [];
     
-    if (this.formattedPeriod) {
-      headerParts.push(`Período: ${this.formattedPeriod}`);
+    // Formatear período para PDF (ej: "AGOSTO 2024")
+    if (this.selectedPeriod) {
+      const year = this.selectedPeriod.getFullYear();
+      const month = this.selectedPeriod.getMonth();
+      const monthNames = [
+        'ENERO', 'FEBRERO', 'MARZO', 'ABRIL', 'MAYO', 'JUNIO',
+        'JULIO', 'AGOSTO', 'SEPTIEMBRE', 'OCTUBRE', 'NOVIEMBRE', 'DICIEMBRE'
+      ];
+      const formattedPeriodForPdf = `${monthNames[month]} ${year}`;
+      headerParts.push(`Período: ${formattedPeriodForPdf}`);
     }
     
     if (this.selectedCollaboratorName) {
