@@ -395,7 +395,6 @@ export class SstmaModalComponent implements OnInit {
             object-fit: cover !important;
             object-position: center !important;
             display: block !important;
-            transform: rotate(90deg) !important;
             transform-origin: center !important;
           }
         </style>
