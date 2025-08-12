@@ -66,7 +66,7 @@
           <app-custom-select
             #communeSelect
             [label]="'Comuna'"
-            [loadFromApi]="true"
+            [loadFromApi]="!!workForm.get('IdRegion')?.value"
             [parameterType]="ParameterType.CUSTOM_API"
             [customApiEndpoint]="'/ws/RegionesSvcImpl.php'"
             [customApiRequestBody]="communeRequestBody"

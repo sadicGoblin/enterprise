@@ -319,7 +319,11 @@
                           </mat-icon>
                         </td>
                         <td>
-                          <button mat-icon-button color="warn" (click)="deletePlanItem(planItem, row)">
+                          <button 
+                            mat-icon-button 
+                            color="warn" 
+                            [disabled]="planItem.estado !== 'pendiente'"
+                            (click)="deletePlanItem(planItem, row)">
                             <mat-icon>delete</mat-icon>
                           </button>
                         </td>
