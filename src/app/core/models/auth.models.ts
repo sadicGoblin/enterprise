@@ -1,6 +1,7 @@
 export interface LoginRequest {
   caso: string; // Required parameter with value 'Consulta'
   usuario: string;
+  password: string;
   idUsuario?: number; // Optional
 }
 

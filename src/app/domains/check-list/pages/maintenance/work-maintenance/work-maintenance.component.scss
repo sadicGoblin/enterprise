@@ -30,6 +30,57 @@ mat-form-field {
   width: 100%;
 }
 
+// Estilos para upload de archivos
+.file-upload-progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: #666;
+  font-size: 0.875rem;
+  
+  mat-spinner {
+    margin-right: 8px;
+  }
+}
+
+.file-success {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: #4caf50;
+  font-size: 0.875rem;
+  
+  mat-icon {
+    font-size: 18px;
+    width: 18px;
+    height: 18px;
+  }
+}
+
+// Estilos para columna Excel
+.excel-column {
+  width: 60px !important;
+  max-width: 60px !important;
+  text-align: center !important;
+  padding: 8px !important;
+  
+  // Icono Excel habilitado en verde
+  button:not(.disabled-excel) mat-icon {
+    color: #4caf50 !important; // Verde
+  }
+}
+
+.disabled-excel {
+  opacity: 0.3;
+  cursor: not-allowed !important;
+  
+  mat-icon {
+    color: #ccc !important;
+  }
+}
+
 // Table styling
 table {
   width: 100%;

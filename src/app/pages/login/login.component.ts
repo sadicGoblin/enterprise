@@ -5,7 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
@@ -36,13 +36,27 @@ export class LoginComponent implements AfterViewInit {
   constructor(
     private router: Router, 
     private snackBar: MatSnackBar,
-    private authService: AuthService
+    private authService: AuthService,
+    private route: ActivatedRoute
   ) {}
 
 
   ngAfterViewInit(): void {
     particlesJS.load('particles-js', 'assets/particles.json', () => {
       console.log('particles.js config loaded');
+    });
+
+    // Verificar si hay mensaje de sesión expirada en los query params
+    this.route.queryParams.subscribe(params => {
+      if (params['message']) {
+        this.showErrorMessage(params['message']);
+        // Limpiar el query param para evitar mostrar el mensaje múltiples veces
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: {},
+          replaceUrl: true
+        });
+      }
     });
   }
 
@@ -55,7 +69,7 @@ export class LoginComponent implements AfterViewInit {
     this.isLoading = true;
     
     // Call login service with only username, no password needed as per the API requirements
-    this.authService.login(this.email)
+    this.authService.login(this.email, this.password)
       .pipe(
         finalize(() => this.isLoading = false)
       )
@@ -69,9 +83,18 @@ export class LoginComponent implements AfterViewInit {
           if (isSuccess) {
             console.log('[LoginComponent] Login successful');
             
-            // No need to load user profile separately since all data comes in the login response
-            // Navigate to main dashboard
-            this.router.navigate(['/check-list']);
+            // Check if there's a redirect URL stored (from AuthGuard)
+            const redirectUrl = sessionStorage.getItem('redirectUrl');
+            
+            if (redirectUrl) {
+              console.log('[LoginComponent] Redirecting to stored URL:', redirectUrl);
+              sessionStorage.removeItem('redirectUrl'); // Clean up
+              this.router.navigateByUrl(redirectUrl);
+            } else {
+              // Navigate to default dashboard
+              console.log('[LoginComponent] Redirecting to default dashboard');
+              this.router.navigate(['/check-list']);
+            }
           } else {
             // Use either new or legacy error message
             const errorMsg = response.message || response.glosa || 'Error de autenticación';
