@@ -198,16 +198,90 @@ export class ARTReportModalComponent implements OnInit {
     if (headerActions && headerActions.parentNode) {
       headerActions.parentNode.removeChild(headerActions);
     }
+
+    // Crear el header para el PDF
+    const pdfHeader = document.createElement('div');
+    pdfHeader.className = 'modal-header';
+    pdfHeader.innerHTML = '<h2>ART</h2>';
     
-    // Convertir las imágenes en enlaces clickeables
-    const images = contentClone.querySelectorAll('img');
+    // Insertar el header al principio del contenido
+    contentClone.insertBefore(pdfHeader, contentClone.firstChild);
+    
+    // Reemplazar las imágenes con contenedores de tamaño fijo para mejor orientación en PDF
+    const imgViewerComponents = contentClone.querySelectorAll('app-img-viewer');
+    
+    // Si hay componentes app-img-viewer, reemplazarlos con imágenes directas
+    imgViewerComponents.forEach((component: Element) => {
+      if (component.parentNode) {
+        // Obtener la lista de URLs de imágenes del artData
+        const imageUrls = this.artData.photos || [];
+        
+        if (imageUrls && imageUrls.length > 0) {
+          // Crear un nuevo contenedor para las imágenes con layout en cuadrícula
+          const imagesContainer = document.createElement('div');
+          imagesContainer.className = 'pdf-images-container';
+          imagesContainer.style.cssText = 'display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 10px; margin-top: 20px; padding: 10px;';
+          
+          // Procesar cada imagen con tamaño fijo 300x300 para mantener consistencia
+          imageUrls.forEach((imgUrl: string, index: number) => {
+            // Contenedor principal para la imagen que evita saltos de página
+            const imageWrapper = document.createElement('div');
+            imageWrapper.style.cssText = 'page-break-inside: avoid; margin-bottom: 30px; text-align: center; display: inline-block; width: 320px; margin-right: 20px;';
+            
+            // Contenedor con tamaño fijo para la imagen
+            const fixedContainer = document.createElement('div');
+            fixedContainer.style.cssText = 'width: 300px; height: 300px; margin: 0 auto; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; position: relative; background: #f5f5f5;';
+            
+            // Crear un enlace contenedor que envuelva la imagen
+            const imageLink = document.createElement('a');
+            imageLink.href = imgUrl;
+            imageLink.target = '_blank';
+            imageLink.style.cssText = 'display: block; width: 100%; height: 100%; text-decoration: none;';
+            
+            // Imagen con tamaño fijo y object-fit: cover para llenar el espacio
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            img.alt = `Evidencia fotográfica ${index + 1}`;
+            img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;';
+            
+            // Agregar imagen al enlace y enlace al contenedor
+            imageLink.appendChild(img);
+            fixedContainer.appendChild(imageLink);
+            imageWrapper.appendChild(fixedContainer);
+            
+            // Agregar texto descriptivo debajo de la imagen
+            const imageLabel = document.createElement('div');
+            imageLabel.style.cssText = 'margin-top: 8px; font-size: 12px; color: #333; text-align: center; font-weight: bold;';
+            imageLabel.textContent = `Imagen ${index + 1}`;
+            imageWrapper.appendChild(imageLabel);
+            
+            // Agregar texto de enlace debajo
+            const linkText = document.createElement('a');
+            linkText.href = imgUrl;
+            linkText.target = '_blank';
+            linkText.style.cssText = 'display: block; margin: 5px auto 0; font-size: 11px; color: #0c4790; text-align: center; text-decoration: none;';
+            linkText.textContent = 'Ver imagen completa';
+            imageWrapper.appendChild(linkText);
+            
+            // Agregar al contenedor principal
+            imagesContainer.appendChild(imageWrapper);
+          });
+          
+          // Reemplazar el componente app-img-viewer con nuestro nuevo contenedor
+          component.parentNode.replaceChild(imagesContainer, component);
+        }
+      }
+    });
+
+    // También procesar las imágenes regulares que no están en app-img-viewer
+    const images = contentClone.querySelectorAll('img:not(.pdf-images-container img)');
     images.forEach(img => {
       const imgSrc = img.getAttribute('src');
       if (imgSrc) {
         // Crear un enlace que envuelva la imagen
         const link = document.createElement('a');
         link.href = imgSrc;
-        link.target = '_blank'; // Abrir en nueva pestaña
+        link.target = '_blank';
         link.title = 'Haga clic para ver la imagen original';
         
         // Reemplazar la imagen con el enlace + imagen
@@ -234,6 +308,14 @@ export class ARTReportModalComponent implements OnInit {
             font-family: Arial, sans-serif;
             margin: 0;
             padding: 20px;
+          }
+          .modal-header {
+            background-color: #0c4790;
+            color: white;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
+            text-align: center;
           }
           .art-modal-header {
             background-color: #0c4790;
@@ -290,6 +372,26 @@ export class ARTReportModalComponent implements OnInit {
           }
           a:hover img {
             border: 2px solid #0c4790;
+          }
+          
+          /* Estilos específicos para el contenedor de imágenes PDF */
+          .pdf-images-container {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: flex-start !important;
+            gap: 10px !important;
+            margin-top: 20px !important;
+            padding: 10px !important;
+          }
+          
+          .pdf-images-container img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            object-position: center !important;
+            display: block !important;
+            transform: rotate(90deg) !important;
+            transform-origin: center !important;
           }
         </style>
       </head>

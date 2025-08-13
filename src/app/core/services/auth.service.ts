@@ -30,7 +30,8 @@ export class AuthService {
     // For this implementation, password is not required as per your specifications
     const request: LoginRequest = {
       caso: 'Consulta',
-      usuario: username
+      usuario: username,
+      password: password
     };
 
     console.log(`[AuthService] Login request for user: ${username}`, request);
@@ -57,6 +58,14 @@ export class AuthService {
             // Store username and other user info
             localStorage.setItem('userName', userData.Usuario || request.usuario);
             
+            // Store authentication token - CRITICAL for API requests
+            if (userData['token']) {
+              localStorage.setItem('authToken', userData['token']);
+              console.log('[AuthService] Token stored successfully');
+            } else {
+              console.warn('[AuthService] No token received in response');
+            }
+
             // Store additional user info that might be needed later
             if (userData.Nombre) localStorage.setItem('userFullName', userData.Nombre);
             if (userData.EMail) localStorage.setItem('userEmail', userData.EMail);
@@ -68,6 +77,40 @@ export class AuthService {
           }
         })
       );
+  }
+
+  /**
+   * Get the stored authentication token
+   * @returns Token string or null if not found
+   */
+  getToken(): string | null {
+    return localStorage.getItem('authToken');
+  }
+
+  /**
+   * Check if user is authenticated (has valid token)
+   * @returns True if token exists, false otherwise
+   */
+  isAuthenticated(): boolean {
+    return !!this.getToken();
+  }
+
+  /**
+   * Logout user and clear all stored data
+   */
+  logout(): void {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('userId');
+    localStorage.removeItem('userName');
+    localStorage.removeItem('userFullName');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userRole');
+    localStorage.removeItem('userAccessType');
+    localStorage.removeItem('userPosition');
+    localStorage.removeItem('userCompany');
+    localStorage.removeItem('userPhone');
+    this.currentUserId = null;
+    console.log('[AuthService] User logged out and all data cleared');
   }
 
   /**
@@ -107,21 +150,5 @@ export class AuthService {
       );
   }
 
-  /**
-   * Check if user is currently logged in
-   */
-  isLoggedIn(): boolean {
-    return !!localStorage.getItem('userId');
-  }
 
-  /**
-   * Logout the current user
-   */
-  logout(): void {
-    this.currentUserId = null;
-    this.userProfile = null;
-    localStorage.removeItem('userId');
-    localStorage.removeItem('userName');
-    // Remove any other stored authentication data
-  }
 }

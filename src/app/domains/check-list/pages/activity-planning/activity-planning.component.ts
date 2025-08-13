@@ -1075,10 +1075,36 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
             min-width: 70px !important;
             max-width: 70px !important;
           }
+          /* Sección de firma */
+          .signature-section {
+            margin-top: 40px;
+            display: flex;
+            justify-content: flex-end;
+            padding-right: 20px;
+          }
+          .signature-line {
+            text-align: center;
+            width: 200px;
+          }
+          .signature-space {
+            border-bottom: 1px solid #333;
+            height: 40px;
+            margin-bottom: 5px;
+          }
+          .signature-label {
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+          }
+          
           @media print {
             body { margin: 0; }
             .pdf-header { break-inside: avoid; }
             table { break-inside: avoid; }
+            .signature-section { 
+              margin-top: 30px;
+              page-break-inside: avoid;
+            }
           }
         </style>
       </head>
@@ -1088,6 +1114,14 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
           <p>${headerInfo}</p>
         </div>
         ${contentClone.innerHTML}
+        
+        <!-- Sección de firma -->
+        <div class="signature-section">
+          <div class="signature-line">
+            <div class="signature-space"></div>
+            <div class="signature-label">Firma</div>
+          </div>
+        </div>
       </body>
       </html>
     `;

@@ -59,7 +59,8 @@ export class ObraService {
       idComuna: obraData.idComuna,
       fechaInicio: obraData.fechaInicio,
       fechaTermino: obraData.fechaTermino,
-      observaciones: obraData.observaciones
+      observaciones: obraData.observaciones,
+      docfile: obraData.docfile
     };
     
     console.log('[ObraService] Creating obra with request:', request);
@@ -83,7 +84,8 @@ export class ObraService {
       comuna: obraData.comuna, // Incluir el campo comuna en la solicitud
       fechaInicio: obraData.fechaInicio,
       fechaTermino: obraData.fechaTermino,
-      observaciones: obraData.observaciones
+      observaciones: obraData.observaciones,
+      docfile: obraData.docfile
     };
     
     console.log('[ObraService] Updating obra with request:', request);

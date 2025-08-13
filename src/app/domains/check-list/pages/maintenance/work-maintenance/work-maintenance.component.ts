@@ -1,11 +1,12 @@
 import { Component, OnInit, CUSTOM_ELEMENTS_SCHEMA, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { MatNativeDateModule, MAT_DATE_LOCALE, DateAdapter, MAT_DATE_FORMATS } from '@angular/material/core';
 import { MatSelectModule } from '@angular/material/select';
 import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatIconModule } from '@angular/material/icon';
@@ -16,8 +17,20 @@ import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 
 // Import custom select component
 import { CustomSelectComponent, ParameterType, SelectOption } from '../../../../../shared/controls/custom-select/custom-select.component';
-
 import { ObraService } from '../../../services/obra.service';
+
+// Formato de fecha personalizado para Chile (DD/MM/AAAA)
+const MY_DATE_FORMATS = {
+  parse: {
+    dateInput: 'DD/MM/YYYY',
+  },
+  display: {
+    dateInput: 'DD/MM/YYYY',
+    monthYearLabel: 'MMM YYYY',
+    dateA11yLabel: 'LL',
+    monthYearA11yLabel: 'MMMM YYYY',
+  },
+};
 import { Obra, ObrasFullResponse } from '../../../models/obra.models';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
@@ -34,6 +47,7 @@ interface Work {
   FechaInicio: string;
   FechaTermino: string;
   Observaciones?: string;
+  docfile?: string; // URL del archivo Excel asociado
 }
 
 @Component({
@@ -43,6 +57,7 @@ interface Work {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    HttpClientModule,
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
@@ -56,6 +71,10 @@ interface Work {
     MatSnackBarModule,
     MatDialogModule,
     CustomSelectComponent
+  ],
+  providers: [
+    { provide: MAT_DATE_LOCALE, useValue: 'es-CL' },
+    { provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS }
   ],
   schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './work-maintenance.component.html',
@@ -85,13 +104,20 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
   isEditing = false;
   editingIndex: number | null = null;
   isLoading = false;
-  displayedColumns = ['code', 'name', 'commune', 'startDate', 'endDate', 'actions'];
+  displayedColumns = ['code', 'name', 'commune', 'startDate', 'endDate', 'excel', 'actions'];
+
+  // Propiedades para manejo de archivos
+  selectedFileName: string = '';
+  isUploadingFile: boolean = false;
+  uploadedFileUrl: string = '';
+  selectedFile: File | null = null;
 
   constructor(
     private fb: FormBuilder,
     private obraService: ObraService,
     private snackBar: MatSnackBar,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private http: HttpClient
   ) {
     // Inicializar el formulario al crear el componente
     this.workForm = this.fb.group({
@@ -106,6 +132,7 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
       IdRegion: [''],
       Region: [''],
       Observaciones: [''],
+      docfile: ['']
     });
     this.initForm();
   }
@@ -120,6 +147,74 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
       this.communeSelect.optionsLoaded.subscribe((options: SelectOption[]) => {
         console.log('Comunas cargadas:', options);
       });
+    }
+  }
+
+  /**
+   * Maneja la selección de archivo Excel
+   */
+  onFileSelected(event: any): void {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      const file = files[0];
+      
+      // Validar tipo de archivo
+      const validTypes = [
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+      ];
+      
+      if (!validTypes.includes(file.type) && !file.name.match(/\.(xls|xlsx)$/i)) {
+        this.showMessage('Por favor seleccione un archivo Excel válido (.xls o .xlsx)');
+        return;
+      }
+      
+      this.selectedFile = file;
+      this.selectedFileName = file.name;
+      this.uploadFileToStorage(file);
+    }
+  }
+
+  /**
+   * Sube el archivo al bucket de almacenamiento
+   */
+  private uploadFileToStorage(file: File): void {
+    this.isUploadingFile = true;
+    this.uploadedFileUrl = '';
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    this.http.post<any>('https://inarco-ssoma.favric.cl/bucket/storage', formData).subscribe({
+      next: (response) => {
+        console.log('Archivo subido correctamente:', response);
+        if (response && response.url) {
+          this.uploadedFileUrl = response.url;
+          this.showMessage('Archivo subido correctamente');
+        } else {
+          this.showMessage('Error: No se pudo obtener la URL del archivo');
+        }
+      },
+      error: (error) => {
+        console.error('Error al subir archivo:', error);
+        this.showMessage('Error al subir el archivo. Por favor, inténtelo de nuevo.');
+        this.selectedFile = null;
+        this.selectedFileName = '';
+        this.uploadedFileUrl = '';
+      },
+      complete: () => {
+        this.isUploadingFile = false;
+      }
+    });
+  }
+
+  /**
+   * Descarga el archivo Excel asociado a una obra
+   */
+  downloadExcelFile(fileUrl: string): void {
+    if (fileUrl && fileUrl.trim()) {
+      // Abrir la URL en una nueva pestaña para descargar el archivo
+      window.open(fileUrl, '_blank');
     }
   }
 
@@ -142,7 +237,8 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
             Region: obra.Region,
             FechaInicio: obra.FechaInicio,
             FechaTermino: obra.FechaTermino,
-            Observaciones: obra.Observaciones
+            Observaciones: obra.Observaciones,
+            docfile: (obra as any).docfile || '' // URL del archivo Excel
           }));
           this.works = works;
           this.dataSource.data = works;
@@ -217,10 +313,20 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
         Comuna: work.Comuna || '',
         IdRegion: work.IdRegion || '',
         Region: work.Region || '',
-        FechaInicio: work.FechaInicio || '',
-        FechaTermino: work.FechaTermino || '',
+        FechaInicio: this.parseLocalDate(work.FechaInicio),
+        FechaTermino: this.parseLocalDate(work.FechaTermino),
         Observaciones: work.Observaciones || '',
+        docfile: work.docfile || ''
       });
+
+      // Configure file upload for editing
+      if (work.docfile) {
+        this.uploadedFileUrl = work.docfile;
+        this.selectedFileName = 'Archivo actual ' + work.docfile;
+      } else {
+        this.uploadedFileUrl = '';
+        this.selectedFileName = '';
+      }
 
       // Marcar como editando y guardar el índice
       this.isEditing = true;
@@ -303,11 +409,24 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
   resetForm(): void {
     this.workForm.reset();
     
+    // Limpiar todos los estados de validación
+    Object.keys(this.workForm.controls).forEach(key => {
+      this.workForm.get(key)?.setErrors(null);
+      this.workForm.get(key)?.markAsUntouched();
+      this.workForm.get(key)?.markAsPristine();
+    });
+    
     // Reset commune request body
     this.communeRequestBody = {
       caso: 'ComunaConsulta',
       idRegion: ''
     };
+
+    // Reset file upload properties
+    this.selectedFile = null;
+    this.selectedFileName = '';
+    this.uploadedFileUrl = '';
+    this.isUploadingFile = false;
   }
 
   save(): void {
@@ -358,7 +477,8 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
       idComuna: formValue.IdComuna,
       fechaInicio: startDate ? startDate.toISOString().split('T')[0] : '',
       fechaTermino: endDate ? endDate.toISOString().split('T')[0] : '',
-      observaciones: formValue.Observaciones || ''
+      observaciones: formValue.Observaciones || '',
+      docfile: this.uploadedFileUrl || '' // URL del archivo Excel subido
     };
     
     console.log('Añadiendo obra:', obraData);
@@ -405,7 +525,8 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
       comuna: formValue.Comuna || "",  // Usar el valor real de la comuna seleccionada
       fechaInicio: startDate ? startDate.toISOString() : "",
       fechaTermino: endDate ? endDate.toISOString() : "",
-      observaciones: formValue.Observaciones || ""
+      observaciones: formValue.Observaciones || "",
+      docfile: this.uploadedFileUrl || ""
     };
     
     // Mostrar el request body en consola para verificación
@@ -496,7 +617,35 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
 
   formatDate(dateString: string): string {
     if (!dateString) return '';
-    const date = new Date(dateString);
+    
+    // Parsear fecha manualmente para evitar problemas de zona horaria
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const month = parts[1];
+      const day = parts[2];
+      return `${day}-${month}-${year}`;
+    }
+    
+    // Fallback si el formato no es el esperado
+    const date = new Date(dateString + 'T00:00:00');
     return date.toLocaleDateString('es-CL');
+  }
+
+  /**
+   * Convierte fecha string YYYY-MM-DD a Date sin problemas de zona horaria
+   */
+  private parseLocalDate(dateString: string): Date | null {
+    if (!dateString) return null;
+    
+    const parts = dateString.split('-');
+    if (parts.length === 3) {
+      const year = parseInt(parts[0]);
+      const month = parseInt(parts[1]) - 1; // Los meses en JS son 0-indexados
+      const day = parseInt(parts[2]);
+      return new Date(year, month, day);
+    }
+    
+    return null;
   }
 }

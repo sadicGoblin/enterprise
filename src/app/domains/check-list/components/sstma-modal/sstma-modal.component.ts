@@ -233,22 +233,70 @@ export class SstmaModalComponent implements OnInit {
       headerActions.parentNode.removeChild(headerActions);
     }
 
-    // Convertir las imágenes en enlaces clickeables
-    const images = contentClone.querySelectorAll('img');
-    images.forEach((img) => {
-      const imgSrc = img.getAttribute('src');
-      if (imgSrc) {
-        // Crear un enlace que envuelva la imagen
-        const link = document.createElement('a');
-        link.href = imgSrc;
-        link.target = '_blank'; // Abrir en nueva pestaña
-        link.title = 'Haga clic para ver la imagen original';
-
-        // Reemplazar la imagen con el enlace + imagen
-        const parent = img.parentNode;
-        if (parent) {
-          parent.replaceChild(link, img);
-          link.appendChild(img);
+    // Extraer las imágenes originales del componente app-img-viewer
+    const photoSection = contentClone.querySelector('.photo-evidence-section');
+    const imgViewerComponents = contentClone.querySelectorAll('app-img-viewer');
+    
+    // Reemplazar cada app-img-viewer con las imágenes originales directamente
+    imgViewerComponents.forEach((component: Element) => {
+      if (component.parentNode) {
+        // Obtener la lista de URLs de imágenes del componente SSTMA
+        const imageUrls = this.sstmaData.photos || [];
+        
+        if (imageUrls && imageUrls.length > 0) {
+          // Crear un nuevo contenedor para las imágenes con layout en cuadrícula
+          const imagesContainer = document.createElement('div');
+          imagesContainer.className = 'pdf-images-container';
+          imagesContainer.style.cssText = 'display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 10px; margin-top: 20px; padding: 10px;';
+          
+          // Para cada imagen, crear dos versiones - una horizontal y una vertical
+          // Procesar cada imagen con tamaño fijo 300x300 para mantener consistencia
+          imageUrls.forEach((imgUrl: string, index: number) => {
+            // Contenedor principal para la imagen que evita saltos de página
+            const imageWrapper = document.createElement('div');
+            imageWrapper.style.cssText = 'page-break-inside: avoid; margin-bottom: 30px; text-align: center; display: inline-block; width: 320px; margin-right: 20px;';
+            
+            // Contenedor con tamaño fijo para la imagen
+            const fixedContainer = document.createElement('div');
+            fixedContainer.style.cssText = 'width: 300px; height: 300px; margin: 0 auto; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; position: relative; background: #f5f5f5;';
+            
+            // Crear un enlace contenedor que envuelva la imagen
+            const imageLink = document.createElement('a');
+            imageLink.href = imgUrl;
+            imageLink.target = '_blank';
+            imageLink.style.cssText = 'display: block; width: 100%; height: 100%; text-decoration: none;';
+            
+            // Imagen con tamaño fijo y object-fit: cover para llenar el espacio
+            const img = document.createElement('img');
+            img.src = imgUrl;
+            img.alt = `Evidencia fotográfica ${index + 1}`;
+            img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;';
+            
+            // Agregar imagen al enlace y enlace al contenedor
+            imageLink.appendChild(img);
+            fixedContainer.appendChild(imageLink);
+            imageWrapper.appendChild(fixedContainer);
+            
+            // Agregar texto descriptivo debajo de la imagen
+            const imageLabel = document.createElement('div');
+            imageLabel.style.cssText = 'margin-top: 8px; font-size: 12px; color: #333; text-align: center; font-weight: bold;';
+            imageLabel.textContent = `Imagen ${index + 1}`;
+            imageWrapper.appendChild(imageLabel);
+            
+            // Agregar texto de enlace debajo
+            const linkText = document.createElement('a');
+            linkText.href = imgUrl;
+            linkText.target = '_blank';
+            linkText.style.cssText = 'display: block; margin: 5px auto 0; font-size: 11px; color: #0c4790; text-align: center; text-decoration: none;';
+            linkText.textContent = 'Ver imagen completa';
+            imageWrapper.appendChild(linkText);
+            
+            // Agregar al contenedor principal
+            imagesContainer.appendChild(imageWrapper);
+          });
+          
+          // Reemplazar el componente app-img-viewer con nuestro nuevo contenedor
+          component.parentNode.replaceChild(imagesContainer, component);
         }
       }
     });
@@ -261,42 +309,35 @@ export class SstmaModalComponent implements OnInit {
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Reporte de Inspección SSTMA</title>
         <style>
-          ${styles}
           body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 16px;
+            color: #333;
           }
           .modal-header {
             background-color: #0c4790;
             color: white;
-            padding: 10px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
-            border-radius: 5px;
-          }
-          h2 {
-            margin: 0;
+            padding: 16px;
+            border-radius: 4px;
+            margin-bottom: 16px;
             text-align: center;
-            width: 100%;
           }
           .info-grid {
-            border: 1px solid #eee;
-            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin-bottom: 16px;
           }
           .info-row {
             display: flex;
-            flex-wrap: wrap;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 4px;
           }
           .info-label {
             font-weight: bold;
             padding: 8px;
-            background-color: #f5f5f5;
             flex: 1;
             min-width: 150px;
           }
@@ -309,12 +350,24 @@ export class SstmaModalComponent implements OnInit {
             margin-top: 20px;
             margin-bottom: 10px;
           }
+          .img-viewer-container {
+            display: block !important;
+          }
           img {
-            max-width: 100%;
-            height: auto;
-            margin-bottom: 10px;
-            page-break-inside: avoid;
-            cursor: pointer;
+            max-height: 500px;
+            width: auto !important;
+            display: block;
+            margin: 0 auto;
+            image-orientation: from-image;
+            object-fit: contain;
+          }
+          
+          /* Contenedor para las imágenes para mantener orientación */
+          .photo-evidence-section img {
+            max-height: 500px; /* Altura máxima para fotos verticales */
+            width: auto !important;
+            display: block;
+            margin: 0 auto 20px auto;
           }
           a {
             color: inherit;
@@ -324,6 +377,25 @@ export class SstmaModalComponent implements OnInit {
           }
           a:hover img {
             border: 2px solid #0c4790;
+          }
+          
+          /* Estilos específicos para el contenedor de imágenes PDF */
+          .pdf-images-container {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: flex-start !important;
+            gap: 10px !important;
+            margin-top: 20px !important;
+            padding: 10px !important;
+          }
+          
+          .pdf-images-container img {
+            width: 100% !important;
+            height: 100% !important;
+            object-fit: cover !important;
+            object-position: center !important;
+            display: block !important;
+            transform-origin: center !important;
           }
         </style>
       </head>
@@ -338,7 +410,7 @@ export class SstmaModalComponent implements OnInit {
       html: htmlContent,
       filename: `reporte-inspeccion-sstma.pdf`,
       title: 'Reporte de Inspección SSTMA',
-      sheet_type: 'V',
+      sheet_type: 'V', // V para vertical (valor correcto para la API)
     };
 
     // Call API to change password
