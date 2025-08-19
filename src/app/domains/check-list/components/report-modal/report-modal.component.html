@@ -30,6 +30,25 @@
         <span class="fecha">Fecha reporte: {{ reportData.reportDate }}</span>
       </div>
 
+    <!-- Grid condicional para datos de control (solo si idControl existe) -->
+    <div class="info-grid control-info-grid" *ngIf="reportData.idControl">
+      <!-- Primera fila: Nº Control y Etapa Constructiva -->
+      <div class="info-row">
+        <div class="info-label">Nº Control</div>
+        <div class="info-value">{{ reportData.idControl }}</div>
+        <div class="info-label">Etapa Const.</div>
+        <div class="info-value">{{ reportData.etapaConst }}</div>
+      </div>
+
+      <!-- Segunda fila: Ámbito y Actividad -->
+      <div class="info-row">
+        <div class="info-label">Ámbito</div>
+        <div class="info-value">{{ reportData.ambito }}</div>
+        <div class="info-label">Actividad</div>
+        <div class="info-value">{{ reportData.actividad }}</div>
+      </div>
+    </div>
+
     <div class="info-grid">
       <!-- Tipo de incidente y gravedad potencial -->
       <div class="info-row">
@@ -51,44 +70,44 @@
       <div class="info-row">
         <div class="info-label">Acción a realizar</div>
         <div class="info-value">{{ reportData.action }}</div>
-        <div class="info-label">Requiere</div>
+        <div class="info-label">Amerita</div>
         <div class="info-value">{{ reportData.requires }}</div>
       </div>
 
       <!-- Descripción -->
       <div class="info-row" *ngIf="reportData.description">
-        <div class="info-label">Descripción</div>
+        <div class="info-label">Descripción del incidente</div>
         <div class="info-value">{{ reportData.description }}</div>
       </div>
 
-      <!-- Originado por Trabajadores -->
-      <div class="info-row" *ngIf="reportData.originatedBy.workers">
-        <div class="info-label">Originado por Trabajadores</div>
-        <div class="info-value">{{ reportData.originatedBy.workers }}</div>
+      <!-- Identificación de Causas (Preliminares) -->
+      <div class="info-row" *ngIf="reportData.identCausas">
+        <div class="info-label">Identificación de Causas (Preliminares)</div>
+        <div class="info-value">{{ reportData.identCausas }}</div>
       </div>
 
-      <!-- Originado por Equipos Fijos -->
-      <div class="info-row" *ngIf="reportData.originatedBy.fixedEquipment">
-        <div class="info-label">Originado por Equipos Fijos</div>
-        <div class="info-value">{{ reportData.originatedBy.fixedEquipment }}</div>
+      <!-- Empresa Involucrada -->  
+      <div class="info-row" *ngIf="reportData.empresa">
+        <div class="info-label">Empresa Involucrada</div>
+        <div class="info-value">{{ reportData.empresa }}</div>
       </div>
 
-      <!-- Originado por Edificios -->
-      <div class="info-row" *ngIf="reportData.originatedBy.buildings">
-        <div class="info-label">Originado por Edificios</div>
-        <div class="info-value">{{ reportData.originatedBy.buildings }}</div>
+      <!-- Sector Obra Involucrada -->
+      <div class="info-row" *ngIf="reportData.sector">
+        <div class="info-label">Sector Obra Involucrada</div>
+        <div class="info-value">{{ reportData.sector }}</div>
       </div>
 
-      <!-- Originado por Vehículos -->
-      <div class="info-row" *ngIf="reportData.originatedBy.vehicles">
-        <div class="info-label">Originado por Vehículos</div>
-        <div class="info-value">{{ reportData.originatedBy.vehicles }}</div>
+      <!-- Riesgo Asociado -->
+      <div class="info-row" *ngIf="reportData.riesgo">
+        <div class="info-label">Riesgo Asociado</div>
+        <div class="info-value">{{ reportData.riesgo }}</div>
       </div>
 
-      <!-- Originado por Ambientales -->
-      <div class="info-row" *ngIf="reportData.originatedBy.environmental">
-        <div class="info-label">Originado por Ambientales</div>
-        <div class="info-value">{{ reportData.originatedBy.environmental }}</div>
+      <!-- Personas Involucradas -->
+      <div class="info-row" *ngIf="reportData.personasInvolucradas">
+        <div class="info-label">Personas Involucradas</div>
+        <div class="info-value">{{ reportData.personasInvolucradas }}</div>
       </div>
 
       <!-- Interesados afectados -->

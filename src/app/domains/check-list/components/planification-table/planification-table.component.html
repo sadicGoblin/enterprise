@@ -117,7 +117,7 @@
             {{ activity.realized }}
           </td>
           <td class="sticky-end-column numeric-cell compliance-cell">
-            {{ activity.compliance }}%
+            {{ (activity.compliance | number:'1.0-0') }}%
           </td>
         </tr>
       </ng-container>
@@ -137,7 +137,7 @@
           {{ totalRealized }}
         </td>
         <td class="sticky-end-column numeric-cell compliance-cell total-cell">
-          {{ totalCompliancePercentage.toFixed(1) }}%
+          {{ totalCompliancePercentage.toFixed(0) }}%
         </td>
       </tr>
     </table>
