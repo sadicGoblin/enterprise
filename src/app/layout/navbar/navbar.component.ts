@@ -3,6 +3,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { Router } from '@angular/router';
+import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-navbar',
@@ -15,7 +16,10 @@ export class NavbarComponent {
 
   userName: string; // Declare userName, will be set in constructor
 
-  constructor(private route: Router) {
+  constructor(
+    private route: Router,
+    private authService: AuthService
+  ) {
     this.userName = localStorage.getItem('userFullName') || 'Usuario'; // Fetch from localStorage or fallback
   }
 
@@ -30,7 +34,12 @@ export class NavbarComponent {
   }
 
   logout() {
-    console.log('Sesión cerrada');
+    console.log('Cerrando sesión y limpiando datos...');
+    
+    // Usar el método logout del AuthService que limpia todo el localStorage
+    this.authService.logout();
+    
+    // Redirigir al login
     this.route.navigate(['']);
   }
 }

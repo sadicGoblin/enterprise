@@ -48,6 +48,10 @@ interface SstmaInspection {
   associatedWork: string;
   associatedRisk: string;
   proposedControlMeasure: string;
+  idControl: string;
+  etapaConst: string;
+  ambito: string;
+  actividad: string;
   communicatedTo: string[];
   photos: string[];
 }
@@ -84,6 +88,10 @@ export class SstmaModalComponent implements OnInit {
     associatedWork: '',
     associatedRisk: '',
     proposedControlMeasure: '',
+    idControl: '',
+    etapaConst: '',
+    ambito: '',
+    actividad: '',
     communicatedTo: [],
     photos: [],
   };
@@ -184,6 +192,10 @@ export class SstmaModalComponent implements OnInit {
           responseData.riesgoAsociado || this.sstmaData.associatedRisk,
         proposedControlMeasure:
           responseData.medidaControl || this.sstmaData.proposedControlMeasure,
+        idControl: responseData.idControl || '',
+        etapaConst: responseData.EtapaConst || '',
+        ambito: responseData.Ambito || '',
+        actividad: responseData.Actividad || '',
         communicatedTo: responseData.comunicadoA
           ? Array.isArray(responseData.comunicadoA)
             ? responseData.comunicadoA

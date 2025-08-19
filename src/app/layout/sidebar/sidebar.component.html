@@ -14,7 +14,7 @@
           <span *ngIf="!isCollapsed" matLine>Dashboard</span>
         </mat-list-item>
 
-        <mat-list-item class="nav-item" [routerLink]="'planning'" > 
+        <mat-list-item class="nav-item" [routerLink]="'planning'">
           <mat-icon matListIcon>assignment</mat-icon>
           <span *ngIf="!isCollapsed" matLine>Plan Personalizado</span>
         </mat-list-item>
@@ -23,13 +23,19 @@
           <mat-expansion-panel-header>
             <mat-panel-title>
               <mat-icon>bar_chart</mat-icon>
-              <span *ngIf="!isCollapsed" class="ml-2">Reportes de Actividades</span>
+              <span *ngIf="!isCollapsed" class="ml-2"
+                >Reportes de Actividades</span
+              >
             </mat-panel-title>
           </mat-expansion-panel-header>
           <div class="mat-expansion-panel-body">
             <mat-list-item class="nav-item" [routerLink]="'reports/add'"
               ><mat-icon>edit</mat-icon>
               <span>Ingreso Reporte</span></mat-list-item
+            >
+            <mat-list-item class="nav-item" [routerLink]="'reports/dashboard'"
+              ><mat-icon>assignment</mat-icon>
+              <span>Plan Personalizado</span></mat-list-item
             >
             <!-- <mat-list-item class="nav-item" [routerLink]="'reports/sstma'"
               ><mat-icon>check_circle</mat-icon>
@@ -38,10 +44,6 @@
             <mat-list-item class="nav-item" [routerLink]="'reports/incidents'"
               ><mat-icon>report_problem</mat-icon>
               <span>Reporte Incidentes</span></mat-list-item
-            >
-            <mat-list-item class="nav-item" [routerLink]="'reports/dashboard'"
-              ><mat-icon>assignment</mat-icon>
-              <span>Plan Personalizado</span></mat-list-item
             >
             <mat-list-item class="nav-item" 
               ><mat-icon>insert_chart</mat-icon>
@@ -64,7 +66,9 @@
             </mat-panel-title>
           </mat-expansion-panel-header>
           <div class="mat-expansion-panel-body">
-            <mat-list-item class="nav-item" [routerLink]="'custom-program/activities'"
+            <mat-list-item
+              class="nav-item"
+              [routerLink]="'custom-program/activities'"
               ><mat-icon>playlist_add</mat-icon>
               <span>Carga Actividades</span></mat-list-item
             >
@@ -72,7 +76,9 @@
               ><mat-icon>content_copy</mat-icon>
               <span>Replicar PP</span></mat-list-item
             > -->
-            <mat-list-item class="nav-item" [routerLink]="'custom-program/library'"
+            <mat-list-item
+              class="nav-item"
+              [routerLink]="'custom-program/library'"
               ><mat-icon>library_books</mat-icon>
               <span>Biblioteca</span></mat-list-item
             >
@@ -90,7 +96,9 @@
             <mat-list-item class="nav-item" [routerLink]="'maintenance/work'"
               ><mat-icon>home_work</mat-icon> <span>Obras</span></mat-list-item
             >
-            <mat-list-item class="nav-item" [routerLink]="'maintenance/custom-params'"
+            <mat-list-item
+              class="nav-item"
+              [routerLink]="'maintenance/custom-params'"
               ><mat-icon>tune</mat-icon>
               <span>Param. Plan Personalizado</span></mat-list-item
             >
@@ -118,12 +126,18 @@
               <span matLine>Mapa Organizacional</span>
             </mat-list-item>
 
-            <mat-list-item class="nav-item" [routerLink]="'administration/password-change'">
+            <mat-list-item
+              class="nav-item"
+              [routerLink]="'administration/password-change'"
+            >
               <mat-icon matListIcon>vpn_key</mat-icon>
               <span matLine>Cambio Clave</span>
             </mat-list-item>
 
-            <mat-list-item class="nav-item" [routerLink]="'administration/accesses'">
+            <mat-list-item
+              class="nav-item"
+              [routerLink]="'administration/accesses'"
+            >
               <mat-icon matListIcon>people</mat-icon>
               <span matLine>Accesos</span>
             </mat-list-item>

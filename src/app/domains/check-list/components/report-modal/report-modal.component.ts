@@ -49,13 +49,15 @@ interface ReportData {
   description: string;
   requires: string;
   reportedBy: string;
-  originatedBy: {
-    workers?: string;
-    fixedEquipment?: string;
-    buildings?: string;
-    vehicles?: string;
-    environmental?: string;
-  };
+  identCausas: string;
+  idControl: string;
+  etapaConst: string;
+  ambito: string;
+  actividad: string;
+  empresa: string;
+  sector: string;
+  riesgo: string;
+  personasInvolucradas: string;
   affectedInterested: string;
   communicatedTo: string[];
   photos: string[];
@@ -98,7 +100,15 @@ export class ReportModalComponent implements OnInit {
     description: '',
     requires: '',
     reportedBy: '',
-    originatedBy: {},
+    identCausas: '',
+    idControl: '',
+    etapaConst: '',
+    ambito: '',
+    actividad: '',
+    empresa: '',
+    sector: '',
+    riesgo: '',
+    personasInvolucradas: '',
     affectedInterested: '',
     communicatedTo: [],
     photos: [],
@@ -195,22 +205,24 @@ export class ReportModalComponent implements OnInit {
       // Mapear los datos de la respuesta a la estructura del reporte
       this.reportData = {
         reportDate: responseData.fecha || '',
-        worksite: responseData.idObra || '',
-        worksiteName: responseData.nombreObra || '',
+        worksite: responseData.IdObra || '',
+        worksiteName: responseData.Obra || '',
         professionalResponsible: responseData.profesionalResponsable || '',
         incidentType: responseData.tipoIncidente_texto || '',
         potentialSeverity: responseData.potencialGravedad_texto || '',
         action: responseData.accionRealizar_texto || '',
-        description: responseData.descripcionAccionRealizar || '',
+        description: responseData.situacionObservada || '',
         requires: responseData.amerita_texto || '',
         reportedBy: responseData.usuario_creador || '',
-        originatedBy: {
-          workers: responseData.originadoPorTrabajadores || '',
-          fixedEquipment: responseData.originadoPorEquiposFijos || '',
-          buildings: responseData.originadoPorEdificios || '',
-          vehicles: responseData.originadoPorVehiculos || '',
-          environmental: responseData.originadoPorAmbientales || '',
-        },
+        identCausas: responseData.ident_causas || '',
+        idControl: responseData.idControl || '',
+        etapaConst: responseData.EtapaConst || '',
+        ambito: responseData.Ambito || '',
+        actividad: responseData.Actividad || '',
+        empresa: responseData.empresa || '',
+        sector: responseData.sector || '',
+        riesgo: responseData.riesgo || '',
+        personasInvolucradas: responseData.personas_involucradas || '',
         affectedInterested: responseData.interesadosAfectadas || '',
         communicatedTo: communicatedTo,
         photos: photos,

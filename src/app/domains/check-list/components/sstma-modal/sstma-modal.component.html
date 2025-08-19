@@ -34,6 +34,25 @@
           <span class="fecha">Fecha reporte: {{ sstmaData.reportDate }}</span>
         </div>
 
+        <!-- Grid condicional para datos de control (solo si idControl existe) -->
+        <div class="info-grid control-info-grid" *ngIf="sstmaData.idControl">
+          <!-- Primera fila: Nº Control y Etapa Constructiva -->
+          <div class="info-row">
+            <div class="info-label">Nº Control</div>
+            <div class="info-value">{{ sstmaData.idControl }}</div>
+            <div class="info-label">Etapa Const.</div>
+            <div class="info-value">{{ sstmaData.etapaConst }}</div>
+          </div>
+
+          <!-- Segunda fila: Ámbito y Actividad -->
+          <div class="info-row">
+            <div class="info-label">Ámbito</div>
+            <div class="info-value">{{ sstmaData.ambito }}</div>
+            <div class="info-label">Actividad</div>
+            <div class="info-value">{{ sstmaData.actividad }}</div>
+          </div>
+        </div>
+
         <div class="info-grid">
           <div class="info-row">
             <div class="info-label">Nombre Empresa</div>
