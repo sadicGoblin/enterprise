@@ -332,12 +332,20 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
       this.isEditing = true;
       this.editingIndex = index;
 
-      // If region is selected, update commune request body
+      // If region is selected, update commune request body and load communes
       if (work.IdRegion) {
         this.communeRequestBody = {
           caso: 'ComunaConsulta',
           idRegion: work.IdRegion
         };
+        
+        // Forzar la carga de comunas para la región seleccionada
+        setTimeout(() => {
+          if (this.communeSelect) {
+            console.log('Cargando comunas para edición de obra. Región:', work.IdRegion);
+            this.communeSelect.loadOptionsFromApi();
+          }
+        }, 100); // Pequeño delay para asegurar que el componente esté listo
       }
 
       // Mostrar mensaje de edición
@@ -470,6 +478,7 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
     const endDate = formValue.FechaTermino ? new Date(formValue.FechaTermino) : null;
     
     // Prepare data for the API
+    const userId = localStorage.getItem('userId') || '';
     const obraData = {
       obra: formValue.Obra,
       codigo: formValue.Codigo,
@@ -478,7 +487,8 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
       fechaInicio: startDate ? startDate.toISOString().split('T')[0] : '',
       fechaTermino: endDate ? endDate.toISOString().split('T')[0] : '',
       observaciones: formValue.Observaciones || '',
-      docfile: this.uploadedFileUrl || '' // URL del archivo Excel subido
+      docfile: this.uploadedFileUrl || '', // URL del archivo Excel subido
+      idUsuario: userId
     };
     
     console.log('Añadiendo obra:', obraData);
@@ -515,6 +525,7 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
     const endDate = formValue.FechaTermino ? new Date(formValue.FechaTermino) : null;
     
     // Prepare data for the API with the exact format required
+    const userId = localStorage.getItem('userId') || '';
     const requestBody = {
       caso: "Actualiza",
       idObra: formValue.IdObra,
@@ -526,7 +537,8 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
       fechaInicio: startDate ? startDate.toISOString() : "",
       fechaTermino: endDate ? endDate.toISOString() : "",
       observaciones: formValue.Observaciones || "",
-      docfile: this.uploadedFileUrl || ""
+      docfile: this.uploadedFileUrl || "",
+      idUsuario: userId
     };
     
     // Mostrar el request body en consola para verificación
