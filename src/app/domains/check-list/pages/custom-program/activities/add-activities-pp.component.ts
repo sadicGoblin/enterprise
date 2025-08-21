@@ -34,7 +34,7 @@ import { ActividadService } from '../../../services/actividad.service';
 interface ProjectApiRequestBody {
   caso: string;
   idObra: number;
-  idUsuario: number;
+  idUsuario: number | null;
   obra?: string | null;
   supervisor?: string | null;
 }
@@ -164,7 +164,7 @@ export class AddActivitiesPpComponent implements OnInit {
   projectControl = new FormControl(null, [Validators.required]);
   projectSelectedId: string | null = null;
   projectApiEndpoint = '/ws/ObrasSvcImpl.php';
-  projectApiCaso = 'Consulta';
+  projectApiCaso = 'Consultas';
   projectApiRequestBody!: ProjectApiRequestBody; // Will be initialized in ngOnInit
   projectOptionValue = 'IdObra';
   projectOptionLabel = 'Obra';
@@ -329,7 +329,8 @@ export class AddActivitiesPpComponent implements OnInit {
     this.projectApiRequestBody = {
       caso: this.projectApiCaso,
       idObra: 0, // For fetching all projects
-      idUsuario: this.userId || 1
+      // idUsuario: this.userId || 1
+      idUsuario: null
     };
   }
 
