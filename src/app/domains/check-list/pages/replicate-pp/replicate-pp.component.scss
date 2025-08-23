@@ -1,0 +1,236 @@
+.dashboard-container {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
+}
+
+.dashboard-card {
+  width: 100%;
+  max-width: 1200px;
+  padding: 24px;
+  overflow-x: auto;
+  position: relative;
+}
+
+.spinner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.dashboard-header {
+  margin-bottom: 24px;
+  
+  .title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+.filters-section {
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  border: 1px solid #e0e0e0;
+  
+  .filters-header {
+    margin-bottom: 20px;
+    
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+      color: #444;
+    }
+  }
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.filter-field {
+  width: 100%;
+  
+  ::ng-deep .mat-form-field {
+    width: 100%;
+    
+    .mat-form-field-wrapper {
+      padding-bottom: 0.75em;
+    }
+    
+    .mat-form-field-infix {
+      padding: 0.5em 0;
+      font-size: 14px;
+    }
+  }
+  
+  ::ng-deep app-custom-select {
+    width: 100%;
+    
+    .mat-form-field {
+      width: 100%;
+    }
+  }
+}
+
+.compact-field {
+  ::ng-deep .mat-form-field-wrapper {
+    padding-bottom: 0.75em;
+  }
+  
+  ::ng-deep .mat-form-field-infix {
+    padding: 0.5em 0;
+    font-size: 14px;
+  }
+}
+
+.button-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+  
+  button {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    font-size: 14px;
+    
+    mat-icon {
+      margin-right: 8px;
+      font-size: 18px;
+    }
+    
+    &[mat-stroked-button] {
+      border-color: #ddd;
+      color: #666;
+      
+      &:hover:not(:disabled) {
+        background-color: #f5f5f5;
+      }
+    }
+    
+    &[mat-raised-button] {
+      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
+      
+      &:hover:not(:disabled) {
+        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+      }
+    }
+    
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    flex-direction: column;
+    
+    button {
+      width: 100%;
+      justify-content: center;
+    }
+  }
+}
+
+// Responsiveness improvements
+@media (max-width: 768px) {
+  .dashboard-container {
+    padding: 12px;
+  }
+  
+  .dashboard-card {
+    padding: 16px;
+  }
+  
+  .filters-section {
+    padding: 16px;
+  }
+}
+
+// Angular Material form field size adjustments
+::ng-deep .mat-form-field-appearance-outline {
+  .mat-form-field-wrapper {
+    margin: 0;
+  }
+  
+  .mat-form-field-flex {
+    padding: 0 0.75em 0 0.75em;
+    min-height: 48px;
+  }
+  
+  .mat-form-field-infix {
+    padding: 0.75em 0;
+    min-height: auto;
+  }
+}
+
+// Ensure consistent sizing across all form controls
+::ng-deep .mat-select-trigger,
+::ng-deep .mat-input-element {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+::ng-deep .mat-datepicker-toggle {
+  color: rgba(0,0,0,0.54);
+}
+
+// Custom select component styling
+::ng-deep app-custom-select .mat-form-field-appearance-outline {
+  .mat-form-field-outline {
+    color: rgba(0,0,0,0.12);
+  }
+  
+  &.mat-focused .mat-form-field-outline-thick {
+    color: #1976d2;
+  }
+}
+
+// Month-Year picker styles
+::ng-deep .month-year-picker {
+  .mat-calendar-period-button {
+    pointer-events: none;
+  }
+  
+  .mat-calendar-arrow {
+    display: none;
+  }
+  
+  // Hide the day view and only show month/year selection
+  .mat-calendar-content {
+    .mat-calendar-table {
+      .mat-calendar-body-cell:not(.mat-calendar-body-disabled):hover {
+        background-color: rgba(25, 118, 210, 0.1);
+      }
+    }
+  }
+}
+
+// Ensure datepicker input shows formatted month/year
+.filter-field {
+  .mat-form-field {
+    .mat-input-element {
+      cursor: pointer;
+    }
+  }
+}

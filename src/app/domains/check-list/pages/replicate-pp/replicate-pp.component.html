@@ -1,0 +1,115 @@
+<div class="dashboard-container">
+  <mat-card class="dashboard-card">
+    <!-- Spinner para carga -->
+    <div *ngIf="isLoading" class="spinner-overlay">
+      <mat-spinner></mat-spinner>
+    </div>
+
+    <!-- Título principal -->
+    <div class="dashboard-header">
+      <h2 class="title">Replicar Plan Personalizado</h2>
+    </div>
+
+    <!-- Sección de Filtros de Búsqueda -->
+    <div class="filters-section">
+      <div class="filters-header">
+        <h3>Consultar Actividades</h3>
+      </div>
+      
+      <div class="filters-grid">
+        <!-- Campo Obra -->
+        <div class="filter-field">
+          <app-custom-select
+            [formControl]="obraControl"
+            [customApiEndpoint]="projectApiEndpoint"
+            [customApiRequestBody]="projectApiRequestBody"
+            [customOptionValueKey]="projectOptionValueKey"
+            [customOptionLabelKey]="projectOptionLabelKey"
+            [parameterType]="parameterTypeCustomApi"
+            [loadFromApi]="true"
+            (selectionChange)="onObraSelectionChange($event)"
+            [label]="'Obra'"
+            [placeholder]="'Seleccione una obra'"
+            [appearance]="'outline'"
+            class="compact-field"
+          ></app-custom-select>
+        </div>
+
+        <!-- Campo Período Inicio -->
+        <div class="filter-field">
+          <app-custom-select
+            #usuarioSelect
+            label="Usuario"
+            [formControl]="usuarioControl"
+            [parameterType]="usuarioParameterType"
+            [loadFromApi]="true"
+            [customApiEndpoint]="usuarioApiEndpoint"
+            [customApiRequestBody]="usuarioApiRequestBody"
+            [customOptionValueKey]="usuarioOptionValue"
+            [customOptionLabelKey]="usuarioOptionLabel"
+            (selectionChange)="onUsuarioSelectionChange($event)"
+            placeholder="Seleccionar Usuario"
+            appearance="outline"
+            class="compact-field"
+          ></app-custom-select>
+        </div>
+
+        <!-- Campo Período Origen -->
+        <div class="filter-field">
+          <mat-form-field appearance="outline" class="compact-field">
+            <mat-label>Período Origen</mat-label>
+            <input 
+              matInput 
+              [matDatepicker]="pickerOrigen" 
+              [formControl]="periodoInicioControl" 
+              readonly>
+            <mat-datepicker-toggle matIconSuffix [for]="pickerOrigen"></mat-datepicker-toggle>
+            <mat-datepicker 
+              #pickerOrigen 
+              startView="multi-year"
+              (monthSelected)="setMonthAndYearOrigen($event, pickerOrigen)"
+              panelClass="month-year-picker">
+            </mat-datepicker>
+          </mat-form-field>
+        </div>
+
+        <!-- Campo Período Destino -->
+        <div class="filter-field">
+          <mat-form-field appearance="outline" class="compact-field">
+            <mat-label>Período Destino</mat-label>
+            <input 
+              matInput 
+              [matDatepicker]="pickerDestino" 
+              [formControl]="periodoFinControl" 
+              readonly>
+            <mat-datepicker-toggle matIconSuffix [for]="pickerDestino"></mat-datepicker-toggle>
+            <mat-datepicker 
+              #pickerDestino 
+              startView="multi-year"
+              (monthSelected)="setMonthAndYearDestino($event, pickerDestino)"
+              panelClass="month-year-picker">
+            </mat-datepicker>
+          </mat-form-field>
+        </div>
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="button-row">
+        <button 
+          mat-stroked-button 
+          type="button" 
+          (click)="limpiarFiltros()"
+          [disabled]="isLoading">
+          <mat-icon>refresh</mat-icon> Limpiar
+        </button>
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="replicar()"
+          [disabled]="isLoading">
+          <mat-icon>description</mat-icon> Replicar
+        </button>
+      </div>
+    </div>
+  </mat-card>
+</div>
