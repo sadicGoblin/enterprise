@@ -1,0 +1,369 @@
+// Estilos para el modal de checklist - COPIADO EXACTO DEL SSTMA
+$scale-factor: 0.9;
+
+// Estilos para estados de carga y error
+.loading-container,
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  min-height: 200px;
+
+  p {
+    margin-top: 1rem;
+    color: #666;
+    font-size: 0.9rem;
+  }
+}
+
+.error-container {
+  color: #f44336;
+
+  mat-icon {
+    font-size: 2rem;
+    height: 2rem;
+    width: 2rem;
+  }
+
+  p {
+    color: #f44336;
+  }
+}
+
+.checklist-modal-container {
+  display: flex;
+  flex-direction: column;
+  width: 800px;
+  max-width: 95vw;
+  max-height: 85vh;
+  overflow: hidden;
+  position: relative;
+  padding: 0;
+  font-size: calc(1rem * 0.9);
+  
+  // Contenedor principal que debe tener flex para permitir scroll en el contenido
+  .modal-main-content {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-height: 85vh;
+    overflow: hidden;
+  }
+  
+  // Estilos para el header
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #0c4790;
+    color: white;
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid #0c4790;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    
+    // Contenedor para botones de acción en el header
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    h2 {
+      color: white;
+      margin: 0;
+      font-weight: 500;
+      font-size: calc(1.4rem * #{$scale-factor});
+    }
+    
+    .close-button,
+    .export-button {
+      color: white;
+    }
+    
+    .export-button:hover {
+      color: #e0e0e0;
+    }
+  }
+
+  // Contenido del reporte
+  .modal-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 1rem;
+  }
+  
+  // Contenedor de la información
+  .info-container {
+    display: flex;
+    flex-direction: column;
+    
+    // Header con fecha
+    .info-header {
+      display: flex;
+      justify-content: start;
+      padding: 0.5rem 1rem;
+      background-color: #f5f5f5;
+      border-bottom: 1px solid #e0e0e0;
+      
+      .fecha {
+        font-weight: 500;
+        color: #333;
+        font-size: calc(0.9rem * 0.9);
+      }
+    }
+  }
+  
+  // Grid de información
+  .info-grid {
+    border: 1px solid #eee;
+    border-collapse: collapse;
+    margin-bottom: 1rem;
+
+    .info-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr 2fr;
+      border-bottom: 1px solid #eee;
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      &:nth-child(odd) {
+        background-color: rgba(0, 0, 0, 0.02);
+      }
+    }
+
+    .info-label {
+      padding: 0.6rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: #444;
+      border-right: 1px solid #eee;
+      display: flex;
+      align-items: center;
+    }
+
+    .info-value {
+      padding: 0.6rem;
+      font-size: 0.9rem;
+      border-right: 1px solid #eee;
+      display: flex;
+      align-items: center;
+
+      &:last-child {
+        border-right: none;
+      }
+    }
+
+    // Filas que ocupan toda la anchura
+    .info-row:nth-child(2),
+    .info-row:nth-child(3),
+    .info-row:nth-child(5),
+    .info-row:nth-child(6),
+    .info-row:nth-child(7),
+    .info-row:nth-child(8) {
+      grid-template-columns: 1fr 5fr;
+
+      .info-label {
+        background-color: rgba(0, 0, 0, 0.03);
+      }
+    }
+
+    .people-list {
+      line-height: 1.4;
+    }
+  }
+
+  // Sección de elementos del checklist
+  .checklist-items-section {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+
+    h3 {
+      color: #0c4790;
+      margin-bottom: 1rem;
+      font-weight: 500;
+      font-size: calc(1.1rem * #{$scale-factor});
+    }
+  }
+
+  .checklist-table-container {
+    overflow-x: auto;
+    border: 1px solid #eee;
+  }
+
+  .checklist-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    font-size: 0.9rem;
+
+    th {
+      background: #f9fafb;
+      color: #374151;
+      font-weight: 600;
+      text-align: left;
+      padding: 0.6rem;
+      border-bottom: 1px solid #eee;
+      border-right: 1px solid #eee;
+      font-size: 0.9rem;
+
+      &.question-column {
+        width: 60%;
+        min-width: 300px;
+      }
+
+      &.status-column {
+        width: 13.33%;
+        text-align: center;
+        min-width: 80px;
+
+        &:last-child {
+          border-right: none;
+        }
+      }
+    }
+
+    tr {
+      &:nth-child(odd) {
+        background-color: rgba(0, 0, 0, 0.02);
+      }
+    }
+
+    td {
+      padding: 0.6rem;
+      border-bottom: 1px solid #eee;
+      border-right: 1px solid #eee;
+      vertical-align: top;
+
+      &.question-cell {
+        color: #444;
+        line-height: 1.4;
+      }
+
+      &.status-cell {
+        text-align: center;
+        
+        &:last-child {
+          border-right: none;
+        }
+      }
+    }
+  }
+
+  .status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    margin: 0 auto;
+
+    &.status-checked {
+      background-color: #4caf50;
+      color: white;
+
+      .check-icon {
+        font-size: 1rem;
+        width: 1rem;
+        height: 1rem;
+      }
+    }
+
+    &.status-unchecked {
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+    }
+  }
+
+  // Sección de evidencia fotográfica
+  .photo-evidence-section {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+
+    h3 {
+      color: #0c4790;
+      margin-bottom: 1rem;
+      font-weight: 500;
+      font-size: calc(1.1rem * #{$scale-factor});
+    }
+
+    // Contenedor para el visor de imágenes con altura máxima
+    ::ng-deep app-img-viewer {
+      display: block;
+      max-height: 60vh;
+      overflow: hidden;
+
+      // Imagen principal
+      .img-container {
+        height: auto;
+        max-height: 50vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+
+        img {
+          max-height: 100%;
+          width: auto;
+          object-fit: contain;
+        }
+      }
+    }
+  }
+
+  // Botones de acción
+  .modal-actions {
+    margin-top: 1.5rem;
+    display: flex;
+    justify-content: flex-end;
+    position: sticky;
+    bottom: 0;
+    background: white;
+    padding: 1rem 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    z-index: 10;
+
+    button {
+      min-width: 120px;
+    }
+  }
+
+  // Responsive
+  @media (max-width: 768px) {
+    .checklist-modal-container {
+      padding: 1rem;
+
+      .info-grid .info-row,
+      .info-grid .info-row:nth-child(2),
+      .info-grid .info-row:nth-child(3),
+      .info-grid .info-row:nth-child(5),
+      .info-grid .info-row:nth-child(6),
+      .info-grid .info-row:nth-child(7),
+      .info-grid .info-row:nth-child(8) {
+        grid-template-columns: 1fr;
+
+        .info-label,
+        .info-value {
+          border-right: none;
+          border-bottom: 1px solid #eee;
+
+          &:last-child {
+            border-bottom: none;
+          }
+        }
+      }
+
+      .modal-header .date-info {
+        position: static;
+        margin-top: 1rem;
+        align-items: center;
+      }
+    }
+  }
+}

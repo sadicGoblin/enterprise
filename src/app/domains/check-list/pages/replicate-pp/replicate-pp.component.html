@@ -35,7 +35,7 @@
           ></app-custom-select>
         </div>
 
-        <!-- Campo Período Inicio -->
+        <!-- Campo Usuario -->
         <div class="filter-field">
           <app-custom-select
             #usuarioSelect
@@ -73,10 +73,55 @@
           </mat-form-field>
         </div>
 
-        <!-- Campo Período Destino -->
-        <div class="filter-field">
+      </div>
+
+      <!-- Botones de acción -->
+      <div class="button-row">
+        <button 
+          mat-stroked-button 
+          type="button" 
+          (click)="limpiarFiltros()"
+          [disabled]="isLoading || searchingTasks">
+          <mat-icon>refresh</mat-icon> Limpiar
+        </button>
+        <button 
+          mat-raised-button 
+          color="primary" 
+          (click)="buscarTareas()"
+          [disabled]="isLoading || searchingTasks || !obraControl.value">
+          <mat-icon *ngIf="!searchingTasks">search</mat-icon>
+          {{ searchingTasks ? 'Buscando...' : 'Buscar Tareas' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Sección de resultados de tareas -->
+    <div *ngIf="showTasksTable" class="tasks-section">
+      <div class="tasks-header">
+        <h3>Tareas Encontradas ({{ filteredTasks.length }}) - Seleccionadas ({{ getSelectedTasksCount() }})</h3>
+        <div class="header-controls">
+          <button 
+            mat-stroked-button 
+            (click)="toggleAllTasks()"
+            [disabled]="isLoading">
+            <mat-icon>{{ allTasksSelected() ? 'check_box_outline_blank' : 'select_all' }}</mat-icon>
+            {{ allTasksSelected() ? 'Deseleccionar Todo' : 'Seleccionar Todo' }}
+          </button>
+          <button 
+            mat-raised-button 
+            color="accent" 
+            (click)="replicar()"
+            [disabled]="isLoading || getSelectedTasksCount() === 0 || !periodoFinControl.value">
+            <mat-icon>content_copy</mat-icon> Replicar {{ getSelectedTasksCount() }} Tareas
+          </button>
+        </div>
+      </div>
+
+      <!-- Período Destino Section -->
+      <div class="periodo-destino-section">
+        <div class="periodo-destino-field">
           <mat-form-field appearance="outline" class="compact-field">
-            <mat-label>Período Destino</mat-label>
+            <mat-label>Período Destino para Clonación</mat-label>
             <input 
               matInput 
               [matDatepicker]="pickerDestino" 
@@ -91,24 +136,76 @@
             </mat-datepicker>
           </mat-form-field>
         </div>
+        <div class="periodo-info" *ngIf="periodoFinControl.value">
+          <mat-icon>info</mat-icon>
+          <span>Las tareas seleccionadas se clonarán hacia: <strong>{{ getFormattedPeriodoDestino() }}</strong></span>
+        </div>
       </div>
 
-      <!-- Botones de acción -->
-      <div class="button-row">
-        <button 
-          mat-stroked-button 
-          type="button" 
-          (click)="limpiarFiltros()"
-          [disabled]="isLoading">
-          <mat-icon>refresh</mat-icon> Limpiar
-        </button>
-        <button 
-          mat-raised-button 
-          color="primary" 
-          (click)="replicar()"
-          [disabled]="isLoading">
-          <mat-icon>description</mat-icon> Replicar
-        </button>
+      <div class="table-container">
+        <table mat-table [dataSource]="filteredTasks" class="tasks-table">
+          <!-- Actividad Column -->
+          <ng-container matColumnDef="actividad">
+            <th mat-header-cell *matHeaderCellDef>Actividad</th>
+            <td mat-cell *matCellDef="let task" class="task-name">
+              <strong>{{ task.Actividad }}</strong>
+            </td>
+          </ng-container>
+
+          <!-- Etapa Constructiva Column -->
+          <ng-container matColumnDef="etapaConst">
+            <th mat-header-cell *matHeaderCellDef>Etapa Constructiva</th>
+            <td mat-cell *matCellDef="let task" class="task-stage">
+              {{ task.EtapaConst }}
+            </td>
+          </ng-container>
+
+          <!-- Sub Proceso Column -->
+          <ng-container matColumnDef="subProceso">
+            <th mat-header-cell *matHeaderCellDef>Sub Proceso</th>
+            <td mat-cell *matCellDef="let task">
+              {{ task.SubProceso }}
+            </td>
+          </ng-container>
+
+          <!-- Ámbito Column -->
+          <ng-container matColumnDef="ambito">
+            <th mat-header-cell *matHeaderCellDef>Ámbito</th>
+            <td mat-cell *matCellDef="let task">
+              <span class="ambito-badge" [class]="'ambito-' + task.IdAmbito">
+                {{ task.Ambito }}
+              </span>
+            </td>
+          </ng-container>
+
+          <!-- Días Column -->
+          <ng-container matColumnDef="usuario">
+            <th mat-header-cell *matHeaderCellDef>Usuario</th>
+            <td mat-cell *matCellDef="let task">
+              <span *ngIf="task.Usuario">{{ task.Usuario }}</span>
+            </td>
+          </ng-container>
+
+          <!-- Selection Column -->
+          <ng-container matColumnDef="selection">
+            <th mat-header-cell *matHeaderCellDef class="selection-header">Seleccionar</th>
+            <td mat-cell *matCellDef="let task; let i = index" class="selection-cell">
+              <mat-checkbox 
+                [checked]="isTaskSelected(task.IdControl)"
+                (change)="toggleTaskSelection(task.IdControl, $event.checked)"
+                color="primary">
+              </mat-checkbox>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+        </table>
+
+        <div *ngIf="filteredTasks.length === 0" class="no-tasks">
+          <mat-icon>info</mat-icon>
+          <p>No hay tareas para mostrar</p>
+        </div>
       </div>
     </div>
   </mat-card>

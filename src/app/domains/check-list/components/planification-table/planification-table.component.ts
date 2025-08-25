@@ -13,6 +13,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { InspectionModalComponent } from '../inspection-modal/inspection-modal.component';
 import { CheckListModalComponent } from './components/checklist-modal/checklist-modal.component';
 import { ARTViewModalComponent } from './components/art-view-modal/art-view-modal.component';
+import { ChecklistReportModalComponent } from '../checklist-report-modal/checklist-report-modal.component';
 
 // Interface for Activity
 export interface Activity {
@@ -473,7 +474,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     else if (activity.name.includes('CHECK LIST')) {
       console.log('Actividad CHECK LIST completada. Abriendo modal de checklist...');
       console.log(`idControl: ${activity.idControl}, día: ${day}, idParam: ${activity.idParam}`);
-      this.openChecklistModal(activity.id, activity.idControl, day);
+      this.openChecklistModal(activity.idControl);
     } else {
       console.log('Actividad completada pero no es de tipo SSOMA ni CHECK LIST');
       console.log('Abriendo modal ART...');
@@ -522,49 +523,10 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
    * @param idControl ID de control asociado a la actividad
    * @param day Día seleccionado de la actividad
    */
-  openChecklistModal(activityId?: number, idControl?: string, day?: number): void {
-    // Buscar la actividad para obtener su idParam
-    const selectedActivity = this._activities.find(a => a.id === activityId);
-    const idParam = selectedActivity?.idParam || '';
-    console.log('DEBUG IDPARAM - Actividad seleccionada:', selectedActivity);
-    console.log('DEBUG IDPARAM - Valor extraído:', idParam);
-    const dialogRef = this.dialog.open(CheckListModalComponent, {
-      width: '90vw',
-      maxWidth: '1400px',
-      disableClose: true,
-      autoFocus: false,
-      data: { 
-        activityId: activityId,
-        projectId: this.projectId,
-        idControl: idControl,
-        day: day,
-        checklistData: null,
-        idParam: idParam,
-        name: selectedActivity?.name || 'Check List',
-        selectedCollaboratorId: this.selectedCollaboratorId,
-        selectedCollaboratorName: this.selectedCollaboratorName,
-        collaboratorApiConfig: {
-          endpoint: '/ws/UsuarioSvcImpl.php',
-          requestBody: {
-            caso: 'ConsultaUsuariosObra',
-            idObra: this.projectId ? parseInt(this.projectId) : 1,
-            idUsuario: 0
-          },
-          valueKey: 'IdUsuario',
-          labelKey: 'nombre'
-        }
-      }
-    });
-    
-    console.log('PlanificationTable: abriendo modal checklist con projectId:', this.projectId);
-    console.log('PlanificationTable: idControl:', idControl, 'day:', day);
+  openChecklistModal(idControl?: string): void {
 
-    dialogRef.afterClosed().subscribe(result => {
-      if (result) {
-        console.log('Checklist guardado:', result);
-        // Aquí iría la lógica para guardar el checklist en el backend
-        // y actualizar las actividades completadas si es necesario
-      }
+    this.dialog.open(ChecklistReportModalComponent, {
+      data: idControl
     });
   }
 

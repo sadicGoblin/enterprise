@@ -18,6 +18,7 @@ import { IncidentReportComponent } from './pages/reports/incident-report/inciden
 import { CreateDashboardPpComponent } from './pages/reports/create-dashboard-pp/create-dashboard-pp.component';
 import { InspectionTrackingComponent } from './pages/reports/inspection-tracking/inspection-tracking.component';
 import { ActivityPlanningComponent } from './pages/activity-planning/activity-planning.component';
+import { ReplicatePpComponent } from './pages/replicate-pp/replicate-pp.component';
 
 export const checkListRoutes: Routes = [
   {
@@ -51,6 +52,7 @@ export const checkListRoutes: Routes = [
         children: [
           { path: 'activities', component: AddActivitiesPpComponent },
           { path: 'library', component: LibraryPpComponent },
+          { path: 'replicate', component: ReplicatePpComponent },
         ],
       },
       // Reports routes grouped logically

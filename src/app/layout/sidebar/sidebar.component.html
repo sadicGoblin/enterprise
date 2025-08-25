@@ -24,18 +24,18 @@
             <mat-panel-title>
               <mat-icon>bar_chart</mat-icon>
               <span *ngIf="!isCollapsed" class="ml-2"
-                >Reportes de Actividades</span
+                >Reportes</span
               >
             </mat-panel-title>
           </mat-expansion-panel-header>
           <div class="mat-expansion-panel-body">
             <mat-list-item class="nav-item" [routerLink]="'reports/add'"
               ><mat-icon>edit</mat-icon>
-              <span>Ingreso Reporte</span></mat-list-item
+              <span>Reporte Actividades</span></mat-list-item
             >
             <mat-list-item class="nav-item" [routerLink]="'reports/dashboard'"
               ><mat-icon>assignment</mat-icon>
-              <span>Plan Personalizado</span></mat-list-item
+              <span>Reporte Histórico</span></mat-list-item
             >
             <!-- <mat-list-item class="nav-item" [routerLink]="'reports/sstma'"
               ><mat-icon>check_circle</mat-icon>
@@ -72,10 +72,11 @@
               ><mat-icon>playlist_add</mat-icon>
               <span>Carga Actividades</span></mat-list-item
             >
-            <!-- <mat-list-item class="nav-item"
+            <mat-list-item class="nav-item"
+              [routerLink]="'custom-program/replicate'"
               ><mat-icon>content_copy</mat-icon>
               <span>Replicar PP</span></mat-list-item
-            > -->
+            >
             <mat-list-item
               class="nav-item"
               [routerLink]="'custom-program/library'"

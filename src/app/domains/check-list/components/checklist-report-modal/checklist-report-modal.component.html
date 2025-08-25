@@ -1,0 +1,141 @@
+<div class="checklist-modal-container">
+  <!-- Estado de carga -->
+  <div *ngIf="isLoading" class="loading-container">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando datos del checklist...</p>
+  </div>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="error" class="error-container">
+    <mat-icon color="warn">error_outline</mat-icon>
+    <p>{{ error }}</p>
+  </div>
+
+  <!-- Contenido principal (sólo se muestra si no hay error y no está cargando) -->
+  <div *ngIf="!isLoading && !error" class="modal-main-content">
+    <!-- Header con título y botón de cierre -->
+    <div class="modal-header">
+      <h2>DETALLE CHECKLIST</h2>
+      <div class="header-actions">
+        <button mat-icon-button (click)="exportToPdf()" class="export-button" aria-label="Exportar a PDF">
+          <mat-icon>picture_as_pdf</mat-icon>
+        </button>
+        <button mat-icon-button (click)="close()" class="close-button" aria-label="Cerrar modal">
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Contenido principal del modal con scroll -->
+    <div class="modal-content">
+      <div class="info-container">
+        <!-- Fecha del reporte -->
+        <div class="info-header">
+          <span class="fecha">Fecha revisión: {{ formatDate(checklistData?.fecha_revision) }}</span>
+        </div>
+
+        <!-- Grid condicional para datos de control (solo si idControl existe) -->
+        <div class="info-grid control-info-grid" *ngIf="checklistData?.IdControl">
+          <!-- Primera fila: Nº Control y Etapa Constructiva -->
+          <div class="info-row">
+            <div class="info-label">Nº Control</div>
+            <div class="info-value">{{ checklistData?.IdControl }}</div>
+            <div class="info-label">Etapa Const.</div>
+            <div class="info-value">{{ checklistData?.EtapaConst }}</div>
+          </div>
+
+          <!-- Segunda fila: Ámbito y Actividad -->
+          <div class="info-row">
+            <div class="info-label">Ámbito</div>
+            <div class="info-value">{{ checklistData?.Ambito }}</div>
+            <div class="info-label">Actividad</div>
+            <div class="info-value">{{ checklistData?.Actividad }}</div>
+          </div>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-row">
+            <div class="info-label">Obra</div>
+            <div class="info-value">{{ checklistData?.Obra }}</div>
+            <div class="info-label">Período</div>
+            <div class="info-value">{{ formatPeriod(checklistData?.Periodo) }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">Sub Proceso</div>
+            <div class="info-value">{{ checklistData?.SubProceso }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">Periodicidad</div>
+            <div class="info-value">{{ checklistData?.Periocidad }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">Revisado por</div>
+            <div class="info-value">{{ checklistData?.revisado_por }}</div>
+          </div>
+
+          <div class="info-row">
+            <div class="info-label">Inspeccionado por</div>
+            <div class="info-value">{{ checklistData?.inspeccionado_por }}</div>
+          </div>
+
+          <div class="info-row" *ngIf="checklistData?.observaciones && checklistData?.observaciones !== 'OK'">
+            <div class="info-label">Observaciones</div>
+            <div class="info-value">{{ checklistData?.observaciones }}</div>
+          </div>
+        </div>
+
+        <!-- Sección de elementos del checklist -->
+        <div class="checklist-items-section" *ngIf="checklistData && checklistData.items && checklistData.items.length > 0">
+          <h3>Elementos a Inspeccionar</h3>
+          
+          <div class="checklist-table-container">
+            <table class="checklist-table">
+              <thead>
+                <tr>
+                  <th class="question-column">Elemento a Inspeccionar</th>
+                  <th class="status-column">Sí</th>
+                  <th class="status-column">No</th>
+                  <th class="status-column">N.A.</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let item of checklistData.items">
+                  <td class="question-cell">{{ item.pregunta }}</td>
+                  <td class="status-cell">
+                    <div class="status-indicator" [ngClass]="{'active': item.si === 1}">
+                      <mat-icon *ngIf="item.si === 1" class="check-icon">check</mat-icon>
+                    </div>
+                  </td>
+                  <td class="status-cell">
+                    <div class="status-indicator" [ngClass]="{'active': item.no === 1}">
+                      <mat-icon *ngIf="item.no === 1" class="check-icon">check</mat-icon>
+                    </div>
+                  </td>
+                  <td class="status-cell">
+                    <div class="status-indicator" [ngClass]="{'active': item.na === 1}">
+                      <mat-icon *ngIf="item.na === 1" class="check-icon">check</mat-icon>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Sección de evidencia fotográfica -->
+        <div class="photo-evidence-section" *ngIf="checklistData && checklistData.files && checklistData.files.length > 0">
+          <h3>Evidencia fotográfica</h3>
+
+          <!-- Componente visualizador de imágenes -->
+          <app-img-viewer
+            [images]="checklistData.files"
+            [showThumbnails]="false"
+          ></app-img-viewer>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

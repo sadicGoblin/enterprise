@@ -356,19 +356,19 @@
 
   &.status-pendiente {
     background-color: #fff3cd;
-    color: #856404;
+    color: #de8d11;
     border: 1px solid #ffeaa7;
   }
 
-  &.status-completado {
-    background-color: #d4edda;
-    color: #155724;
+  &.status-cumplida {
+    background-color: #22b544;
+    color: #ffffff;
     border: 1px solid #b8daff;
   }
 
-  &.status-en-progreso {
-    background-color: #cce5f0;
-    color: #004085;
+  &.status-no-cumplida {
+    background-color: #dc3b3b;
+    color: #ffffff;
     border: 1px solid #b8daff;
   }
 }
