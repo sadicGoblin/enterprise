@@ -77,7 +77,7 @@
             </mat-hint>
           </mat-form-field>
 
-          <app-custom-select
+          <!-- <app-custom-select
             label="Riesgo Asociado"
             [formControl]="riskParameterControl"
             [parameterType]="riskParameterType"
@@ -91,7 +91,7 @@
             [required]="true"
             appearance="fill"
             class="full-width"
-          ></app-custom-select>
+          ></app-custom-select> -->
         </div>
 
         <div class="column">
@@ -298,8 +298,7 @@
                         <th>Día</th>
                         <th>Estado</th>
                         <th>Tipo</th>
-                        <th>Periocidad</th>
-                        <th>Completado</th>
+                        <th>Periodicidad</th>
                         <th>Acciones</th>
                       </tr>
                     </thead>
@@ -307,22 +306,23 @@
                       <tr *ngFor="let planItem of getPlanificationData(row.id)">
                         <td>{{ planItem.dia }}</td>
                         <td>
-                          <span class="status-badge" [ngClass]="'status-' + planItem.estado">
-                            {{ planItem.estado }}
-                          </span>
+                          <span class="status-badge"
+                          [ngClass]="{
+                            'status-pendiente': planItem.estado === 'pendiente',
+                            'status-cumplida': planItem.estado === 'cumplida',
+                            'status-no-cumplida': planItem.estado === 'no cumplida'
+                          }">
+                      {{ planItem.estado }}
+                    </span>
+                    
                         </td>
                         <td>{{ planItem.tipo }}</td>
                         <td>{{ planItem.Periocidad }}</td>
                         <td>
-                          <mat-icon [ngClass]="planItem.diaCompletado === '1' ? 'completed' : 'pending'">
-                            {{ planItem.diaCompletado === '1' ? 'check_circle' : 'cancel' }}
-                          </mat-icon>
-                        </td>
-                        <td>
                           <button 
                             mat-icon-button 
                             color="warn" 
-                            [disabled]="planItem.estado !== 'pendiente'"
+                            [disabled]="planItem.estado == 'cumplida'"
                             (click)="deletePlanItem(planItem, row)">
                             <mat-icon>delete</mat-icon>
                           </button>

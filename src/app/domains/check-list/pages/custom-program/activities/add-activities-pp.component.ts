@@ -1265,7 +1265,6 @@ export class AddActivitiesPpComponent implements OnInit {
       "dias": daysString
     };
 
-
     // Llamar al servicio para actualizar los días en la base de datos
     this.controlService.updateControlDays(updateBody).subscribe({
       next: (response) => {
@@ -1276,6 +1275,9 @@ export class AddActivitiesPpComponent implements OnInit {
           verticalPosition: 'bottom',
           panelClass: ['success-snackbar']
         });
+
+        // Recargar los datos de planificación si la fila está expandida
+        this.refreshPlanificationDataIfExpanded(controlId);
       },
       error: (error) => {
         console.error('Error al actualizar días:', error);
@@ -1291,6 +1293,29 @@ export class AddActivitiesPpComponent implements OnInit {
     // La tabla se actualiza automáticamente porque estamos modificando
     // directamente el objeto element que ya está en el array tableData
     console.log('Datos actualizados en la tabla:', this.tableData);
+  }
+
+  /**
+   * Recarga los datos de planificación si la fila está expandida
+   */
+  refreshPlanificationDataIfExpanded(controlId: number): void {
+    if (this.expandedElements.has(controlId)) {
+      console.log(`Recargando datos de planificación para control ${controlId} (fila expandida)`);
+      
+      // Encontrar el elemento de la tabla para obtener el período
+      const tableElement = this.tableData.find(item => item.id === controlId);
+      
+      if (tableElement && tableElement.period) {
+        // Limpiar los datos cacheados
+        delete this.planificationData[controlId];
+        delete this.loadingPlanification[controlId];
+        
+        // Recargar los datos
+        this.loadPlanificationData(controlId, tableElement.period.toString());
+      } else {
+        console.warn(`No se pudo encontrar elemento de tabla o período para control ${controlId}`);
+      }
+    }
   }
 
   /**

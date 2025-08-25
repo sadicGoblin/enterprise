@@ -903,6 +903,52 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     this.exportingPdf = true;
     this.snackBar.open('Generando PDF del cronograma...', '', { duration: 2000 });
 
+    // Cargar el logo de Inarco primero
+    this.loadInarcoLogo().then(logoBase64 => {
+      this.generatePdfWithLogo(logoBase64);
+    }).catch(error => {
+      console.warn('No se pudo cargar el logo, generando PDF sin logo:', error);
+      this.generatePdfWithLogo(null);
+    });
+  }
+
+  /**
+   * Carga el logo de Inarco y lo convierte a base64
+   */
+  private loadInarcoLogo(): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Ajustar tamaño del logo para el PDF (60px de alto)
+        const logoHeight = 60;
+        const logoWidth = (img.width * logoHeight) / img.height;
+        
+        canvas.width = logoWidth;
+        canvas.height = logoHeight;
+        
+        ctx?.drawImage(img, 0, 0, logoWidth, logoHeight);
+        
+        const base64 = canvas.toDataURL('image/png');
+        resolve(base64);
+      };
+      
+      img.onerror = () => {
+        reject('Error al cargar la imagen');
+      };
+      
+      img.src = 'assets/logo-icon.png';
+    });
+  }
+
+  /**
+   * Genera el PDF con o sin logo
+   */
+  private generatePdfWithLogo(logoBase64: string | null): void {
     // Obtener el contenido HTML del cronograma
     const cronogramaContent = document.querySelector('#cronograma-content');
     if (!cronogramaContent) {
@@ -937,7 +983,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     });
     
     // Crear el encabezado del PDF con información del período y proyecto
-    const headerInfo = this.createPdfHeader();
+    const headerInfo = this.createPdfHeader(logoBase64);
     
     // Obtener los estilos CSS relevantes
     const styles = this.getStyles();
@@ -969,6 +1015,38 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
             font-size: 24px;
           }
           .pdf-header p {
+            margin: 5px 0 0 0;
+            font-size: 14px;
+          }
+          .pdf-header-with-logo {
+            background-color: #0c4790;
+            color: white;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 80px;
+          }
+          .inarco-logo {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 60px;
+            width: auto;
+          }
+          .header-content {
+            text-align: center;
+            flex: 1;
+          }
+          .header-content h1 {
+            margin: 0;
+            font-size: 24px;
+          }
+          .header-content p {
             margin: 5px 0 0 0;
             font-size: 14px;
           }
@@ -1109,10 +1187,12 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
         </style>
       </head>
       <body>
+        ${logoBase64 ? headerInfo : `
         <div class="pdf-header">
           <h1>CRONOGRAMA MENSUAL</h1>
           <p>${headerInfo}</p>
         </div>
+        `}
         ${contentClone.innerHTML}
         
         <!-- Sección de firma -->
@@ -1131,7 +1211,8 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
       html: htmlContent,
       filename: `cronograma-${this.formattedPeriod?.replace(/\s+/g, '-')}-${Date.now()}.pdf`,
       title: `Cronograma Mensual - ${this.formattedPeriod}`,
-      sheet_type: 'H' // Landscape para tablas anchas
+      sheet_type: 'H', 
+      hide_footer: true
     };
 
     // Enviar a la API usando ProxyService como en los otros modales
@@ -1169,7 +1250,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   /**
    * Crea el encabezado con información del PDF
    */
-  private createPdfHeader(): string {
+  private createPdfHeader(logoBase64?: string | null): string {
     let headerParts = [];
     
     // Formatear período para PDF (ej: "AGOSTO 2024")
@@ -1193,6 +1274,19 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
     }
     
     headerParts.push(`Generado: ${new Date().toLocaleDateString('es-ES')}`);
+    
+    // Si tenemos logo, crear header HTML completo, sino solo texto
+    if (logoBase64) {
+      return `
+        <div class="pdf-header-with-logo">
+          <img src="${logoBase64}" class="inarco-logo" alt="Inarco Logo" />
+          <div class="header-content">
+            <h1>CRONOGRAMA MENSUAL</h1>
+            <p>${headerParts.join(' | ')}</p>
+          </div>
+        </div>
+      `;
+    }
     
     return headerParts.join(' | ');
   }

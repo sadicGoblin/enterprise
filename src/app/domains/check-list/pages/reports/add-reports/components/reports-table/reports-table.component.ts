@@ -22,6 +22,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { SstmaModalComponent } from '../../../../../components/sstma-modal/sstma-modal.component';
 import { ReportModalComponent } from '../../../../../components/report-modal/report-modal.component';
 import { ARTReportModalComponent } from '../../../../../components/art-report-modal/art-report-modal.component';
+import { ChecklistReportModalComponent } from '../../../../../components/checklist-report-modal/checklist-report-modal.component';
 
 // Interface for the API response
 interface ReportResponse {
@@ -40,6 +41,7 @@ interface Report {
   Obra: string;
   fecha: string;
   creador: string;
+  idControl: string;
   profesionalResponsable: string;
   ambitoInvolucrado: string;
 }
@@ -359,6 +361,7 @@ export class ReportsTableComponent implements OnInit {
   viewReport(report: Report): void {
     console.log('View report:', report);
     let idActivity = report.idActividad;
+    let idControl = report.idControl;
     if(report.tipo.toUpperCase().includes('INCIDENTE')){
       this.dialog.open(ReportModalComponent, {
         data: idActivity
@@ -373,6 +376,12 @@ export class ReportsTableComponent implements OnInit {
           this.dialog.open(ARTReportModalComponent, {
             data: idActivity
           });
+        }else{
+          if(report.tipo.toUpperCase().includes('CHECKLIST') || report.tipo.toUpperCase().includes('CHECK LIST')){
+            this.dialog.open(ChecklistReportModalComponent, {
+              data: idControl
+            });
+          }
         }
       }
     }
