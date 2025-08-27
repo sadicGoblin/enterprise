@@ -296,7 +296,7 @@ $scale-factor: 0.9;
     // Contenedor para el visor de imágenes con altura máxima
     ::ng-deep app-img-viewer {
       display: block;
-      max-height: 60vh;
+      // max-height: 60vh;
       overflow: hidden;
 
       // Imagen principal

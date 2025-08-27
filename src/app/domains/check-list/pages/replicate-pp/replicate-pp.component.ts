@@ -88,10 +88,8 @@ export class ReplicatePpComponent implements OnInit {
   projectOptionLabelKey = 'Obra';
   
   // RequestBody para la API
-  projectApiRequestBody = {
-    caso: 'Consulta',
-    idObra: 0,
-    idUsuario: '478' // Valor por defecto
+  projectApiRequestBody: { [key: string]: string | number } = {
+    idUsuario: localStorage.getItem('userId') || ''
   };
 
   // Usuario/Collaborator selection using custom select component (matching activity-planning)
@@ -115,14 +113,14 @@ export class ReplicatePpComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Get user id from localStorage or default to 478
-    const userId = localStorage.getItem('id_usuario') || '478';
+    // Get user id from localStorage (matching activity-planning)
+    const userId = localStorage.getItem('userId') || '';
     
-    // Setup API request body with the user ID
+    // Setup API request body with the user ID (matching activity-planning structure)
     this.projectApiRequestBody = {
-      caso: 'Consulta',
-      idObra: 0,
-      idUsuario: userId
+      "caso": "Consulta",
+      "idObra": 0,
+      "idUsuario": userId || ''
     };
     
     // Set default period only for origen (current month) - removed auto-initialization of destino
