@@ -22,6 +22,24 @@
           ></app-custom-select>
 
           <mat-form-field appearance="fill" class="full-width">
+            <mat-label>Período</mat-label>
+            <input 
+              matInput 
+              [matDatepicker]="picker" 
+              [(ngModel)]="selectedDate" 
+              (dateChange)="onDateChange()"
+              readonly>
+            <mat-hint>MM/YYYY</mat-hint>
+            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker 
+              #picker 
+              startView="multi-year" 
+              (monthSelected)="setMonthAndYear($event, picker)"
+              [startAt]="selectedDate">
+            </mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="fill" class="full-width">
             <mat-label>Etapa Constructiva</mat-label>
             <mat-select [formControl]="stageControl" (selectionChange)="onStageSelectionChange($event.value)">
               <!-- Mostrar spinner cuando se están cargando etapas -->
@@ -44,13 +62,7 @@
             </mat-select>
           </mat-form-field>
 
-          <mat-form-field appearance="fill" class="full-width">
-            <mat-label>Período</mat-label>
-            <input matInput [matDatepicker]="picker" [(ngModel)]="selectedDate" (dateChange)="onDateChange()">
-            <mat-hint>MM/YYYY</mat-hint>
-            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker #picker startView="year" [startAt]="selectedDate"></mat-datepicker>
-          </mat-form-field>
+          
 
           <mat-form-field appearance="fill" class="full-width">
             <mat-label>Sub-proceso</mat-label>

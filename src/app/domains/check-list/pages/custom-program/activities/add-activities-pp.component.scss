@@ -50,6 +50,50 @@
   border-radius: 2px;
 }
 
+/* Contenedor para período con botón de búsqueda */
+.period-search-container {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  
+  .period-field {
+    flex: 1;
+  }
+  
+  .search-button {
+    margin-top: 8px; // Alinear con el campo de texto
+    height: 48px;
+    min-width: 120px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+    }
+    
+    &:disabled {
+      background-color: #f5f5f5;
+      color: #999;
+    }
+  }
+  
+  @media (max-width: 600px) {
+    flex-direction: column;
+    
+    .period-field {
+      width: 100%;
+    }
+    
+    .search-button {
+      width: 100%;
+      margin-top: 0;
+    }
+  }
+}
+
 /* Contenido y layout */
 .form-grid {
   display: grid;

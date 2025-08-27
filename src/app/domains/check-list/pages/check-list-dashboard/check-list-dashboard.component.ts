@@ -563,227 +563,201 @@ export class CheckListDashboardComponent implements OnInit, AfterViewInit {
     if (this.selectedUser) pdfTitle += ` - Usuario: ${this.selectedUser}`;
     if (this.selectedScope) pdfTitle += ` - Ámbito: ${this.selectedScope}`;
     
-    // Configuraciones básicas para la captura
+    // Configuraciones para html2canvas
     const options = {
-      scale: 1.5,
+      scale: 2, // Mejor calidad
       useCORS: true,
       allowTaint: true,
       backgroundColor: '#ffffff',
-      logging: false
+      logging: false,
+      width: 1400, // Ancho fijo para mejor consistencia
+      windowWidth: 1400,
+      windowHeight: 800
     };
-    
-    // Seleccionar las secciones principales sin importar los separadores
+
+    // Buscar las secciones específicas del dashboard para capturar por separado
     const metricsSection = document.querySelector('.metrics-section') as HTMLElement;
+    const chartsRowFirst = document.querySelector('.charts-row:not(.full-width-chart)') as HTMLElement;
+    const lineChartSection = document.querySelector('.charts-row.full-width-chart') as HTMLElement;
+    const chartsRowLast = document.querySelector('.charts-row:nth-of-type(3)') as HTMLElement;
     
-    // Para las filas de gráficos, tenemos que ser más específicos porque hay 3 filas
-    // La primera fila normal de gráficos (dona y barras)
-    const firstChartsRow = document.querySelector('.charts-row:not(.full-width-chart)') as HTMLElement;
-    
-    // La última fila de gráficos (heatmap y proyectos activos)
-    const secondChartsRow = document.querySelector('.charts-row:nth-of-type(3)') as HTMLElement;
-    
-    // Sección de actividades recientes
-    const activitiesSection = document.querySelector('.activities-section') as HTMLElement;
-    
-    console.log('Secciones encontradas para PDF:', {
-      metricas: metricsSection ? true : false,
-      grafico1: firstChartsRow ? true : false,
-      grafico2: secondChartsRow ? true : false,
-      actividades: activitiesSection ? true : false
-    });
-    
-    // Verificar si se encontraron todas las secciones necesarias
-    if (!metricsSection || !firstChartsRow || !secondChartsRow || !activitiesSection) {
-      console.error('No se encontraron todas las secciones del dashboard para el PDF');
+    if (!metricsSection) {
+      console.error('No se encontró el contenedor de métricas');
       this.isLoading = false;
       return;
     }
-    
-    // Lista de secciones a capturar (siempre las 4 secciones fijas)
-    const sections = [
-      { element: metricsSection, title: 'Métricas Principales' },
-      { element: firstChartsRow, title: 'Gráficos de Distribución' },
-      { element: secondChartsRow, title: 'Actividad por Categorías' },
-      { element: activitiesSection, title: 'Actividades Recientes' }
-    ];
-    
-    // Mantener registro de elementos temporales creados para limpiar después
-    const temporaryElements: HTMLElement[] = [];
-    
-    // El PDF tendrá 2 secciones por página - Primera página: Métricas y Gráficos 1, Segunda página: Gráficos 2 y Actividades
-    
-    // Función para preparar un elemento antes de la captura
-    const prepareElement = (element: HTMLElement): {
-      originalStyles: { [key: string]: string },
-      parents: ParentElement[]
-    } => {
-      // Guardar estilos originales
-      const originalStyles = {
-        width: element.style.width,
-        height: element.style.height,
-        position: element.style.position,
-        overflow: element.style.overflow
-      };
+
+    console.log('Generando PDF del dashboard por secciones...');
+
+    // Función para preparar elementos para captura
+    const prepareForCapture = () => {
+      const loadingElements = document.querySelectorAll('.loading-overlay');
+      const filterButtons = document.querySelectorAll('.filter-button');
       
-      // Configurar para la captura
-      element.style.width = element.scrollWidth + 'px';
-      element.style.height = 'auto';
-      element.style.overflow = 'visible';
-      
-      // Preparar padres
-      const parents: ParentElement[] = [];
-      let parent = element.parentElement;
-      
-      while (parent) {
-        parents.push({
-          element: parent,
-          originalOverflow: parent.style.overflow
-        });
-        parent.style.overflow = 'visible';
-        parent = parent.parentElement;
-      }
-      
-      return { originalStyles, parents };
+      loadingElements.forEach(el => (el as HTMLElement).style.display = 'none');
+      filterButtons.forEach(el => (el as HTMLElement).style.display = 'none');
     };
-    
-    // Función para restaurar un elemento después de la captura
-    const restoreElement = (element: HTMLElement, data: {
-      originalStyles: { [key: string]: string },
-      parents: ParentElement[]
-    }) => {
-      // Restaurar estilos del elemento
-      Object.keys(data.originalStyles).forEach(key => {
-        element.style[key as any] = data.originalStyles[key];
-      });
+
+    // Función para restaurar elementos después de la captura
+    const restoreAfterCapture = () => {
+      const loadingElements = document.querySelectorAll('.loading-overlay');
+      const filterButtons = document.querySelectorAll('.filter-button');
       
-      // Restaurar padres
-      data.parents.forEach(p => {
-        p.element.style.overflow = p.originalOverflow;
-      });
+      loadingElements.forEach(el => (el as HTMLElement).style.display = '');
+      filterButtons.forEach(el => (el as HTMLElement).style.display = '');
     };
+
+    // Preparar para captura
+    prepareForCapture();
 
     // Array para almacenar las imágenes de cada sección
-    const sectionImages: {image: string, width: number, height: number}[] = [];
+    const sectionImages: {image: string, title: string}[] = [];
     
-    // Función para procesar cada sección de forma secuencial
-    const processSectionAtIndex = (index: number) => {
-      if (index >= sections.length) {
-        // Todas las secciones han sido procesadas, ahora combinamos en un único PDF grande
-        createCompletePDF();
-        return;
-      }
-      
-      const section = sections[index];
-      const elementData = prepareElement(section.element);
-      
-      try {
-        // Capturar la sección actual
-        html2canvas(section.element, options).then(canvas => {
-          // Obtener imagen y dimensiones
+    // Lista de secciones a capturar
+    const sections = [
+      { element: metricsSection, title: 'Métricas Principales' },
+      { element: chartsRowFirst, title: 'Gráficos de Distribución' },
+      { element: lineChartSection, title: 'Tendencias por Día' },
+      { element: chartsRowLast, title: 'Análisis por Categorías' }
+    ].filter(section => section.element); // Solo incluir secciones que existen
+
+    // Función para procesar secciones secuencialmente
+    const processSections = async () => {
+      for (let i = 0; i < sections.length; i++) {
+        const section = sections[i];
+        try {
+          const canvas = await html2canvas(section.element, options);
           const imgData = canvas.toDataURL('image/png');
-          const width = canvas.width;
-          const height = canvas.height;
-          
-          // Guardar la imagen de esta sección
-          sectionImages.push({ image: imgData, width, height });
-          
-          // Restaurar el elemento a su estado original
-          restoreElement(section.element, elementData);
-          
-          // Procesar la siguiente sección
-          processSectionAtIndex(index + 1);
-        }).catch(error => {
-          console.error(`Error al capturar sección ${section.title}:`, error);
-          restoreElement(section.element, elementData);
-          processSectionAtIndex(index + 1); // Continuar con la siguiente sección a pesar del error
-        });
-      } catch (error) {
-        console.error(`Error al procesar sección ${section.title}:`, error);
-        restoreElement(section.element, elementData);
-        processSectionAtIndex(index + 1);
-      }
-    };
-
-    // Función para crear el PDF final con 2 secciones por página
-    const createCompletePDF = () => {
-      // Configuración de PDF (A4 landscape)
-      const pdf = new jsPDF('landscape', 'mm', 'a4');
-      const pageWidth = 277; // Ancho A4 landscape menos márgenes
-      const pageHeight = 190; // Altura útil para contenido en A4 landscape
-
-      // Añadir título y fecha
-      const date = new Date();
-      const dateStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
-      
-      // Contador de páginas
-      let currentPage = 0;
-      
-      // Distribuir secciones: 2 por página
-      for (let i = 0; i < sectionImages.length; i += 2) {
-        // Añadir nueva página si no es la primera sección
-        if (i > 0) {
-          pdf.addPage();
-        }
-        currentPage++;
-        
-        // Encabezado de la página (mínimo espacio)
-        pdf.setFontSize(7);
-        pdf.text(pdfTitle, 10, 10);
-        pdf.setFontSize(5);
-        pdf.text(`Generado el: ${dateStr} | Página ${currentPage}`, 10, 15);
-        
-        // Primera sección en esta página
-        const img1 = sectionImages[i];
-        
-        // Añadir título de la primera sección (mínimo espacio)
-        let yPosition = 20; // Posición inicial muy reducida
-        pdf.setFontSize(6);
-        pdf.text(sections[i].title, 10, yPosition);
-        yPosition += 3; // Mínimo espacio tras el título
-        
-        // Calcular dimensiones de la primera imagen (ancho máximo, márgenes mínimos)
-        const imgWidth1 = 287; // Ancho máximo con márgenes mínimos
-        const imgHeight1 = (img1.height * imgWidth1) / img1.width;
-        
-        // Añadir la primera imagen
-        pdf.addImage(img1.image, 'PNG', 5, yPosition, imgWidth1, imgHeight1);
-        
-        // Calcular posición para la segunda sección
-        yPosition += imgHeight1 + 3; // Mínimo espacio entre imágenes
-        
-        // Comprobar si existe una segunda sección para esta página
-        if (i + 1 < sectionImages.length) {
-          const img2 = sectionImages[i + 1];
-          
-          // Añadir título de la segunda sección
-          pdf.setFontSize(6);
-          pdf.text(sections[i + 1].title, 10, yPosition);
-          yPosition += 3; // Mínimo espacio tras el título
-          
-          // Calcular dimensiones de la segunda imagen
-          const imgWidth2 = 287; // Ancho máximo con márgenes mínimos
-          const imgHeight2 = (img2.height * imgWidth2) / img2.width;
-          
-          // Añadir la segunda imagen
-          pdf.addImage(img2.image, 'PNG', 5, yPosition, imgWidth2, imgHeight2);
+          sectionImages.push({ image: imgData, title: section.title });
+          console.log(`Sección "${section.title}" capturada correctamente`);
+        } catch (error) {
+          console.error(`Error capturando sección ${section.title}:`, error);
         }
       }
       
-      // Guardar el PDF
-      pdf.save(`dashboard-actividades-${this.selectedPeriod}.pdf`);
-      
-      // Eliminar todos los elementos temporales del DOM
-      temporaryElements.forEach(el => {
-        if (el.parentNode) {
-          el.parentNode.removeChild(el);
-        }
-      });
-      
-      // Ocultar indicador de carga
-      this.isLoading = false;
+      // Crear PDF con todas las secciones
+      this.createPDFWithSections(pdfTitle, sectionImages);
+      restoreAfterCapture();
     };
+
+    processSections();
+  }
+
+  private async createPDFWithSections(title: string, sections: {image: string, title: string}[]): Promise<void> {
+    // Crear PDF en orientación portrait (vertical)
+    const pdf = new jsPDF('portrait', 'mm', 'a4');
+    const pageWidth = 210;
+    const pageHeight = 297;
+    const margin = 15;
+    const contentWidth = pageWidth - (margin * 2);
+
+    // Primera página: Solo header
+    pdf.setFontSize(18);
+    pdf.text(title, margin, 30);
     
-    // Iniciar el procesamiento con la primera sección
-    processSectionAtIndex(0);
+    const date = new Date().toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    
+    pdf.setFontSize(12);
+    pdf.text(`Generado el: ${date}`, margin, 45);
+
+    // Agregar información adicional en la primera página
+    let yPosition = 65;
+    
+    if (this.selectedProject || this.selectedUser || this.selectedScope) {
+      pdf.setFontSize(14);
+      pdf.text('Filtros Aplicados:', margin, yPosition);
+      yPosition += 10;
+      
+      pdf.setFontSize(11);
+      if (this.selectedProject) {
+        pdf.text(`• Proyecto: ${this.selectedProject}`, margin + 5, yPosition);
+        yPosition += 8;
+      }
+      if (this.selectedUser) {
+        pdf.text(`• Usuario: ${this.selectedUser}`, margin + 5, yPosition);
+        yPosition += 8;
+      }
+      if (this.selectedScope) {
+        pdf.text(`• Ámbito: ${this.selectedScope}`, margin + 5, yPosition);
+        yPosition += 8;
+      }
+    }
+
+    // Agregar línea separadora
+    yPosition += 15;
+    pdf.setLineWidth(0.5);
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+
+    // Agregar índice de contenido
+    yPosition += 20;
+    pdf.setFontSize(14);
+    pdf.text('Contenido del Reporte:', margin, yPosition);
+    yPosition += 10;
+
+    pdf.setFontSize(11);
+    sections.forEach((section, index) => {
+      pdf.text(`${index + 1}. ${section.title}`, margin + 5, yPosition);
+      yPosition += 8;
+    });
+
+    // Procesar cada sección secuencialmente para evitar problemas de superposición
+    for (let index = 0; index < sections.length; index++) {
+      const section = sections[index];
+      pdf.addPage();
+      
+      // Título de la sección
+      pdf.setFontSize(16);
+      pdf.text(`${index + 1}. ${section.title}`, margin, 30);
+      
+      // Línea separadora
+      pdf.setLineWidth(0.3);
+      pdf.line(margin, 35, pageWidth - margin, 35);
+      
+      // Agregar la imagen directamente sin usar img.onload
+      try {
+        // Dimensiones más conservadoras y proporcionales
+        const maxHeight = pageHeight - 85; // Más espacio para márgenes (220mm disponibles)
+        const maxWidth = contentWidth ; // 90% del ancho disponible (162mm)
+        
+        // Calcular dimensiones más realistas basadas en las capturas
+        let imgWidth = maxWidth;
+        let imgHeight = maxWidth * 0.6; // Relación 3:2 más natural para los charts
+        
+        // Si la altura calculada excede el máximo, ajustar proporcionalmente
+        if (imgHeight > maxHeight) {
+          imgHeight = maxHeight;
+          imgWidth = imgHeight / 0.6; // Mantener la proporción 3:2
+        }
+        
+        // Asegurar que el ancho no exceda el límite
+        if (imgWidth > maxWidth) {
+          imgWidth = maxWidth;
+          imgHeight = imgWidth * 0.6;
+        }
+        
+        // Centrar la imagen
+        const imgX = (pageWidth - imgWidth) / 2;
+        const imgY = 50; // Posición fija después del título y línea
+        
+        // Agregar la imagen directamente
+        pdf.addImage(section.image, 'PNG', imgX, imgY, imgWidth, imgHeight);
+        
+      } catch (error) {
+        console.error(`Error agregando imagen de sección ${section.title}:`, error);
+        // Si hay error, agregar un mensaje de texto en lugar de la imagen
+        pdf.setFontSize(12);
+        pdf.text(`Error al cargar la imagen de: ${section.title}`, margin, 60);
+      }
+    }
+    
+    // Guardar el PDF
+    pdf.save(`dashboard-actividades-${this.selectedPeriod}.pdf`);
+    this.isLoading = false;
   }
 }

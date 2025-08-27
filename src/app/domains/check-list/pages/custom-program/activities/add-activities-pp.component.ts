@@ -164,8 +164,10 @@ export class AddActivitiesPpComponent implements OnInit {
   projectControl = new FormControl(null, [Validators.required]);
   projectSelectedId: string | null = null;
   projectApiEndpoint = '/ws/ObrasSvcImpl.php';
-  projectApiCaso = 'Consultas';
-  projectApiRequestBody!: ProjectApiRequestBody; // Will be initialized in ngOnInit
+  projectApiCaso = 'Consulta';
+  projectApiRequestBody: { [key: string]: string | number } = {
+    idUsuario: localStorage.getItem('userId') || ''
+  };
   projectOptionValue = 'IdObra';
   projectOptionLabel = 'Obra';
   projectParameterType = ParameterType.OBRA;
@@ -304,11 +306,77 @@ export class AddActivitiesPpComponent implements OnInit {
   onDateChange(): void {
     this.formatSelectedDate();
 
-    // Verificar si tenemos todos los datos para cargar controles existentes
-    if (this.projectSelectedId && this.stageSelectedId && this.selectedUser && this.selectedDate) {
-      // console.log('Tenemos obra, etapa y colaborador - cargando controles existentes al cambiar fecha...');
+    // Verificar si tenemos los datos mínimos necesarios para cargar controles existentes
+    // Solo necesitamos obra, colaborador y fecha (etapa no es obligatoria)
+    if (this.projectSelectedId && this.selectedUser && this.selectedDate) {
+      console.log('Fecha cambió - recargando controles existentes automáticamente...');
       this.loadExistingControls();
+    } else {
+      console.log('Fecha cambió pero faltan datos para recargar:', {
+        proyecto: !!this.projectSelectedId,
+        colaborador: !!this.selectedUser,
+        fecha: !!this.selectedDate
+      });
     }
+  }
+
+  /**
+   * Establece solo mes y año seleccionado en el datepicker y cierra el picker
+   */
+  setMonthAndYear(date: Date, datepicker: any): void {
+    // Establecer el día 1 para tener una fecha válida del mes seleccionado
+    const selectedDate = new Date(date.getFullYear(), date.getMonth(), 1);
+    this.selectedDate = selectedDate;
+    this.formatSelectedDate();
+    datepicker.close();
+    
+    // Disparar el evento de cambio de fecha automáticamente
+    this.onDateChange();
+  }
+
+  /**
+   * Búsqueda manual de actividades - permite recargar datos sin necesidad de cambiar colaborador
+   */
+  buscarActividades(): void {
+    if (!this.projectSelectedId) {
+      this.snackBar.open('Seleccione una obra primero', 'Cerrar', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom',
+        panelClass: ['warning-snackbar']
+      });
+      return;
+    }
+
+    if (!this.selectedUser) {
+      this.snackBar.open('Seleccione un colaborador primero', 'Cerrar', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom',
+        panelClass: ['warning-snackbar']
+      });
+      return;
+    }
+
+    if (!this.selectedDate) {
+      this.snackBar.open('Seleccione un período primero', 'Cerrar', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom',
+        panelClass: ['warning-snackbar']
+      });
+      return;
+    }
+
+    console.log('Búsqueda manual iniciada - cargando controles existentes...');
+    this.loadExistingControls();
+
+    this.snackBar.open('Buscando actividades...', 'Cerrar', {
+      duration: 2000,
+      horizontalPosition: 'center',
+      verticalPosition: 'bottom',
+      panelClass: ['info-snackbar']
+    });
   }
 
   ngOnInit(): void {
@@ -325,12 +393,14 @@ export class AddActivitiesPpComponent implements OnInit {
       console.error('Error parsing userData from localStorage:', error);
     }
 
-    // Initialize project API request body with the current user ID
+    
+
+    // Initialize project API request body with the current user ID (matching activity-planning)
+    const userId = localStorage.getItem('userId') || '';
     this.projectApiRequestBody = {
-      caso: this.projectApiCaso,
-      idObra: 0, // For fetching all projects
-      // idUsuario: this.userId || 1
-      idUsuario: null
+      "caso": "Consulta",
+      "idObra": 0,
+      "idUsuario": userId || ''
     };
   }
 
