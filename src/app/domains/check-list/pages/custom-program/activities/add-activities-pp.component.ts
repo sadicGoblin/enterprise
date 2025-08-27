@@ -750,7 +750,8 @@ export class AddActivitiesPpComponent implements OnInit {
     'scope',
     'name',
     'days',
-    'periodicity'
+    'periodicity',
+    'delete'
   ];
 
   // Propiedades para manejar expansión de filas
@@ -830,8 +831,15 @@ export class AddActivitiesPpComponent implements OnInit {
     if (!this.projectSelectedId || !this.stageSelectedId || !this.scopeSelectedId ||
       this.selectedSubprocesses.length === 0 || this.selectedActivities.length === 0) {
       console.error('Error: Faltan campos requeridos');
+      this.snackBar.open('Faltan campos requeridos', 'Cerrar', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom',
+        panelClass: ['error-snackbar']
+      });
       if (!this.scopeSelectedId) {
         console.error('El ámbito (scope) no está seleccionado. Por favor, seleccione un ámbito.');
+
       }
       // Mostrar mensaje de error al usuario
       return;
@@ -1100,14 +1108,6 @@ export class AddActivitiesPpComponent implements OnInit {
     }
   }
 
-  /**
-   * Elimina una actividad de la tabla por su ID
-   */
-  deleteActivity(activity: { id: number }): void {
-    // Filtrar la tabla para eliminar la actividad con el ID dado
-    this.tableData = this.tableData.filter(item => item.id !== activity.id);
-    console.log(`Actividad ${activity.id} eliminada de la tabla`);
-  }
 
   /**
    * Maneja el cambio de selección de usuario
@@ -1524,6 +1524,119 @@ export class AddActivitiesPpComponent implements OnInit {
             console.error('Error al eliminar planificación:', error);
             
             this.snackBar.open('Error al eliminar planificación', 'Cerrar', {
+              duration: 3000,
+              horizontalPosition: 'center',
+              verticalPosition: 'bottom',
+              panelClass: ['error-snackbar']
+            });
+          }
+        });
+      }
+    });
+  }
+
+  /**
+   * Verificar si una actividad tiene días asignados
+   */
+  hasDaysAssigned(element: any): boolean {
+    // Remover console.log para evitar spam en change detection
+    const daysField = element.days;
+    return daysField != "";
+  }
+
+  /**
+   * Eliminar una actividad de la tabla
+   */
+  deleteActivity(element: any): void {
+    // Verificar que el elemento tenga un ID de control válido
+    if (!element.id) {
+      this.snackBar.open('Error: No se puede eliminar la actividad, ID no encontrado', 'Cerrar', {
+        duration: 3000,
+        horizontalPosition: 'center',
+        verticalPosition: 'bottom',
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+
+    // Mostrar diálogo de confirmación
+    const dialogRef = this.dialog.open(ConfirmationDialogComponent, {
+      width: '500px',
+      data: { 
+        title: 'Confirmar eliminación', 
+        options: [
+          `ACTIVIDAD: ${element.name || 'No especificada'}`,
+          `PROYECTO: ${element.project || 'No especificado'}`,
+          `ETAPA: ${element.stage || 'No especificada'}`,
+          `SUBPROCESO: ${element.subprocess || 'No especificado'}`,
+          `ÁMBITO: ${element.scope || 'No especificado'}`
+        ],
+        question: '¿Está seguro que desea eliminar esta actividad? Esta acción no se puede deshacer.'
+      }
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      console.log('Dialog result:', result); // Debug
+      if (result === 'SÍ') {
+        // Mostrar snackbar de progreso
+        this.snackBar.open('Eliminando actividad...', '', {
+          duration: 0, // No se cierra automáticamente
+          horizontalPosition: 'center',
+          verticalPosition: 'bottom',
+          panelClass: ['info-snackbar']
+        });
+
+        // Preparar request para eliminar el control
+        const requestBody = {
+          caso: 'Elimina',
+          idControl: element.id
+        };
+
+        console.log('Eliminando control:', requestBody);
+        
+        // Llamada a la API para eliminar
+        this.proxyService.post(environment.apiBaseUrl + '/ws/ControlSvcImpl.php', requestBody).subscribe({
+          next: (response: any) => {
+            // Cerrar snackbar de progreso
+            this.snackBar.dismiss();
+            
+            if (response && response.success) {
+              // Mostrar mensaje de éxito
+              this.snackBar.open('Actividad eliminada correctamente', 'Cerrar', {
+                duration: 3000,
+                horizontalPosition: 'center',
+                verticalPosition: 'bottom',
+                panelClass: ['success-snackbar']
+              });
+              
+              // Actualizar tabla eliminando el elemento
+              this.tableData = this.tableData.filter(item => item.id !== element.id);
+              
+              // También eliminar datos de planificación si existen
+              if (this.planificationData[element.id]) {
+                delete this.planificationData[element.id];
+              }
+              
+              // Remover de elementos expandidos si está expandido
+              this.expandedElements.delete(element.id);
+              
+            } else {
+              console.error('Error al eliminar actividad:', response);
+              this.snackBar.open('Error al eliminar actividad', 'Cerrar', {
+                duration: 3000,
+                horizontalPosition: 'center',
+                verticalPosition: 'bottom',
+                panelClass: ['error-snackbar']
+              });
+            }
+          },
+          error: (error) => {
+            // Cerrar snackbar de progreso
+            this.snackBar.dismiss();
+            
+            console.error('Error al eliminar actividad:', error);
+            
+            this.snackBar.open('Error al eliminar actividad', 'Cerrar', {
               duration: 3000,
               horizontalPosition: 'center',
               verticalPosition: 'bottom',

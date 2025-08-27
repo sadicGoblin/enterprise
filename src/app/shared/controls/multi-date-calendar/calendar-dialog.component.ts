@@ -9,6 +9,7 @@ export interface CalendarDialogData {
   defaultDays?: number[]; // Días predeterminados como números (1-31)
   rowData: any; // Datos de la fila seleccionada
   controlId: number; // ID del control para actualizar
+  selectedPeriod?: Date | null; // Período seleccionado para mostrar en el calendario
 }
 
 /**
@@ -25,6 +26,7 @@ export interface CalendarDialogData {
         <app-multi-date-calendar
           [selectedDates]="selectedDates"
           [defaultDates]="data.defaultDays || []"
+          [initialPeriod]="data.selectedPeriod || null"
           (datesChange)="onDateSelectionChanged($event)">
         </app-multi-date-calendar>
       </div>
@@ -187,9 +189,13 @@ export class CalendarDialogComponent {
     dialogRef.updateSize('480px', '370px');
     // Eliminar padding del diálogo
     this.dialogRef.addPanelClass('calendar-dialog-no-padding');
-    // Inicializar con los días seleccionados previamente
-    this.selectedDates = [...(this.data.selectedDates || [])];
-    this.tempSelectedDates = [...this.selectedDates];
+  }
+
+  ngOnInit(): void {
+    // Pasar las fechas seleccionadas al componente del calendario
+    if (this.data.selectedDates && this.data.selectedDates.length > 0) {
+      this.selectedDates = [...this.data.selectedDates];
+    }
   }
 
   onDateSelectionChanged(dates: Date[]): void {

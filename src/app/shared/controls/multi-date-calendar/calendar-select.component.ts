@@ -63,6 +63,7 @@ export class CalendarSelectComponent {
   @Input() controlId: number = 0;
   @Input() icon: string = 'calendar_month';
   @Input() tooltip: string = 'Seleccionar fechas';
+  @Input() selectedPeriod: Date | null = null;
 
   @Output() datesSelected = new EventEmitter<Date[]>();
 
@@ -73,10 +74,11 @@ export class CalendarSelectComponent {
    */
   openCalendarDialog(): void {
     const dialogData: CalendarDialogData = {
-      selectedDates: [...this.selectedDates],
+      selectedDates: this.selectedDates,
       defaultDays: this.defaultDays,
       rowData: this.rowData,
-      controlId: this.controlId
+      controlId: this.controlId,
+      selectedPeriod: this.selectedPeriod
     };
 
     const dialogRef = this.dialog.open(CalendarDialogComponent, {
