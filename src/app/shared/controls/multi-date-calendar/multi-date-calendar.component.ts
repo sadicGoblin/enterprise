@@ -44,6 +44,7 @@ export class MultiDateCalendarComponent implements OnInit {
   @Input() minDate?: Date;
   @Input() maxDate?: Date;
   @Input() defaultDates: number[] = []; // Días predeterminados (1-31)
+  @Input() initialPeriod: Date | null = null; // Período inicial para mostrar en el calendario
   @Output() datesChange = new EventEmitter<Date[]>();
 
   currentDate = new Date();
@@ -77,6 +78,12 @@ export class MultiDateCalendarComponent implements OnInit {
   ngOnInit(): void {
     // Inicializar nombres de los días de la semana
     this.weekDays = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'];
+    
+    // Si se proporciona un período inicial, usarlo para establecer el mes y año del calendario
+    if (this.initialPeriod) {
+      this.currentMonth = this.initialPeriod.getMonth();
+      this.currentYear = this.initialPeriod.getFullYear();
+    }
     
     // Inicializar el calendario
     this.generateCalendar();

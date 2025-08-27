@@ -23,36 +23,54 @@
 
           <mat-form-field appearance="fill" class="full-width">
             <mat-label>Período</mat-label>
-            <input 
-              matInput 
-              [matDatepicker]="picker" 
-              [(ngModel)]="selectedDate" 
+            <input
+              matInput
+              [matDatepicker]="picker"
+              [(ngModel)]="selectedDate"
               (dateChange)="onDateChange()"
-              readonly>
+              readonly
+            />
             <mat-hint>MM/YYYY</mat-hint>
-            <mat-datepicker-toggle matIconSuffix [for]="picker"></mat-datepicker-toggle>
-            <mat-datepicker 
-              #picker 
-              startView="multi-year" 
+            <mat-datepicker-toggle
+              matIconSuffix
+              [for]="picker"
+            ></mat-datepicker-toggle>
+            <mat-datepicker
+              #picker
+              startView="multi-year"
               (monthSelected)="setMonthAndYear($event, picker)"
-              [startAt]="selectedDate">
+              [startAt]="selectedDate"
+            >
             </mat-datepicker>
           </mat-form-field>
 
           <mat-form-field appearance="fill" class="full-width">
             <mat-label>Etapa Constructiva</mat-label>
-            <mat-select [formControl]="stageControl" (selectionChange)="onStageSelectionChange($event.value)">
+            <mat-select
+              [formControl]="stageControl"
+              (selectionChange)="onStageSelectionChange($event.value)"
+            >
               <!-- Mostrar spinner cuando se están cargando etapas -->
               <div *ngIf="loadingStages" class="loading-spinner-container">
                 <mat-spinner diameter="20"></mat-spinner>
                 <span class="loading-text">Cargando etapas...</span>
               </div>
               <!-- Mostrar opciones de etapas -->
-              <mat-option *ngFor="let stage of stageOptions" [value]="stage.idEtapaConstructiva">
+              <mat-option
+                *ngFor="let stage of stageOptions"
+                [value]="stage.idEtapaConstructiva"
+              >
                 {{ stage.nombre }}
               </mat-option>
               <!-- Mensaje cuando no hay etapas -->
-              <mat-option *ngIf="stageOptions.length === 0 && !loadingStages && projectSelectedId" disabled>
+              <mat-option
+                *ngIf="
+                  stageOptions.length === 0 &&
+                  !loadingStages &&
+                  projectSelectedId
+                "
+                disabled
+              >
                 No hay etapas disponibles para esta obra
               </mat-option>
               <!-- Mensaje cuando no se ha seleccionado obra -->
@@ -62,25 +80,40 @@
             </mat-select>
           </mat-form-field>
 
-          
-
           <mat-form-field appearance="fill" class="full-width">
             <mat-label>Sub-proceso</mat-label>
-            <mat-select multiple [(ngModel)]="selectedSubprocesses" [compareWith]="compareSubprocesses">
-              <div *ngIf="loadingSubprocesses" class="loading-spinner-container">
+            <mat-select
+              multiple
+              [(ngModel)]="selectedSubprocesses"
+              [compareWith]="compareSubprocesses"
+            >
+              <div
+                *ngIf="loadingSubprocesses"
+                class="loading-spinner-container"
+              >
                 <mat-spinner diameter="20"></mat-spinner>
                 <span class="loading-text">Cargando sub-procesos...</span>
               </div>
-              <mat-option 
-                *ngFor="let subprocess of subprocessOptions" 
+              <mat-option
+                *ngFor="let subprocess of subprocessOptions"
                 [value]="subprocess"
               >
                 {{ subprocess.nombre }}
               </mat-option>
-              <mat-option *ngIf="subprocessOptions.length === 0 && !loadingSubprocesses && stageSelectedId" disabled>
+              <mat-option
+                *ngIf="
+                  subprocessOptions.length === 0 &&
+                  !loadingSubprocesses &&
+                  stageSelectedId
+                "
+                disabled
+              >
                 No hay sub-procesos disponibles para esta etapa
               </mat-option>
-              <mat-option *ngIf="!stageSelectedId && !loadingSubprocesses" disabled>
+              <mat-option
+                *ngIf="!stageSelectedId && !loadingSubprocesses"
+                disabled
+              >
                 Seleccione una etapa constructiva primero
               </mat-option>
             </mat-select>
@@ -109,7 +142,10 @@
         <div class="column">
           <mat-form-field appearance="fill" class="full-width">
             <mat-label>Colaborador</mat-label>
-            <mat-select [(ngModel)]="selectedUser" (selectionChange)="onUserSelectionChange($event)">
+            <mat-select
+              [(ngModel)]="selectedUser"
+              (selectionChange)="onUserSelectionChange($event)"
+            >
               <!-- Mostrar spinner cuando se están cargando usuarios -->
               <div *ngIf="loadingUsers" class="loading-spinner-container">
                 <mat-spinner diameter="20"></mat-spinner>
@@ -120,7 +156,10 @@
                 {{ user.nombre }}
               </mat-option>
               <!-- Mensaje cuando no hay usuarios -->
-              <mat-option *ngIf="users.length === 0 && !loadingUsers && projectSelectedId" disabled>
+              <mat-option
+                *ngIf="users.length === 0 && !loadingUsers && projectSelectedId"
+                disabled
+              >
                 No hay colaboradores disponibles para esta obra
               </mat-option>
               <!-- Mensaje cuando no se ha seleccionado obra -->
@@ -153,16 +192,26 @@
                 <mat-spinner diameter="20"></mat-spinner>
                 <span class="loading-text">Cargando actividades...</span>
               </div>
-              <mat-option 
-                *ngFor="let activity of activityOptions" 
+              <mat-option
+                *ngFor="let activity of activityOptions"
                 [value]="activity"
               >
                 {{ activity.nombre }}
               </mat-option>
-              <mat-option *ngIf="activityOptions.length === 0 && !loadingActivities && scopeSelectedId" disabled>
+              <mat-option
+                *ngIf="
+                  activityOptions.length === 0 &&
+                  !loadingActivities &&
+                  scopeSelectedId
+                "
+                disabled
+              >
                 No hay actividades disponibles para este ámbito
               </mat-option>
-              <mat-option *ngIf="!scopeSelectedId && !loadingActivities" disabled>
+              <mat-option
+                *ngIf="!scopeSelectedId && !loadingActivities"
+                disabled
+              >
                 Seleccione un ámbito primero
               </mat-option>
             </mat-select>
@@ -201,12 +250,16 @@
         <ng-container matColumnDef="expand">
           <th mat-header-cell *matHeaderCellDef></th>
           <td mat-cell *matCellDef="let element">
-            <button 
-              mat-icon-button 
+            <button
+              mat-icon-button
               (click)="toggleRowExpansion(element)"
               [attr.aria-label]="isExpanded(element) ? 'Colapsar' : 'Expandir'"
             >
-              <mat-icon>{{ isExpanded(element) ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</mat-icon>
+              <mat-icon>{{
+                isExpanded(element)
+                  ? "keyboard_arrow_up"
+                  : "keyboard_arrow_down"
+              }}</mat-icon>
             </button>
           </td>
         </ng-container>
@@ -259,6 +312,7 @@
               [rowData]="element"
               [controlId]="element.id"
               [tooltip]="getDaysTooltip(element.selectedDays)"
+              [selectedPeriod]="selectedDate"
               (datesSelected)="onCalendarDatesSelected($event, element)"
             >
             </app-calendar-select>
@@ -277,33 +331,49 @@
               mat-icon-button
               color="warn"
               (click)="deleteActivity(element)"
+              [disabled]="hasDaysAssigned(element)"
             >
               <mat-icon>delete</mat-icon>
             </button>
           </td>
         </ng-container>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-        
+        <tr
+          mat-header-row
+          *matHeaderRowDef="displayedColumns; sticky: true"
+        ></tr>
+
         <!-- Filas normales de la tabla -->
-        <ng-container *matRowDef="let row; columns: displayedColumns; let i = index">
+        <ng-container
+          *matRowDef="let row; columns: displayedColumns; let i = index"
+        >
           <tr mat-row class="table-row"></tr>
-          
+
           <!-- Fila expandible -->
           <tr *ngIf="isExpanded(row)" class="expanded-row">
-            <td [attr.colspan]="displayedColumns.length" class="expanded-content">
-              
+            <td
+              [attr.colspan]="displayedColumns.length"
+              class="expanded-content"
+            >
               <!-- Contenido de la expansión -->
               <div class="expansion-container">
-                
                 <!-- Spinner de carga -->
-                <div *ngIf="isLoadingPlanification(row.id)" class="loading-container">
+                <div
+                  *ngIf="isLoadingPlanification(row.id)"
+                  class="loading-container"
+                >
                   <mat-spinner diameter="30"></mat-spinner>
                   <span>Cargando detalles...</span>
                 </div>
-                
+
                 <!-- Datos de planificación -->
-                <div *ngIf="!isLoadingPlanification(row.id) && getPlanificationData(row.id).length > 0" class="planification-data">
+                <div
+                  *ngIf="
+                    !isLoadingPlanification(row.id) &&
+                    getPlanificationData(row.id).length > 0
+                  "
+                  class="planification-data"
+                >
                   <table class="expansion-table">
                     <thead>
                       <tr>
@@ -318,24 +388,28 @@
                       <tr *ngFor="let planItem of getPlanificationData(row.id)">
                         <td>{{ planItem.dia }}</td>
                         <td>
-                          <span class="status-badge"
-                          [ngClass]="{
-                            'status-pendiente': planItem.estado === 'pendiente',
-                            'status-cumplida': planItem.estado === 'cumplida',
-                            'status-no-cumplida': planItem.estado === 'no cumplida'
-                          }">
-                      {{ planItem.estado }}
-                    </span>
-                    
+                          <span
+                            class="status-badge"
+                            [ngClass]="{
+                              'status-pendiente':
+                                planItem.estado === 'pendiente',
+                              'status-cumplida': planItem.estado === 'cumplida',
+                              'status-no-cumplida':
+                                planItem.estado === 'no cumplida'
+                            }"
+                          >
+                            {{ planItem.estado }}
+                          </span>
                         </td>
                         <td>{{ planItem.tipo }}</td>
                         <td>{{ planItem.Periocidad }}</td>
                         <td>
-                          <button 
-                            mat-icon-button 
-                            color="warn" 
+                          <button
+                            mat-icon-button
+                            color="warn"
                             [disabled]="planItem.estado == 'cumplida'"
-                            (click)="deletePlanItem(planItem, row)">
+                            (click)="deletePlanItem(planItem, row)"
+                          >
                             <mat-icon>delete</mat-icon>
                           </button>
                         </td>
@@ -343,21 +417,35 @@
                     </tbody>
                   </table>
                 </div>
-                
+
                 <!-- Mensaje cuando no hay datos -->
-                <div *ngIf="!isLoadingPlanification(row.id) && getPlanificationData(row.id).length === 0" class="no-data-message">
+                <div
+                  *ngIf="
+                    !isLoadingPlanification(row.id) &&
+                    getPlanificationData(row.id).length === 0
+                  "
+                  class="no-data-message"
+                >
                   <mat-icon>info</mat-icon>
                   <span>No hay datos de planificación disponibles</span>
                 </div>
-                
               </div>
             </td>
           </tr>
         </ng-container>
-        
+
         <!-- Mostrar mensaje cuando no hay datos -->
         <tr class="mat-row" *matNoDataRow>
-          <td class="mat-cell" [attr.colspan]="displayedColumns.length" style="text-align: center; padding: 2rem 1rem; font-style: italic; color: #777;">
+          <td
+            class="mat-cell"
+            [attr.colspan]="displayedColumns.length"
+            style="
+              text-align: center;
+              padding: 2rem 1rem;
+              font-style: italic;
+              color: #777;
+            "
+          >
             No hay actividades registradas
           </td>
         </tr>
