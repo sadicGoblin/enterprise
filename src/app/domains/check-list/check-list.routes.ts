@@ -19,6 +19,7 @@ import { CreateDashboardPpComponent } from './pages/reports/create-dashboard-pp/
 import { InspectionTrackingComponent } from './pages/reports/inspection-tracking/inspection-tracking.component';
 import { ActivityPlanningComponent } from './pages/activity-planning/activity-planning.component';
 import { ReplicatePpComponent } from './pages/replicate-pp/replicate-pp.component';
+import { HistoryReportComponent } from './pages/reports/history-report/history-report.component';
 
 export const checkListRoutes: Routes = [
   {
@@ -64,6 +65,7 @@ export const checkListRoutes: Routes = [
           { path: 'incidents', component: IncidentReportComponent },
           { path: 'dashboard', component: CreateDashboardPpComponent },
           { path: 'tracking', component: InspectionTrackingComponent },
+          { path: 'history', component: HistoryReportComponent },
         ],
       },
       // Planning route

@@ -1,0 +1,535 @@
+.search-filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background-color: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  
+  // Aseguramos que todos los iconos dentro del contenedor de filtros tengan color #333
+  .mat-icon {
+    color: #333 !important;
+  }
+  
+  .global-search {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-right: 10px;
+    
+    .search-field {
+      width: 150px;
+    }
+    
+    .clear-search {
+      margin-left: 2px;
+      height: 24px;
+      width: 24px;
+      line-height: 24px;
+      
+      .mat-icon {
+        color: #333 !important;
+        font-size: 16px;
+        height: 16px;
+        width: 16px;
+        line-height: 16px;
+      }
+      
+      &:hover .mat-icon {
+        color: #333 !important;
+      }
+    }
+  }
+  
+  .filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: flex-end;
+  }
+  
+  .filter-field {
+    width: 140px;
+    min-width: 140px;
+    margin: 0;
+  }
+  
+  .custom-select-wrapper,
+  .custom-input-wrapper {
+    display: flex;
+    flex-direction: column;
+    width: 180px;
+    min-width: 180px;
+    margin-bottom: 4px;
+    
+    .custom-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #333333;
+      margin-bottom: 4px;
+      margin-left: 1px;
+    }
+    
+    .custom-input-container {
+      display: flex;
+      align-items: center;
+      border: 1px solid #cccccc;
+      border-radius: 4px;
+      background-color: white;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      height: 38px;
+      padding: 0;
+      overflow: hidden;
+      
+      .mat-icon {
+        color: #333;
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        margin-left: 8px;
+        margin-right: 4px;
+        line-height: 16px;
+      }
+      
+      .custom-input,
+      .custom-select {
+        border: none;
+        background: transparent;
+        outline: none;
+        flex: 1;
+        height: 100%;
+        font-size: 13px;
+        color: #333;
+        font-weight: 500;
+        padding: 0 8px 0 0;
+        width: calc(100% - 30px);
+        display: flex;
+        align-items: center;
+      }
+      
+      .custom-input {
+        padding-left: 4px;
+      }
+      
+      &:focus-within {
+        border-color: #1565c0;
+        box-shadow: 0 2px 5px rgba(25, 118, 210, 0.3);
+      }
+    }
+  }
+  
+  // Para el campo de búsqueda global
+  .global-search {
+    .custom-input-wrapper {
+      width: 180px;
+    }
+  }
+  
+  .filter-actions {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    padding-top: 4px;
+    
+    button {
+      background-color: white;
+      border: 1px solid #cccccc;
+      border-radius: 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      
+      .mat-icon {
+        color: #333 !important;
+        font-size: 18px;
+        height: 18px;
+        width: 18px;
+      }
+      
+      &:hover:not([disabled]) {
+        border-color: #5286b9;
+        box-shadow: 0 2px 4px rgba(25, 118, 210, 0.15);
+        
+        .mat-icon {
+          color: #333 !important;
+        }
+      }
+      
+      &[disabled] .mat-icon {
+        color: #aaaaaa !important;
+      }
+    }
+    
+    .clear-filters-btn {
+      min-width: 100px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 36px;
+      border-radius: 4px;
+      font-weight: 500;
+      font-size: 14px;
+      transition: all 0.2s ease;
+      
+      .mat-icon {
+        font-size: 18px;
+        height: 18px;
+        width: 18px;
+        margin-right: 4px;
+      }
+    }
+  }
+}
+
+// Estilos para las mat-icon en botones
+.mat-icon-button .mat-icon {
+  font-size: 18px;
+  line-height: 18px;
+  height: 18px;
+  width: 18px;
+}
+
+// Estilos específicos del componente history-table
+.search-filter-container {
+  // Mejoras para campos de formulario dentro de este componente
+  .mat-mdc-form-field-subscript-wrapper {
+    display: none; // Elimina el espacio para mensajes de error
+  }
+  
+  // Estilos personalizados para imitar exactamente los campos de fecha
+  .mat-mdc-form-field {
+    margin: 0;
+    width: 140px;
+    height: 38px;
+    font-size: 13px;
+    
+    // Ocultar el floating label completo en favor de labels estáticos
+    .mdc-floating-label {
+      display: none;
+    }
+    
+    .mat-mdc-form-field-subscript-wrapper {
+      display: none;
+    }
+    
+    // Eliminar todos los estilos Material por defecto
+    .mat-mdc-text-field-wrapper {
+      background-color: transparent !important;
+      padding: 0 !important;
+      height: 38px;
+      border: none;
+      
+      .mdc-line-ripple {
+        display: none;
+      }
+    }
+    
+    .mat-mdc-form-field-flex {
+      padding: 0 !important;
+      height: 38px;
+      background-color: transparent !important;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    
+    .mat-mdc-form-field-infix {
+      padding: 0 !important;
+      height: 38px;
+      width: 100%;
+      border: none;
+      position: relative;
+    }
+    
+    // Contenedor personalizado al estilo de los campos de fecha
+    .custom-input-container {
+      display: flex;
+      align-items: center;
+      border: 1px solid #cccccc;
+      border-radius: 4px;
+      background-color: white;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      height: 38px;
+      width: 100%;
+      padding: 0;
+      overflow: hidden;
+      
+      // Para el ícono
+      .mat-icon {
+        color: #333;
+        font-size: 16px;
+        width: 16px;
+        height: 16px;
+        margin-left: 8px;
+        margin-right: 4px;
+        line-height: 16px;
+      }
+      
+      // Para el select y input
+      .mat-mdc-select,
+      input.mat-mdc-input-element {
+        border: none;
+        background: transparent;
+        outline: none;
+        flex: 1;
+        height: 100%;
+        font-size: 13px;
+        color: #333;
+        font-weight: 500;
+        padding: 0 8px 0 0;
+        box-sizing: border-box;
+      }
+      
+      &:focus-within {
+        border-color: #1565c0;
+        box-shadow: 0 2px 5px rgba(25, 118, 210, 0.3);
+      }
+    }
+  }
+  
+  // Reducir el espacio entre campos
+  .mat-mdc-form-field {
+    margin-bottom: 0;
+  }
+  
+  // Estilos para el texto de etiquetas y valores
+  .mat-mdc-select-value, .mat-mdc-form-field-label, .mat-mdc-select-min-line, .mat-mdc-input-element {
+    font-size: 13px !important; // Mismo tamaño que los inputs de fecha
+  }
+  
+  .mat-mdc-form-field-label {
+    color: #333 !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    font-weight: 500;
+    font-size: 13px !important;
+    margin-left: 0 !important;
+  }
+  
+  .mdc-floating-label--float-above {
+    transform: translateY(-106%) scale(0.75) !important;
+  }
+  
+  // Íconos de los campos
+  .mat-icon {
+    color: #333 !important;
+    font-size: 16px !important;
+    height: 16px !important;
+    width: 16px !important;
+    line-height: 16px !important;
+  }
+  
+  // Estilos para los botones de selección en dropdown
+  .select-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 8px;
+    border-bottom: 1px solid #e0e0e0;
+    margin-bottom: 4px;
+    background-color: #f5f5f5;
+    
+    .compact-button {
+      min-width: 110px;
+      font-size: 13px;
+      line-height: 36px;
+      padding: 0 16px;
+      
+      &[color="primary"] {
+        background-color: #333;
+        box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+      }
+      
+      .small-icon {
+        font-size: 16px;
+        height: 16px;
+        width: 16px;
+        margin-right: 4px;
+      }
+    }
+  }
+  
+  // Estilo para el panel de opciones del dropdown
+  .mat-mdc-select-panel {
+    min-width: 100% !important;
+    border: 1px solid #cccccc;
+    border-radius: 0 0 4px 4px !important;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1) !important;
+    background-color: white !important;
+  }
+  
+  // Estilos para los componentes Angular Material dentro de este componente
+  // Reducir tamaño del texto y checkbox en las opciones del select
+  .mat-mdc-select-panel {
+    .mat-mdc-option {
+      min-height: 24px !important;
+      font-size: 12px !important;
+      line-height: 24px !important;
+      padding: 0 8px !important;
+    }
+    
+    // Estilo para el checkbox que aparece en las opciones de multi-select
+    .mat-pseudo-checkbox {
+      width: 10px !important;
+      height: 10px !important;
+      margin-right: 6px !important;
+      transform: scale(0.8) !important;
+    }
+    
+    // Estilo para el texto de las opciones
+    .mdc-list-item__primary-text {
+      font-size: 12px !important;
+      font-weight: 400 !important;
+      line-height: 1.2 !important;
+    }
+    
+    // Estilo general para el texto de las opciones (fallback)
+    .mat-mdc-option-text {
+      font-size: 12px !important;
+      font-weight: 400 !important;
+      line-height: 1.2 !important;
+    }
+  }
+  
+  // Estilos para las opciones en el dropdown del select
+  .mat-mdc-option {
+    min-height: 28px !important;
+    height: 28px !important;
+    font-size: 12px !important;
+    padding: 0 8px !important;
+    
+    .mdc-list-item__primary-text {
+      font-size: 12px !important;
+      line-height: 28px !important;
+    }
+  }
+  
+  // Estilo para checkboxes en los multiselect (reduciendo tamaño)
+  .mat-pseudo-checkbox {
+    width: 10px !important;
+    height: 10px !important;
+    margin-right: 6px !important;
+    transform: scale(0.8) !important;
+  }
+}
+
+.table-container {
+  overflow-x: auto;
+  max-width: 100%;
+  border-radius: 4px;
+  border: 1px solid #e0e0e0;
+
+  .results-table {
+    width: 100%;
+    table-layout: auto;
+    border-collapse: collapse;
+    
+    &.mat-mdc-table {
+      font-size: 12px;
+      
+      // Filas intercaladas
+      .mat-mdc-row:nth-child(even) {
+        background-color: rgba(0, 0, 0, 0.02);
+      }
+      
+      // Efecto hover en filas
+      .mat-mdc-row:hover {
+        background-color: rgba(0, 0, 0, 0.04);
+      }
+    }
+  }
+
+  // Estilos para la tabla dentro de este componente
+  .mdc-data-table__header-cell {
+    height: 36px;
+    padding: 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(0, 0, 0, 0.7);
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #e0e0e0;
+  }
+  
+  .mdc-data-table__cell {
+    height: 32px;
+    padding: 0 8px;
+    font-size: 11px;
+    border-bottom: 1px solid #f0f0f0;
+    
+    // Alineación vertical centrada
+    vertical-align: middle;
+  }
+  
+  .mat-mdc-paginator {
+    font-size: 11px;
+    background-color: #fafafa;
+    border-top: 1px solid #e0e0e0;
+  }
+  
+  .mat-mdc-paginator-container {
+    padding: 0 8px;
+    min-height: 36px;
+  }
+  
+  // Ajustes para la paginación
+  .mat-mdc-paginator-range-label {
+    margin: 0 12px;
+    font-size: 11px;
+  }
+  
+  // Ajustes para los botones de paginación
+  .mat-mdc-paginator-navigation-previous,
+  .mat-mdc-paginator-navigation-next,
+  .mat-mdc-paginator-navigation-first,
+  .mat-mdc-paginator-navigation-last {
+    width: 28px;
+    height: 28px;
+  }
+
+  /* Las columnas usan ancho automático basado en su contenido */
+  .estado-cumplida {
+    color: green;
+    font-weight: 500;
+  }
+
+  .estado-no-cumplida {
+    color: red;
+    font-weight: 500;
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 16px;
+    color: rgba(0, 0, 0, 0.6);
+    font-size: 13px;
+  }
+}
+
+/* Estilos para el panel de opciones del select (usando panelClass) */
+.small-select-panel {
+  // Estilos para cada opción
+  .mat-mdc-option {
+    min-height: 28px !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    font-size: 12px !important;
+    padding: 0 8px !important;
+  }
+  
+  // Estilo para el texto de las opciones
+  .mdc-list-item__primary-text {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    line-height: 28px !important;
+  }
+  
+  // Estilo para los checkboxes en multiselect
+  .mat-pseudo-checkbox {
+    width: 14px !important;
+    height: 14px !important;
+    margin-right: 6px !important;
+    transform: scale(0.8) !important;
+  }
+}

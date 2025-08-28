@@ -18,6 +18,34 @@
   --line-height-loose: 1.6;
 }
 
+/* Estilos globales para los paneles de select con clase small-select-panel */
+.cdk-overlay-pane .small-select-panel {
+  min-height: 200px;
+  max-height: 300px !important;
+}
+
+.cdk-overlay-pane .mat-mdc-select-panel.small-select-panel {
+  min-height: 200px;
+  max-height: 300px !important;
+}
+
+/* Deshabilitar selección de texto en el contenedor de filtros de búsqueda global */
+.search-filter-container {
+  * {
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+  }
+}
+
+/* Estilos globales para las opciones del select en modo compacto */
+.mat-mdc-option.mat-mdc-option {
+  min-height: 28px !important;
+  height: 28px !important;
+  line-height: 28px !important;
+}
+
 html,
 body {
   height: 100%;

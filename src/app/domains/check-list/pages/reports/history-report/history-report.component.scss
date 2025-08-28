@@ -1,0 +1,334 @@
+// Estilos del contenedor principal del formulario
+
+
+
+.form-container {
+  background-color: #e3f2fd; // Fondo celeste
+  border: 2px solid #5286b9; // Borde azul
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 2px 8px rgba(25, 118, 210, 0.2);
+  width: 400px;
+  margin: 0 auto 20px auto;
+  position: relative;
+  
+  &.compact {
+    padding: 12px;
+  }
+  
+  // Estilos para el encabezado del formulario
+  .form-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    
+    h3 {
+      margin: 0;
+      color: #333333; // Color negro en lugar de azul
+      font-size: 14px !important; // Tamaño más pequeño
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      
+      .header-icon {
+        margin-right: 8px;
+        font-size: 14px;
+        height: 14px;
+        width: 14px;
+        color: #333333;
+      }
+    }
+  }
+  
+  // Estilos para el separador
+  mat-divider {
+    margin-bottom: 16px;
+  }
+
+  // Estilos para el botón de expandir/colapsar
+  .expand-button {
+    color: #666;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    margin: 0;
+    min-width: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    ::ng-deep .mat-mdc-button-touch-target {
+      width: 24px;
+      height: 24px;
+    }
+    
+    ::ng-deep .mdc-icon-button__icon {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      margin: auto !important;
+    }
+    
+    ::ng-deep .mat-icon {
+      font-size: 18px;
+      width: 18px;
+      height: 18px;
+      line-height: 18px;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      margin: auto !important;
+    }
+  }
+  
+  // Contenido del filtro
+  .filter-content {
+    transition: max-height 0.35s ease-in-out, opacity 0.35s ease-in-out, padding 0.35s ease-in-out, margin 0.35s ease-in-out;
+    max-height: 500px;
+    opacity: 1;
+    overflow: hidden;
+    
+    &.collapsed {
+      max-height: 0;
+      opacity: 0;
+      margin: 0;
+      padding: 0;
+    }
+  }
+  
+  // Estilo para la leyenda del rango de fechas
+  .date-range-summary {
+    font-size: 13px;
+    font-weight: 500;
+    color: #333333; // Cambiado a negro
+    transition: opacity 0.35s ease-in-out;
+    animation: fadeIn 0.35s ease-in-out;
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  // Contenedor para los campos de fecha (horizontal)
+  .dates-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  
+  // Contenedor individual para cada campo de fecha
+  .date-field-container {
+    width: calc(50% - 8px);
+    
+    // Etiqueta del campo
+    .date-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: #1976d2;
+      margin-bottom: 6px;
+      display: block;
+    }
+    
+    // Input personalizado
+    .custom-date-input {
+      display: flex;
+      align-items: center;
+      border: 1px solid #cccccc;
+      border-radius: 4px;
+      background-color: white;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      height: 38px;
+      padding: 0;
+      
+      // Campo de entrada
+      input {
+        border: none;
+        background: transparent;
+        outline: none;
+        flex: 1;
+        height: 100%;
+        font-size: 13px;
+        color: #333;
+        font-weight: 500;
+        padding: 0 0 0 8px;
+        box-sizing: border-box;
+      }
+      
+      // Botón del datepicker
+      .mat-datepicker-toggle {
+        color: #1976d2;
+        margin-right: 2px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        
+        ::ng-deep .mat-mdc-icon-button.mat-mdc-button-base {
+          width: 30px;
+          height: 30px;
+          padding: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        ::ng-deep .mat-datepicker-toggle-default-icon {
+          width: 18px;
+          height: 18px;
+        }
+      }
+      
+      // Sin efecto hover
+      /* Efecto hover removido */
+      
+      // Estado focus
+      &:focus-within {
+        border-color: #1565c0;
+        box-shadow: 0 2px 5px rgba(25, 118, 210, 0.3);
+      }
+    }
+    
+    // Mensajes de error
+    .field-error {
+      color: #f44336;
+      font-size: 11px;
+      margin-top: 4px;
+      padding-left: 2px;
+    }
+  }
+  
+  // Fila de botones al final
+  .buttons-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    margin-top: 16px;
+    
+    // Estilo de botones
+    .compact-button {
+      min-width: 110px;
+      font-size: 13px;
+      
+      &[color="primary"] {
+        background-color: #1976d2;
+        box-shadow: 0 2px 4px rgba(25, 118, 210, 0.3);
+      }
+      
+      .small-icon {
+        font-size: 16px;
+        height: 16px;
+        width: 16px;
+        margin-right: 4px;
+      }
+    }
+  }
+}
+
+// Estilos para el encabezado principal
+.map-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 6px;
+  margin: 8px 0 12px 12px; // Añadido margen a la izquierda
+  border-bottom: 1px solid #e0e0e0;
+  
+  .title {
+    margin: 0;
+    font-size: 14px !important; // Tamaño más pequeño
+    font-weight: 500;
+    color: #333;
+  }
+}
+
+// Estilos para iconos pequeños
+.small-icon {
+  font-size: 18px;
+  height: 18px;
+  width: 18px;
+  line-height: 18px;
+}
+
+// Overlay spinner para carga
+.spinner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  
+  .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    
+    .loading-text {
+      margin-top: 15px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #282c30;
+    }
+  }
+}
+
+// Estilos para la tabla de resultados
+.results-container {
+  margin-top: 24px;
+  
+  .table-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 500;
+      
+      .record-count {
+        font-size: 14px;
+        color: #666;
+        margin-left: 8px;
+      }
+    }
+  }
+  
+  // Estilos para las pestañas
+  ::ng-deep .mat-mdc-tab-group {
+    margin-top: 16px;
+    
+    .mat-mdc-tab-header {
+      border-bottom: 1px solid #e0e0e0;
+      margin-bottom: 16px;
+    }
+    
+    .mat-mdc-tab-body-content {
+      padding: 12px;
+    }
+    
+    .mat-mdc-tab-label-container {
+      background-color: #fafafa;
+    }
+    
+    .mat-mdc-tab {
+      min-width: 120px;
+      
+      &.mat-mdc-tab-active {
+        .mdc-tab__text-label {
+          color: #3f51b5;
+        }
+      }
+    }
+  }
+}

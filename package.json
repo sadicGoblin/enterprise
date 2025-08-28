@@ -10,7 +10,8 @@
     "build:prod": "ng build --configuration production",
     "firebase:login": "npx firebase login",
     "firebase:init": "npx firebase init",
-    "firebase:deploy": "npm run build:prod && npx firebase deploy --only hosting"
+    "firebase:deploy": "npm run build:prod && npx firebase deploy --only hosting",
+    "lint": "ng lint"
   },
   "private": true,
   "dependencies": {
@@ -41,6 +42,8 @@
     "@angular/compiler-cli": "^17.3.0",
     "@types/jasmine": "~5.1.0",
     "@types/xlsx": "^0.0.35",
+    "angular-eslint": "20.2.0",
+    "eslint": "^9.33.0",
     "firebase": "^11.8.1",
     "firebase-admin": "^13.4.0",
     "firebase-functions": "^6.3.2",
@@ -51,6 +54,7 @@
     "karma-coverage": "~2.2.0",
     "karma-jasmine": "~5.1.0",
     "karma-jasmine-html-reporter": "~2.1.0",
-    "typescript": "~5.4.2"
+    "typescript": "~5.4.2",
+    "typescript-eslint": "8.40.0"
   }
 }
