@@ -35,23 +35,43 @@ export class ActivitiesService {
   /**
    * Crea una nueva actividad
    */
-  createActivity(activity: NewActivityRequest): Observable<ApiActivityResponse> {
-    const payload = {
-      method: 'crearActividad',
-      data: activity
+  createActivity(activity: any): Observable<ApiActivityResponse> {
+    // Mapear los campos del formulario a los campos esperados por la API
+    const mappedActivity = {
+      caso: 'NuevaActividad',
+      idAmbito: activity.idAmbito,
+      nombre: activity.name,
+      codigo: activity.code,
+      idPeriocidad: activity.idFrequency,
+      idCategoriaActividad: activity.idCategory,
+      idParametroAsociado: activity.idParameter || '0',
+      idBiblioteca: activity.idDocument || '0'
     };
-    return this.proxyService.post<ApiActivityResponse>(environment.apiBaseUrl + this.activitiesEndpoint, payload);
+    
+    console.log('📤 Enviando nueva actividad mapeada:', mappedActivity);
+    return this.proxyService.post<ApiActivityResponse>(environment.apiBaseUrl + this.activitiesEndpoint, mappedActivity);
   }
 
   /**
    * Actualiza una actividad existente
+   * 
    */
-  updateActivity(activity: UpdateActivityRequest): Observable<ApiActivityResponse> {
-    const payload = {
-      method: 'actualizarActividad',
-      data: activity
+  updateActivity(activity: any): Observable<ApiActivityResponse> {
+    // Mapear los campos del formulario a los campos esperados por la API
+    const mappedActivity = {
+      caso: 'ActualizaActividad',
+      idActividades: activity.id,
+      idAmbito: activity.idAmbito,
+      nombre: activity.name,
+      codigo: activity.code,
+      idPeriocidad: activity.idFrequency,
+      idCategoriaActividad: activity.idCategory,
+      idParametroAsociado: activity.idParameter || '0',
+      idBiblioteca: activity.idDocument || '0'
     };
-    return this.proxyService.post<ApiActivityResponse>(environment.apiBaseUrl + this.activitiesEndpoint, payload);
+    
+    console.log('📤 Enviando actividad actualizada mapeada:', mappedActivity);
+    return this.proxyService.post<ApiActivityResponse>(environment.apiBaseUrl + this.activitiesEndpoint, mappedActivity);
   }
 
   /**

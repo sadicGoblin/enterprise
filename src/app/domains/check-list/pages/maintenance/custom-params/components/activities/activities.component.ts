@@ -233,6 +233,7 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
 
   // Método para manejar la acción de guardar una actividad desde el formulario
   handleSaveActivity(activityData: any): void {
+    console.log('Guardando actividad:', activityData);
     if (this.isAddMode) {
       this.activitiesStateService
         .createActivity(activityData)
