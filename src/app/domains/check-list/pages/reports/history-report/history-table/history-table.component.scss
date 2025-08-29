@@ -140,12 +140,16 @@
       border: 1px solid #cccccc;
       border-radius: 4px;
       box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      height: 32px;
+      width: 32px;
+      line-height: 32px;
       
       .mat-icon {
         color: #333 !important;
-        font-size: 18px;
-        height: 18px;
-        width: 18px;
+        font-size: 16px;
+        height: 16px;
+        width: 16px;
+        line-height: 16px;
       }
       
       &:hover:not([disabled]) {
@@ -162,23 +166,52 @@
       }
     }
     
+    .excel-button {
+      background-color: #217346; // Color verde de Excel
+      border: 1px solid #185a36;
+      
+      .mat-icon {
+        color: white !important;
+      }
+      
+      &:hover:not([disabled]) {
+        background-color: #18613a;
+        border-color: #0e4123;
+        box-shadow: 0 2px 4px rgba(33, 115, 70, 0.3);
+        
+        .mat-icon {
+          color: white !important;
+        }
+      }
+      
+      &[disabled] {
+        background-color: rgba(33, 115, 70, 0.5);
+        border-color: rgba(24, 90, 54, 0.5);
+        
+        .mat-icon {
+          color: rgba(255, 255, 255, 0.5) !important;
+        }
+      }
+    }
+    
     .clear-filters-btn {
-      min-width: 100px;
+      min-width: 80px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      height: 36px;
+      gap: 4px;
+      height: 28px;
       border-radius: 4px;
-      font-weight: 500;
-      font-size: 14px;
+      font-weight: 400;
+      font-size: 11px;
       transition: all 0.2s ease;
+      padding: 0 8px;
       
       .mat-icon {
-        font-size: 18px;
-        height: 18px;
-        width: 18px;
-        margin-right: 4px;
+        font-size: 14px;
+        height: 14px;
+        width: 14px;
+        margin-right: 2px;
       }
     }
   }
@@ -439,34 +472,47 @@
         background-color: rgba(0, 0, 0, 0.04);
       }
     }
-  }
-
-  // Estilos para la tabla dentro de este componente
-  .mdc-data-table__header-cell {
-    height: 36px;
-    padding: 0 8px;
-    font-size: 11px;
-    font-weight: 600;
-    color: rgba(0, 0, 0, 0.7);
-    background-color: #f5f5f5;
-    border-bottom: 1px solid #e0e0e0;
-  }
-  
-  .mdc-data-table__cell {
-    height: 32px;
-    padding: 0 8px;
-    font-size: 11px;
-    border-bottom: 1px solid #f0f0f0;
     
-    // Alineación vertical centrada
-    vertical-align: middle;
+    th {
+      font-size: 12px;
+      font-weight: 600;
+      color: #2c2c41;
+      background: linear-gradient(to bottom, #fbfbfb, #f0f0f0);
+      border-bottom: 1px solid #e0e0e0;
+    }
+    
+    td {
+      font-size: 11px;
+      font-weight: 400;
+      color: #000000;
+      padding: 12px;
+    }
   }
   
-  .mat-mdc-paginator {
-    font-size: 11px;
-    background-color: #fafafa;
+  .paginator-container {
+    display: flex;
+    justify-content: flex-end;
     border-top: 1px solid #e0e0e0;
+    background-color: #f9f9f9;
+    
+    .mat-mdc-paginator {
+      font-size: 12px;
+      background-color: transparent;
+      border-top: none;
+      display: flex;
+      justify-content: flex-end;
+      width: 100%;
+    }
+    
+    .mat-mdc-paginator-container {
+      padding: 0 16px;
+      min-height: 48px;
+      display: flex;
+      align-items: center;
+    }
   }
+  
+  /* Los estilos del paginador ahora están en .paginator-container */
   
   .mat-mdc-paginator-container {
     padding: 0 8px;

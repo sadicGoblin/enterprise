@@ -1,18 +1,41 @@
-<div class="chart-container">
-  <div class="chart-header" *ngIf="kpiValue !== undefined">
-    <div class="kpi-container">
-      <div class="kpi-value" [ngClass]="kpiClass">{{ kpiValue }}%</div>
-      <div class="kpi-label">KPI</div>
+<div class="chart-card kpi-dashboard-card">
+  <ng-container *ngIf="hasData; else noData">
+    <!-- Encabezado con título e indicador KPI -->
+    <div class="chart-header">
+      <div class="chart-title">
+        <mat-icon>bar_chart</mat-icon>
+        <h3>KPI {{ getFilterDisplayName().toUpperCase() }}</h3>
+      </div>
+      
     </div>
-    <div class="filter-name" *ngIf="filterType">
-      {{ getFilterDisplayName() }}
+    
+    <!-- Contenido del gráfico -->
+    <div class="chart-content">
+      <div class="chart-canvas-container">
+        <canvas #chartCanvas></canvas>
+      </div>
     </div>
-  </div>
-  <div class="chart-canvas-container">
-    <canvas #chartCanvas></canvas>
-  </div>
-  <div class="no-data-message" *ngIf="!hasData">
-    <mat-icon>info</mat-icon>
-    <span>No hay datos disponibles para mostrar</span>
-  </div>
+    
+    <!-- Leyenda de estados -->
+    <div class="metrics-section" *ngIf="estados && estados.length > 0">
+      <div class="section-header">
+        <mat-icon>check_circle</mat-icon>
+        <span>ESTADOS</span>
+        <span class="count-indicator">({{ estados.length }})</span>
+      </div>
+      <div class="metrics-list custom-scrollbar horizontal-list">
+        <div class="metric-item" *ngFor="let estado of estados; let i = index">
+          <div class="metric-dot" [style.background-color]="chartColors[i % chartColors.length]"></div>
+          <div class="metric-name" [title]="estado">{{ estado }}</div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+  
+  <ng-template #noData>
+    <div class="no-data-container">
+      <mat-icon>info</mat-icon>
+      <span>No hay datos disponibles para mostrar</span>
+    </div>
+  </ng-template>
 </div>

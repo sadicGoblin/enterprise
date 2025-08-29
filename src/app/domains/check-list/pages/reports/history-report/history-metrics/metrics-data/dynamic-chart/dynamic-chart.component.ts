@@ -34,13 +34,12 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   // Clase CSS para el KPI
   kpiClass: string = 'kpi-warning';
   
-  // Colores para los gráficos
+  // Colores para los gráficos - similar a los mostrados en la imagen
   chartColors: string[] = [
-    // Paleta profesional y atractiva
-    '#3366CC', '#DC3912', '#FF9900', '#109618', '#990099',
-    '#0099C6', '#DD4477', '#66AA00', '#B82E2E', '#316395',
-    '#994499', '#22AA99', '#AAAA11', '#6633CC', '#E67300',
-    '#8B0707', '#329262', '#5574A6', '#3B3EAC'
+    // Azul claro para "no cumplida" y rojo para "cumplida" como se ve en la imagen
+    '#5B9BD5', '#ED7D31', '#70AD47', '#FFC000', '#7030A0',
+    '#C00000', '#43682B', '#255E91', '#9E480E', '#636363',
+    '#997300', '#A5A5A5', '#4472C4', '#FF3300', '#33CCCC'
   ];
   
   // Datos procesados del gráfico
@@ -163,6 +162,8 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
         backgroundColor: this.adjustAlpha(color, 0.7),
         borderColor: color,
         borderWidth: 1,
+        barThickness: 10, // Establece una altura fija de 10px para todas las barras
+        maxBarThickness: 25, // Limita el grosor máximo de las barras
         barPercentage: 0.8,
         categoryPercentage: 0.9
       });
@@ -191,36 +192,14 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
       responsive: true,
       maintainAspectRatio: false,
       animation: {
-        duration: 800, // Animación más fluida
-        easing: 'easeOutQuart'
+        duration: 400
       },
       plugins: {
         legend: {
-          position: 'bottom',
-          align: 'start',
-          labels: {
-            boxWidth: 15,
-            boxHeight: 15,
-            padding: 15,
-            font: {
-              size: 11,
-              family: "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
-            },
-            usePointStyle: true,
-            pointStyle: 'circle'
-          }
+          display: false // Ocultamos la leyenda ya que tenemos una personalizada
         },
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.7)',
-          titleFont: {
-            size: 13,
-            weight: 'bold'
-          },
-          bodyFont: {
-            size: 12
-          },
-          padding: 10,
-          cornerRadius: 4,
           callbacks: {
             label: (context) => {
               const label = context.dataset.label || '';
@@ -234,24 +213,20 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
         x: { // Eje horizontal: valores numéricos
           stacked: true, // Para barras apiladas
           grid: {
-            color: 'rgba(200, 200, 200, 0.2)',
-            lineWidth: 0.5
+            display: true,
+            color: 'rgba(255, 255, 255, 0.1)',
+            tickLength: 0
           },
           border: {
-            display: true,
-            width: 1,
-            color: 'rgba(200, 200, 200, 0.5)'
+            display: false
           },
           ticks: {
             font: {
-              size: 11,
-              family: "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+              size: 10
             },
-            padding: 5,
-            color: '#666',
-            callback: (value) => {
-              return value;
-            }
+            color: '#b4b4cc',
+            padding: 3,
+            maxRotation: 0
           }
         },
         y: { // Eje vertical: categorías (valores del filtro)
@@ -262,18 +237,20 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
           border: {
             display: false
           },
+          position: 'left', // Asegura que las etiquetas estén a la izquierda
           ticks: {
             font: {
-              size: 12,
-              weight: 500,
-              family: "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
+              size: 10,
+              family: "Arial, sans-serif"
             },
-            padding: 8,
-            color: '#444',
+            color: '#b4b4cc',
+            padding: 5,
+            autoSkip: false, // Asegura que todas las etiquetas sean visibles
+            align: 'start', // Alinea las etiquetas a la izquierda para mejor legibilidad
             callback: (value, index) => {
               // Truncamos etiquetas muy largas
               const label = this.valoresFiltro[index] || '';
-              return this.truncateLabel(label, 22);
+              return this.truncateLabel(label, 18);
             }
           }
         }

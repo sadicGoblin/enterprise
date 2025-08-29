@@ -14,7 +14,7 @@
 
     <!-- Cuerpo con cuatro columnas del 25% cada una -->
     <div class="chart-content kpi-card-content">
-      
+
       <div class="metrics-row">
         <!-- COLUMNA A (25%) - DATOS ESTADOS -->
         <div class="column-equal">
@@ -49,7 +49,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- COLUMNA C (25%) - DATOS TIPOS -->
         <div class="column-equal">
           <div class="metrics-section" *ngIf="getObjectKeys(registrosPorTipo).length > 0">
@@ -67,7 +67,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- COLUMNA D (25%) - GRÁFICO DE TORTA TIPOS -->
         <div class="column-equal">
           <div class="chart-container" *ngIf="getObjectKeys(registrosPorTipo).length > 0">
@@ -99,15 +99,12 @@
 <div class="dynamic-charts-container" *ngIf="dynamicCharts && dynamicCharts.length > 0">
   <div class="dynamic-charts-section">
     <div class="section-header dynamic-charts-header">
+      <br><br>
     </div>
-    
+
     <div class="dynamic-charts-grid">
-      <app-dynamic-chart 
-        *ngFor="let chart of dynamicCharts" 
-        [filterType]="chart.filterType" 
-        [fieldToFilter]="chart.fieldName" 
-        [selectedValues]="chart.selectedValues || []" 
-        [filteredData]="data">
+      <app-dynamic-chart *ngFor="let chart of dynamicCharts" [filterType]="chart.filterType"
+        [fieldToFilter]="chart.fieldName" [selectedValues]="chart.selectedValues || []" [filteredData]="data">
       </app-dynamic-chart>
     </div>
   </div>

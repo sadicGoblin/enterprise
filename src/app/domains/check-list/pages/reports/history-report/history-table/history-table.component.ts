@@ -13,6 +13,8 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
 import { HistoricalReportItem } from '../../../../../../core/services/report.service';
+import * as ExcelJS from 'exceljs';
+import { saveAs } from 'file-saver';
 
 @Component({
   selector: 'app-history-table',
@@ -43,7 +45,7 @@ export class HistoryTableComponent implements AfterViewInit, OnChanges {
   
   // Tabla de datos
   dataSource = new MatTableDataSource<HistoricalReportItem>([]);
-  displayedColumns: string[] = ['fecha', 'Obra', 'Usuario', 'Actividad', 'tipo', 'estado'];
+  displayedColumns: string[] = ['fecha', 'Obra', 'Usuario', 'cargo', 'Actividad', 'subproceso', 'tipo', 'estado'];
   
   // Opciones para los filtros select
   filtroObras: string[] = [];
@@ -403,5 +405,79 @@ export class HistoryTableComponent implements AfterViewInit, OnChanges {
         }
       }, 0);
     }
+  }
+
+  /**
+   * Exporta todos los datos a un archivo Excel
+   */
+  exportToExcel(): void {
+    if (!this.data || this.data.length === 0) {
+      console.warn('No hay datos para exportar');
+      return;
+    }
+
+    // Crear un nuevo libro de trabajo
+    const workbook = new ExcelJS.Workbook();
+    const worksheet = workbook.addWorksheet('Reporte Histórico');
+
+    // Recopilar todos los nombres de propiedad de todos los objetos
+    const allProperties = new Set<string>();
+    
+    // Primero, descubrir todos los posibles campos en los datos
+    this.data.forEach(item => {
+      Object.keys(item).forEach(key => allProperties.add(key));
+    });
+    
+    // Convertir el conjunto a un array ordenado alfabéticamente
+    const allPropertyNames = Array.from(allProperties).sort();
+
+    // Definir las columnas basadas en todos los nombres de propiedad encontrados
+    const columns = allPropertyNames.map(prop => {
+      // Capitalizar la primera letra para los encabezados
+      const header = prop.charAt(0).toUpperCase() + prop.slice(1);
+      return { header, key: prop, width: 20 };
+    });
+
+    worksheet.columns = columns;
+
+    // Estilo para el encabezado
+    const headerRow = worksheet.getRow(1);
+    headerRow.font = { bold: true, color: { argb: 'FFFFFF' } };
+    headerRow.fill = {
+      type: 'pattern',
+      pattern: 'solid',
+      fgColor: { argb: '2C2C41' }
+    };
+    headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+    // Añadir todos los datos al archivo Excel incluyendo todos los campos del JSON
+    this.data.forEach(item => {
+      const row: Record<string, any> = {};
+      // Mapear cada propiedad del objeto JSON
+      allPropertyNames.forEach(prop => {
+        // Usar notación de índice con tipo seguro
+        row[prop] = (item as Record<string, any>)[prop];
+      });
+      worksheet.addRow(row);
+    });
+
+    // Auto-ajustar el ancho de las columnas
+    worksheet.columns.forEach(column => {
+      let maxLength = 0;
+      column['eachCell']?.({ includeEmpty: true }, (cell) => {
+        const columnWidth = cell.value ? cell.value.toString().length : 10;
+        if (columnWidth > maxLength) {
+          maxLength = columnWidth;
+        }
+      });
+      column.width = Math.min(maxLength + 2, 30); // Limitar a un máximo de 30
+    });
+
+    // Generar el archivo
+    workbook.xlsx.writeBuffer().then((buffer) => {
+      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const fecha = new Date().toISOString().split('T')[0];
+      saveAs(blob, `Reporte_Historico_${fecha}.xlsx`);
+    });
   }
 }
