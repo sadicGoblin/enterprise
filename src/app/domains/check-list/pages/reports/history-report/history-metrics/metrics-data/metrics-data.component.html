@@ -14,6 +14,7 @@
 
     <!-- Cuerpo con cuatro columnas del 25% cada una -->
     <div class="chart-content kpi-card-content">
+      
       <div class="metrics-row">
         <!-- COLUMNA A (25%) - DATOS ESTADOS -->
         <div class="column-equal">
@@ -85,6 +86,31 @@
       </div>
     </div>
   </ng-container>
+
+  <ng-template #noData>
+    <div class="no-data-message">
+      <mat-icon>info_outline</mat-icon>
+      <span>Sin datos para mostrar</span>
+    </div>
+  </ng-template>
+</div>
+
+<!-- Sección dinámica de gráficos basados en filtros activos (componente completamente separado) -->
+<div class="dynamic-charts-container" *ngIf="dynamicCharts && dynamicCharts.length > 0">
+  <div class="dynamic-charts-section">
+    <div class="section-header dynamic-charts-header">
+    </div>
+    
+    <div class="dynamic-charts-grid">
+      <app-dynamic-chart 
+        *ngFor="let chart of dynamicCharts" 
+        [filterType]="chart.filterType" 
+        [fieldToFilter]="chart.fieldName" 
+        [selectedValues]="chart.selectedValues || []" 
+        [filteredData]="data">
+      </app-dynamic-chart>
+    </div>
+  </div>
 
   <ng-template #noData>
     <div class="no-data-message">

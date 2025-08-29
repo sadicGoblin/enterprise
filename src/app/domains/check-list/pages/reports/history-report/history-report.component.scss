@@ -1,6 +1,18 @@
-// Estilos del contenedor principal del formulario
+// Estilos del contenedor principal
+.map-container {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  
+  .map-card {
+    width: 100%;
+    max-width: 1440px; // Ancho máximo según estándares actuales
+    margin: 0 auto;
+    overflow: hidden;
+  }
+}
 
-
+// Estilos del contenedor del formulario
 
 .form-container {
   background-color: #e3f2fd; // Fondo celeste

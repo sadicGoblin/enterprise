@@ -1,62 +1,80 @@
-import { Component, Input, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DynamicChartComponent } from './dynamic-chart/dynamic-chart.component';
+import { SummaryKpiComponent } from './summary-kpi/summary-kpi.component';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { NgChartsModule } from 'ng2-charts';
-import { Chart, ChartConfiguration } from 'chart.js';
+import Chart from 'chart.js/auto';
 
 @Component({
   selector: 'app-metrics-data',
   standalone: true,
-  imports: [CommonModule, MatIconModule, MatCardModule, MatDividerModule, MatTooltipModule, NgChartsModule],
+  imports: [
+    CommonModule, 
+    MatIconModule, 
+    MatCardModule, 
+    MatDividerModule, 
+    MatTooltipModule,
+    DynamicChartComponent,
+    SummaryKpiComponent
+  ],
   templateUrl: './metrics-data.component.html',
   styleUrls: ['./metrics-data.component.scss']
 })
 export class MetricsDataComponent implements OnChanges, AfterViewInit {
   @Input() data: any[] = [];
+  @Input() activeFilters: {[key: string]: string[]} = {};
   
-  // Datos procesados para métricas
-  totalRegistros: number = 0;
-  registrosPorTipo: {[key: string]: number} = {};
-  registrosPorEstado: {[key: string]: number} = {};
-  registrosPorObra: {[key: string]: number} = {};
-  registrosPorUsuario: {[key: string]: number} = {};
-  
-  // Referencias a los canvas de los gráficos
+  // Referencias a los elementos del DOM para los gráficos
   @ViewChild('estadosChart') estadosChartCanvas!: ElementRef<HTMLCanvasElement>;
   @ViewChild('tiposChart') tiposChartCanvas!: ElementRef<HTMLCanvasElement>;
   
   // Instancias de los gráficos
   private estadosChart: Chart | null = null;
   private tiposChart: Chart | null = null;
-
-  // Colores para gráficos y visualizaciones
-  private chartColors: string[] = [
-    '#4285F4', '#EA4335', '#FBBC05', '#34A853', // Colores Google Material
-    '#7986CB', '#33B679', '#8E24AA', '#039BE5', // Colores complementarios
-    '#0B8043', '#D50000', '#E67C73', '#F6BF26', // Variaciones adicionales
-    '#F4511E', '#616161', '#A79B8E', '#3949AB'  // Más colores Material
-  ];
+  
+  // Datos procesados para métricas
+  totalRegistros = 0;
+  registrosPorTipo: {[key: string]: number} = {};
+  registrosPorEstado: {[key: string]: number} = {};
+  registrosPorObra: {[key: string]: number} = {};
+  registrosPorUsuario: {[key: string]: number} = {};
+  
+  // Gráficos dinámicos por filtros activos
+  dynamicCharts: {filterType: string, fieldName: string, selectedValues?: string[]}[] = [];
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data'] && this.data) {
+    console.log('MetricsDataComponent - ngOnChanges:', { 
+      data: changes['data']?.currentValue?.length || 0, 
+      activeFilters: changes['activeFilters']?.currentValue, 
+      hasFilters: changes['activeFilters'] && Object.keys(changes['activeFilters'].currentValue || {}).length > 0
+    });
+    if ((changes['data'] && this.data) || changes['activeFilters']) {
       this.procesarDatos();
     }
   }
-
+  
+  /**
+   * Procesa los datos para generar métricas y gráficos
+   */
   procesarDatos(): void {
-    this.totalRegistros = this.data.length;
+    console.log('MetricsDataComponent - procesarDatos - inicio', {
+      dataLength: this.data.length, 
+      activeFilters: this.activeFilters,
+      hasActiveFilters: Object.keys(this.activeFilters || {}).length > 0
+    });
     
-    // Reset contadores
+    // Reiniciar contadores
+    this.totalRegistros = this.data.length;
     this.registrosPorTipo = {};
     this.registrosPorEstado = {};
     this.registrosPorObra = {};
     this.registrosPorUsuario = {};
     
-    // Procesar datos para conteos
-    this.data.forEach(registro => {
+    // Procesar cada registro
+    this.data.forEach((registro: any) => {
       // Contar por tipo
       if (registro.tipo) {
         this.registrosPorTipo[registro.tipo] = (this.registrosPorTipo[registro.tipo] || 0) + 1;
@@ -78,30 +96,129 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
       }
     });
     
-    // Actualizar gráficos después de procesar datos
-    this.updateCharts();
+    // Generar gráficos dinámicos basados en filtros activos
+    this.generarGraficosDinamicos();
   }
   
-  // Métodos auxiliares para el template
-  getObjectKeys(obj: any): string[] {
-    return Object.keys(obj);
+  /**
+   * Convierte el tipo de filtro a un nombre de campo en los datos
+   * @param filterType Tipo de filtro
+   * @returns Nombre del campo correspondiente
+   */
+  private getFieldNameFromFilterType(filterType: string): string {
+    // Mapeo de tipos de filtro a nombres de campo
+    const filterMap: {[key: string]: string} = {
+      'tipo': 'tipo',
+      'estado': 'estado',
+      'obra': 'obra',
+      'usuario': 'usuario'
+      // Agregar más mapeos según sea necesario
+    };
+    
+    return filterMap[filterType] || filterType;
   }
   
-  // Retorna un color del arreglo de colores basado en el índice
-  getChartColor(index: number): string {
-    return this.chartColors[index % this.chartColors.length];
+  /**
+   * Devuelve un nombre amigable para el tipo de filtro
+   * @param filterType Tipo de filtro
+   * @returns Nombre para mostrar del filtro
+   */
+  private getFilterDisplayName(filterType: string): string {
+    // Mapeo de tipos de filtro a nombres para mostrar
+    const displayMap: {[key: string]: string} = {
+      'tipo': 'Tipo',
+      'estado': 'Estado',
+      'obra': 'Obra',
+      'usuario': 'Usuario'
+      // Agregar más mapeos según sea necesario
+    };
+    
+    return displayMap[filterType] || filterType.charAt(0).toUpperCase() + filterType.slice(1);
   }
   
-  // Genera un color de avatar basado en el índice
-  getAvatarColor(index: number): string {
-    const baseColors = [
-      '#3F51B5', '#F44336', '#4CAF50', '#FFC107', '#2196F3', 
-      '#9C27B0', '#FF5722', '#795548', '#607D8B', '#009688'
-    ];
-    return baseColors[index % baseColors.length];
+  /**
+   * Genera gráficos dinámicos basados en los filtros activos
+   */
+  private generarGraficosDinamicos(): void {
+    console.log('MetricsDataComponent - generarGraficosDinamicos - inicio', {
+      dataLength: this.data.length,
+      activeFilters: this.activeFilters,
+      filterKeys: Object.keys(this.activeFilters || {})
+    });
+    
+    // Si no hay filtros activos o datos, no generamos gráficos
+    if (!this.activeFilters || Object.keys(this.activeFilters).length === 0 || !this.data || this.data.length === 0) {
+      console.log('MetricsDataComponent - No hay filtros activos o datos para generar gráficos');
+      this.dynamicCharts = [];
+      return;
+    }
+    
+    // Limpiamos los gráficos dinámicos previos
+    this.dynamicCharts = [];
+    
+    // Para cada tipo de filtro activo
+    for (const filterType of Object.keys(this.activeFilters)) {
+      const selectedValues = this.activeFilters[filterType] || [];
+      
+      // Solo procesamos si hay valores seleccionados
+      if (selectedValues && selectedValues.length > 0) {
+        // Obtener el nombre real del campo en los datos
+        const fieldName = this.getFieldNameFromFilterType(filterType);
+        
+        // Para cada valor seleccionado en el filtro actual, verificar si hay datos
+        const valoresConDatos = selectedValues.filter(filterValue => {
+          // Buscar registros que coincidan con el valor del filtro
+          const registrosCoincidentes = this.data.filter((registro: any) => {
+            // Si el tipo de filtro coincide exactamente con un campo en los datos
+            if (registro[fieldName] !== undefined) {
+              return registro[fieldName] === filterValue;
+            }
+            
+            // Si no coincide exactamente, buscamos un campo que contenga el nombre del filtro
+            const camposRegistro = Object.keys(registro);
+            const campoCoincidente = camposRegistro.find(campo => 
+              campo.toLowerCase().includes(fieldName.toLowerCase())
+            );
+            
+            // Si encontramos el campo, comparamos su valor
+            if (campoCoincidente) {
+              return registro[campoCoincidente] === filterValue;
+            }
+            return false;
+          });
+          
+          return registrosCoincidentes.length > 0;
+        });
+        
+        console.log('MetricsDataComponent - Valores con datos para filtro:', {
+          filterType, 
+          fieldName,
+          valoresConDatos,
+          totalValores: valoresConDatos.length
+        });
+        
+        if (valoresConDatos.length > 0) {
+          // Agregar configuración para este filtro
+          this.dynamicCharts.push({
+            filterType: this.getFilterDisplayName(filterType),
+            fieldName,
+            selectedValues: valoresConDatos
+          });
+        } else {
+          console.log('MetricsDataComponent - No existen datos para este filtro:', {
+            filterType,
+            fieldName
+          });
+        }
+      }
+    }
   }
   
-  // Extrae las iniciales del nombre (máximo 2 caracteres)
+  /**
+   * Extrae las iniciales del nombre (máximo 2 caracteres)
+   * @param name Nombre completo
+   * @returns Iniciales del nombre
+   */
   getInitials(name: string): string {
     if (!name) return '??';
     
@@ -115,17 +232,19 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
     return (words[0].charAt(0) + words[words.length - 1].charAt(0)).toUpperCase();
   }
   
-  // Implementación de AfterViewInit para inicializar los gráficos
+  /**
+   * Inicializa los gráficos después de que los elementos del DOM estén disponibles
+   */
   ngAfterViewInit(): void {
-    // Inicializamos los gráficos después de que los elementos del DOM estén disponibles
     setTimeout(() => {
       this.initCharts();
     }, 0);
   }
   
-  // Inicializar los gráficos
+  /**
+   * Inicializa los gráficos si hay datos
+   */
   private initCharts(): void {
-    // Sólo inicializamos si hay datos
     if (this.getObjectKeys(this.registrosPorEstado).length > 0) {
       this.initEstadosChart();
     }
@@ -135,7 +254,9 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
     }
   }
   
-  // Actualizar los gráficos
+  /**
+   * Actualiza los gráficos destruyendo los existentes y creando nuevos
+   */
   private updateCharts(): void {
     // Destruimos los gráficos existentes si existen
     if (this.estadosChart) {
@@ -154,7 +275,9 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
     }
   }
   
-  // Inicializar gráfico de Estados
+  /**
+   * Inicializa el gráfico de estados
+   */
   private initEstadosChart(): void {
     if (!this.estadosChartCanvas) return;
     
@@ -173,15 +296,17 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
           data: data,
           backgroundColor: colors,
           hoverBackgroundColor: colors.map(color => this.adjustAlpha(color, 0.8)),
-          borderWidth: 2,
-          borderColor: 'rgba(20, 20, 30, 0.6)'
+          borderWidth: 0,
+          borderColor: 'transparent'
         }]
       },
       options: this.getChartOptions()
     });
   }
   
-  // Inicializar gráfico de Tipos
+  /**
+   * Inicializa el gráfico de tipos
+   */
   private initTiposChart(): void {
     if (!this.tiposChartCanvas) return;
     
@@ -200,17 +325,21 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
           data: data,
           backgroundColor: colors,
           hoverBackgroundColor: colors.map(color => this.adjustAlpha(color, 0.8)),
-          borderWidth: 2,
-          borderColor: 'rgba(20, 20, 30, 0.6)'
+          borderWidth: 0,
+          borderColor: 'transparent'
         }]
       },
       options: this.getChartOptions()
     });
   }
   
-  // Ajusta la transparencia de un color
+  /**
+   * Ajusta la transparencia de un color
+   * @param color Color en formato hexadecimal
+   * @param alpha Nivel de transparencia (0-1)
+   * @returns Color en formato rgba
+   */
   private adjustAlpha(color: string, alpha: number): string {
-    // Convertir color hex a RGB
     const r = parseInt(color.slice(1, 3), 16);
     const g = parseInt(color.slice(3, 5), 16);
     const b = parseInt(color.slice(5, 7), 16);
@@ -218,7 +347,10 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
   
-  // Configuración común para los gráficos
+  /**
+   * Retorna configuraciones comunes para los gráficos
+   * @returns Opciones de configuración para Chart.js
+   */
   private getChartOptions(): any {
     return {
       responsive: true,
@@ -251,5 +383,38 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
         animateScale: true
       }
     };
+  }
+
+  /**
+   * Método auxiliar para obtener las claves de un objeto
+   * @param obj Objeto del que se extraerán las claves
+   * @returns Array de claves del objeto
+   */
+  getObjectKeys(obj: {[key: string]: any}): string[] {
+    return Object.keys(obj || {});
+  }
+  
+  /**
+   * Retorna un color para los gráficos basado en un índice
+   * @param index Índice del color
+   * @returns Color en formato hexadecimal
+   */
+  getChartColor(index: number): string {
+    const colors = [
+      '#4285F4', // Azul
+      '#34A853', // Verde
+      '#FBBC05', // Amarillo
+      '#EA4335', // Rojo
+      '#8E24AA', // Púrpura
+      '#00ACC1', // Cyan
+      '#FB8C00', // Naranja
+      '#43A047', // Verde oscuro
+      '#3949AB', // Indigo
+      '#D81B60', // Rosa
+      '#6D4C41', // Marrón
+      '#757575', // Gris
+    ];
+    
+    return colors[index % colors.length];
   }
 }

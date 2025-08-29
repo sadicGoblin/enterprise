@@ -5,12 +5,16 @@ import { CommonModule } from '@angular/common';
 import { MetricsFilterComponent } from './metrics-filter/metrics-filter.component';
 import { MetricsDataComponent } from './metrics-data/metrics-data.component';
 
+// Importar componentes de Material necesarios
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+
 @Component({
   selector: 'app-history-metrics',
   templateUrl: './history-metrics.component.html',
   styleUrls: ['./history-metrics.component.scss'],
   standalone: true,
-  imports: [CommonModule, MetricsFilterComponent, MetricsDataComponent]
+  imports: [CommonModule, MatIconModule, MatButtonModule, MetricsFilterComponent, MetricsDataComponent]
 })
 export class HistoryMetricsComponent implements OnChanges {
   // Recibir datos del componente padre
@@ -18,6 +22,16 @@ export class HistoryMetricsComponent implements OnChanges {
   
   // Datos filtrados que se pasarán al componente de datos
   filteredData: any[] = [];
+  
+  // Control para panel de filtros flotante
+  filterPanelOpen = false;
+  
+  /**
+   * Alterna la visibilidad del panel de filtros
+   */
+  toggleFilterPanel(): void {
+    this.filterPanelOpen = !this.filterPanelOpen;
+  }
   
   // Objeto para guardar filtros aplicados
   activeFilters: {[key: string]: string[]} = {};

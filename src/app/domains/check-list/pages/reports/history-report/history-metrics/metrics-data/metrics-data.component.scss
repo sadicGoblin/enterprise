@@ -21,7 +21,7 @@ $hover-color: rgba(255, 255, 255, 0.05);
   
   // Chart Header
   .chart-header {
-    padding: 4px 16px;
+    padding: 0px 16px;
     margin: 0;
     display: flex;
     align-items: center;
@@ -273,7 +273,7 @@ $hover-color: rgba(255, 255, 255, 0.05);
 
         // Estilos específicos para gráficos de torta
         .pie-chart-container {
-          height: calc(100% - 36px);
+          height: calc(100% - 50px);
           display: flex;
           align-items: center;
           justify-content: center;
@@ -289,6 +289,54 @@ $hover-color: rgba(255, 255, 255, 0.05);
               width: 100% !important;
               height: 100% !important;
               max-height: 180px;
+            }
+          }
+        }
+        
+        .dynamic-charts-section {
+          margin-top: 20px;
+          border-top: 1px solid rgba(255, 255, 255, 0.1);
+          padding-top: 15px;
+          max-height: none; // Eliminar altura máxima para permitir contenido más largo
+          overflow: visible; // Permitir que el contenido se extienda
+          position: relative;
+          z-index: 1; // Asegurar que esté debajo del gráfico principal
+
+          .dynamic-charts-header {
+            margin-bottom: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+
+            .count-indicator {
+              color: rgba(0, 0, 0, 0.54);
+              font-size: 0.9rem;
+            }
+
+            mat-icon {
+              font-size: 20px;
+              height: 20px;
+              width: 20px;
+            }
+          }
+
+          .dynamic-charts-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            margin-bottom: 15px;
+            
+            app-dynamic-chart {
+              width: 100%;
+              min-height: 250px; // Altura mínima para cada gráfico
+              margin-bottom: 15px;
+              padding: 15px;
+              border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+              
+              &:last-child {
+                border-bottom: none;
+              }
             }
           }
         }
@@ -316,6 +364,145 @@ $hover-color: rgba(255, 255, 255, 0.05);
     span {
       font-size: 14px;
       color: $text-secondary;
+    }
+  }
+}
+
+//* Sección de gráficos dinámicos por filtros */
+.filtered-charts-section {
+  width: 100%;
+  margin-bottom: 20px;
+  
+  .filtered-charts-header {
+    margin-bottom: 16px;
+    
+    mat-icon {
+      color: #5c6bc0;
+    }
+  }
+  
+  .filtered-charts-container {
+    display: inline-block;
+    width: calc(50% - 16px);
+    margin-right: 16px;
+    margin-bottom: 16px;
+    vertical-align: top;
+    
+    @media (max-width: 992px) {
+      width: 100%;
+      margin-right: 0;
+    }
+  }
+  
+  .dynamic-charts-section {
+    margin-top: 20px;
+    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    padding-top: 15px;
+
+    .dynamic-charts-header {
+      margin-bottom: 15px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .count-indicator {
+        color: rgba(0, 0, 0, 0.54);
+        font-size: 0.9rem;
+      }
+
+      mat-icon {
+        font-size: 20px;
+        height: 20px;
+        width: 20px;
+      }
+    }
+
+    .dynamic-charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+  }
+  
+  .filtered-chart-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e0e0e0;
+    
+    mat-card-header {
+      padding: 12px 16px;
+      background-color: #f5f5f5;
+      border-bottom: 1px solid #e0e0e0;
+      
+      mat-card-title {
+        font-size: 16px;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        
+        .filter-type {
+          font-weight: bold;
+          margin-right: 6px;
+        }
+        
+        .filter-value {
+          color: #5c6bc0;
+        }
+      }
+    }
+    
+    mat-card-content {
+      padding: 16px;
+    }
+  }
+  
+  .filtered-chart-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    
+    .filtered-states-list {
+      flex: 1;
+      max-width: 70%;
+    }
+    
+    .filter-kpi-indicator {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-left: 16px;
+      
+      .kpi-circle {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        font-size: 20px;
+        margin-bottom: 8px;
+        color: white;
+        
+        &.kpi-success {
+          background-color: #4caf50;
+        }
+        
+        &.kpi-warning {
+          background-color: #ff9800;
+        }
+        
+        &.kpi-danger {
+          background-color: #f44336;
+        }
+      }
+      
+      .kpi-label {
+        font-size: 14px;
+        color: #616161;
+      }
     }
   }
 }

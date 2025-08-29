@@ -1,0 +1,18 @@
+<div class="chart-container">
+  <div class="chart-header" *ngIf="kpiValue !== undefined">
+    <div class="kpi-container">
+      <div class="kpi-value" [ngClass]="kpiClass">{{ kpiValue }}%</div>
+      <div class="kpi-label">KPI</div>
+    </div>
+    <div class="filter-name" *ngIf="filterType">
+      {{ getFilterDisplayName() }}
+    </div>
+  </div>
+  <div class="chart-canvas-container">
+    <canvas #chartCanvas></canvas>
+  </div>
+  <div class="no-data-message" *ngIf="!hasData">
+    <mat-icon>info</mat-icon>
+    <span>No hay datos disponibles para mostrar</span>
+  </div>
+</div>

@@ -2,21 +2,131 @@
   font-family: 'Roboto', sans-serif;
   padding: 16px 0;
   
+  // Botón de filtros (visible solo en móviles)
+  .filter-toggle-button {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    background-color: #1976d2;
+    color: white;
+    border-radius: 20px;
+    padding: 6px 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    border: none;
+    font-family: inherit;
+    font-size: 14px;
+    min-width: 120px;
+    height: 36px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    
+    &:hover {
+      background-color: #1565c0;
+    }
+    
+    mat-icon {
+      margin-right: 8px;
+      font-size: 18px;
+      height: 18px;
+      width: 18px;
+      line-height: 18px;
+    }
+    
+    span {
+      display: inline-block;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    @media (max-width: 991px) {
+      display: flex;
+    }
+  }
+  
   // Layout de dos columnas
   .metrics-layout {
     display: flex;
     gap: 24px;
+    position: relative; // Para posicionar el overlay
     
-    // Columna izquierda para filtros (20%)
-    .metrics-filter-column {
-      width: 20%;
-      flex-shrink: 0;
+    // Media query para pantallas pequeñas (<992px)
+    @media (max-width: 991px) {
+      flex-direction: column;
     }
     
-    // Columna derecha para datos (80%)
+    // Overlay para cerrar el panel (visible solo cuando el panel está abierto)
+    .filter-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 998; // Por debajo del panel pero encima de todo lo demás
+    }
+    
+    // Columna izquierda para filtros (ancho fijo 240px en desktop)
+    .metrics-filter-column {
+      width: 240px;
+      min-width: 240px;
+      flex-shrink: 0;
+      background-color: white;
+      
+      // Header del panel de filtros (visible solo en móviles)
+      .filter-panel-header {
+        display: none;
+        justify-content: space-between;
+        align-items: center;
+        padding: 8px 16px;
+        background-color: #1976d2;
+        color: white;
+        
+        h3 {
+          margin: 0;
+          font-size: 16px;
+        }
+        
+        .close-filters {
+          color: white;
+        }
+      }
+      
+      // En pantallas pequeñas, panel flotante
+      @media (max-width: 991px) {
+        position: fixed;
+        top: 0;
+        right: -280px; // Oculto por defecto
+        width: 280px;
+        min-width: 280px;
+        height: 100vh;
+        overflow-y: auto;
+        z-index: 999;
+        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.2);
+        transition: right 0.3s ease;
+        
+        // Mostrar header en móviles
+        .filter-panel-header {
+          display: flex;
+        }
+        
+        // Cuando está activo, mostrar el panel
+        &.active {
+          right: 0;
+        }
+      }
+    }
+    
+    // Columna derecha para datos (ocupa el resto del espacio)
     .metrics-data-column {
-      width: 80%;
+      width: auto;
       flex-grow: 1;
+      
+      // En pantallas pequeñas, ocupar todo el ancho disponible
+      @media (max-width: 991px) {
+        width: 100%;
+      }
     }
   }
   

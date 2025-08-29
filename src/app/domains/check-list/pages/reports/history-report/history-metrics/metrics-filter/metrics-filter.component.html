@@ -1,14 +1,15 @@
 <div class="filter-container">
-  <div class="filter-header">
-    <h3>Filtros</h3>
-    <mat-divider></mat-divider>
+  <div class="filter-header improved-header">
+    <div class="header-content">
+      <h3>Filtros</h3>
+      <div class="total-count">
+        <mat-icon>analytics</mat-icon>
+        <span>Total registros: <strong>{{totalRegistros}}</strong></span>
+      </div>
+    </div>
   </div>
   
   <div class="filter-content">
-    <div class="total-info">
-      <mat-icon>analytics</mat-icon>
-      <span>Total registros: <strong>{{totalRegistros}}</strong></span>
-    </div>
     
     <!-- Grupos de filtros expandibles -->
     <div class="filter-groups" *ngIf="filterGroups.length > 0">
