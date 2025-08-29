@@ -55,17 +55,48 @@
   min-width: 120px;
 }
 
-// Aplicar el factor de escala global (referencia a la memoria sobre preferencia de tamaño de texto)
+// Aplicar el factor de escala global y asegurar altura consistente
 :host ::ng-deep {
   .mat-form-field {
     font-size: 0.9rem;
+    min-height: 56px !important; // Forzar altura mínima consistente
+    height: auto !important; // Permitir altura automática pero no menor al mínimo
+  }
+  
+  .mat-form-field-wrapper {
+    min-height: 56px !important;
+    padding-bottom: 1.25em !important; // Asegurar espacio consistente
+  }
+  
+  .mat-form-field-infix {
+    min-height: 24px !important;
+    padding: 0.5em 0 !important;
+    border-top: 1em solid transparent !important;
   }
   
   .mat-form-field-label {
     font-size: 0.9rem;
+    top: 1.28125em !important; // Posición consistente del label
   }
   
   .mat-select-value {
     font-size: 0.9rem;
+  }
+  
+  .mat-input-element {
+    font-size: 0.9rem;
+  }
+  
+  // Específico para mat-select para evitar colapso
+  .mat-select {
+    min-height: 24px !important;
+  }
+  
+  .mat-form-field-appearance-outline .mat-form-field-outline {
+    min-height: 56px !important;
+  }
+  
+  .mat-form-field-appearance-outline .mat-form-field-infix {
+    padding: 1em 0 1em 0 !important;
   }
 }

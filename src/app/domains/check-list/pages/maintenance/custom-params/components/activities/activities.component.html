@@ -1,16 +1,19 @@
 <div class="container">
-  <div class="row">
-    <div class="col">
-        <app-activity-form 
-          [isEditing]="!isAddMode"
-          [activityToEdit]="selectedActivity"
-          [referenceData]="(referenceData$ | async) || emptyReferenceData"
-          (saveActivity)="handleSaveActivity($event)"
-          (cancelEdit)="handleCancelEdit()"
-          (scopeChange)="handleScopeChange($event)">
-        </app-activity-form>
-    </div>
-    
+  <!-- Formulario fijo en la parte superior -->
+  <div class="form-section">
+    <app-activity-form 
+      #activityForm
+      [isEditing]="!isAddMode"
+      [activityToEdit]="selectedActivity"
+      [referenceData]="(referenceData$ | async) || emptyReferenceData"
+      (saveActivity)="handleSaveActivity($event)"
+      (cancelEdit)="handleCancelEdit()"
+      (scopeChange)="handleScopeChange($event)">
+    </app-activity-form>
+  </div>
+  
+  <!-- Tabla con scroll horizontal independiente -->
+  <div class="table-section">
     <app-activities-table 
       [activities]="(filteredActivities$ | async) || []"
       [isLoading]="(loading$ | async) || false"

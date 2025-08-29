@@ -1,12 +1,14 @@
 .table-container {
   position: relative;
-  min-height: 200px;
   width: 100%;
-  overflow: auto;
+  height: 100%; // Usar toda la altura disponible del contenedor padre
+  overflow: auto; // Permitir scroll horizontal y vertical
+  max-width: 100%; // Evitar que se expanda más allá del contenedor padre
 }
 
 .full-width-table {
   width: 100%;
+  min-width: 800px; // Asegurar ancho mínimo para forzar scroll horizontal si es necesario
 }
 
 .spinner-container {

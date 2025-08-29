@@ -161,7 +161,7 @@ $scale-factor: 0.9; // Factor de escala global para texto más pequeño
         display: none;
     }
     .mat-mdc-text-field-wrapper {
-        height: 48px;
+        height: 55px;
     }
   }
 }
@@ -196,9 +196,9 @@ $scale-factor: 0.9; // Factor de escala global para texto más pequeño
     font-size: #{14px * $scale-factor};
   }
 
-  .mat-mdc-text-field-wrapper {
-    height: #{40px * $scale-factor};
-  }
+  // .mat-mdc-text-field-wrapper {
+  //   height: #{40px * $scale-factor};
+  // }
 
   .mdc-floating-label {
     font-size: #{14px * $scale-factor};
