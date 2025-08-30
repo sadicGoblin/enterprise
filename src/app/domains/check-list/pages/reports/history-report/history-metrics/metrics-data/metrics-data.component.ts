@@ -57,7 +57,8 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
   }
   
   /**
-   * Procesa los datos para generar métricas y gráficos
+   * Procesa los datos para generar métricas y gráficos de forma dinámica
+   * sin depender de nombres de campos específicos
    */
   procesarDatos(): void {
     console.log('MetricsDataComponent - procesarDatos - inicio', {
@@ -73,27 +74,39 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
     this.registrosPorObra = {};
     this.registrosPorUsuario = {};
     
-    // Procesar cada registro
+    if (this.data.length === 0) {
+      return;
+    }
+
+    // Detectar campos de cadena de texto en los datos (potenciales candidatos para filtros/gráficos)
+    const camposCadena = this.detectarCamposCadena(this.data[0]);
+    
+    // Procesar cada registro de forma dinámica
     this.data.forEach((registro: any) => {
-      // Contar por tipo
-      if (registro.tipo) {
-        this.registrosPorTipo[registro.tipo] = (this.registrosPorTipo[registro.tipo] || 0) + 1;
-      }
-      
-      // Contar por estado
-      if (registro.estado) {
-        this.registrosPorEstado[registro.estado] = (this.registrosPorEstado[registro.estado] || 0) + 1;
-      }
-      
-      // Contar por obra
-      if (registro.obra) {
-        this.registrosPorObra[registro.obra] = (this.registrosPorObra[registro.obra] || 0) + 1;
-      }
-      
-      // Contar por usuario
-      if (registro.usuario) {
-        this.registrosPorUsuario[registro.usuario] = (this.registrosPorUsuario[registro.usuario] || 0) + 1;
-      }
+      camposCadena.forEach(campo => {
+        // Si el registro tiene este campo y tiene un valor
+        if (registro[campo] !== undefined && registro[campo] !== null) {
+          // Seleccionamos el contador adecuado según el campo
+          let contadorCampo = null;
+          
+          // Intentamos mapear el campo a uno de nuestros contadores predefinidos
+          if (campo.toLowerCase().includes('tipo')) {
+            contadorCampo = this.registrosPorTipo;
+          } else if (campo.toLowerCase().includes('estado')) {
+            contadorCampo = this.registrosPorEstado;
+          } else if (campo.toLowerCase().includes('obra')) {
+            contadorCampo = this.registrosPorObra;
+          } else if (campo.toLowerCase().includes('usuario')) {
+            contadorCampo = this.registrosPorUsuario;
+          }
+          
+          // Si encontramos un contador adecuado, actualizamos el conteo
+          if (contadorCampo) {
+            const valorCampo = String(registro[campo]);
+            contadorCampo[valorCampo] = (contadorCampo[valorCampo] || 0) + 1;
+          }
+        }
+      });
     });
     
     // Generar gráficos dinámicos basados en filtros activos
@@ -101,21 +114,74 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
   }
   
   /**
+   * Detecta qué campos de un objeto contienen cadenas de texto (strings)
+   * @param objeto Objeto de muestra para analizar
+   * @returns Array con los nombres de los campos que contienen strings
+   */
+  private detectarCamposCadena(objeto: any): string[] {
+    if (!objeto || typeof objeto !== 'object') {
+      return [];
+    }
+    
+    return Object.keys(objeto).filter(key => {
+      const valor = objeto[key];
+      return typeof valor === 'string' || valor instanceof String;
+    });
+  }
+  
+  /**
    * Convierte el tipo de filtro a un nombre de campo en los datos
+   * Ahora es completamente genérico sin mapeo hardcodeado
    * @param filterType Tipo de filtro
    * @returns Nombre del campo correspondiente
    */
   private getFieldNameFromFilterType(filterType: string): string {
-    // Mapeo de tipos de filtro a nombres de campo
-    const filterMap: {[key: string]: string} = {
-      'tipo': 'tipo',
-      'estado': 'estado',
-      'obra': 'obra',
-      'usuario': 'usuario'
-      // Agregar más mapeos según sea necesario
-    };
+    // Si tenemos datos, buscamos campos que coincidan con el tipo de filtro
+    if (this.data && this.data.length > 0) {
+      const sampleRecord = this.data[0];
+      const fieldNames = Object.keys(sampleRecord);
+      
+      // Caso 1: Búsqueda de coincidencia exacta
+      if (fieldNames.includes(filterType)) {
+        return filterType;
+      }
+      
+      // Caso 2: Búsqueda de coincidencia por contener el texto (case insensitive)
+      // Priorizamos nombres de campo únicos para cada tipo de filtro
+      // para evitar coincidencias ambiguas
+      
+      // Prioridad 1: Campos que contienen exactamente el tipo de filtro
+      const exactMatch = fieldNames.find(field => 
+        field.toLowerCase() === filterType.toLowerCase()
+      );
+      
+      if (exactMatch) {
+        return exactMatch;
+      }
+      
+      // Prioridad 2: Campos que contienen el tipo de filtro como substring
+      const containsMatch = fieldNames.find(field => 
+        field.toLowerCase().includes(filterType.toLowerCase())
+      );
+      
+      if (containsMatch) {
+        return containsMatch;
+      }
+      
+      // Prioridad 3: Tipo de filtro contiene el nombre del campo
+      const reverseMatch = fieldNames.find(field => 
+        filterType.toLowerCase().includes(field.toLowerCase()) && 
+        field.length > 2 // Evitar coincidencias con campos muy cortos
+      );
+      
+      if (reverseMatch) {
+        return reverseMatch;
+      }
+    }
     
-    return filterMap[filterType] || filterType;
+    // Si no encontramos coincidencia, devolvemos el tipo de filtro tal cual
+    // y agregamos un identificador único basado en el tipo para evitar colisiones
+    return `${filterType}_field`;
   }
   
   /**
@@ -124,16 +190,58 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
    * @returns Nombre para mostrar del filtro
    */
   private getFilterDisplayName(filterType: string): string {
-    // Mapeo de tipos de filtro a nombres para mostrar
-    const displayMap: {[key: string]: string} = {
-      'tipo': 'Tipo',
-      'estado': 'Estado',
-      'obra': 'Obra',
-      'usuario': 'Usuario'
-      // Agregar más mapeos según sea necesario
-    };
+    // Implementación genérica para convertir cualquier texto a un formato de título
+    return filterType
+      // Separar por guiones bajos o guiones
+      .replace(/[-_]/g, ' ')
+      // Separar camelCase (insertar espacio antes de mayúsculas)
+      .replace(/([a-z])([A-Z])/g, '$1 $2')
+      // Capitalizar primera letra de cada palabra
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+  }
+  
+  /**
+   * Método utilitario para obtener las claves de un objeto
+   * Usado en la plantilla HTML para iterar sobre objetos
+   * @param obj Objeto del cual obtener las claves
+   * @returns Array con las claves del objeto
+   */
+  getObjectKeys(obj: any): string[] {
+    if (!obj) return [];
+    return Object.keys(obj);
+  }
+  
+  /**
+   * Obtiene un color para un gráfico basado en el índice
+   * @param index Índice para el color
+   * @returns Color en formato hexadecimal o rgba
+   */
+  getChartColor(index: number): string {
+    // Colores predefinidos para los gráficos
+    const colors = [
+      '#4285F4', // Azul Google
+      '#EA4335', // Rojo Google
+      '#FBBC05', // Amarillo Google
+      '#34A853', // Verde Google
+      '#673AB7', // Morado
+      '#FF9800', // Naranja
+      '#795548', // Marrón
+      '#009688', // Verde azulado
+      '#00BCD4', // Cian
+      '#E91E63', // Rosa
+      '#3F51B5', // Índigo
+      '#607D8B'  // Gris azulado
+    ];
     
-    return displayMap[filterType] || filterType.charAt(0).toUpperCase() + filterType.slice(1);
+    // Si el índice es mayor que la cantidad de colores, generamos uno aleatorio
+    if (index >= colors.length) {
+      const r = Math.floor(128 + Math.random() * 128);
+      const g = Math.floor(128 + Math.random() * 128);
+      const b = Math.floor(128 + Math.random() * 128);
+      return `rgba(${r}, ${g}, ${b}, 0.8)`;
+    }
+    
+    return colors[index];
   }
   
   /**
@@ -385,36 +493,5 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
     };
   }
 
-  /**
-   * Método auxiliar para obtener las claves de un objeto
-   * @param obj Objeto del que se extraerán las claves
-   * @returns Array de claves del objeto
-   */
-  getObjectKeys(obj: {[key: string]: any}): string[] {
-    return Object.keys(obj || {});
-  }
-  
-  /**
-   * Retorna un color para los gráficos basado en un índice
-   * @param index Índice del color
-   * @returns Color en formato hexadecimal
-   */
-  getChartColor(index: number): string {
-    const colors = [
-      '#4285F4', // Azul
-      '#34A853', // Verde
-      '#FBBC05', // Amarillo
-      '#EA4335', // Rojo
-      '#8E24AA', // Púrpura
-      '#00ACC1', // Cyan
-      '#FB8C00', // Naranja
-      '#43A047', // Verde oscuro
-      '#3949AB', // Indigo
-      '#D81B60', // Rosa
-      '#6D4C41', // Marrón
-      '#757575', // Gris
-    ];
-    
-    return colors[index % colors.length];
-  }
+  // Métodos eliminados para evitar duplicaciones
 }
