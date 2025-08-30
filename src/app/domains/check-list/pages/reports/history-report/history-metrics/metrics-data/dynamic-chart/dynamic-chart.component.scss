@@ -1,0 +1,249 @@
+.chart-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: #1e1e2f;
+  border-radius: 4px;
+  border: 1px solid #2c2c41;
+  overflow: hidden;
+  color: #ffffff;
+  margin-bottom: 16px;
+}
+
+.kpi-dashboard-card {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #2c2c41;
+  margin-bottom: 0;
+}
+
+.chart-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  
+  h3 {
+    margin: 0;
+    font-size: 0.8rem;
+    font-weight: 400;
+    color: #ffffff;
+  }
+  
+  mat-icon {
+    color: #738df6;
+    font-size: 14px;
+    height: 14px;
+    width: 14px;
+  }
+}
+
+.kpi-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: #252540;
+  border-radius: 4px;
+  padding: 5px 8px;
+  border: 1px solid #3a3a5c;
+}
+
+.kpi-value {
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1;
+  
+  &.kpi-success {
+    color: #28a745;
+  }
+  
+  &.kpi-warning {
+    color: #ffc107;
+  }
+  
+  &.kpi-danger {
+    color: #dc3545;
+  }
+}
+
+.kpi-label {
+  font-size: 0.65rem;
+  opacity: 0.7;
+  text-transform: uppercase;
+  margin-top: 2px;
+  letter-spacing: 0.5px;
+}
+
+.chart-content {
+  padding: 15px 16px;
+}
+
+.filter-name {
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: #ffffff;
+  flex-grow: 1;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chart-canvas-container {
+  flex-grow: 1;
+  position: relative;
+  min-height: 200px;
+  max-height: 300px; /* Altura máxima del contenedor */
+  padding: 0;
+  overflow-y: auto; /* Añadir scroll vertical cuando sea necesario */
+  @extend .custom-scrollbar; /* Aplicar estilo personalizado al scrollbar */
+}
+
+.metrics-section {
+  padding: 12px 16px;
+  border-top: 1px solid #2c2c41;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  
+  mat-icon {
+    color: #738df6;
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    margin-right: 8px;
+  }
+  
+  span {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #b4b4cc;
+  }
+  
+  .count-indicator {
+    font-size: 0.7rem;
+    color: #8a8aa9;
+    margin-left: 5px;
+  }
+}
+
+canvas {
+  max-width: 100%;
+}
+
+/* Establecer un min-height de 10px para las barras del gráfico */
+:host ::ng-deep .chart-canvas-container canvas {
+  & > div > div > div > div > div > div > canvas {
+    min-height: 10px;
+  }
+}
+
+/* Estilos específicos para las barras horizontales */
+:host ::ng-deep canvas {
+  & .chartjs-horizontal-bar {
+    min-height: 10px !important;
+  }
+}
+
+/* Asegurar que los elementos internos de las barras tengan altura mínima */
+:host ::ng-deep .chart-canvas-container {
+  & .chartjs-render-monitor {
+    & [role="img"] > div {
+      min-height: 10px;
+    }
+  }
+}
+
+.metrics-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  width: 100%;
+
+  &.horizontal-list {
+    flex-direction: row;
+    overflow-x: auto;
+    padding-bottom: 5px;
+  }
+}
+
+.metric-item {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 4px;
+  background-color: #252540;
+  min-width: 80px;
+}
+
+.metric-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.metric-name {
+  font-size: 0.75rem;
+  color: #b4b4cc;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 120px;
+}
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a5c #1e1e2f;
+  
+  &::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+  }
+  
+  &::-webkit-scrollbar-track {
+    background: #1e1e2f;
+  }
+  
+  &::-webkit-scrollbar-thumb {
+    background-color: #3a3a5c;
+    border-radius: 3px;
+  }
+}
+
+.no-data-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  color: #8a8aa9;
+  text-align: center;
+  padding: 20px;
+  background-color: #252540;
+  border-radius: 4px;
+  margin: 16px;
+  
+  mat-icon {
+    font-size: 2rem;
+    height: 2rem;
+    width: 2rem;
+    margin-bottom: 10px;
+    color: #6c6c8b;
+  }
+  
+  span {
+    font-size: 0.9rem;
+  }
+}

@@ -1,0 +1,367 @@
+// Estilos generales para el contenedor de filtros
+.filter-container {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  
+  // Estilos para el encabezado
+  .filter-header {
+    padding: 12px 16px 8px;
+    
+    h3 {
+      margin: 0 0 8px;
+      font-size: 16px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    // Estilos para el encabezado mejorado
+    &.improved-header {
+      background-color: #f5f5f5;
+      border-top-left-radius: 4px;
+      border-top-right-radius: 4px;
+      padding: 8px 12px;
+      border-bottom: 1px solid #e6e6e6;
+      
+      .header-content {
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        
+        h3 {
+          margin: 0;
+          color: #686868;
+          font-weight: 400;
+          font-size: 12px;
+        }
+        
+        .total-count {
+          display: flex;
+          align-items: center;
+          
+          mat-icon {
+            margin-right: 5px;
+            font-size: 16px;
+            height: 16px;
+            width: 16px;
+            color: #666;
+          }
+          
+          span {
+            font-size: 12px;
+            color: #555;
+            
+            strong {
+              font-weight: 500;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Contenido de los filtros
+  .filter-content {
+    padding: 8px 16px 16px;
+    flex: 1;
+    overflow-y: auto;
+    
+    // Información total
+    .total-info {
+      display: flex;
+      align-items: center;
+      padding: 10px 4px;
+      margin-bottom: 16px;
+      border-bottom: 1px solid #eee;
+      
+      mat-icon {
+        margin-right: 8px;
+        font-size: 18px;
+        height: 18px;
+        width: 18px;
+        color: #1976d2;
+      }
+      
+      span {
+        font-size: 14px;
+        color: #555;
+        
+        strong {
+          font-weight: 500;
+          color: #333;
+        }
+      }
+    }
+  }
+  
+  // Grupos de filtros
+  .filter-groups {
+    .filter-group {
+      margin-bottom: 12px;
+      border-radius: 6px;
+      border: 1px solid #eaeaea;
+      overflow: hidden;
+      
+      // Cabecera de grupo
+      .group-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        cursor: pointer;
+        background-color: #f9f9f9;
+        transition: background-color 0.2s ease;
+        
+        &:hover {
+          background-color: #f0f0f0;
+        }
+        
+        .header-left {
+          display: flex;
+          align-items: center;
+          
+          mat-icon {
+            margin-right: 8px;
+            font-size: 18px;
+            height: 18px;
+            width: 18px;
+          }
+          
+          span {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+          }
+        }
+        
+        .header-right {
+          display: flex;
+          align-items: center;
+          
+          .badge {
+            background-color: #1976d2;
+            color: white;
+            border-radius: 10px;
+            min-width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 8px;
+            padding: 0 6px;
+          }
+          
+          .expand-icon {
+            font-size: 20px;
+            height: 20px;
+            width: 20px;
+            transition: transform 0.3s ease;
+          }
+        }
+      }
+      
+      // Contenido expandible del grupo
+      .group-content {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease, padding 0.3s ease;
+        padding: 0 12px;
+        background-color: white;
+        
+        &.expanded {
+          max-height: 500px;
+          padding: 12px;
+          overflow-y: auto;
+        }
+        
+        // Campo de búsqueda
+        .search-input {
+          margin-bottom: 10px;
+          
+          mat-form-field {
+            width: 100%;
+            
+            ::ng-deep .mat-mdc-form-field-infix {
+              padding: 8px 0 !important;
+              min-height: 36px !important;
+            }
+            
+            ::ng-deep .mat-mdc-text-field-wrapper {
+              padding: 0 10px !important;
+            }
+          }
+        }
+        
+        // Botón de limpiar filtros
+        .clear-filters {
+          margin-bottom: 10px;
+          
+          .clear-button {
+            display: flex;
+            align-items: center;
+            background: none;
+            border: none;
+            color: #1976d2;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 12px;
+            border-radius: 4px;
+            transition: background-color 0.2s ease;
+            
+            &:hover {
+              background-color: rgba(25, 118, 210, 0.08);
+            }
+            
+            mat-icon {
+              font-size: 16px;
+              height: 16px;
+              width: 16px;
+              margin-right: 4px;
+            }
+          }
+        }
+        
+        // Contenedor para items con autocomplete
+        .items-container {
+          .autocomplete-field {
+            width: 100%;
+            margin-bottom: 10px;
+            
+            ::ng-deep .mat-mdc-form-field-infix {
+              padding: 8px 0 !important;
+            }
+            
+            ::ng-deep .mat-mdc-text-field-wrapper {
+              padding: 0 10px !important;
+            }
+          }
+          
+          // Items seleccionados en autocomplete
+          .selected-items {
+            margin-top: 8px;
+            
+            .selected-item {
+              margin-bottom: 8px;
+            }
+            
+            .more-items {
+              font-size: 12px;
+              color: #666;
+              margin-top: 8px;
+              font-style: italic;
+            }
+          }
+        }
+        
+        // Lista de items para grupos pequeños
+        .items-list {
+          max-height: 300px;
+          overflow-y: auto;
+          
+          .list-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid #f5f5f5;
+            
+            &:last-child {
+              border-bottom: none;
+            }
+            
+            mat-checkbox {
+              flex: 1;
+              
+              ::ng-deep .mat-checkbox-label {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: calc(100% - 40px);
+                font-size: 13px;
+              }
+            }
+            
+            .item-count {
+              background-color: #f0f0f0;
+              color: #666;
+              border-radius: 10px;
+              min-width: 24px;
+              height: 18px;
+              font-size: 11px;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              margin-left: 8px;
+              padding: 0 6px;
+            }
+          }
+        }
+      }
+    }
+  }
+  
+  // Mensaje cuando no hay filtros
+  .no-filters {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 30px 0;
+    color: #888;
+    
+    mat-icon {
+      font-size: 36px;
+      height: 36px;
+      width: 36px;
+      margin-bottom: 12px;
+      opacity: 0.6;
+    }
+    
+    p {
+      font-size: 14px;
+      margin: 0;
+    }
+  }
+  
+  // Estilos para el autocompletado
+  ::ng-deep .mat-mdc-autocomplete-panel {
+    .mdc-list-item {
+      padding: 0 8px !important;
+      height: auto !important;
+      min-height: 36px !important;
+    }
+    
+    .item-option {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      
+      mat-checkbox {
+        flex: 1;
+      }
+      
+      .item-count {
+        background-color: #f0f0f0;
+        color: #666;
+        border-radius: 10px;
+        min-width: 24px;
+        height: 18px;
+        font-size: 11px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 6px;
+      }
+    }
+    
+    .selected {
+      background-color: rgba(25, 118, 210, 0.05);
+    }
+  }
+}

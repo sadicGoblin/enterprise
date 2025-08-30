@@ -1,0 +1,118 @@
+<div class="chart-card kpi-dashboard-card">
+  <ng-container *ngIf="data && data.length > 0; else noData">
+    <!-- Encabezado con totales -->
+    <div class="chart-header">
+      <div class="chart-title">
+        <mat-icon>dashboard</mat-icon>
+        <h3>RESUMEN KPI</h3>
+      </div>
+      <div class="total-badge">
+        <span class="total-value">{{ totalRegistros | number }}</span>
+        <span class="total-label">REGISTROS</span>
+      </div>
+    </div>
+
+    <!-- Cuerpo con cuatro columnas del 25% cada una -->
+    <div class="chart-content kpi-card-content">
+
+      <div class="metrics-row">
+        <!-- COLUMNA A (25%) - DATOS ESTADOS -->
+        <div class="column-equal">
+          <div class="metrics-section" *ngIf="getObjectKeys(registrosPorEstado).length > 0">
+            <div class="section-header">
+              <mat-icon>check_circle</mat-icon>
+              <span>ESTADOS</span>
+              <span class="count-indicator">({{ getObjectKeys(registrosPorEstado).length }})</span>
+            </div>
+            <div class="metrics-list custom-scrollbar vertical-list">
+              <div class="metric-item" *ngFor="let estado of getObjectKeys(registrosPorEstado); let i = index">
+                <div class="metric-dot" [style.background-color]="getChartColor(i)"></div>
+                <div class="metric-name" [title]="estado">{{ estado }}</div>
+                <div class="metric-value">{{ registrosPorEstado[estado] }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUMNA B (25%) - GRÁFICO DE TORTA ESTADOS -->
+        <div class="column-equal">
+          <div class="chart-container" *ngIf="getObjectKeys(registrosPorEstado).length > 0">
+            <div class="section-header">
+              <mat-icon>pie_chart</mat-icon>
+              <span>GRÁFICO ESTADOS</span>
+            </div>
+            <div class="pie-chart-container">
+              <!-- Gráfico de torta de Estados -->
+              <div class="pie-chart-placeholder">
+                <canvas #estadosChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUMNA C (25%) - DATOS TIPOS -->
+        <div class="column-equal">
+          <div class="metrics-section" *ngIf="getObjectKeys(registrosPorTipo).length > 0">
+            <div class="section-header">
+              <mat-icon>category</mat-icon>
+              <span>TIPOS</span>
+              <span class="count-indicator">({{ getObjectKeys(registrosPorTipo).length }})</span>
+            </div>
+            <div class="metrics-list custom-scrollbar vertical-list">
+              <div class="metric-item" *ngFor="let tipo of getObjectKeys(registrosPorTipo); let i = index">
+                <div class="metric-dot" [style.background-color]="getChartColor(i+3)"></div>
+                <div class="metric-name" [title]="tipo">{{ tipo }}</div>
+                <div class="metric-value">{{ registrosPorTipo[tipo] }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- COLUMNA D (25%) - GRÁFICO DE TORTA TIPOS -->
+        <div class="column-equal">
+          <div class="chart-container" *ngIf="getObjectKeys(registrosPorTipo).length > 0">
+            <div class="section-header">
+              <mat-icon>pie_chart</mat-icon>
+              <span>GRÁFICO TIPOS</span>
+            </div>
+            <div class="pie-chart-container">
+              <!-- Gráfico de torta de Tipos -->
+              <div class="pie-chart-placeholder">
+                <canvas #tiposChart></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <ng-template #noData>
+    <div class="no-data-message">
+      <mat-icon>info_outline</mat-icon>
+      <span>Sin datos para mostrar</span>
+    </div>
+  </ng-template>
+</div>
+
+<!-- Sección dinámica de gráficos basados en filtros activos (componente completamente separado) -->
+<div class="dynamic-charts-container" *ngIf="dynamicCharts && dynamicCharts.length > 0">
+  <div class="dynamic-charts-section">
+    <div class="section-header dynamic-charts-header">
+      <br><br>
+    </div>
+
+    <div class="dynamic-charts-grid">
+      <app-dynamic-chart *ngFor="let chart of dynamicCharts" [filterType]="chart.filterType"
+        [fieldToFilter]="chart.fieldName" [selectedValues]="chart.selectedValues || []" [filteredData]="data">
+      </app-dynamic-chart>
+    </div>
+  </div>
+
+  <ng-template #noData>
+    <div class="no-data-message">
+      <mat-icon>info_outline</mat-icon>
+      <span>Sin datos para mostrar</span>
+    </div>
+  </ng-template>
+</div>

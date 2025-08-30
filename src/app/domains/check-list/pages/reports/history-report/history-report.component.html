@@ -1,0 +1,94 @@
+<div class="map-container">
+  <mat-card class="map-card">
+    <div *ngIf="isLoading" class="spinner-overlay">
+      <div class="loading-container">
+        <mat-spinner></mat-spinner>
+        <p class="loading-text">Procesando la información...</p>
+      </div>
+    </div>
+    
+    <div class="map-card-header">
+      <h2 class="title">Reporte Histórico</h2>
+    </div>
+    
+    <div class="map-card-content">
+      <!-- Formulario de filtros -->
+      <div class="form-container compact">
+        <div class="form-header">
+          <h3>
+            <mat-icon class="header-icon">filter_alt</mat-icon> 
+            <span *ngIf="isFilterExpanded">Búsqueda por rangos</span>
+            <span *ngIf="!isFilterExpanded && selectedDateRange" class="date-range-summary">
+              {{ formatDateForDisplay(historyForm.value.startDate) }} - {{ formatDateForDisplay(historyForm.value.endDate) }}
+            </span>
+          </h3>
+          <span class="icon-container">
+            <button mat-icon-button class="expand-button" (click)="toggleFilterVisibility()" type="button" aria-label="Expandir/colapsar">
+              <mat-icon *ngIf="isFilterExpanded">expand_less</mat-icon>
+              <mat-icon *ngIf="!isFilterExpanded">expand_more</mat-icon>
+            </button>
+          </span>
+        </div>
+        <mat-divider></mat-divider>
+        
+        <div class="filter-content" [ngClass]="{'collapsed': !isFilterExpanded}">
+          <form [formGroup]="historyForm" (ngSubmit)="onSubmit()">
+            <div class="dates-container">
+              <div class="date-field-container">
+                <div class="date-label">Fecha Desde</div>
+                <div class="custom-date-input">
+                  <input matInput [matDatepicker]="startPicker" formControlName="startDate" placeholder="dd/mm/aaaa" />
+                  <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #startPicker></mat-datepicker>
+                </div>
+                <div class="field-error" *ngIf="historyForm.get('startDate')?.hasError('required') && historyForm.get('startDate')?.touched">
+                  Requerido
+                </div>
+              </div>
+              
+              <div class="date-field-container">
+                <div class="date-label">Fecha Hasta</div>
+                <div class="custom-date-input">
+                  <input matInput [matDatepicker]="endPicker" formControlName="endDate" placeholder="dd/mm/aaaa" />
+                  <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                  <mat-datepicker #endPicker></mat-datepicker>
+                </div>
+                <div class="field-error" *ngIf="historyForm.get('endDate')?.hasError('required') && historyForm.get('endDate')?.touched">
+                  Requerido
+                </div>
+              </div>
+            </div>
+            
+            <div class="buttons-row">
+              <button mat-stroked-button type="button" class="compact-button" (click)="resetForm()">
+                <mat-icon class="small-icon">refresh</mat-icon> Limpiar
+              </button>
+              <button mat-raised-button color="primary" class="compact-button" type="submit">
+                <mat-icon class="small-icon">description</mat-icon> Generar
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      <!-- Mensaje de error -->
+      <div *ngIf="errorMessage" class="error-container">
+        <p class="error-message">{{ errorMessage }}</p>
+      </div>
+      
+      <!-- Resultados con pestañas -->
+      <div *ngIf="tableData.length > 0" class="results-container compact">
+  
+        <!-- Pestañas para Métricas y Datos -->
+        <mat-tab-group>
+          <mat-tab label="Métricas">
+            <app-history-metrics [data]="tableData"></app-history-metrics>
+          </mat-tab>
+          <mat-tab label="Datos">
+            <app-history-table [data]="tableData"></app-history-table>
+          </mat-tab>
+        </mat-tab-group>
+      </div>
+    </div>
+  </mat-card>
+</div>

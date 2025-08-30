@@ -1,0 +1,34 @@
+<div class="metrics-container">
+  <!-- Botón de filtros para dispositivos móviles -->
+  <button class="filter-toggle-button" (click)="toggleFilterPanel()">
+    <mat-icon>filter_list</mat-icon>
+    <span>Filtros</span>
+  </button>
+  
+  <div class="metrics-layout">
+    <!-- Columna/Panel de filtros (flotante en móviles) -->
+    <div class="metrics-filter-column" [class.active]="filterPanelOpen">
+      <div class="filter-panel-header">
+        <h3>Filtros</h3>
+        <button class="close-filters" (click)="toggleFilterPanel()" mat-icon-button>
+          <mat-icon>close</mat-icon>
+        </button>
+      </div>
+      <app-metrics-filter 
+        [data]="data"
+        (filterChange)="handleFilterChange($event)">
+      </app-metrics-filter>
+    </div>
+    
+    <!-- Overlay para cerrar el panel al hacer clic fuera -->
+    <div class="filter-overlay" *ngIf="filterPanelOpen" (click)="toggleFilterPanel()"></div>
+    
+    <!-- Columna para datos -->
+    <div class="metrics-data-column">
+      <app-metrics-data 
+        [data]="filteredData"
+        [activeFilters]="activeFilters">
+      </app-metrics-data>
+    </div>
+  </div>
+</div>

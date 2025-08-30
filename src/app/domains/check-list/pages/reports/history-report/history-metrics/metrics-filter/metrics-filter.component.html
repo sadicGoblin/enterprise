@@ -1,0 +1,62 @@
+<div class="filter-container">
+  <div class="filter-header improved-header">
+    <div class="header-content">
+      <h3>Filtros</h3>
+      <div class="total-count">
+        <mat-icon>analytics</mat-icon>
+        <span>Total registros: <strong>{{totalRegistros}}</strong></span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="filter-content">
+    
+    <!-- Grupos de filtros expandibles -->
+    <div class="filter-groups" *ngIf="filterGroups.length > 0">
+      <!-- Grupo de filtros -->
+      <div class="filter-group" *ngFor="let group of filterGroups">
+        <!-- Cabecera expandible -->
+        <div class="group-header" (click)="toggleExpand(group)">
+          <div class="header-left">
+            <mat-icon [color]="getSelectedCount(group) > 0 ? 'primary' : ''">{{group.icon}}</mat-icon>
+            <span>{{group.name}}</span>
+          </div>
+          <div class="header-right">
+            <span class="badge" *ngIf="getSelectedCount(group) > 0">{{getSelectedCount(group)}}</span>
+            <mat-icon class="expand-icon">{{group.expanded ? 'expand_less' : 'expand_more'}}</mat-icon>
+          </div>
+        </div>
+        
+        <!-- Contenido expandible -->
+        <div class="group-content" [class.expanded]="group.expanded">
+          <!-- Se eliminó el buscador duplicado que estaba aquí -->
+          
+          <!-- Opción de limpiar filtros si hay seleccionados -->
+          <div class="clear-filters" *ngIf="group.expanded && getSelectedCount(group) > 0">
+            <button class="clear-button" (click)="clearFilters(group); $event.stopPropagation()">
+              <mat-icon>clear_all</mat-icon>
+              <span>Limpiar filtros</span>
+            </button>
+          </div>
+          
+          <!-- Componente multi-select reutilizable para todos los grupos -->
+          <app-multi-select 
+            *ngIf="group.expanded"
+            [items]="getMultiSelectItems(group)"
+            [label]="''"
+            [showCount]="true"
+            [useAutocomplete]="group.useAutocomplete"
+            [expanded]="true"
+            (selectionChange)="handleSelectionChange($event, group)">
+          </app-multi-select>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Mensaje cuando no hay filtros disponibles -->
+    <div class="no-filters" *ngIf="filterGroups.length === 0">
+      <mat-icon>filter_alt_off</mat-icon>
+      <p>No hay filtros disponibles</p>
+    </div>
+  </div>
+</div>

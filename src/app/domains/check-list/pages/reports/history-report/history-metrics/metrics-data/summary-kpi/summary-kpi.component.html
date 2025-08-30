@@ -1,0 +1,74 @@
+<div class="summary-kpi-container">
+  <!-- Tarjeta de KPI con valor circular -->
+  <mat-card class="kpi-card">
+    <mat-card-header>
+      <mat-card-title>
+        <div class="kpi-title">
+          <mat-icon>pie_chart</mat-icon>
+          <span>Resumen KPI</span>
+        </div>
+      </mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <div class="kpi-value-container">
+        <div class="kpi-value">
+          <div class="percentage">{{ getKpiValue(estadosData) }}%</div>
+          <div class="label">Completado</div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+  <!-- Tarjetas para los gráficos de estados y tipos -->
+  <div class="charts-row">
+    <!-- Gráfico de estados -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>
+          <div class="chart-title">
+            <mat-icon>donut_large</mat-icon>
+            <span>Estados</span>
+          </div>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container">
+          <canvas #estadosChart></canvas>
+        </div>
+        <mat-divider></mat-divider>
+        <div class="legend-container">
+          <div class="legend-item" *ngFor="let estado of getObjectKeys(estadosData); let i = index">
+            <div class="color-box" [style.background-color]="chartColors[i % chartColors.length]"></div>
+            <div class="legend-label" [matTooltip]="estado">{{ estado }}</div>
+            <div class="legend-value">{{ estadosData[estado] }}</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <!-- Gráfico de tipos -->
+    <mat-card class="chart-card">
+      <mat-card-header>
+        <mat-card-title>
+          <div class="chart-title">
+            <mat-icon>category</mat-icon>
+            <span>Tipos</span>
+          </div>
+        </mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <div class="chart-container">
+          <canvas #tiposChart></canvas>
+        </div>
+        <mat-divider></mat-divider>
+        <div class="legend-container">
+          <div class="legend-item" *ngFor="let tipo of getObjectKeys(tiposData); let i = index">
+            <div class="color-box" [style.background-color]="chartColors[(i + 3) % chartColors.length]"></div>
+            <div class="legend-label" [matTooltip]="tipo">{{ tipo }}</div>
+            <div class="legend-value">{{ tiposData[tipo] }}</div>
+          </div>
+        </div>
+      </mat-card-content>
+    </mat-card>
+  </div>
+</div>

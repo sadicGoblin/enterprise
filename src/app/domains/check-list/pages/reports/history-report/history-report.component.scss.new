@@ -1,0 +1,169 @@
+.map-container {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+}
+
+.map-card {
+  width: 100%;
+  padding: 12px;
+  overflow-x: auto;
+  position: relative;
+  
+  ::ng-deep .mat-mdc-card-content {
+    padding: 8px;
+  }
+}
+
+// Overlay spinner para carga
+.spinner-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+}
+
+.compact-field {
+  margin-bottom: 10px;
+  width: 100%;
+  
+  ::ng-deep {
+    // Configuración general del campo
+    .mat-mdc-form-field {
+      display: inline-flex;
+      flex-direction: column;
+      min-width: 0;
+      text-align: left;
+    }
+    
+    // Contenedor del campo de formulario
+    .mat-mdc-text-field-wrapper {
+      height: 36px;
+      padding: 0 10px;
+      border-radius: 4px;
+      background-color: white;
+    }
+  }
+}
+
+// Estilos específicos para los campos de fecha
+.date-field {
+  max-width: 220px;
+  margin: 0 auto;
+  
+  ::ng-deep {
+    .mat-mdc-text-field-wrapper {
+      background-color: rgba(210, 230, 255, 0.2); // Fondo celeste muy sutil
+    }
+    
+    .mat-mdc-form-field-flex {
+      border-radius: 4px;
+      border: 1px solid #1976d2; // Borde azul
+      box-shadow: 0 2px 6px rgba(25, 118, 210, 0.1); // Sombra sutil azulada
+    }
+    
+    .mat-mdc-form-field-infix {
+      padding: 8px 0;
+    }
+    
+    .mat-mdc-input-element {
+      color: #333; // Color del texto más oscuro para mejor contraste
+      font-weight: 500; // Texto un poco más bold
+    }
+    
+    .mat-datepicker-toggle {
+      color: #1976d2; // Color azul para el ícono del datepicker
+    }
+    
+    .mat-form-field-prefix {
+      margin-right: 8px;
+      color: #1976d2; // Color azul para el ícono del prefijo
+    }
+    
+    .mdc-floating-label {
+      color: #1976d2; // Color azul para el label
+    }
+    
+    // Para el estado enfocado
+    .mat-focused .mat-mdc-form-field-flex {
+      background-color: rgba(210, 230, 255, 0.4); // Fondo celeste más visible en focus
+      border-color: #2196f3; // Borde azul más brillante en focus
+    }
+  }
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 16px;
+  align-items: center;
+  
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+    .button-container {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 8px;
+    }
+  }
+}
+
+.button-container {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+.compact-button {
+  height: 36px;
+  line-height: 36px;
+  padding: 0 16px;
+  
+  .small-icon {
+    font-size: 18px;
+    height: 18px;
+    width: 18px;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+}
+
+.form-container {
+  margin-bottom: 20px;
+  
+  &.compact {
+    .form-header {
+      margin-bottom: 16px;
+      h3 {
+        font-size: 16px;
+        font-weight: 500;
+        margin: 0;
+        padding-bottom: 8px;
+        color: rgba(0, 0, 0, 0.87);
+      }
+    }
+  }
+}
+
+.map-card-header {
+  padding: 8px 16px;
+  
+  .title {
+    font-size: 20px;
+    font-weight: 500;
+    margin: 0;
+    color: rgba(0, 0, 0, 0.87);
+  }
+}
+
+.map-card-content {
+  padding: 16px;
+}
