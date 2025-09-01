@@ -1,21 +1,26 @@
-<div class="datatable-container" [ngClass]="{'with-shadow': config.shadow}">
-  <div class="datatable-header" *ngIf="columns && columns.length > 0">
-    <div class="column-selector" *ngIf="columns.length > 1">
-      <button mat-icon-button [matMenuTriggerFor]="columnMenu" matTooltip="{{config.columnSelectLabel}}">
-        <mat-icon>view_column</mat-icon>
+<!-- Toolbar with action buttons - Moved outside the main container -->
+<div class="external-toolbar" *ngIf="config.showToolbar">
+  <div class="global-search">
+    <mat-form-field appearance="outline" class="search-field">
+      <mat-label>{{config.globalSearchLabel || 'Buscar...'}}</mat-label>
+      <input matInput [(ngModel)]="globalFilterValue" (keyup)="applyFilters()">
+      <mat-icon matSuffix>search</mat-icon>
+      <button *ngIf="globalFilterValue" matSuffix mat-icon-button aria-label="Clear" (click)="globalFilterValue=''; applyFilters()">
+        <mat-icon>close</mat-icon>
       </button>
-      <mat-menu #columnMenu="matMenu" xPosition="before">
-        <div class="column-menu-header">{{config.columnSelectLabel}}</div>
-        <button mat-menu-item *ngFor="let column of availableColumns" 
-                (click)="$event.stopPropagation(); toggleColumnVisibility(column.field)">
-          <mat-checkbox [checked]="visibleColumns.has(column.field)" 
-                        (change)="$event.stopPropagation(); toggleColumnVisibility(column.field)">
-            {{column.header}}
-          </mat-checkbox>
-        </button>
-      </mat-menu>
-    </div>
+    </mat-form-field>
   </div>
+  <div class="toolbar-actions">
+    <button mat-stroked-button color="primary" class="compact-button" (click)="clearAllFilters()">
+      <mat-icon>filter_alt_off</mat-icon> {{config.clearAllFiltersLabel || 'Limpiar todos los filtros'}}
+    </button>
+    <button mat-stroked-button color="accent" class="compact-button export-button" (click)="exportToExcel()">
+      <mat-icon>file_download</mat-icon> {{config.exportExcelLabel || 'Exportar a Excel'}}
+    </button>
+  </div>
+</div>
+
+<div class="datatable-container" [ngClass]="{'with-shadow': config.shadow}">
 
   <div class="table-container" [style.max-height]="config.maxHeight">
     <table mat-table [dataSource]="displayData" matSort (matSortChange)="onSortChange($event)" class="compact-table">
@@ -29,46 +34,85 @@
         </td>
       </ng-container>
 
-      <!-- Columna de números de fila -->
+      <!-- Columna de número de fila -->
       <ng-container matColumnDef="rowNum" *ngIf="config.showRowNumber">
-        <th mat-header-cell *matHeaderCellDef class="row-num-cell"></th>
-        <td mat-cell *matCellDef="let row; let i = index" class="row-num-cell">
-          {{ i + 1 + (currentPage * currentPageSize) }}
+        <th mat-header-cell *matHeaderCellDef class="row-number-cell">#</th>
+        <td mat-cell *matCellDef="let row; let i = index" class="row-number-cell">
+          {{(currentPage * currentPageSize) + i + 1}}
         </td>
       </ng-container>
 
-      <!-- Columnas dinámicas según configuración -->
+      <!-- Columnas dinámicas -->
       <ng-container *ngFor="let column of columns" [matColumnDef]="column.field">
-        <th mat-header-cell *matHeaderCellDef 
-            [style.width]="column.width" 
-            [style.text-align]="column.align || 'left'"
-            [mat-sort-header]="column.sortable ? column.field : null">
-          {{ column.header }}
+        <th mat-header-cell *matHeaderCellDef [attr.mat-sort-header]="column.sortable ? '' : null" [ngClass]="{'text-center': column.align === 'center', 'text-right': column.align === 'right'}">
+          <div class="header-content">
+            <span>{{column.header}}</span>
+            <button *ngIf="column.filterable !== false" 
+                    class="filter-button" 
+                    mat-icon-button 
+                    [matMenuTriggerFor]="filterMenu"
+                    (click)="$event.stopPropagation(); prepareColumnFilter(column)">
+              <mat-icon class="filter-icon">filter_list</mat-icon>
+            </button>
+          </div>
+          <!-- Resize handle for column resizing -->
+          <div class="resize-handle" 
+               (mousedown)="startColumnResize($event, column.field)">
+          </div>
+          <mat-menu #filterMenu="matMenu" class="excel-filter-menu" xPosition="before">
+            <div class="filter-menu-container" (click)="$event.stopPropagation()">
+              <div class="filter-search">
+                <mat-icon>search</mat-icon>
+                <input type="text" placeholder="Buscar..." 
+                       (input)="filterColumnOptions($event, column.field)">
+              </div>
+              <div class="filter-actions">
+                <button mat-button color="primary" (click)="selectAllColumnFilter(column.field)">
+                  <mat-icon>done_all</mat-icon> Seleccionar todos
+                </button>
+                <button mat-button color="warn" (click)="clearColumnFilter(column.field)">
+                  <mat-icon>close</mat-icon> Limpiar
+                </button>
+              </div>
+              <div class="filter-options-container">
+                <mat-selection-list #optionsList [multiple]="true">
+                  <mat-list-option *ngFor="let option of getFilterOptionsForColumn(column.field)" 
+                                   [value]="option"
+                                   [selected]="isColumnFilterSelected(column.field, option)"
+                                   (click)="toggleColumnFilterOption(column.field, option)">
+                    {{option}}
+                  </mat-list-option>
+                </mat-selection-list>
+              </div>
+              <!-- Filter is applied immediately on each selection, no need for Apply/Cancel buttons -->
+            </div>
+          </mat-menu>
         </th>
-        <td mat-cell *matCellDef="let row" 
-            [ngClass]="getCellClass(column, formatCellValue(column, row))"
-            [style.width]="column.width">
-          {{ formatCellValue(column, row) }}
+        <td mat-cell *matCellDef="let row" [ngClass]="getCellClass(column, formatCellValue(column, row))" (click)="onRowClick(row, 0)">
+          {{formatCellValue(column, row)}}
         </td>
       </ng-container>
 
       <tr mat-header-row *matHeaderRowDef="displayedColumns; sticky: true"></tr>
-      <tr mat-row *matRowDef="let row; let i = index; columns: displayedColumns;"
-          (click)="onRowClick(row, i)"
-          [ngClass]="{'selected-row': isSelected(i)}"></tr>
-    </table>
+      <tr mat-row *matRowDef="let row; let i = index; columns: displayedColumns;"></tr>
 
-    <div class="no-data-message" *ngIf="!displayData || displayData.length === 0">
-      {{config.noDataMessage}}
-    </div>
+      <!-- Fila para mensaje de "sin datos" -->
+      <tr class="mat-row" *matNoDataRow>
+        <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+          {{config.noDataMessage}}
+        </td>
+      </tr>
+    </table>
   </div>
 
-  <mat-paginator *ngIf="config.pagination && totalItems > 0"
-                [pageSize]="currentPageSize"
-                [pageSizeOptions]="[5, 10, 20, 50, 100]"
-                [length]="totalItems"
-                [pageIndex]="currentPage"
-                (page)="onPageChange($event)"
-                showFirstLastButtons>
-  </mat-paginator>
+  <div class="datatable-footer" *ngIf="config.pagination">
+    <mat-paginator
+      [length]="totalItems"
+      [pageSize]="currentPageSize"
+      [pageSizeOptions]="[5, 10, 15, 20, 25, 50]"
+      [pageIndex]="currentPage"
+      (page)="onPageChange($event)"
+      aria-label="Seleccionar página">
+    </mat-paginator>
+  </div>
 </div>

@@ -3,6 +3,9 @@ import { Chart, ChartConfiguration, ChartDataset } from 'chart.js';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
 
+// Import report configuration model
+import { ReportConfig } from '../../../models/report-config.model';
+
 @Component({
   selector: 'app-dynamic-chart',
   templateUrl: './dynamic-chart.component.html',
@@ -15,10 +18,11 @@ import { MatIconModule } from '@angular/material/icon';
 })
 export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestroy {
   @Input() filterType: string = '';
-  @Input() filterValue: string = '';
-  @Input() filteredData: any[] = [];
+  @Input() completeData: any[] = []; // Datos completos sin filtrar
   @Input() fieldToFilter: string = '';
-  @Input() selectedValues: string[] = []; // Array de valores seleccionados para comparación
+  @Input() activeFilters: any = {}; // Filtros activos (igual que summary-kpi)
+  @Input() reportConfig?: ReportConfig; // Configuración del reporte
+  @Input() title: string = 'KPI OBRA'; // Título personalizable con valor predeterminado
   
   @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
   
@@ -31,6 +35,12 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   // Valor KPI (porcentaje de cumplimiento)
   kpiValue?: number;
   
+  // Datos para el footer
+  totalElementos: number = 0;
+  totalFiltro: number = 0;
+  contadorEstados: {[key: string]: number} = {};
+  promediosPorEstado: {[key: string]: number} = {};
+  
   // Clase CSS para el KPI
   kpiClass: string = 'kpi-warning';
   
@@ -42,17 +52,24 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     '#997300', '#A5A5A5', '#4472C4', '#FF3300', '#33CCCC'
   ];
   
-  // Datos procesados del gráfico
+  // Campo principal que se usará para procesar los datos (antes era hardcodeado 'estado')
+  principalValueField: string = 'estado';
+  
+  // Estados únicos encontrados (usado para barras, leyendas y estadísticas)
   estados: string[] = [];
   valoresFiltro: string[] = [];
   estadosPorValor: Record<string, Record<string, number>> = {};
   
   ngOnChanges(changes: SimpleChanges): void {
-    if ((changes['filteredData'] || changes['fieldToFilter'] || changes['selectedValues']) 
-        && this.filteredData && this.filteredData.length > 0) {
+    // Si cambia la configuración del reporte, actualizamos los campos a utilizar
+    if (changes['reportConfig'] && this.reportConfig) {
+      // Actualizamos el campo principal desde la configuración
+      this.principalValueField = this.reportConfig.principalValue || 'estado';
+    }
+    
+    if ((changes['completeData'] || changes['fieldToFilter'] || changes['activeFilters'] || changes['reportConfig']) 
+        && this.completeData && this.completeData.length > 0) {
       this.procesarDatos();
-      this.kpiValue = this.calcularPorcentajeGeneralDeCumplimiento();
-      this.kpiClass = this.getKpiClass();
       
       if (this.chart) {
         this.chart.destroy();
@@ -66,7 +83,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   }
   
   ngAfterViewInit(): void {
-    if (this.filteredData && this.filteredData.length > 0) {
+    if (this.completeData && this.completeData.length > 0) {
       this.initChart();
     }
   }
@@ -78,49 +95,115 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   }
   
   /**
-   * Procesa los datos filtrados para generar la información necesaria para el gráfico
+   * Procesa los datos completos aplicando filtros para generar la información necesaria para el gráfico
    */
   procesarDatos(): void {
-    this.hasData = this.filteredData.length > 0;
+    this.hasData = this.completeData.length > 0;
     if (!this.hasData) return;
     
     console.log('Procesando datos para el gráfico dinámico');
-    console.log('Datos filtrados:', this.filteredData);
+    console.log('Total datos disponibles:', this.completeData.length, 
+      'usando campo principal:', this.principalValueField);
+    
+    // Hacemos una copia profunda de los datos para evitar mutaciones no deseadas
+    const dataCopy = JSON.parse(JSON.stringify(this.completeData));
     
     // Detectar el campo de filtrado (puede venir como 'Obra', 'obra', etc.)
     const campoFiltro = this.fieldToFilter.toLowerCase();
     console.log('Campo filtro:', campoFiltro);
     
-    // Detectar estados únicos en los datos (ejm: completado, pendiente, etc.)
+    // Filtramos los datos usando activeFilters, similar a summary-kpi
+    const datosFiltrados = dataCopy.filter((item: any) => {
+      // Verificamos cada filtro activo
+      for (const filterField in this.activeFilters) {
+        if (this.activeFilters.hasOwnProperty(filterField) && 
+            this.activeFilters[filterField] && 
+            this.activeFilters[filterField].length > 0) {
+          
+          // Obtenemos el valor del item para este campo de filtro
+          const itemValue = this.getCampoValor(item, filterField.toLowerCase());
+          if (!itemValue) return false;
+          
+          // Si el valor del item no está en los filtros seleccionados, excluimos el item
+          const strItemValue = String(itemValue).toLowerCase();
+          if (!this.activeFilters[filterField].some((filterValue: string) => 
+              String(filterValue).toLowerCase() === strItemValue)) {
+            return false;
+          }
+        }
+      }
+      
+      // Si pasó todos los filtros, incluimos el item
+      return true;
+    });
+    
+    console.log('Datos filtrados:', datosFiltrados.length);
+    
+    // Actualizamos el total de elementos para el footer
+    this.totalElementos = datosFiltrados.length;
+    
+    // Este valor se actualizará más adelante cuando tengamos los valores únicos del filtro
+    this.totalFiltro = 0;
+    
+    // Detectar estados únicos en los datos filtrados usando el campo principal
     const todosLosEstados = new Set<string>();
-    this.filteredData.forEach(item => {
-      if (item.estado) {
-        todosLosEstados.add(item.estado);
+    
+    // Reiniciamos los contadores para estadísticas
+    this.contadorEstados = {};
+    this.promediosPorEstado = {};
+    
+    // Contamos ocurrencias de cada estado
+    datosFiltrados.forEach((item: any) => {
+      if (item[this.principalValueField]) {
+        const estado = item[this.principalValueField];
+        todosLosEstados.add(estado);
+        
+        // Incrementamos el contador para este estado
+        if (!this.contadorEstados[estado]) {
+          this.contadorEstados[estado] = 0;
+        }
+        this.contadorEstados[estado]++;
       }
     });
+    
     this.estados = Array.from(todosLosEstados);
     console.log('Estados detectados:', this.estados);
+    console.log('Contadores por estado:', this.contadorEstados);
     
-    // Preparar estructura para contar estados por cada valor del filtro
+    // Obtener valores únicos del campo de filtro
+    const valoresFiltracion = new Set<string>();
+    datosFiltrados.forEach((item: any) => {
+      const valorFiltro = this.getCampoValor(item, campoFiltro);
+      if (valorFiltro) {
+        valoresFiltracion.add(valorFiltro);
+      }
+    });
+    this.valoresFiltro = Array.from(valoresFiltracion);
+    
+    // Actualizar totalFiltro con la cantidad real de barras que se mostrarán en el gráfico
+    // (corresponde a la cantidad de valores únicos del campo de filtro)
+    this.totalFiltro = this.valoresFiltro.length;
+    
+    // Inicializar el objeto para almacenar conteos por estado y valor de filtro
     this.estadosPorValor = {};
-    this.valoresFiltro = [...this.selectedValues];
-    
-    // Para cada valor seleccionado, contar ocurrencias de cada estado
-    this.valoresFiltro.forEach(valor => {
-      this.estadosPorValor[valor] = {};
+    this.valoresFiltro.forEach(valorFiltro => {
+      this.estadosPorValor[valorFiltro] = {};
       this.estados.forEach(estado => {
-        this.estadosPorValor[valor][estado] = 0;
-      });
-      
-      // Contar las ocurrencias de cada estado para este valor
-      this.filteredData.forEach(item => {
-        const itemValor = String(this.getCampoValor(item, campoFiltro)).toLowerCase();
-        if (itemValor === valor.toLowerCase() && item.estado) {
-          this.estadosPorValor[valor][item.estado]++;
-        }
+        this.estadosPorValor[valorFiltro][estado] = 0;
       });
     });
     
+    // Contar registros para cada combinación de estado y valor de filtro
+    datosFiltrados.forEach((item: any) => {
+      const valorFiltro = this.getCampoValor(item, campoFiltro);
+      const estado = item[this.principalValueField]; // Usar el campo principal configurado
+      if (valorFiltro && estado && this.estadosPorValor[valorFiltro]) {
+        if (!this.estadosPorValor[valorFiltro][estado]) {
+          this.estadosPorValor[valorFiltro][estado] = 0;
+        }
+        this.estadosPorValor[valorFiltro][estado]++;
+      }
+    });
     console.log('Estadísticas por valor:', this.estadosPorValor);
   }
   
@@ -148,24 +231,28 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     const ctx = this.chartCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
     
-    // Preparar datasets para cada estado
+    console.log('Inicializando gráfico dinámico');
+    
+    // Ajustamos la altura del canvas basado en la cantidad de elementos
+    this.adjustCanvasHeight();
+    
+    // Crear datasets para el gráfico (uno por cada estado)
     const datasets: ChartDataset[] = [];
+    
+    // Para cada estado/valor, creamos un dataset
     this.estados.forEach((estado, index) => {
       const data = this.valoresFiltro.map(valor => this.estadosPorValor[valor][estado] || 0);
-      
-      const colorIndex = index % this.chartColors.length;
-      const color = this.chartColors[colorIndex];
       
       datasets.push({
         label: estado,
         data: data,
-        backgroundColor: this.adjustAlpha(color, 0.7),
-        borderColor: color,
-        borderWidth: 1,
-        barThickness: 10, // Establece una altura fija de 10px para todas las barras
-        maxBarThickness: 25, // Limita el grosor máximo de las barras
-        barPercentage: 0.8,
-        categoryPercentage: 0.9
+        backgroundColor: this.getEstadoColor(estado, index),
+        borderColor: 'rgba(0, 0, 0, 0.1)',
+        borderWidth: 0.5,
+        borderRadius: 2,
+        barPercentage: 0.9,
+        categoryPercentage: 0.8,
+        hoverBackgroundColor: this.adjustAlpha(this.getEstadoColor(estado, index), 0.8)
       });
     });
     
@@ -179,8 +266,43 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
       options: this.getChartOptions()
     };
     
+    // Crear nueva instancia de gráfico
     this.chart = new Chart(ctx, config);
     console.log('Gráfico creado', this.chart);
+  }
+  
+  /**
+   * Ajusta la altura del canvas basado en la cantidad de elementos
+   * Para garantizar suficiente espacio entre las barras
+   */
+  private adjustCanvasHeight(): void {
+    if (!this.valoresFiltro || this.valoresFiltro.length === 0) return;
+    
+    // Calculamos una altura dinámica basada en la cantidad de elementos
+    // Aumentamos considerablemente la asignación de espacio vertical
+    const baseHeight = 200; // Altura base más grande
+    const itemCount = this.valoresFiltro.length;
+    const minItemsForBase = 3; // Menos elementos antes de empezar a crecer
+    const heightPerExtraItem = 10; // Más espacio por cada elemento adicional
+    
+    let calculatedHeight = baseHeight;
+    if (itemCount > minItemsForBase) {
+      calculatedHeight += (itemCount - minItemsForBase) * heightPerExtraItem;
+    }
+    
+    // Sin límite máximo para permitir que crezca lo necesario
+    
+    // Aplicamos la altura calculada al canvas y a su contenedor padre
+    const canvas = this.chartCanvas.nativeElement;
+    canvas.height = calculatedHeight;
+    canvas.style.height = `${calculatedHeight}px`;
+    
+    // También aplicamos la altura al contenedor padre para forzar el redimensionamiento
+    const container = canvas.parentElement;
+    if (container) {
+      container.style.height = `${calculatedHeight}px`;
+      container.style.minHeight = `${calculatedHeight}px`;
+    }
   }
   
   /**
@@ -192,7 +314,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
       responsive: true,
       maintainAspectRatio: false,
       animation: {
-        duration: 400
+        duration: 300
       },
       plugins: {
         legend: {
@@ -238,19 +360,24 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
             display: false
           },
           position: 'left', // Asegura que las etiquetas estén a la izquierda
+          // Aumentamos el espacio reservado para las etiquetas del eje Y
+          afterFit: (axis) => {
+            // Reservamos 100px más de espacio para las etiquetas
+            axis.width = axis.width + 80;
+          },
           ticks: {
             font: {
               size: 10,
               family: "Arial, sans-serif"
             },
             color: '#b4b4cc',
-            padding: 5,
+            padding: 6, // Aumentamos el padding de 5 a 8
             autoSkip: false, // Asegura que todas las etiquetas sean visibles
             align: 'start', // Alinea las etiquetas a la izquierda para mejor legibilidad
             callback: (value, index) => {
               // Truncamos etiquetas muy largas
               const label = this.valoresFiltro[index] || '';
-              return this.truncateLabel(label, 18);
+              return this.truncateLabel(label, 25); // Permitir etiquetas más largas
             }
           }
         }
@@ -268,44 +395,52 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     let r = 0, g = 0, b = 0;
     
     if (color.startsWith('rgba(')) {
-      const match = color.match(/rgba\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*[\\d.]+\\s*\\)/);
+      const match = color.match(/rgba\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*,\s*[\d.]+\s*\)/);
       if (match) {
         r = parseInt(match[1]);
         g = parseInt(match[2]);
         b = parseInt(match[3]);
         return `rgba(${r}, ${g}, ${b}, ${alpha})`;
       }
-    }
-    
-    if (color.startsWith('#')) {
-      // #RGB o #RGBA
-      if (color.length === 4 || color.length === 5) {
-        r = parseInt(color.charAt(1) + color.charAt(1), 16);
-        g = parseInt(color.charAt(2) + color.charAt(2), 16);
-        b = parseInt(color.charAt(3) + color.charAt(3), 16);
-      } 
-      // #RRGGBB o #RRGGBBAA
-      else if (color.length === 7 || color.length === 9) {
-        r = parseInt(color.substring(1, 3), 16);
-        g = parseInt(color.substring(3, 5), 16);
-        b = parseInt(color.substring(5, 7), 16);
+    } else if (color.startsWith('rgb(')) {
+      const match = color.match(/rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)/);
+      if (match) {
+        r = parseInt(match[1]);
+        g = parseInt(match[2]);
+        b = parseInt(match[3]);
+        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
       }
+    } else if (color.startsWith('#')) {
+      r = parseInt(color.substring(1, 3), 16);
+      g = parseInt(color.substring(3, 5), 16);
+      b = parseInt(color.substring(5, 7), 16);
       return `rgba(${r}, ${g}, ${b}, ${alpha})`;
     }
     
-    if (color.startsWith('rgb(')) {
-      const match = color.match(/rgb\\(\\s*(\\d+)\\s*,\\s*(\\d+)\\s*,\\s*(\\d+)\\s*\\)/);
-      if (match) {
-        r = parseInt(match[1]);
-        g = parseInt(match[2]);
-        b = parseInt(match[3]);
-        return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+    // Valor por defecto si no se puede procesar el color
+    return `rgba(200, 200, 200, ${alpha})`;
+  }
+  
+  /**
+   * Obtiene el color correspondiente a un estado
+   * @param estado Nombre del estado
+   * @param index Índice alternativo para usar si no hay color configurado
+   * @returns Color en formato hexadecimal o rgba
+   */
+  getEstadoColor(estado: string, index: number): string {
+    // Primero buscamos en la configuración de colores del reporte
+    if (this.reportConfig?.chartColors) {
+      const colorConfig = this.reportConfig.chartColors.find(cc => cc.indexItem === estado);
+      if (colorConfig) {
+        return colorConfig.color;
       }
     }
     
-    // Si no se puede parsear, devolvemos el color original
-    return color;
+    // Si no hay configuración específica, usamos el color del array por defecto
+    return this.chartColors[index % this.chartColors.length];
   }
+  
+  // Se ha eliminado el método getEstadoClass ya que ahora usamos getEstadoColor directamente
   
   /**
    * Método para obtener un nombre amigable para el filtro actual
@@ -323,39 +458,10 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     return fieldName;
   }
   
-  /**
-   * Calcula el porcentaje general de cumplimiento (KPI)
-   * @returns Porcentaje de 0 a 100
-   */
-  private calcularPorcentajeGeneralDeCumplimiento(): number {
-    // Por defecto mostramos un valor neutro (50%)
-    // Esta función debe ser personalizada según los criterios específicos de negocio
-    // Importante: No asumimos la semántica de los estados (qué es 'completado', 'pendiente', etc.),
-    // ya que estamos construyendo un componente completamente dinámico sin hardcodeos
-    return 50;
-  }
-  
-  /**
-   * Método público para obtener el valor KPI que se muestra en el template
-   */
-  public getKpiValue(): number {
-    return this.calcularPorcentajeGeneralDeCumplimiento();
-  }
-  
-  /**
-   * Determina la clase CSS del KPI basado en el porcentaje
-   */
-  public getKpiClass(): string {
-    const kpiValue = this.getKpiValue();
-    
-    if (kpiValue >= 75) {
-      return 'kpi-success';
-    } else if (kpiValue >= 50) {
-      return 'kpi-warning';
-    } else {
-      return 'kpi-danger';
-    }
-  }
+  // Se han eliminado los métodos relacionados con KPI ya que no se utilizan actualmente en el template:
+  // - calcularPorcentajeGeneralDeCumplimiento()
+  // - getKpiValue()
+  // - getKpiClass()
   
   /**
    * Trunca una etiqueta si es demasiado larga

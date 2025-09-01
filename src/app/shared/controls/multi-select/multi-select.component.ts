@@ -132,14 +132,21 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
     const allSelected = this.isAllSelected();
     console.log('[MultiSelectComponent] toggleAll - Estado actual:', allSelected ? 'Todos seleccionados' : 'No todos seleccionados');
     
+    // Cambiar el estado de todos los elementos (no deshabilitados)
     this._internalItems.forEach(item => {
       if (!item.disabled) {
         item.selected = !allSelected;
       }
     });
     
-    console.log('[MultiSelectComponent] toggleAll - Nuevo estado:', !allSelected ? 'Todos seleccionados' : 'Ninguno seleccionado');
-    this.emitSelection();
+    // Limpiar la búsqueda
+    this.searchControl.setValue('');
+    
+    // Emitir los cambios directamente, sin generar múltiples eventos
+    const selectedItems = this._internalItems.filter(item => item.selected);
+    console.log('[MultiSelectComponent] toggleAll - Emitiendo selección directamente:', selectedItems);
+    this._lastEmitLength = selectedItems.length;
+    this.selectionChange.emit(selectedItems);
   }
   
   clearSelection(): void {

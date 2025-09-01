@@ -1,11 +1,12 @@
-import { Component, Input, AfterViewInit, ViewChild, ElementRef, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { Chart, ChartConfiguration } from 'chart.js/auto';
+import { ReportConfig } from '../../../models/report-config.model';
 import { NgChartsModule } from 'ng2-charts';
-import { Chart } from 'chart.js';
 
 @Component({
   selector: 'app-summary-kpi',
@@ -21,239 +22,280 @@ import { Chart } from 'chart.js';
   templateUrl: './summary-kpi.component.html',
   styleUrls: ['./summary-kpi.component.scss']
 })
-export class SummaryKpiComponent implements OnChanges, AfterViewInit {
-  @Input() estadosData: {[key: string]: number} = {};
-  @Input() tiposData: {[key: string]: number} = {};
+export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy {
+  @Input() completeData: any[] = [];
+  @Input() activeFilters: any = {};
+  @Input() reportConfig?: ReportConfig;
+  @Input() title: string = 'RESUMEN KPI'; // Título personalizable con valor predeterminado
   
-  // Referencias a los canvas de los gráficos
-  @ViewChild('estadosChart') estadosChartCanvas!: ElementRef<HTMLCanvasElement>;
-  @ViewChild('tiposChart') tiposChartCanvas!: ElementRef<HTMLCanvasElement>;
+  // Indicador de si hay datos para mostrar
+  hasData: boolean = false;
   
-  // Instancias de los gráficos
-  private estadosChart: Chart | null = null;
-  private tiposChart: Chart | null = null;
-
-  // Colores para gráficos y visualizaciones
-  public chartColors: string[] = [
-    '#4285F4', '#EA4335', '#FBBC05', '#34A853', // Colores Google Material
-    '#7986CB', '#33B679', '#8E24AA', '#039BE5', // Colores complementarios
-    '#0B8043', '#D50000', '#E67C73', '#F6BF26', // Variaciones adicionales
-    '#F4511E', '#616161', '#A79B8E', '#3949AB'  // Más colores Material
+  // Datos procesados para todos los campos configurados
+  summaryData: Record<string, Record<string, number>> = {};
+  
+  // Mapa de instancias de Chart.js (dinámico)
+  private chartInstances: Record<string, Chart> = {};
+  
+  // Mapa de iconos por tipo de campo
+  private fieldIcons: Record<string, string> = {
+    'estado': 'check_circle',
+    'tipo': 'category',
+    'obra': 'domain',
+    'fecha': 'calendar_today',
+    'default': 'label'
+  };
+  
+  // Colores para los gráficos
+  chartColors: string[] = [
+    '#5B9BD5', '#ED7D31', '#70AD47', '#FFC000', '#7030A0',
+    '#C00000', '#43682B', '#255E91', '#9E480E', '#636363',
+    '#997300', '#A5A5A5', '#4472C4', '#FF3300', '#33CCCC'
   ];
+  
+  // Campo principal utilizado para el valor principal (antes era hardcodeado 'estado')
+  principalValueField: string = 'estado';
+  
+  // Campo secundario utilizado para agrupar datos (antes era hardcodeado 'tipo')
+  secondaryValueField: string = 'tipo';
+
+  /**
+   * Devuelve un color para un índice determinado en el gráfico
+   * @param index Índice del elemento en la lista
+   * @param value Valor para el que se busca el color
+   * @returns Color en formato hexadecimal
+   */
+  getChartColor(index: number, value?: string): string {
+    // Si tenemos configuración de reporte con colores y un valor definido, intentamos obtener el color personalizado
+    if (this.reportConfig?.chartColors && value) {
+      // Buscamos en el array de ColorConfig si hay una configuración para el valor dado
+      const colorConfig = this.reportConfig.chartColors.find((cc: {indexItem: string, color: string}) => cc.indexItem === value);
+      if (colorConfig) {
+        return colorConfig.color;
+      }
+    }
+    
+    // Si no hay color personalizado, usamos el color por índice
+    return this.chartColors[index % this.chartColors.length];
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['estadosData'] || changes['tiposData']) {
-      this.updateCharts();
+    // Si cambia la configuración del reporte, actualizamos los campos a utilizar
+    if (changes['reportConfig'] && this.reportConfig) {
+      // Actualizamos el campo principal y secundario desde la configuración
+      this.principalValueField = this.reportConfig.principalValue || 'estado';
+      console.log('Configuración de reporte cargada:', 
+        { principalValue: this.principalValueField, summaryValues: this.reportConfig.summaryValues });
     }
+    
+    // IMPORTANTE: Solo procesamos los datos cuando cambia la data completa o la configuración
+    // Ignoramos los cambios en activeFilters porque este componente NO debe reaccionar a filtros
+    if (changes['completeData'] || changes['reportConfig']) {
+      this.procesarDatosCompletos();
+      // Inicializar o actualizar los gráficos
+      this.initializeCharts();
+    }
+  }
+  
+  // Método para obtener el total de registros
+  getTotalRegistros(): number {
+    if (!this.reportConfig?.principalValue || !this.summaryData[this.reportConfig.principalValue]) {
+      return 0;
+    }
+    
+    return Object.values(this.summaryData[this.reportConfig.principalValue]).reduce((a, b) => a + b, 0);
+  }
+  
+  /**
+   * Procesa los datos completos para generar las estadísticas por cada campo configurado
+   * IMPORTANTE: Siempre trabajamos con la data completa, no aplicamos filtros internamente
+   * porque cada componente debe mostrar siempre la distribución completa de los datos.
+   */
+  private procesarDatosCompletos(): void {
+    // Reiniciar datos
+    this.summaryData = {};
+    this.hasData = this.completeData && this.completeData.length > 0;
+    
+    if (!this.hasData || !this.reportConfig?.summaryValues) return;
+    
+    // IMPORTANTE: Usamos siempre la data completa, NO aplicamos filtros
+    // Esto permite que el componente muestre la distribución total de datos
+    // independientemente de los filtros aplicados en otros componentes
+    // Realizamos una copia profunda (deep copy) para asegurar que no modificamos la data original
+    const datosCompletos = JSON.parse(JSON.stringify(this.completeData));
+    
+    console.log('Total de datos a procesar:', datosCompletos.length);
+    
+    // Procesar cada campo configurado en summaryValues
+    this.reportConfig.summaryValues?.forEach(fieldName => {
+      // Inicializar el contador para este campo
+      this.summaryData[fieldName] = {};
+      
+      // Contar ocurrencias de cada valor único en este campo
+      datosCompletos.forEach((item: Record<string, any>) => {
+        const value = item[fieldName];
+        if (value !== undefined && value !== null) {
+          // Convertir a string para usar como clave
+          const valueKey = String(value);
+          if (!this.summaryData[fieldName][valueKey]) {
+            this.summaryData[fieldName][valueKey] = 0;
+          }
+          this.summaryData[fieldName][valueKey]++;
+        }
+      });
+    });
+    
+    console.log('Datos procesados:', this.summaryData);
   }
 
   ngAfterViewInit(): void {
-    // Inicializamos los gráficos después de que los elementos del DOM estén disponibles
+    // Inicializar los gráficos si ya tenemos datos
+    this.initializeCharts();
+  }
+
+  /**
+   * Inicializa o actualiza los gráficos dinámicamente según los campos configurados
+   */
+  private initializeCharts(): void {
+    // Esperar al siguiente ciclo para asegurarnos que el DOM esté listo
     setTimeout(() => {
-      this.initCharts();
+      if (!this.reportConfig?.summaryValues || !this.hasData) return;
+      
+      // Para cada campo configurado, crear o actualizar su gráfico
+      this.reportConfig.summaryValues?.forEach((fieldName: string) => {
+        const canvasId = `chart-${fieldName}`;
+        const canvasElement = document.getElementById(canvasId) as HTMLCanvasElement;
+        
+        if (canvasElement) {
+          // Destruir gráfico anterior si existe
+          if (this.chartInstances[fieldName]) {
+            this.chartInstances[fieldName].destroy();
+            delete this.chartInstances[fieldName];
+          }
+          
+          // Crear nuevo gráfico si tenemos datos para este campo
+          if (this.summaryData[fieldName] && Object.keys(this.summaryData[fieldName]).length > 0) {
+            this.createChart(fieldName, canvasElement);
+          }
+        }
+      });
     }, 0);
   }
 
-  // Inicializar todos los gráficos
-  private initCharts(): void {
-    // Sólo inicializamos si hay datos
-    if (this.getObjectKeys(this.estadosData).length > 0) {
-      this.initEstadosChart();
-    }
+  /**
+   * Crea un gráfico tipo donut para el campo especificado
+   */
+  private createChart(fieldName: string, canvasElement: HTMLCanvasElement): void {
+    const ctx = canvasElement.getContext('2d');
+    if (!ctx || !this.summaryData[fieldName]) return;
     
-    if (this.getObjectKeys(this.tiposData).length > 0) {
-      this.initTiposChart();
-    }
-  }
-  
-  // Actualizar los gráficos
-  private updateCharts(): void {
-    // Destruimos los gráficos existentes si existen
-    if (this.estadosChart) {
-      this.estadosChart.destroy();
-      this.estadosChart = null;
-    }
+    const values = Object.keys(this.summaryData[fieldName]);
+    const counts = values.map((value: string) => this.summaryData[fieldName][value]);
     
-    if (this.tiposChart) {
-      this.tiposChart.destroy();
-      this.tiposChart = null;
-    }
-    
-    // Si ya tenemos los elementos del DOM, inicializamos los gráficos
-    if (this.estadosChartCanvas && this.tiposChartCanvas) {
-      this.initCharts();
-    }
-  }
-
-  // Calcula el porcentaje de cumplimiento basado en los estados
-  getKpiValue(estadosData: {[key: string]: number}): number {
-    // Si no hay datos, devolvemos 0
-    if (!estadosData || Object.keys(estadosData).length === 0) return 0;
-    
-    // Calculamos el total de registros
-    const total = Object.values(estadosData).reduce((sum, value) => sum + value, 0);
-    if (total === 0) return 0;
-    
-    // Calculamos el porcentaje de cumplimiento (estados completados / total)
-    // Asumimos que los estados completados son 'Completado', 'Finalizado' o similar
-    const completados = Object.entries(estadosData)
-      .filter(([estado]) => 
-        estado.toLowerCase().includes('completado') || 
-        estado.toLowerCase().includes('finalizado'))
-      .reduce((sum, [, value]) => sum + value, 0);
-    
-    return Math.round((completados / total) * 100);
-  }
-  
-  // Inicializar gráfico de Estados
-  private initEstadosChart(): void {
-    if (!this.estadosChartCanvas) return;
-    
-    const ctx = this.estadosChartCanvas.nativeElement.getContext('2d');
-    if (!ctx) return;
-    
-    const labels = this.getObjectKeys(this.estadosData);
-    const data = labels.map(key => this.estadosData[key]);
-    const colors = labels.map((_, i) => this.chartColors[i % this.chartColors.length]);
-    
-    this.estadosChart = new Chart(ctx, {
+    // Configuración del gráfico de torta
+    this.chartInstances[fieldName] = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels,
+        labels: values,
         datasets: [{
-          data,
-          backgroundColor: colors,
-          hoverBackgroundColor: colors.map(color => this.adjustAlpha(color, 0.8)),
-          borderWidth: 0,
-          borderColor: 'transparent'
+          data: counts,
+          backgroundColor: values.map((value: string, i: number) => this.getChartColor(i, value)),
+          borderWidth: 0
         }]
       },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '60%',
-        plugins: {
-          legend: {
-            display: false // Ocultamos la leyenda, ya que mostramos los valores en las listas
-          },
-          tooltip: {
-            enabled: true,
-            backgroundColor: 'rgba(20, 20, 30, 0.95)',
-            titleColor: '#ffffff',
-            bodyColor: '#ffffff',
-            padding: 8,
-            displayColors: true,
-            callbacks: {
-              label: (context) => {
-                const label = context.label || '';
-                const value = Number(context.raw || 0);
-                const dataArray = context.chart.data.datasets[0].data;
-                
-                // Asegurar que total sea tratado como número
-                let totalValue = 0;
-                for (let i = 0; i < dataArray.length; i++) {
-                  totalValue += Number(dataArray[i] || 0);
-                }
-                
-                let percentage = 0;
-                if (totalValue > 0) {
-                  percentage = Math.round((value * 100) / totalValue);
-                }
-                
-                return `${label}: ${value} (${percentage}%)`;
-              }
+      options: this.getChartOptions()
+    });
+  }
+
+  /**
+   * Devuelve las opciones de configuración para los gráficos
+   */
+  private getChartOptions(): ChartConfiguration<'doughnut'>['options'] {
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          display: false // Ocultamos completamente la leyenda
+        },
+        tooltip: {
+          callbacks: {
+            label: (context: any) => {
+              const label = context.label || '';
+              const value = context.raw as number;
+              const total = context.chart.data.datasets[0].data.reduce(
+                (a: number, b: number) => a + b, 0
+              );
+              const percentage = Math.round((value / total) * 100);
+              return `${label}: ${value} (${percentage}%)`;
             }
           }
-        },
-        // Estas opciones son compatibles con Chart.js v3
-        animation: {
-          duration: 1000
         }
+      },
+      layout: {
+        padding: 5
+      },
+      elements: {
+        arc: {
+          borderWidth: 0
+        }
+      },
+      // Agregamos un cutout para que el donut sea más visible al no tener leyenda
+      cutout: '70%'
+    };
+  }
+
+  ngOnDestroy(): void {
+    // Limpiar instancias de Chart.js para evitar memory leaks
+    Object.keys(this.chartInstances).forEach(fieldName => {
+      if (this.chartInstances[fieldName]) {
+        this.chartInstances[fieldName].destroy();
       }
     });
   }
-  
-  // Inicializar gráfico de Tipos
-  private initTiposChart(): void {
-    if (!this.tiposChartCanvas) return;
-    
-    const ctx = this.tiposChartCanvas.nativeElement.getContext('2d');
-    if (!ctx) return;
-    
-    const labels = this.getObjectKeys(this.tiposData);
-    const data = labels.map(key => this.tiposData[key]);
-    // Offset para usar colores diferentes
-    const colors = labels.map((_, i) => this.chartColors[(i + 3) % this.chartColors.length]);
-    
-    this.tiposChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels,
-        datasets: [{
-          data,
-          backgroundColor: colors,
-          hoverBackgroundColor: colors.map(color => this.adjustAlpha(color, 0.8)),
-          borderWidth: 0,
-          borderColor: 'transparent'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '60%',
-        plugins: {
-          legend: {
-            display: false
-          },
-          tooltip: {
-            enabled: true,
-            backgroundColor: 'rgba(20, 20, 30, 0.95)',
-            titleColor: '#ffffff',
-            bodyColor: '#ffffff',
-            padding: 8,
-            displayColors: true,
-            callbacks: {
-              label: (context) => {
-                const label = context.label || '';
-                const value = Number(context.raw || 0);
-                const dataArray = context.chart.data.datasets[0].data;
-                
-                // Asegurar que total sea tratado como número
-                let totalValue = 0;
-                for (let i = 0; i < dataArray.length; i++) {
-                  totalValue += Number(dataArray[i] || 0);
-                }
-                
-                let percentage = 0;
-                if (totalValue > 0) {
-                  percentage = Math.round((value * 100) / totalValue);
-                }
-                
-                return `${label}: ${value} (${percentage}%)`;
-              }
-            }
-          }
-        },
-        // Estas opciones son compatibles con Chart.js v3
-        animation: {
-          duration: 1000
-        }
-      }
-    });
-  }
-  
-  // Ajusta la transparencia de un color
-  private adjustAlpha(color: string, alpha: number): string {
-    // Convertir color hex a RGB
-    const r = parseInt(color.slice(1, 3), 16);
-    const g = parseInt(color.slice(3, 5), 16);
-    const b = parseInt(color.slice(5, 7), 16);
-    
-    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+
+  /**
+   * Trunca una etiqueta si es demasiado larga
+   * @param label Etiqueta a truncar
+   * @param maxLength Longitud máxima permitida
+   * @returns Etiqueta truncada con puntos suspensivos si excede la longitud máxima
+   */
+  private truncateLabel(label: string, maxLength: number): string {
+    return label.length > maxLength
+      ? `${label.substring(0, maxLength)}...`
+      : label;
   }
 
-  // Método auxiliar para obtener las claves de un objeto
-  public getObjectKeys(obj: {[key: string]: any}): string[] {
+  /**
+   * Devuelve el icono a mostrar para un campo específico
+   */
+  public getFieldIcon(fieldName: string): string {
+    return this.fieldIcons[fieldName?.toLowerCase()] || this.fieldIcons["default"];
+  }
+  
+  /**
+   * Convierte el nombre técnico de un campo a un nombre legible
+   */
+  public getFieldDisplayName(fieldName: string): string {
+    if (!fieldName) return '';
+    // Capitalizar primera letra y separar palabras con espacio
+    return fieldName.charAt(0).toUpperCase() + 
+      fieldName.slice(1).replace(/([A-Z])/g, ' $1');
+  }
+  
+  /**
+   * Devuelve las claves de un objeto como array
+   */
+  public getObjectKeys(obj: any): string[] {
     return Object.keys(obj || {});
+  }
+  
+  /**
+   * Verifica si falta la configuración de resumen o está vacía
+   */
+  public hasMissingSummaryConfig(): boolean {
+    if (!this.reportConfig) return true;
+    if (!this.reportConfig.summaryValues) return true;
+    return this.reportConfig.summaryValues.length === 0;
   }
 }

@@ -1,92 +1,51 @@
-import { Component, Input, ViewChild, AfterViewInit, OnChanges, SimpleChanges, ViewEncapsulation, ElementRef, NgZone } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatTableModule, MatTableDataSource } from '@angular/material/table';
-import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
-import { MatSortModule, MatSort } from '@angular/material/sort';
-import { MatInputModule } from '@angular/material/input';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatSelectChange, MatSelectModule, MatSelect } from '@angular/material/select';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
 import { HistoricalReportItem } from '../../../../../../core/services/report.service';
-import * as ExcelJS from 'exceljs';
-import { saveAs } from 'file-saver';
+import { DataTableComponent } from '../../../../../../shared/controls/datatable/datatable.component';
+import { DataTableColumn, DataTableConfig } from '../../../../../../shared/controls/datatable/datatable.models';
+import { REPORTS_CONFIG } from '../configs/reports.config';
 
 @Component({
   selector: 'app-history-table',
   standalone: true,
   imports: [
     CommonModule,
-    MatTableModule,
-    MatPaginatorModule,
-    MatSortModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatIconModule,
-    MatButtonModule,
-    MatSelectModule,
-    MatTooltipModule,
-    FormsModule,
-    ReactiveFormsModule
+    DataTableComponent
   ],
   templateUrl: './history-table.component.html',
   styleUrls: ['./history-table.component.scss'],
   encapsulation: ViewEncapsulation.None
 })
-export class HistoryTableComponent implements AfterViewInit, OnChanges {  
-  // Estado para mostrar/ocultar filtros
-  showFilters = true;
+export class HistoryTableComponent implements OnChanges {  
   // Input para recibir los datos de la tabla
   @Input() data: HistoricalReportItem[] = [];
   
-  // Tabla de datos
-  dataSource = new MatTableDataSource<HistoricalReportItem>([]);
-  displayedColumns: string[] = ['fecha', 'Obra', 'Usuario', 'cargo', 'Actividad', 'subproceso', 'tipo', 'estado'];
-  
-  // Opciones para los filtros select
-  filtroObras: string[] = [];
-  filtroUsuarios: string[] = [];
-  filtroTipos: string[] = [];
-  filtroEstados: string[] = [];
-  
-  // Valores seleccionados para cada filtro
-  selectedObras: string[] = [];
-  selectedUsuarios: string[] = [];
-  selectedTipos: string[] = [];
-  selectedEstados: string[] = [];
-  
-  // Referencia al paginador y ordenamiento
-  @ViewChild(MatPaginator) paginator!: MatPaginator;
-  @ViewChild(MatSort) sort!: MatSort;
-  
-  // Filtros adicionales - ahora usando arrays para multiselect
-  filterValues: { [key: string]: string | string[] } = {
-    Obra: [],
-    Usuario: [],
-    tipo: [],
-    estado: []
+  // Variables para la tabla dinámica
+  dynamicTableConfig: DataTableConfig = {
+    showRowNumber: true,
+    selectable: false,
+    maxHeight: '60vh',
+    pagination: true,
+    shadow: true,
+    columnSelectLabel: 'Columnas',
+    showFilters: true,
+    clearFiltersLabel: 'Limpiar filtros',
+    selectAllLabel: 'Seleccionar todos',
+    globalSearchLabel: 'Búsqueda',
+    globalSearchPlaceholder: 'Buscar en todos los campos',
+    showToolbar: true,
+    clearAllFiltersLabel: 'Limpiar todos los filtros',
+    exportExcelLabel: 'Exportar a Excel',
+    exportFileName: 'Reporte_Historico'
   };
-
-  ngAfterViewInit(): void {
-    this.dataSource.paginator = this.paginator;
-    this.dataSource.sort = this.sort;
-    this.setupFilter();
-  }
+  
+  dynamicTableColumns: DataTableColumn[] = [];
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] && changes['data'].currentValue) {
       const data = changes['data'].currentValue;
-      this.dataSource.data = data;
-      
-      // Generar opciones únicas para los selectores de filtro
-      this.filtroObras = this.getUniqueValues(data, 'Obra');
-      this.filtroUsuarios = this.getUniqueValues(data, 'Usuario');
-      this.filtroTipos = this.getUniqueValues(data, 'tipo');
-      this.filtroEstados = this.getUniqueValues(data, 'estado');
+      // Configurar la tabla dinámica
+      this.setupDynamicTable(data);
     }
   }
   
@@ -101,383 +60,80 @@ export class HistoryTableComponent implements AfterViewInit, OnChanges {
     // Eliminar duplicados y ordenar
     return [...new Set(values)].sort();
   }
-
   /**
-   * Configura el filtro personalizado para la tabla
+   * Configura la tabla dinámica basada en los datos recibidos
    */
-  setupFilter(): void {
-    this.dataSource.filterPredicate = (data: HistoricalReportItem, filter: string): boolean => {
-      const searchTerms = JSON.parse(filter);
-      
-      // Manejando búsqueda global primero
-      if (searchTerms.globalFilter && searchTerms.globalFilter.length > 0) {
-        const globalSearch = searchTerms.globalFilter.toLowerCase();
-        // Busca en todos los campos relevantes
-        const searchableFields: (keyof HistoricalReportItem)[] = ['fecha', 'Obra', 'Usuario', 'Actividad', 'tipo', 'estado'];
-        const matchesGlobalSearch = searchableFields.some(field => {
-          const value = data[field]?.toString().toLowerCase() || '';
-          return value.includes(globalSearch);
-        });
-        
-        if (!matchesGlobalSearch) return false;
-      }
-      
-      // Filtros de columnas específicas
-      return Object.keys(searchTerms).every(key => {
-        if (key === 'globalFilter') return true; // Ya procesamos este filtro
-        
-        const filterValue = searchTerms[key];
-        
-        // Si el filtro está vacío o es un array vacío, retorna true
-        if (!filterValue || (Array.isArray(filterValue) && filterValue.length === 0)) return true;
-        
-        const dataValue = data[key as keyof HistoricalReportItem]?.toString().toLowerCase() || '';
-        
-        // Si es un array (multiselect), verificamos si alguno de los valores seleccionados coincide
-        if (Array.isArray(filterValue)) {
-          return filterValue.some(value => 
-            dataValue.includes(value.toLowerCase())
-          );
-        } else {
-          // Para filtros de texto simple
-          return dataValue.includes(filterValue.toLowerCase());
-        }
-      });
-    };
-  }
-
-  /**
-   * Actualiza el filtro de la tabla
-   */
-  updateFilter(property: keyof HistoricalReportItem, value: string | string[]): void {
-    this.filterValues[property] = value;
-    this.dataSource.filter = JSON.stringify({
-      ...this.filterValues,
-      globalFilter: this.globalFilterValue
-    });
-    
-    // Reiniciar el paginador
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
-  }
-
-  /**
-   * Filtro para columna Obra
-   */
-  applyFilterObra(value: string[]): void {
-    this.updateFilter('Obra', value);
-  }
-  
-  /**
-   * Filtro para columna Usuario
-   */
-  applyFilterUsuario(value: string[]): void {
-    this.updateFilter('Usuario', value);
-  }
-  
-  /**
-   * Filtro para columna Tipo
-   */
-  applyFilterTipo(value: string[]): void {
-    this.updateFilter('tipo', value);
-  }
-  
-  /**
-   * Filtro para columna Estado
-   */
-  applyFilterEstado(value: string[]): void {
-    this.updateFilter('estado', value);
-  }
-  
-  // Texto para búsqueda global
-  globalFilterValue = '';
-  
-  /**
-   * Aplica filtro global a todos los campos
-   */
-  applyGlobalFilter(event: Event): void {
-    const filterValue = (event.target as HTMLInputElement).value;
-    this.globalFilterValue = filterValue.trim().toLowerCase();
-    
-    // Aplica el filtro global a través del filterPredicate configurado
-    this.dataSource.filter = JSON.stringify({
-      ...this.filterValues,
-      globalFilter: this.globalFilterValue
-    });
-    
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
-  }
-  
-  /**
-   * Limpia la búsqueda global
-   */
-  clearGlobalFilter(): void {
-    this.globalFilterValue = '';
-    this.dataSource.filter = JSON.stringify({
-      ...this.filterValues,
-      globalFilter: ''
-    });
-    
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
-  }
-  
-  /**
-   * Alterna la visibilidad de los filtros
-   */
-  toggleFilterView(): void {
-    this.showFilters = !this.showFilters;
-  }
-  
-  /**
-   * Verifica si hay algún filtro activo
-   * @returns true si hay al menos un filtro activo
-   */
-  hasActiveFilters(): boolean {
-    const hasObras = Array.isArray(this.selectedObras) && this.selectedObras.length > 0;
-    const hasUsuarios = Array.isArray(this.selectedUsuarios) && this.selectedUsuarios.length > 0;
-    const hasTipos = Array.isArray(this.selectedTipos) && this.selectedTipos.length > 0;
-    const hasEstados = Array.isArray(this.selectedEstados) && this.selectedEstados.length > 0;
-    const hasGlobalFilter = typeof this.globalFilterValue === 'string' && this.globalFilterValue.trim().length > 0;
-    
-    return hasObras || hasUsuarios || hasTipos || hasEstados || hasGlobalFilter;
-  }
-
-  /**
-   * Limpia todos los filtros de la tabla
-   */
-  clearFilters(): void {
-    this.filterValues = {
-      Obra: [],
-      Usuario: [],
-      tipo: [],
-      estado: []
-    };
-    
-    // Resetear las selecciones
-    this.selectedObras = [];
-    this.selectedUsuarios = [];
-    this.selectedTipos = [];
-    this.selectedEstados = [];
-    this.globalFilterValue = '';
-    
-    this.dataSource.filter = JSON.stringify({
-      ...this.filterValues,
-      globalFilter: ''
-    });
-    
-    // Reiniciar el paginador
-    if (this.dataSource.paginator) {
-      this.dataSource.paginator.firstPage();
-    }
-  }
-  
-  /**
-   * Limpia un filtro específico
-   */
-  clearFilterSingle(filterName: string): void {
-    switch(filterName) {
-      case 'Obra':
-        this.filterValues['Obra'] = [];
-        this.selectedObras = [];
-        this.applyFilterObra([]);
-        break;
-      case 'Usuario':
-        this.filterValues['Usuario'] = [];
-        this.selectedUsuarios = [];
-        this.applyFilterUsuario([]);
-        break;
-      case 'tipo':
-        this.filterValues['tipo'] = [];
-        this.selectedTipos = [];
-        this.applyFilterTipo([]);
-        break;
-      case 'estado':
-        this.filterValues['estado'] = [];
-        this.selectedEstados = [];
-        this.applyFilterEstado([]);
-        break;
-    }
-  }
-  
-  /**
-   * Selecciona todas las opciones de un filtro específico
-   */
-  selectAllOptions(filterName: string): void {
-    switch(filterName) {
-      case 'Obra':
-        this.selectedObras = [...this.filtroObras];
-        this.applyFilterObra(this.selectedObras);
-        break;
-      case 'Usuario':
-        this.selectedUsuarios = [...this.filtroUsuarios];
-        this.applyFilterUsuario(this.selectedUsuarios);
-        break;
-      case 'tipo':
-        this.selectedTipos = [...this.filtroTipos];
-        this.applyFilterTipo(this.selectedTipos);
-        break;
-      case 'estado':
-        this.selectedEstados = [...this.filtroEstados];
-        this.applyFilterEstado(this.selectedEstados);
-        break;
-    }
-  }
-  
-  /**
-   * Ajusta las dimensiones y posición del panel de opciones cuando se abre
-   * @param select El componente mat-select
-   * @param isOpen Si el panel está abierto
-   */
-  adjustPanelHeight(select: MatSelect, isOpen: boolean): void {
-    if (isOpen) {
-      // Pequeño timeout para esperar que el panel se renderice inicialmente
-      setTimeout(() => {
-        // Selecciona el panel de opciones actual
-        const panel = document.querySelector('.cdk-overlay-pane:not(.cdk-visually-hidden) .mat-mdc-select-panel') as HTMLElement;
-        if (panel) {
-          // Configurar transiciones antes de modificar propiedades (paso 1)
-          panel.style.transition = 'min-width 0.25s ease-out, width 0.25s ease-out';
-          
-          // Ya no necesitamos aplicar estilos para evitar selecciones de texto aquí
-          // porque lo hemos movido a styles.scss global
-          
-          // Aplicar estilos específicos para las opciones (texto y formato)
-          const options = panel.querySelectorAll('.mat-mdc-option .mdc-list-item__primary-text') as NodeListOf<HTMLElement>;
-          options.forEach(option => {
-            option.style.whiteSpace = 'nowrap';
-            option.style.overflow = 'hidden';
-            option.style.textOverflow = 'ellipsis';
-            option.style.display = 'block';
-          });
-          
-          // Añadir prevención de eventos de selección por precaución
-          panel.addEventListener('selectstart', (e) => {
-            e.preventDefault();
-            return false;
-          });
-          
-          // También asegurar que los checkbox no permitan selección de texto
-          const checkboxes = panel.querySelectorAll('.mat-pseudo-checkbox') as NodeListOf<HTMLElement>;
-          checkboxes.forEach(checkbox => {
-            checkbox.style.userSelect = 'none';
-          });
-          
-          // Selecciona el contenedor del overlay
-          const overlayPane = document.querySelector('.cdk-overlay-pane:not(.cdk-visually-hidden)') as HTMLElement;
-          if (overlayPane) {
-            // Configurar transiciones antes de modificar propiedades (paso 1)
-            overlayPane.style.transition = 'transform 0.25s ease-out, min-width 0.25s ease-out';
-            
-            // Pequeño retraso para que las transiciones se apliquen después (paso 2)
-            setTimeout(() => {
-              // Modifica las dimensiones
-              panel.style.minWidth = '250px';
-              overlayPane.style.minWidth = '250px';
-              
-              // Ajustar la posición hacia la izquierda
-              // Primero obtenemos la transformación actual
-              const currentTransform = window.getComputedStyle(overlayPane).transform;
-              
-              // Si ya tiene una transformación, la modificamos
-              if (currentTransform && currentTransform !== 'none') {
-                // Extraemos la matriz de transformación
-                const matrix = new DOMMatrix(currentTransform);
-                // Movemos 50px a la izquierda
-                matrix.e -= 50; // Desplazamiento en X
-                overlayPane.style.transform = matrix.toString();
-              } else {
-                // Si no tiene transformación, agregamos una para mover 50px a la izquierda
-                overlayPane.style.transform = 'translateX(-50px)';
-              }
-              
-              // Aseguramos que no se salga de la pantalla
-              const rect = overlayPane.getBoundingClientRect();
-              if (rect.left < 0) {
-                overlayPane.style.transform = 'translateX(0)';
-              }
-            }, 50); // Un pequeño retraso para aplicar los cambios después de establecer la transición
-          }
-        }
-      }, 0);
-    }
-  }
-
-  /**
-   * Exporta todos los datos a un archivo Excel
-   */
-  exportToExcel(): void {
-    if (!this.data || this.data.length === 0) {
-      console.warn('No hay datos para exportar');
+  private setupDynamicTable(data: any[]): void {
+    if (!data || data.length === 0) {
+      this.dynamicTableColumns = [];
       return;
     }
-
-    // Crear un nuevo libro de trabajo
-    const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet('Reporte Histórico');
-
-    // Recopilar todos los nombres de propiedad de todos los objetos
-    const allProperties = new Set<string>();
     
-    // Primero, descubrir todos los posibles campos en los datos
-    this.data.forEach(item => {
-      Object.keys(item).forEach(key => allProperties.add(key));
-    });
+    // Obtener configuración del reporte desde el archivo de configuración global
+    const reportConfig = REPORTS_CONFIG.reports.find(report => report.indexName === 'history-report');
     
-    // Convertir el conjunto a un array ordenado alfabéticamente
-    const allPropertyNames = Array.from(allProperties).sort();
+    // Definir columnas y filtros con valores por defecto si no se encuentra la configuración
+    const columnsTableConfig = reportConfig?.columnsTable || [];
+    const columnsFilterConfig = reportConfig?.columnsFilter || [];
+    
+    // Sample data para verificar tipos y propiedades
+    const sample = data[0];
+    
+    // Todas las propiedades disponibles en los datos
+    const allProperties = Object.keys(sample);
+    
+    // Limpiar columnas anteriores
+    this.dynamicTableColumns = [];
+    
+    // Configurar columnas de la tabla según la configuración global o automáticamente
+    const columnsToDisplay = columnsTableConfig.length > 0 ? columnsTableConfig : allProperties;
+    
+    for (const property of columnsToDisplay) {
+      // Solo incluir si la propiedad existe en los datos
+      if (allProperties.includes(property)) {
+        this.dynamicTableColumns.push({
+          field: property,
+          header: property.charAt(0).toUpperCase() + property.slice(1), // Capitalizar primera letra
+          sortable: true,
+          filterable: columnsFilterConfig.includes(property), // Marcar como filtrable si está en columnsFilter
+          dataType: typeof sample[property] === 'boolean' ? 'boolean' : 'text',
+          align: typeof sample[property] === 'number' ? 'right' : 'left'
+        });
+      }
+    }
+  }
+  
+  /**
+   * Gets appropriate icon for field based on field name
+   */
+  getIconForField(field: string): string {
+    const lowerField = field.toLowerCase();
+    
+    if (lowerField.includes('user') || lowerField.includes('usuario')) {
+      return 'person';
+    }
+    if (lowerField.includes('date') || lowerField.includes('fecha')) {
+      return 'calendar_today';
+    }
+    if (lowerField.includes('type') || lowerField.includes('tipo')) {
+      return 'label';
+    }
+    if (lowerField.includes('status') || lowerField.includes('estado')) {
+      return 'check_circle';
+    }
+    if (lowerField.includes('location') || lowerField.includes('ubicacion') || lowerField.includes('obra')) {
+      return 'business';
+    }
+    
+    // Default icon
+    return 'filter_list';
+  }
 
-    // Definir las columnas basadas en todos los nombres de propiedad encontrados
-    const columns = allPropertyNames.map(prop => {
-      // Capitalizar la primera letra para los encabezados
-      const header = prop.charAt(0).toUpperCase() + prop.slice(1);
-      return { header, key: prop, width: 20 };
-    });
-
-    worksheet.columns = columns;
-
-    // Estilo para el encabezado
-    const headerRow = worksheet.getRow(1);
-    headerRow.font = { bold: true, color: { argb: 'FFFFFF' } };
-    headerRow.fill = {
-      type: 'pattern',
-      pattern: 'solid',
-      fgColor: { argb: '2C2C41' }
-    };
-    headerRow.alignment = { vertical: 'middle', horizontal: 'center' };
-
-    // Añadir todos los datos al archivo Excel incluyendo todos los campos del JSON
-    this.data.forEach(item => {
-      const row: Record<string, any> = {};
-      // Mapear cada propiedad del objeto JSON
-      allPropertyNames.forEach(prop => {
-        // Usar notación de índice con tipo seguro
-        row[prop] = (item as Record<string, any>)[prop];
-      });
-      worksheet.addRow(row);
-    });
-
-    // Auto-ajustar el ancho de las columnas
-    worksheet.columns.forEach(column => {
-      let maxLength = 0;
-      column['eachCell']?.({ includeEmpty: true }, (cell) => {
-        const columnWidth = cell.value ? cell.value.toString().length : 10;
-        if (columnWidth > maxLength) {
-          maxLength = columnWidth;
-        }
-      });
-      column.width = Math.min(maxLength + 2, 30); // Limitar a un máximo de 30
-    });
-
-    // Generar el archivo
-    workbook.xlsx.writeBuffer().then((buffer) => {
-      const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const fecha = new Date().toISOString().split('T')[0];
-      saveAs(blob, `Reporte_Historico_${fecha}.xlsx`);
-    });
+  /**
+   * Handles click event on a table row
+   */
+  onDynamicRowClick(row: any): void {
+    console.log('Selected row:', row);
+    // Here you can implement additional actions when clicking on a row
   }
 }

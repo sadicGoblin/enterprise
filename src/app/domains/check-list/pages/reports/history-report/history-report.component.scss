@@ -293,6 +293,25 @@
   }
 }
 
+// Estilos para el componente de mensajes
+.message-block {
+  display: block;
+  margin: 16px 0;
+  max-width: 100%;
+  animation: fadeInMessage 0.4s ease-out;
+}
+
+@keyframes fadeInMessage {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 // Estilos para la tabla de resultados
 .results-container {
   margin-top: 24px;

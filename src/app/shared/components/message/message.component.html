@@ -1,0 +1,23 @@
+<div class="message-container" [ngClass]="type" *ngIf="visible">
+  <div class="message-content">
+    <mat-icon class="message-icon">{{ icon }}</mat-icon>
+    <span class="message-text">{{ text }}</span>
+    
+    <div class="message-actions">
+      <!-- Botón para mostrar/ocultar detalles técnicos (solo si hay detalles) -->
+      <button *ngIf="technicalDetails" mat-icon-button class="details-button" (click)="showDetails = !showDetails" aria-label="Ver detalles técnicos">
+        <mat-icon>{{ showDetails ? 'keyboard_arrow_up' : 'keyboard_arrow_down' }}</mat-icon>
+      </button>
+      
+      <!-- Botón para cerrar el mensaje -->
+      <button *ngIf="dismissible" mat-icon-button class="close-button" (click)="dismiss()" aria-label="Cerrar mensaje">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+  
+  <!-- Área de detalles técnicos (solo visible cuando showDetails es true) -->
+  <div *ngIf="showDetails && technicalDetails" class="technical-details" [@expandCollapse]="showDetails ? 'expanded' : 'collapsed'">
+    <pre>{{ technicalDetails }}</pre>
+  </div>
+</div>

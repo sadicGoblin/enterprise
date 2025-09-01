@@ -31,13 +31,7 @@
         <div class="group-content" [class.expanded]="group.expanded">
           <!-- Se eliminó el buscador duplicado que estaba aquí -->
           
-          <!-- Opción de limpiar filtros si hay seleccionados -->
-          <div class="clear-filters" *ngIf="group.expanded && getSelectedCount(group) > 0">
-            <button class="clear-button" (click)="clearFilters(group); $event.stopPropagation()">
-              <mat-icon>clear_all</mat-icon>
-              <span>Limpiar filtros</span>
-            </button>
-          </div>
+          <!-- Se eliminó el botón de limpiar filtros -->
           
           <!-- Componente multi-select reutilizable para todos los grupos -->
           <app-multi-select 
