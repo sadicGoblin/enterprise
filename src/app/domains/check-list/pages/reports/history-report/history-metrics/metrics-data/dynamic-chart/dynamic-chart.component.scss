@@ -1,249 +1,386 @@
-.chart-card {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 0;
-  box-sizing: border-box;
-  background-color: #1e1e2f;
-  border-radius: 4px;
-  border: 1px solid #2c2c41;
-  overflow: hidden;
-  color: #ffffff;
-  margin-bottom: 16px;
-}
+// Variables
+$primary-color: #1976d2;
+$secondary-color: #252a3e;
+$text-primary: #ffffff;
+$text-secondary: rgba(255, 255, 255, 0.7);
+$border-color: rgba(255, 255, 255, 0.1);
+$badge-bg: rgba(255, 255, 255, 0.02);
+$badge-color: #60a5fa;
+$hover-color: rgba(255, 255, 255, 0.05);
 
+// KPI Dashboard Card - Dark style
 .kpi-dashboard-card {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-}
-
-.chart-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #2c2c41;
-  margin-bottom: 0;
-}
-
-.chart-title {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  
-  h3 {
-    margin: 0;
-    font-size: 0.8rem;
-    font-weight: 400;
-    color: #ffffff;
-  }
-  
-  mat-icon {
-    color: #738df6;
-    font-size: 14px;
-    height: 14px;
-    width: 14px;
-  }
-}
-
-.kpi-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: #252540;
-  border-radius: 4px;
-  padding: 5px 8px;
-  border: 1px solid #3a3a5c;
-}
-
-.kpi-value {
-  font-size: 1.2rem;
-  font-weight: 600;
-  line-height: 1;
-  
-  &.kpi-success {
-    color: #28a745;
-  }
-  
-  &.kpi-warning {
-    color: #ffc107;
-  }
-  
-  &.kpi-danger {
-    color: #dc3545;
-  }
-}
-
-.kpi-label {
-  font-size: 0.65rem;
-  opacity: 0.7;
-  text-transform: uppercase;
-  margin-top: 2px;
-  letter-spacing: 0.5px;
-}
-
-.chart-content {
-  padding: 15px 16px;
-}
-
-.filter-name {
-  font-size: 1.2rem;
-  font-weight: 400;
-  color: #ffffff;
-  flex-grow: 1;
-  margin: 0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.chart-canvas-container {
-  flex-grow: 1;
-  position: relative;
-  min-height: 200px;
-  max-height: 300px; /* Altura máxima del contenedor */
+  // Quitamos la altura máxima fija
+  // max-height: 200px;
+  margin: 0 0 16px 0;
   padding: 0;
-  overflow-y: auto; /* Añadir scroll vertical cuando sea necesario */
-  @extend .custom-scrollbar; /* Aplicar estilo personalizado al scrollbar */
-}
-
-.metrics-section {
-  padding: 12px 16px;
-  border-top: 1px solid #2c2c41;
-}
-
-.section-header {
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;
+  border-radius: 5px;
+  background: linear-gradient(145deg, #1e2132, #2d3042);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border: none;
   
-  mat-icon {
-    color: #738df6;
-    font-size: 18px;
-    height: 18px;
-    width: 18px;
-    margin-right: 8px;
+  // Chart Header
+  .chart-header {
+    padding: 0px 16px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    min-height: 30px;
+    
+    .chart-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      
+      mat-icon {
+        font-size: 13px;
+        height: 13px;
+        width: 13px;
+        color: $text-primary;
+      }
+      
+      h3 {
+        margin: 0;
+        font-size: 11px !important;
+        font-weight: 400;
+        color: $text-primary;
+        letter-spacing: 0.5px;
+      }
+    }
+    
+    .total-badge {
+      display: flex;
+      align-items: center;
+      background-color: $badge-bg;
+      padding: 2px 8px;
+      border-radius: 4px;
+      height: 22px;
+      
+      .total-value {
+        font-weight: 600;
+        font-size: 12px;
+        color: #60a5fa;
+        margin-right: 4px;
+      }
+      
+      .total-label {
+        font-size: 10px;
+        font-weight: 500;
+        color: $text-secondary;
+      }
+    }
   }
   
-  span {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: #b4b4cc;
+  // Chart Content
+  .chart-content {
+    padding: 0;
+    overflow: hidden;
+    // Eliminamos restricción de altura fija
+    // height: calc(200px - 50px - 8px); // Total height minus header and padding
+    min-height: 142px; // Mantenemos una altura mínima
+    
+    .metrics-row {
+      display: flex;
+      height: 100%;
+      padding: 0 8px;
+      gap: 12px;
+      width: 100%;
+      
+      &::-webkit-scrollbar {
+        height: 4px;
+        width: 4px;
+      }
+      
+      &::-webkit-scrollbar-thumb {
+        background-color: rgba(255, 255, 255, 0.2);
+        border-radius: 2px;
+      }
+      
+      // Equal columns (25%)
+      .column-equal {
+        width: 25%;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        overflow: hidden;
+        
+        &:not(:last-child) {
+          padding-right: 8px;
+          border-right: 1px solid $border-color;
+          margin-right: 4px;
+        }
+      }
+      
+      // Metrics and charts section
+      .metrics-section, .chart-container {
+        flex: 1 1 auto;
+        width: 100%;
+        padding: 8px;
+        height: 50%;
+        overflow: hidden;
+        margin-bottom: 8px;
+        
+        &:last-child {
+          margin-bottom: 0;
+        }
+        
+        .section-header {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          margin-bottom: 8px;
+          padding-bottom: 4px;
+          border-bottom: 1px solid $border-color;
+          
+          mat-icon {
+            font-size: 13px;
+            height: 13px;
+            width: 13px;
+            color: $text-secondary;
+          }
+          
+          span {
+            font-size: 10px;
+            font-weight: 400;
+            color: $text-primary;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+          }
+          
+          .count-indicator {
+            font-size: 10px;
+            color: $text-secondary;
+            margin-left: 4px;
+          }
+        }
+        
+        .metrics-list {
+          display: flex;
+          flex-direction: row; // Horizontal by default
+          flex-wrap: nowrap;
+          gap: 0;
+          height: calc(100% - 26px);
+          overflow-x: auto;
+          overflow-y: hidden;
+          white-space: nowrap;
+          padding: 5px 0;
+          
+          &.vertical-list {
+            flex-direction: column; // Vertical for 4-column layout
+            overflow-y: auto;
+            overflow-x: hidden;
+            white-space: normal; // Allow text wrapping
+            padding: 0;
+            gap: 4px;
+          }
+          
+          &.custom-scrollbar::-webkit-scrollbar {
+            height: 3px; // Adjusted for horizontal scroll
+            width: 3px;
+          }
+          
+          &.custom-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+          }
+          
+          .metric-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: transparent; // No background
+            padding: 2px 6px;
+            height: 14px;
+            flex: 0 0 auto; // Don't grow or shrink
+            position: relative;
+            margin-right: 0;
+            margin-bottom: 0;
+            border-radius: 0;
+            transition: color 0.2s ease;
+            
+            // No vertical separator in vertical mode
+            .vertical-list & {
+              &:not(:last-child)::after {
+                display: none;
+              }
+              
+              // Bottom border in vertical mode
+              &:not(:last-child) {
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding-bottom: 4px;
+                margin-bottom: 4px;
+              }
+            }
+            
+            // Vertical separator only for horizontal lists
+            &:not(:last-child)::after {
+              content: '|';
+              position: absolute;
+              right: -2px;
+              color: rgba(255, 255, 255, 0.3);
+              font-weight: 100;
+            }
+            
+            &:hover {
+              color: #60a5fa;
+            }
+            
+            .metric-dot {
+              width: 8px;
+              height: 8px;
+              border-radius: 50%;
+              flex-shrink: 0;
+              box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+              margin-right: 2px;
+            }
+            
+            .metric-name {
+              font-size: 9px;
+              color: $text-primary;
+              white-space: nowrap;
+              overflow: hidden;
+              text-overflow: ellipsis;
+              text-transform: uppercase;
+              font-weight: 600;
+              letter-spacing: 0.5px;
+              max-width: 120px;
+            }
+            
+            .metric-value {
+              font-size: 10px;
+              font-weight: 600;
+              color: #60a5fa;
+              margin-left: 4px;
+              margin-right: 8px;
+            }
+          }
+        }
+
+        // Pie chart specific styles
+        .pie-chart-container {
+          height: calc(100% - 50px);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          
+          .pie-chart-placeholder {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            
+            canvas {
+              width: 100% !important;
+              height: 100% !important;
+              max-height: 180px;
+            }
+          }
+        }
+      }
+    }
   }
   
-  .count-indicator {
-    font-size: 0.7rem;
-    color: #8a8aa9;
-    margin-left: 5px;
-  }
-}
-
-canvas {
-  max-width: 100%;
-}
-
-/* Establecer un min-height de 10px para las barras del gráfico */
-:host ::ng-deep .chart-canvas-container canvas {
-  & > div > div > div > div > div > div > canvas {
-    min-height: 10px;
-  }
-}
-
-/* Estilos específicos para las barras horizontales */
-:host ::ng-deep canvas {
-  & .chartjs-horizontal-bar {
-    min-height: 10px !important;
-  }
-}
-
-/* Asegurar que los elementos internos de las barras tengan altura mínima */
-:host ::ng-deep .chart-canvas-container {
-  & .chartjs-render-monitor {
-    & [role="img"] > div {
-      min-height: 10px;
+  // No data message
+  .no-data-message, .no-data-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 200px;
+    padding: 20px;
+    
+    mat-icon {
+      font-size: 24px;
+      height: 24px;
+      width: 24px;
+      color: $text-secondary;
+      margin-bottom: 8px;
+    }
+    
+    span {
+      font-size: 14px;
+      color: $text-secondary;
     }
   }
 }
 
-.metrics-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+// Canvas dentro del contenedor del gráfico
+.chart-canvas-container {
+  flex-grow: 1;
+  position: relative;
+  min-height: 150px;
+  // Quitamos la altura máxima para permitir que crezca según el contenido
+  // max-height: 300px;
+  height: auto;
   width: 100%;
-
-  &.horizontal-list {
-    flex-direction: row;
-    overflow-x: auto;
-    padding-bottom: 5px;
+  padding: 0;
+  
+  canvas {
+    max-width: 100%;
+    height: auto !important; // Forzar altura automática
   }
 }
 
-.metric-item {
-  display: flex;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background-color: #252540;
-  min-width: 80px;
+// Additional utility class
+.mt-4 {
+  margin-top: 1rem;
 }
 
-.metric-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  margin-right: 8px;
-}
-
-.metric-name {
-  font-size: 0.75rem;
-  color: #b4b4cc;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: 120px;
-}
-
-.custom-scrollbar {
-  scrollbar-width: thin;
-  scrollbar-color: #3a3a5c #1e1e2f;
+// Estilos para el footer con estadísticas
+.chart-footer {
+  padding: 10px 16px;
+  border-top: 1px solid $border-color;
+  margin-top: 8px;
+  background-color: $secondary-color;
+  border-radius: 0 0 5px 5px;
   
-  &::-webkit-scrollbar {
-    height: 6px;
-    width: 6px;
-  }
-  
-  &::-webkit-scrollbar-track {
-    background: #1e1e2f;
-  }
-  
-  &::-webkit-scrollbar-thumb {
-    background-color: #3a3a5c;
-    border-radius: 3px;
-  }
-}
-
-.no-data-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  height: 120px;
-  color: #8a8aa9;
-  text-align: center;
-  padding: 20px;
-  background-color: #252540;
-  border-radius: 4px;
-  margin: 16px;
-  
-  mat-icon {
-    font-size: 2rem;
-    height: 2rem;
-    width: 2rem;
-    margin-bottom: 10px;
-    color: #6c6c8b;
-  }
-  
-  span {
-    font-size: 0.9rem;
+  .stats-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    font-size: 12px;
+    
+    .stats-left {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+    }
+    
+    .stats-right {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+    
+    .stat-item {
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+      
+      .stat-label {
+        color: $text-secondary;
+        margin-right: 4px;
+        font-weight: 400;
+      }
+      
+      .stat-value {
+        font-weight: 600;
+        color: $text-primary;
+      }
+      
+      // No necesitamos reglas específicas aquí ya que aplicamos el color directamente desde el HTML
+      // Esto elimina la necesidad de tener colores hardcodeados en el CSS
+    }
+    
+    .stat-divider {
+      color: $border-color;
+      margin: 0 6px;
+    }
   }
 }

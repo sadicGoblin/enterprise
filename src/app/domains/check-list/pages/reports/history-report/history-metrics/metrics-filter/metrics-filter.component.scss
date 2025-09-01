@@ -197,34 +197,7 @@
           }
         }
         
-        // Botón de limpiar filtros
-        .clear-filters {
-          margin-bottom: 10px;
-          
-          .clear-button {
-            display: flex;
-            align-items: center;
-            background: none;
-            border: none;
-            color: #1976d2;
-            padding: 4px 8px;
-            cursor: pointer;
-            font-size: 12px;
-            border-radius: 4px;
-            transition: background-color 0.2s ease;
-            
-            &:hover {
-              background-color: rgba(25, 118, 210, 0.08);
-            }
-            
-            mat-icon {
-              font-size: 16px;
-              height: 16px;
-              width: 16px;
-              margin-right: 4px;
-            }
-          }
-        }
+        // Se eliminaron los estilos del botón de limpiar filtros
         
         // Contenedor para items con autocomplete
         .items-container {

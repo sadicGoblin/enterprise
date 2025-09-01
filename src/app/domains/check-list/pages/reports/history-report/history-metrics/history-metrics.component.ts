@@ -1,6 +1,9 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
+// Importar la configuración del reporte
+import { ReportConfig } from '../models/report-config.model';
+
 // Importar los nuevos componentes
 import { MetricsFilterComponent } from './metrics-filter/metrics-filter.component';
 import { MetricsDataComponent } from './metrics-data/metrics-data.component';
@@ -19,6 +22,9 @@ import { MatButtonModule } from '@angular/material/button';
 export class HistoryMetricsComponent implements OnChanges {
   // Recibir datos del componente padre
   @Input() data: any[] = [];
+  
+  // Recibir la configuración del reporte
+  @Input() reportConfig?: ReportConfig;
   
   // Datos filtrados que se pasarán al componente de datos
   filteredData: any[] = [];

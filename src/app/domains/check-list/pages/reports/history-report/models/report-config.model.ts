@@ -1,0 +1,28 @@
+/**
+ * Interfaz para la configuración de colores de elementos específicos
+ */
+export interface ColorConfig {
+  indexItem: string;  // Valor del item (ej: 'cumplida', 'pendiente')
+  color: string;      // Color en hexadecimal
+}
+
+/**
+ * Configuración para un reporte específico
+ */
+export interface ReportConfig {
+  indexName: string;           // Identificador único del reporte
+  principalValue: string;      // Campo principal a mostrar en gráficos (ej: 'estado')
+  summaryValues: string[];     // Campos para mostrar en resúmenes (ej: ['estado', 'tipo'])
+  chartColors?: ColorConfig[]; // Configuración de colores específicos para valores
+  columnsTable?: string[];     // Campos para mostrar en la tabla
+  columnsFilter?: string[];    // Campos para mostrar en el filtro
+  title?: string;              // Título opcional del reporte
+}
+
+/**
+ * Configuración global para todos los reportes disponibles
+ */
+export interface GlobalReportsConfig {
+  reports: ReportConfig[];
+  defaultColors?: string[];    // Colores por defecto si no se especifican
+}

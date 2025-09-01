@@ -62,6 +62,8 @@ export class ReportService {
       fecha_inicio: startDate,
       fecha_fin: endDate
     };
+    console.log(this.apiUrl, payload);
+
 
     return this.http.post<HistoricalReportResponse>(this.apiUrl, payload)
       .pipe(

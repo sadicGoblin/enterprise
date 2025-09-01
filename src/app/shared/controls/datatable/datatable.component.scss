@@ -1,4 +1,4 @@
-// Estilos para la tabla compacta y minimalista
+// Styles for compact and minimalist table
 
 .datatable-container {
   display: flex;
@@ -12,20 +12,98 @@
   }
 }
 
-.datatable-header {
+// Toolbar styles - External implementation
+// External toolbar styles - More compact version
+.external-toolbar {
   display: flex;
-  justify-content: flex-end;
-  padding: 0.5rem;
+  justify-content: space-between;
   align-items: center;
+  padding: 6px 12px;
+  margin-bottom: 8px;
+  background-color: transparent;
+  
+  .global-search {
+    flex: 1;
+    max-width: 400px;
+    
+    .search-field {
+      width: 100%;
+      
+      ::ng-deep .mat-mdc-form-field-subscript-wrapper {
+        display: none;
+      }
+      
+      ::ng-deep .mat-mdc-text-field-wrapper {
+        padding: 0 8px;
+      }
+    }
+  }
+  
+  .toolbar-actions {
+    display: flex;
+    gap: 8px;
+    
+    button.compact-button {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      line-height: 28px;
+      height: 28px;
+      padding: 0 8px;
+      
+      mat-icon {
+        margin-right: 4px;
+        font-size: 16px;
+        height: 16px;
+        width: 16px;
+        line-height: 16px;
+      }
+      
+      &.export-button {
+        // Green color for export button (using accent color with custom style)
+        color: #388e3c; // Material green color
+        border-color: #388e3c;
+        
+        &:hover {
+          background-color: rgba(56, 142, 60, 0.04);
+        }
+      }
+    }
+  }
 }
 
-.column-menu-header {
-  padding: 0.5rem 1rem;
-  font-size: 0.85rem;
-  font-weight: 500;
-  color: rgba(0, 0, 0, 0.6);
+
+
+// Styles for actions inside selects
+::ng-deep .select-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px;
   border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+  
+  .select-all-btn, .clear-btn {
+    font-size: 0.8rem;
+    min-height: 24px;
+    line-height: 24px;
+    padding: 0 8px;
+  }
 }
+
+// Style for selected options (chips)
+::ng-deep .mat-mdc-select-value {
+  max-width: 100%;
+  padding-right: 20px;
+  
+  .mat-mdc-select-placeholder,
+  .mat-mdc-select-value-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+
 
 .table-container {
   position: relative;
@@ -33,18 +111,18 @@
   width: 100%;
 }
 
-// Estilo para la tabla compacta similar a la imagen
+// Style for compact table similar to the image
 .compact-table {
   width: 100%;
   border-collapse: collapse;
   
-  // Hacer que las filas sean más compactas
+  // Make rows more compact
   .mat-mdc-row, .mat-mdc-header-row {
     height: 32px !important;
     min-height: 32px !important;
   }
   
-  // Reducir padding en celdas para una apariencia más compacta
+  // Reduce padding in cells for a more compact appearance
   .mat-mdc-cell, .mat-mdc-header-cell {
     padding: 0 8px !important;
     font-size: 12px !important;
@@ -53,6 +131,9 @@
     line-height: 32px !important;
     box-sizing: border-box;
     border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    white-space: nowrap !important; // Prevent text wrapping
+    overflow: hidden !important;
+    text-overflow: ellipsis !important; // Show ellipsis for overflowed text
   }
   
   .mat-mdc-header-cell {
@@ -69,7 +150,7 @@
     padding: 0 4px !important;
   }
   
-  .row-num-cell {
+  .row-number-cell {
     width: 30px;
     text-align: center;
     padding: 0 4px !important;
@@ -120,6 +201,281 @@
   }
 }
 
+// Small select panel styles for dropdown options
+::ng-deep .small-select-panel {
+  // Excel-like style for panel
+  &.excel-style-panel {
+    background: #ffffff;
+    border: 1px solid #dadada;
+    border-radius: 2px;
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15);
+    min-width: 280px !important;
+    max-width: 320px !important;
+    
+    .mat-mdc-select-panel {
+      padding: 0 !important;
+      background-color: #ffffff;
+    }
+    
+    // Search box styles
+    .select-header {
+      padding: 8px;
+      background-color: #f3f3f3;
+      border-bottom: 1px solid #e0e0e0;
+      
+      .search-box {
+        display: flex;
+        align-items: center;
+        background-color: #ffffff;
+        border: 1px solid #c0c0c0;
+        border-radius: 2px;
+        padding: 2px 6px;
+        height: 28px;
+        
+        .search-icon {
+          color: #666;
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          margin-right: 4px;
+        }
+        
+        input {
+          border: none;
+          outline: none;
+          flex: 1;
+          font-size: 12px;
+          color: #333;
+          background: transparent;
+        }
+      }
+    }
+    
+    .table-container {
+      overflow-x: auto;
+      width: 100%;
+      
+      table.compact-table {
+        width: 100%;
+        table-layout: fixed; /* Required for column resize to work properly */
+        
+        th, td {
+          padding: 0.5rem;
+          white-space: nowrap; /* Prevent text from wrapping */
+          overflow: hidden;
+          text-overflow: ellipsis; /* Show ellipsis for overflowed text */
+        }
+        
+        th {
+          font-weight: bold;
+          background-color: #f9f9f9;
+          position: relative; /* Required for resize handle */
+          
+          .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+          }
+          
+          /* Resize handle */
+          .resize-handle {
+            position: absolute;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 5px;
+            cursor: col-resize;
+            user-select: none;
+            background-color: transparent;
+            
+            &:hover, &.active {
+              background-color: rgba(0, 0, 0, 0.1);
+            }
+          }
+        }
+      }
+    }
+    
+    // Action buttons
+    .select-actions {
+      display: flex;
+      justify-content: space-between;
+      background-color: #f3f3f3;
+      border-bottom: 1px solid #e0e0e0;
+      padding: 4px 8px;
+      
+      button {
+        min-width: auto;
+        line-height: 28px;
+        padding: 0 4px;
+        font-size: 12px;
+        
+        mat-icon {
+          font-size: 16px;
+          width: 16px;
+          height: 16px;
+          line-height: 16px;
+        }
+      }
+    }
+  }
+  
+  // Styles for each option
+  .mat-mdc-option {
+    min-height: 28px !important;
+    height: 28px !important;
+    line-height: 28px !important;
+    font-size: 12px !important;
+    padding: 0 8px !important;
+  }
+  
+  // Style for option text
+  .mdc-list-item__primary-text {
+    font-size: 12px !important;
+    font-weight: 500 !important;
+    line-height: 28px !important;
+  }
+  
+  // Style for checkboxes in multiselect
+  .mat-pseudo-checkbox {
+    width: 14px !important;
+    height: 14px !important;
+  }
+}
+
+// Estilos para el mensaje de "sin datos"
+.no-data-cell {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+// Estilos para los encabezados de columna con filtro (estilo Excel)
+.header-content {
+  display: inline-flex;
+  align-items: center;
+  width: 100%;
+  
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .filter-button {
+    width: 20px;
+    height: 20px;
+    line-height: 20px;
+    padding: 0;
+    min-width: auto;
+    margin-left: 4px;
+    vertical-align: middle;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    top: -1px;
+    
+    .filter-icon {
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+      line-height: 16px;
+      display: inline-block;
+    }
+  }
+}
+
+// Estilos para el menú de filtro estilo Excel
+::ng-deep .excel-filter-menu {
+  max-width: none !important;
+  
+  .mat-mdc-menu-panel {
+    max-width: 320px !important;
+  }
+  
+  .filter-menu-container {
+    padding: 0;
+    width: 300px;
+    max-height: 400px;
+    display: flex;
+    flex-direction: column;
+    
+    .filter-search {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      background-color: #f5f5f5;
+      border-bottom: 1px solid #e0e0e0;
+      
+      .mat-icon {
+        color: #666;
+        margin-right: 8px;
+      }
+      
+      input {
+        flex: 1;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 6px 8px;
+        font-size: 13px;
+        outline: none;
+        
+        &:focus {
+          border-color: #1976d2;
+        }
+      }
+    }
+    
+    .filter-actions {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background-color: #f5f5f5;
+      border-bottom: 1px solid #e0e0e0;
+      
+      button {
+        font-size: 12px;
+        line-height: 24px;
+        padding: 0 8px;
+        
+        .mat-icon {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
+          margin-right: 4px;
+        }
+      }
+    }
+    
+    .filter-options-container {
+      max-height: 250px;
+      overflow-y: auto;
+      
+      .mat-selection-list {
+        padding: 0;
+      }
+      
+      .mat-list-option {
+        height: 32px;
+        font-size: 13px;
+      }
+    }
+    
+    .filter-actions-footer {
+      display: flex;
+      justify-content: flex-end;
+      padding: 8px 12px;
+      background-color: #f5f5f5;
+      border-top: 1px solid #e0e0e0;
+      
+      button {
+        margin-left: 8px;
+      }
+    }
+  }
+}
+
 // Mensaje cuando no hay datos
 .no-data-message {
   display: flex;
@@ -153,6 +509,13 @@
   .mat-mdc-paginator-page-size-select {
     margin: 0 4px !important;
   }
+}
+
+// Footer de la tabla
+.datatable-footer {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
 }
 
 // Override para ajustar el tamaño de los íconos de Material

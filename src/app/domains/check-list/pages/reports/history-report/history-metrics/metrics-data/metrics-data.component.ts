@@ -8,6 +8,9 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import Chart from 'chart.js/auto';
 
+// Importar el modelo de configuración de reportes
+import { ReportConfig } from '../../models/report-config.model';
+
 @Component({
   selector: 'app-metrics-data',
   standalone: true,
@@ -24,8 +27,10 @@ import Chart from 'chart.js/auto';
   styleUrls: ['./metrics-data.component.scss']
 })
 export class MetricsDataComponent implements OnChanges, AfterViewInit {
-  @Input() data: any[] = [];
+  @Input() data: any[] = [];         // Datos filtrados para mostrar en las métricas y gráficos
+  @Input() completeData: any[] = []; // Datos completos sin filtrar (para SummaryKpi)
   @Input() activeFilters: {[key: string]: string[]} = {};
+  @Input() reportConfig?: ReportConfig;
   
   // Referencias a los elementos del DOM para los gráficos
   @ViewChild('estadosChart') estadosChartCanvas!: ElementRef<HTMLCanvasElement>;
@@ -64,7 +69,8 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
     console.log('MetricsDataComponent - procesarDatos - inicio', {
       dataLength: this.data.length, 
       activeFilters: this.activeFilters,
-      hasActiveFilters: Object.keys(this.activeFilters || {}).length > 0
+      hasActiveFilters: Object.keys(this.activeFilters || {}).length > 0,
+      reportConfig: this.reportConfig
     });
     
     // Reiniciar contadores
@@ -246,6 +252,8 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
   
   /**
    * Genera gráficos dinámicos basados en los filtros activos
+   * Ahora envía los datos completos a cada instancia de dynamic-chart
+   * y cada componente se encarga de hacer su propio filtrado
    */
   private generarGraficosDinamicos(): void {
     console.log('MetricsDataComponent - generarGraficosDinamicos - inicio', {
@@ -273,51 +281,21 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
         // Obtener el nombre real del campo en los datos
         const fieldName = this.getFieldNameFromFilterType(filterType);
         
-        // Para cada valor seleccionado en el filtro actual, verificar si hay datos
-        const valoresConDatos = selectedValues.filter(filterValue => {
-          // Buscar registros que coincidan con el valor del filtro
-          const registrosCoincidentes = this.data.filter((registro: any) => {
-            // Si el tipo de filtro coincide exactamente con un campo en los datos
-            if (registro[fieldName] !== undefined) {
-              return registro[fieldName] === filterValue;
-            }
-            
-            // Si no coincide exactamente, buscamos un campo que contenga el nombre del filtro
-            const camposRegistro = Object.keys(registro);
-            const campoCoincidente = camposRegistro.find(campo => 
-              campo.toLowerCase().includes(fieldName.toLowerCase())
-            );
-            
-            // Si encontramos el campo, comparamos su valor
-            if (campoCoincidente) {
-              return registro[campoCoincidente] === filterValue;
-            }
-            return false;
-          });
-          
-          return registrosCoincidentes.length > 0;
-        });
+        // Ya no necesitamos filtrar los datos aquí, solo pasar la configuración
+        // para que el componente dynamic-chart haga el filtrado
         
-        console.log('MetricsDataComponent - Valores con datos para filtro:', {
+        console.log('MetricsDataComponent - Configurando filtro para dynamic-chart:', {
           filterType, 
           fieldName,
-          valoresConDatos,
-          totalValores: valoresConDatos.length
+          selectedValues: selectedValues.length
         });
         
-        if (valoresConDatos.length > 0) {
-          // Agregar configuración para este filtro
-          this.dynamicCharts.push({
-            filterType: this.getFilterDisplayName(filterType),
-            fieldName,
-            selectedValues: valoresConDatos
-          });
-        } else {
-          console.log('MetricsDataComponent - No existen datos para este filtro:', {
-            filterType,
-            fieldName
-          });
-        }
+        // Agregar configuración para este filtro
+        this.dynamicCharts.push({
+          filterType: this.getFilterDisplayName(filterType),
+          fieldName,
+          selectedValues: selectedValues
+        });
       }
     }
   }

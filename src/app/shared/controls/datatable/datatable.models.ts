@@ -25,6 +25,9 @@ export interface DataTableColumn {
   
   /** Clase CSS personalizada para aplicar a las celdas de esta columna */
   cellClass?: string;
+  
+  /** Indica si esta columna debe ser filtrable */
+  filterable?: boolean;
 }
 
 /**
@@ -54,6 +57,33 @@ export interface DataTableConfig {
 
   /** Texto para el botón de selección de columnas */
   columnSelectLabel?: string;
+  
+  /** Indica si se deben mostrar los filtros */
+  showFilters?: boolean;
+  
+  /** Etiqueta para el botón de limpiar filtros */
+  clearFiltersLabel?: string;
+  
+  /** Etiqueta para el botón de seleccionar todos */
+  selectAllLabel?: string;
+  
+  /** Texto para la búsqueda global */
+  globalSearchLabel?: string;
+  
+  /** Placeholder para la búsqueda global */
+  globalSearchPlaceholder?: string;
+  
+  /** Indica si se debe mostrar la toolbar con opciones */
+  showToolbar?: boolean;
+  
+  /** Etiqueta para el botón de limpiar todos los filtros en la toolbar */
+  clearAllFiltersLabel?: string;
+  
+  /** Etiqueta para el botón de exportar a Excel */
+  exportExcelLabel?: string;
+  
+  /** Nombre del archivo al exportar a Excel */
+  exportFileName?: string;
 }
 
 /**
@@ -86,8 +116,59 @@ export interface SortEvent {
  */
 export interface PageEvent {
   /** Página actual */
-  page: number;
+  pageIndex: number;
   
   /** Número de filas por página */
   pageSize: number;
+  
+  /** Total de elementos */
+  length: number;
+}
+
+/**
+ * Interface for filter configuration
+ */
+export interface DataTableFilter {
+  /** Field to filter */
+  field: string;
+  
+  /** Label to show in UI */
+  label: string;
+  
+  /** Icon to display next to filter */
+  icon?: string;
+  
+  /** Available values for filter */
+  options: any[];
+  
+  /** Original complete list of options (used for search/filtering) */
+  allOptions?: any[];
+  
+  /** Selected values */
+  selectedValues: any[];
+  
+  /** Placeholder for filter */
+  placeholder?: string;
+}
+
+/**
+ * Interfaz para eventos de cambio en filtros
+ */
+export interface FilterChangeEvent {
+  /** Campo que fue filtrado */
+  field: string;
+  
+  /** Valores seleccionados */
+  values: string[];
+}
+
+/**
+ * Interfaz para parámetros de filtrado
+ */
+export interface FilterParams {
+  /** Filtros por columna */
+  columnFilters: { [key: string]: string[] };
+  
+  /** Filtro global */
+  globalFilter: string;
 }

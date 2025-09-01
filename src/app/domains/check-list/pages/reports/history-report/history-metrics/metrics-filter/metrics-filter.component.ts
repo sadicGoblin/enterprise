@@ -53,6 +53,7 @@ interface FilterGroup {
 })
 export class MetricsFilterComponent implements OnChanges {
   @Input() data: any[] = [];
+  @Input() columnsFilter: string[] = [];
   @Output() filterChange = new EventEmitter<any>();
   
   // Contadores para filtros
@@ -76,22 +77,35 @@ export class MetricsFilterComponent implements OnChanges {
     // Si no hay datos, salir
     if (!this.data || this.data.length === 0) return;
     
-    // Detectar automáticamente todas las propiedades string
-    const firstItem = this.data[0];
-    const stringFields = Object.keys(firstItem).filter(key => {
-      // Excluir campos que comiencen con 'Id'
-      if (key.startsWith('Id') || key.startsWith('id')) {
-        return false;
-      }
-      return this.data.some(item => 
-        typeof item[key] === 'string' && item[key] !== null && item[key].trim() !== ''
-      );
-    });
+    // Determinar qué campos mostrar basado en columnsFilter
+    let fieldsToShow = [];
     
-    // Ordenar campos alfabéticamente
-    stringFields.sort();
+    if (this.columnsFilter && this.columnsFilter.length > 0) {
+      // Usar solo los campos especificados en columnsFilter
+      fieldsToShow = this.columnsFilter.filter(field => {
+        // Verificar que el campo existe en los datos
+        return this.data.some(item => 
+          item[field] !== undefined && 
+          typeof item[field] === 'string' && 
+          item[field] !== null && 
+          item[field].trim() !== ''
+        );
+      });
+    } else {
+      // Si no se especifica columnsFilter, usar el comportamiento anterior
+      const firstItem = this.data[0];
+      fieldsToShow = Object.keys(firstItem).filter(key => {
+        // Excluir campos que comiencen con 'Id'
+        if (key.startsWith('Id') || key.startsWith('id')) {
+          return false;
+        }
+        return this.data.some(item => 
+          typeof item[key] === 'string' && item[key] !== null && item[key].trim() !== ''
+        );
+      });
+    }
     
-    stringFields.forEach(field => {
+    fieldsToShow.forEach(field => {
       // Contabilizar valores únicos
       const valueCounts: { [key: string]: number } = {};
       this.data.forEach(item => {
@@ -203,11 +217,7 @@ export class MetricsFilterComponent implements OnChanges {
     group.expanded = !group.expanded;
   }
   
-  clearFilters(group: FilterGroup): void {
-    group.items.forEach(item => item.selected = false);
-    group.searchControl.setValue('');
-    this.applyFilters();
-  }
+  // Se eliminó el método clearFilters que ya no es necesario
   
   getSelectedCount(group: FilterGroup): number {
     return group.items.filter(item => item.selected).length;

@@ -22,9 +22,16 @@ import { ReportService, HistoricalReportItem } from '../../../../../core/service
 import { finalize, catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
 
+// Importamos la configuración y su servicio
+import { ReportConfigService } from './services/report-config.service';
+import { ReportConfig } from './models/report-config.model';
+
 // Importamos los componentes de tabla y métricas
 import { HistoryTableComponent } from './history-table/history-table.component';
 import { HistoryMetricsComponent } from './history-metrics/history-metrics.component';
+
+// Importamos el componente de mensajes
+import { MessageComponent, MessageType } from '../../../../../shared/components/message/message.component';
 
 @Component({
   selector: 'app-history-report',
@@ -43,7 +50,8 @@ import { HistoryMetricsComponent } from './history-metrics/history-metrics.compo
     MatProgressSpinnerModule,
     MatTabsModule,
     HistoryTableComponent,
-    HistoryMetricsComponent
+    HistoryMetricsComponent,
+    MessageComponent
   ],
   providers: [
     // Configuración para el datepicker en español
@@ -66,9 +74,19 @@ import { HistoryMetricsComponent } from './history-metrics/history-metrics.compo
 export class HistoryReportComponent implements OnInit {
   historyForm!: FormGroup;
   isLoading = false;
+  
+  // Propiedades para el sistema de mensajes
   errorMessage = '';
+  technicalDetails = '';
+  messageType: MessageType = MessageType.INFO;
+  showMessage = false;
+  
   isFilterExpanded = true; // Control para expandir/colapsar el filtro
   selectedDateRange = false; // Indica si hay un rango de fechas seleccionado
+  
+  // Configuración del reporte actual
+  reportConfig?: ReportConfig;
+  readonly reportIndexName = 'history-report';
   
   // Datos para la tabla
   tableData: HistoricalReportItem[] = [];
@@ -77,19 +95,27 @@ export class HistoryReportComponent implements OnInit {
     private fb: FormBuilder,
     private snackBar: MatSnackBar,
     private reportService: ReportService,
-    private dateAdapter: DateAdapter<Date>
+    private dateAdapter: DateAdapter<Date>,
+    private reportConfigService: ReportConfigService
   ) { }
 
   ngOnInit(): void {
     // Configurar el adaptador de fechas para usar formato español
     this.dateAdapter.setLocale('es-ES');
     this.initForm();
+    
+    // Cargar la configuración del reporte
+    this.reportConfig = this.reportConfigService.getReportConfig(this.reportIndexName);
+    
+    if (!this.reportConfig) {
+      console.warn(`No se encontró configuración para el reporte: ${this.reportIndexName}`);
+    }
   }
 
   initForm(): void {
     // Fecha desde: primer día del mes de hace 2 meses
     const startDate = new Date();
-    startDate.setMonth(startDate.getMonth() - 0);
+    startDate.setMonth(startDate.getMonth() - 1);
     startDate.setDate(1); // Primer día del mes
     
     // Fecha hasta: día de ayer
@@ -118,8 +144,11 @@ export class HistoryReportComponent implements OnInit {
       return;
     }
 
+    // Reseteamos el estado del mensaje y comenzamos la carga
     this.isLoading = true;
+    this.showMessage = false;
     this.errorMessage = '';
+    this.technicalDetails = '';
     const formValues = this.historyForm.value;
     
     // Formatear fechas para la API
@@ -129,7 +158,35 @@ export class HistoryReportComponent implements OnInit {
     this.reportService.getHistoricalReport(startDateStr, endDateStr)
       .pipe(
         catchError(error => {
-          this.errorMessage = 'Error al cargar el reporte: ' + (error.message || 'Desconocido');
+          // Configuramos el mensaje principal para el usuario
+          if (error.status === 0) {
+            this.errorMessage = 'Error de conexión: No se puede establecer comunicación con el servidor.';
+          } else if (error.status === 504 || error.status === 408) {
+            this.errorMessage = `Tiempo de espera agotado: El servidor tardó demasiado en responder.`;
+          } else if (error.status === 500) {
+            this.errorMessage = 'Error interno del servidor: Ha ocurrido un problema procesando su solicitud.';
+          } else if (error.status === 403) {
+            this.errorMessage = 'Acceso denegado: No tiene permisos para acceder a este recurso.';
+          } else if (error.status === 404) {
+            this.errorMessage = 'Recurso no encontrado: El reporte solicitado no está disponible en el servidor.';
+          } else if (error.status === 200) {
+            // Error específico de parsing con estado 200
+            this.errorMessage = 'Error al procesar la respuesta: El servidor devolvió datos en un formato inesperado.';
+          } else {
+            // Para otros errores, usamos un mensaje simplificado
+            this.errorMessage = `Error al cargar el reporte: ${error.message || 'Error desconocido'}`;
+          }
+          
+          // Guardamos los detalles técnicos completos para mostrarlos en el área expandible
+          this.technicalDetails = `Error completo: ${error.message}\n`;
+          this.technicalDetails += `Código de estado: ${error.status || 'N/A'}\n`;
+          
+          if (error.stack) {
+            this.technicalDetails += `\nStack trace:\n${error.stack}`;
+          }
+          
+          this.messageType = MessageType.ERROR;
+          this.showMessage = true;
           console.error('Error fetching historical report:', error);
           
           return of({ count: 0, data: [], from_cache: false });
@@ -138,9 +195,10 @@ export class HistoryReportComponent implements OnInit {
       )
       .subscribe(response => {
         if (response.data.length === 0) {
-          this.snackBar.open('No se encontraron registros para el período seleccionado', 'Cerrar', {
-            duration: 3000
-          });
+          // Mostramos un mensaje de advertencia si no hay datos
+          this.errorMessage = 'No se encontraron registros para el período seleccionado';
+          this.messageType = MessageType.WARNING;
+          this.showMessage = true;
         } else {
           this.snackBar.open(`Se encontraron ${response.count} registros`, 'Cerrar', {
             duration: 3000
@@ -153,7 +211,15 @@ export class HistoryReportComponent implements OnInit {
   }
 
   onSubmit(): void {
+    // Limpiar datos anteriores
+    this.tableData = [];
+    this.showMessage = false;
+    this.errorMessage = '';
+    this.technicalDetails = '';
+    
+    // Cargar nuevos datos
     this.loadHistoricalReport();
+    
     // Colapsar el formulario y mostrar el rango de fechas seleccionado
     this.isFilterExpanded = false;
     this.selectedDateRange = true;

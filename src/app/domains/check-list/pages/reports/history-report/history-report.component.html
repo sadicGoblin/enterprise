@@ -71,10 +71,16 @@
         </div>
       </div>
       
-      <!-- Mensaje de error -->
-      <div *ngIf="errorMessage" class="error-container">
-        <p class="error-message">{{ errorMessage }}</p>
-      </div>
+      <!-- Sistema de mensajes -->
+      <app-message
+        *ngIf="showMessage"
+        [text]="errorMessage"
+        [type]="messageType"
+        [technicalDetails]="technicalDetails"
+        [dismissible]="true"
+        [timeout]="7000"
+        class="message-block"
+      ></app-message>
       
       <!-- Resultados con pestañas -->
       <div *ngIf="tableData.length > 0" class="results-container compact">
@@ -82,7 +88,7 @@
         <!-- Pestañas para Métricas y Datos -->
         <mat-tab-group>
           <mat-tab label="Métricas">
-            <app-history-metrics [data]="tableData"></app-history-metrics>
+            <app-history-metrics [data]="tableData" [reportConfig]="reportConfig"></app-history-metrics>
           </mat-tab>
           <mat-tab label="Datos">
             <app-history-table [data]="tableData"></app-history-table>

@@ -1,6 +1,16 @@
-<div class="chart-card kpi-dashboard-card">
+<!-- Primer componente: summary-kpi con diseño idéntico al tradicional -->
+<!-- IMPORTANTE: Usamos completeData (datos sin filtrar) para este componente -->
+<!-- Esto garantiza que siempre muestre la distribución total de los datos -->
+<app-summary-kpi 
+  [completeData]="completeData" 
+  [reportConfig]="reportConfig"
+  [title]="'DISTRIBUCIÓN GLOBAL DE DATOS'">
+</app-summary-kpi>
+
+<!-- Segundo componente: Vista tradicional de cuadrícula -->
+ <!-- 
+<div class="chart-card kpi-dashboard-card mt-4">
   <ng-container *ngIf="data && data.length > 0; else noData">
-    <!-- Encabezado con totales -->
     <div class="chart-header">
       <div class="chart-title">
         <mat-icon>dashboard</mat-icon>
@@ -12,11 +22,8 @@
       </div>
     </div>
 
-    <!-- Cuerpo con cuatro columnas del 25% cada una -->
     <div class="chart-content kpi-card-content">
-
       <div class="metrics-row">
-        <!-- COLUMNA A (25%) - DATOS ESTADOS -->
         <div class="column-equal">
           <div class="metrics-section" *ngIf="getObjectKeys(registrosPorEstado).length > 0">
             <div class="section-header">
@@ -34,7 +41,6 @@
           </div>
         </div>
 
-        <!-- COLUMNA B (25%) - GRÁFICO DE TORTA ESTADOS -->
         <div class="column-equal">
           <div class="chart-container" *ngIf="getObjectKeys(registrosPorEstado).length > 0">
             <div class="section-header">
@@ -42,7 +48,6 @@
               <span>GRÁFICO ESTADOS</span>
             </div>
             <div class="pie-chart-container">
-              <!-- Gráfico de torta de Estados -->
               <div class="pie-chart-placeholder">
                 <canvas #estadosChart></canvas>
               </div>
@@ -50,7 +55,6 @@
           </div>
         </div>
 
-        <!-- COLUMNA C (25%) - DATOS TIPOS -->
         <div class="column-equal">
           <div class="metrics-section" *ngIf="getObjectKeys(registrosPorTipo).length > 0">
             <div class="section-header">
@@ -68,7 +72,6 @@
           </div>
         </div>
 
-        <!-- COLUMNA D (25%) - GRÁFICO DE TORTA TIPOS -->
         <div class="column-equal">
           <div class="chart-container" *ngIf="getObjectKeys(registrosPorTipo).length > 0">
             <div class="section-header">
@@ -76,7 +79,6 @@
               <span>GRÁFICO TIPOS</span>
             </div>
             <div class="pie-chart-container">
-              <!-- Gráfico de torta de Tipos -->
               <div class="pie-chart-placeholder">
                 <canvas #tiposChart></canvas>
               </div>
@@ -85,6 +87,7 @@
         </div>
       </div>
     </div>
+
   </ng-container>
 
   <ng-template #noData>
@@ -94,6 +97,7 @@
     </div>
   </ng-template>
 </div>
+-->
 
 <!-- Sección dinámica de gráficos basados en filtros activos (componente completamente separado) -->
 <div class="dynamic-charts-container" *ngIf="dynamicCharts && dynamicCharts.length > 0">
@@ -104,7 +108,8 @@
 
     <div class="dynamic-charts-grid">
       <app-dynamic-chart *ngFor="let chart of dynamicCharts" [filterType]="chart.filterType"
-        [fieldToFilter]="chart.fieldName" [selectedValues]="chart.selectedValues || []" [filteredData]="data">
+        [fieldToFilter]="chart.fieldName" [activeFilters]="activeFilters" [completeData]="completeData"
+        [reportConfig]="reportConfig" [title]="'KPI ' + (chart.filterType || '.')">
       </app-dynamic-chart>
     </div>
   </div>
