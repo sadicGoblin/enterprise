@@ -1,3 +1,23 @@
 .container {
   margin-top: 25px;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 25px); // Usar toda la altura disponible menos el margin
+  overflow: hidden; // Evitar scroll en el contenedor principal
+}
+
+.form-section {
+  flex-shrink: 0; // No permitir que se reduzca
+  background: white; // Fondo sólido
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0; // Separador visual
+  z-index: 10; // Mantener por encima de la tabla
+  position: relative;
+}
+
+.table-section {
+  flex: 1; // Ocupar el espacio restante
+  overflow: auto; // Permitir scroll vertical y horizontal
+  padding: 16px;
+  min-height: 0; // Importante para que funcione el scroll en flexbox
 }

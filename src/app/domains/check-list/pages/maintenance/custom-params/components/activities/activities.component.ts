@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
+import { Component, OnDestroy, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -101,6 +101,10 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
   // Referencia al componente hijo de formulario
   @ViewChild(ActivityFormComponent)
   activityFormComponent!: ActivityFormComponent;
+  
+  // Referencia al elemento del formulario para scroll automático
+  @ViewChild('activityForm', { read: ElementRef })
+  activityFormElement!: ElementRef;
 
   constructor(
     private activitiesStateService: ActivitiesStateService,
@@ -197,10 +201,21 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
 
   // Método para manejar la acción de editar una actividad desde la tabla
   handleEditActivity(activity: ActivityItem): void {
+    console.log('🖊️ Editando actividad:', activity);
     // this.selectedActivityId = activity.id;
     this.selectedActivity = activity;
     this.isAddMode = false;
     this.isFormVisible = true;
+    
+    // Scroll automático hacia el formulario
+    setTimeout(() => {
+      if (this.activityFormElement) {
+        this.activityFormElement.nativeElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }, 100); // Pequeño delay para asegurar que el DOM se actualice
   }
 
   // Método para manejar la acción de eliminar una actividad desde la tabla
@@ -218,6 +233,7 @@ export class ActivitiesComponent implements OnInit, OnDestroy {
 
   // Método para manejar la acción de guardar una actividad desde el formulario
   handleSaveActivity(activityData: any): void {
+    console.log('Guardando actividad:', activityData);
     if (this.isAddMode) {
       this.activitiesStateService
         .createActivity(activityData)

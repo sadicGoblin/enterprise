@@ -1,4 +1,4 @@
-<div class="table-controls">
+<div class="table-controls sticky-search">
   <mat-form-field appearance="fill" class="search-field">
     <mat-label>Buscar</mat-label>
     <input
@@ -11,7 +11,7 @@
 </div>
 <table
   mat-table
-  [dataSource]="activities"
+  [dataSource]="filteredActivities"
   class="mat-elevation-z2 full-width-table"
 >
   <ng-container matColumnDef="codigo">
@@ -68,6 +68,7 @@
       <button
         mat-icon-button
         color="warn"
+        [disabled]="true"
         (click)="onDeleteActivity(element.idactividad)"
         title="Eliminar"
       >

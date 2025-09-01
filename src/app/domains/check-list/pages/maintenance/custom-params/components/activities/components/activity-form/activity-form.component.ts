@@ -4,6 +4,7 @@ import {
   Output,
   EventEmitter,
   OnInit,
+  OnChanges,
   ViewChild,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -48,7 +49,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
   templateUrl: './activity-form.component.html',
   styleUrls: ['./activity-form.component.scss'],
 })
-export class ActivityFormComponent implements OnInit {
+export class ActivityFormComponent implements OnInit, OnChanges {
   @Input() isEditing = false;
   @Input() activityToEdit?: ActivityItem;
   @Input() scopeOptions: any[] = [];
@@ -134,6 +135,19 @@ export class ActivityFormComponent implements OnInit {
     this.initForm();
   }
 
+  ngOnChanges(): void {
+    console.log('📝 ngOnChanges - isEditing:', this.isEditing, 'activityToEdit:', this.activityToEdit);
+    // React to changes in activityToEdit input
+    if (this.isEditing && this.activityToEdit && this.activityForm) {
+      this.activityBeingEdited = true;
+      this.populateFormWithActivity(this.activityToEdit);
+    } else if (!this.isEditing) {
+      // Reset to add mode
+      this.activityBeingEdited = false;
+      this.resetActivityForm();
+    }
+  }
+
   initForm(): void {
     this.activityForm = this.fb.group({
       scopeId: this.scopeControl,
@@ -153,27 +167,83 @@ export class ActivityFormComponent implements OnInit {
   }
   
   private populateFormWithActivity(activity: ActivityItem): void {
+    console.log('🔄 Poblando formulario con actividad:', activity);
+    
     // Set form control values
     this.activityForm.patchValue({
       code: activity.code,
       name: activity.name,
-      // The select controls will be set via their respective methods
     });
     
     // Set scope selection if available
     if (activity.idAmbito) {
-      const scopeOption = this.scopeOptions.find(option => option.IdAmbito === activity.idAmbito);
-      if (scopeOption) {
-        this.scopeControl.setValue(scopeOption.IdAmbito);
-        this.selectedScopeOption = {
-          value: scopeOption.IdAmbito,
-          label: scopeOption.nombre
+      this.scopeControl.setValue(activity.idAmbito as any);
+      this.selectedScopeOption = {
+        value: activity.idAmbito,
+        label: activity.scopeName || 'Ámbito'
+      };
+    }
+    
+    // Set frequency selection if available and reference data exists
+    if (activity.idFrequency && this.referenceData?.frequencyOptions) {
+      this.frequencyControl.setValue(activity.idFrequency as any);
+      const frequencyOption = this.referenceData.frequencyOptions.find(f => f['value'] === activity.idFrequency);
+      if (frequencyOption) {
+        this.selectedFrequency = {
+          id: activity.idFrequency,
+          name: frequencyOption['label'],
+          label: frequencyOption['label']
         };
       }
     }
     
-    // Note: The other selections (frequency, category, parameter, document)
-    // will be handled when we have reference data loaded
+    // Set category selection if available and reference data exists  
+    if (activity.idCategory && this.referenceData?.categoryOptions) {
+      this.categoryControl.setValue(activity.idCategory as any);
+      const categoryOption = this.referenceData.categoryOptions.find(c => c['value'] === activity.idCategory);
+      if (categoryOption) {
+        this.selectedCategory = {
+          id: activity.idCategory,
+          name: categoryOption['label'],
+          label: categoryOption['label']
+        };
+      }
+    }
+    
+    // Set parameter selection if available and reference data exists
+    if (activity.idParameter && this.referenceData?.parameterOptions) {
+      this.parameterControl.setValue(activity.idParameter as any);
+      const parameterOption = this.referenceData.parameterOptions.find(p => p['value'] === activity.idParameter);
+      if (parameterOption) {
+        this.selectedParameter = {
+          id: activity.idParameter,
+          name: parameterOption['label'],
+          label: parameterOption['label']
+        };
+      }
+    }
+    
+    // Set document selection if available
+    // Use idBiblioteca since that's the actual field name in the activity data
+    const documentId = activity.idDocument || (activity as any).idBiblioteca;
+    if (documentId) {
+      console.log('🗂️ Setting document ID:', documentId);
+      this.documentControl.setValue(documentId as any);
+      // Set the selected document info for internal tracking
+      this.selectedDocument = {
+        id: documentId,
+        name: activity.document || 'Documento',
+        label: activity.document || 'Documento'
+      };
+    }
+    
+    console.log('✅ Formulario poblado con:', {
+      scope: this.selectedScopeOption,
+      frequency: this.selectedFrequency,
+      category: this.selectedCategory,
+      parameter: this.selectedParameter,
+      document: this.selectedDocument
+    });
   }
 
   onSubmit(): void {

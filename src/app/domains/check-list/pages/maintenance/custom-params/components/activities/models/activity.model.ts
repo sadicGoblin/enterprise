@@ -19,11 +19,13 @@ export interface ActivityItem {
     CategoriaActividad?: string;
     parametroAsociado?: string;
     documentoAsociado?: string;
+    idBiblioteca?: string; // Campo real para documentos desde el backend
     // Propiedades de nombres resueltos para mostrar en la tabla (compatibilidad)
     frequencyName?: string;
     categoryName?: string;
     parameterName?: string;
     documentName?: string;
+    scopeName?: string;
   }
   
   export interface ApiActivityResponse {
