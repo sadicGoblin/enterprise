@@ -27,6 +27,12 @@ export class ImgViewerComponent implements OnInit {
   imageError: boolean = false;
   private autoPlayTimer?: any;
 
+  // Modal properties
+  isModalOpen: boolean = false;
+  modalImageSrc: string = '';
+  modalRotation: number = 0;
+  modalZoom: number = 1;
+
   ngOnInit(): void {
     if (this.autoPlay && this.images.length > 1) {
       this.startAutoPlay();
@@ -107,5 +113,42 @@ export class ImgViewerComponent implements OnInit {
     if (this.autoPlay && this.images.length > 1) {
       this.startAutoPlay();
     }
+  }
+
+  // Modal methods
+  openImageModal(imageSrc: string): void {
+    this.modalImageSrc = imageSrc;
+    this.modalRotation = 0;
+    this.modalZoom = 1;
+    this.isModalOpen = true;
+    document.body.style.overflow = 'hidden'; // Prevent background scrolling
+  }
+
+  closeImageModal(): void {
+    this.isModalOpen = false;
+    this.modalImageSrc = '';
+    this.modalRotation = 0;
+    this.modalZoom = 1;
+    document.body.style.overflow = 'auto'; // Restore scrolling
+  }
+
+  rotateImage(): void {
+    this.modalRotation = (this.modalRotation + 90) % 360;
+  }
+
+  zoomIn(): void {
+    this.modalZoom = Math.min(this.modalZoom * 1.2, 3); // Max zoom 3x
+  }
+
+  zoomOut(): void {
+    this.modalZoom = Math.max(this.modalZoom / 1.2, 0.5); // Min zoom 0.5x
+  }
+
+  resetZoom(): void {
+    this.modalZoom = 1;
+  }
+
+  get modalImageTransform(): string {
+    return `rotate(${this.modalRotation}deg) scale(${this.modalZoom})`;
   }
 }

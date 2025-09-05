@@ -1,11 +1,8 @@
 {
   "/ws": {
-    "target": "http://localhost:8080",
+    "target": "https://inarco-webapp.web.app",
     "secure": false,
     "changeOrigin": true,
-    "logLevel": "debug",
-    "headers": {
-      "Origin": "https://inarco-web.web.app"
-    }
+    "logLevel": "debug"
   }
 }
