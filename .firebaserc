@@ -1,5 +1,8 @@
 {
   "projects": {
-    "default": "inarco-web"
-  }
+    "default": "inarco-webapp",
+    "inarco-webapp": "inarco-webapp"
+  },
+  "targets": {},
+  "etags": {}
 }

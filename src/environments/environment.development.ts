@@ -3,18 +3,20 @@ import { EnvironmentConfig } from './environment.config';
 /**
  * Development environment configuration
  */
-export const environment: EnvironmentConfig = {
+export const environment = {
   production: false,
-  apiBaseUrl: 'http://localhost:8080',
-  firebase: {
-    apiKey: "AIzaSyDC-BfxEZioD2VEgmjtQjrxiYD9ib7ulo4",
-    authDomain: "inarco-web.firebaseapp.com",
-    projectId: "inarco-web",
-    storageBucket: "inarco-web.firebasestorage.app",
-    messagingSenderId: "357886997164",
-    appId: "1:357886997164:web:ce112e2dcd08659da4e509",
-    measurementId: "G-HKFC1THJY2"
+
+  apiBaseUrl: 'https://inarco-ssoma.favric.cl',
+  firebaseConfig: {
+    apiKey: "AIzaSyApcxpJIrf2fOEjoeyBbXiLr-5DCLPHgPo",
+    authDomain: "inarco-webapp.firebaseapp.com",
+    projectId: "inarco-webapp",
+    storageBucket: "inarco-webapp.firebasestorage.app",
+    messagingSenderId: "153610839354",
+    appId: "1:153610839354:web:47bc7a9d8608cdb9d7dc03",
+    measurementId: "G-VXZS3NQE2G"
   }
 };
+
 
 
