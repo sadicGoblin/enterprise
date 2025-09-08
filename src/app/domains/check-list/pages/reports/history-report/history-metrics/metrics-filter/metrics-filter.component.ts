@@ -1,34 +1,21 @@
 import { Component, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormsModule } from '@angular/forms';
+import { getFieldIcon } from '../../../../../../../shared/configs/icons.config';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatCardModule } from '@angular/material/card';
-import { MatExpansionModule } from '@angular/material/expansion';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatInputModule } from '@angular/material/input';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatAutocompleteModule } from '@angular/material/autocomplete';
-import { FormControl } from '@angular/forms';
-import { Observable } from 'rxjs';
-import { map, startWith } from 'rxjs/operators';
 import { MultiSelectComponent, MultiSelectItem } from '../../../../../../../shared/controls/multi-select/multi-select.component';
+import { HierarchicalFilterItem } from '../../../../../models/hierarchical-filter.model';
 
-interface FilterItem {
-  label: string;
-  count: number;
-  selected: boolean;
-}
-
+/**
+ * Interface for simplified filter group and multi-select options
+ * This contains all properties needed by the multi-select component
+ */
 interface FilterGroup {
   name: string;
   icon: string;
-  items: FilterItem[];
-  searchControl: FormControl;
-  filteredItems: Observable<FilterItem[]>;
-  expanded: boolean;
-  useAutocomplete: boolean;
-  multiSelectItems?: MultiSelectItem[];
+  rawData: any[];
+  filterField: string;
 }
 
 @Component({
@@ -37,15 +24,8 @@ interface FilterGroup {
   imports: [
     CommonModule, 
     FormsModule,
-    ReactiveFormsModule,
     MatIconModule, 
     MatDividerModule, 
-    MatCardModule,
-    MatExpansionModule,
-    MatFormFieldModule,
-    MatInputModule,
-    MatCheckboxModule,
-    MatAutocompleteModule,
     MultiSelectComponent
   ],
   templateUrl: './metrics-filter.component.html',
@@ -55,35 +35,59 @@ export class MetricsFilterComponent implements OnChanges {
   @Input() data: any[] = [];
   @Input() columnsFilter: string[] = [];
   @Output() filterChange = new EventEmitter<any>();
+  @Output() hierarchicalFiltersChange = new EventEmitter<HierarchicalFilterItem[]>();
   
-  // Contadores para filtros
+  // Counter for filters
   totalRegistros: number = 0;
   
-  // Grupos de filtros
+  // Filter groups
   filterGroups: FilterGroup[] = [];
+  
+  // Hierarchical filter system
+  hierarchicalFilters: HierarchicalFilterItem[] = [];
+  
+  // Original data (to avoid data loss when filtering)
+  originalData: any[] = [];
   
   constructor() {}
   
+  /**
+   * When input changes, initialize filters and process data
+   */
   ngOnChanges(changes: SimpleChanges): void {
+    
     if (changes['data'] && this.data) {
+      // Store original data to avoid data loss when filtering
+      this.originalData = [...this.data];
       this.totalRegistros = this.data.length;
       this.initializeFilters();
     }
   }
   
+  /**
+   * Returns the icon name for a given field using the centralized icon config
+   * @param fieldName Field name to get icon for
+   */
+  getFieldIconName(fieldName: string): string {
+    return getFieldIcon(fieldName);
+  }
+  
+  /**
+   * Initializes filter groups based on columnsFilter or available string fields
+   */
   initializeFilters(): void {
     this.filterGroups = [];
     
-    // Si no hay datos, salir
+    // Exit if no data available
     if (!this.data || this.data.length === 0) return;
     
-    // Determinar qué campos mostrar basado en columnsFilter
+    // Determine which fields to show based on columnsFilter
     let fieldsToShow = [];
     
     if (this.columnsFilter && this.columnsFilter.length > 0) {
-      // Usar solo los campos especificados en columnsFilter
+      // Only use fields specified in columnsFilter
       fieldsToShow = this.columnsFilter.filter(field => {
-        // Verificar que el campo existe en los datos
+        // Verify the field exists in the data as a string type
         return this.data.some(item => 
           item[field] !== undefined && 
           typeof item[field] === 'string' && 
@@ -92,10 +96,10 @@ export class MetricsFilterComponent implements OnChanges {
         );
       });
     } else {
-      // Si no se especifica columnsFilter, usar el comportamiento anterior
+      // If columnsFilter is not specified, use previous behavior
       const firstItem = this.data[0];
       fieldsToShow = Object.keys(firstItem).filter(key => {
-        // Excluir campos que comiencen con 'Id'
+        // Exclude fields starting with 'Id'
         if (key.startsWith('Id') || key.startsWith('id')) {
           return false;
         }
@@ -105,192 +109,142 @@ export class MetricsFilterComponent implements OnChanges {
       });
     }
     
+    // Create a filter group for each field
     fieldsToShow.forEach(field => {
-      // Contabilizar valores únicos
-      const valueCounts: { [key: string]: number } = {};
-      this.data.forEach(item => {
-        const value = item[field];
-        if (typeof value === 'string' && value !== null && value.trim() !== '') {
-          valueCounts[value] = (valueCounts[value] || 0) + 1;
-        }
-      });
+      // Create a simple group structure - data processing is now handled by multi-select
+      // Convert field name to display name (first letter uppercase)
+      const fieldDisplayName = field.charAt(0).toUpperCase() + field.slice(1);
       
-      // Crear items para el grupo de filtros
-      const items: FilterItem[] = Object.keys(valueCounts)
-        .sort() // Ordenar valores alfabéticamente
-        .map(value => ({
-          label: value,
-          count: valueCounts[value],
-          selected: false
-        }));
+      // Get appropriate icon for this field
+      const icon = this.getFieldIconName(field);
       
-      // Solo crear grupo si hay al menos un item
-      if (items.length > 0) {
-        // Note: Ya no usamos este searchControl en la UI, pero lo mantenemos por compatibilidad
-        // La búsqueda ahora la maneja internamente el componente multi-select
-        const searchControl = new FormControl('');
-        const filteredItems = searchControl.valueChanges.pipe(
-          startWith(''),
-          map(value => this.filterItems(value, items))
-        );
-        
-        // Determinar icono basado en el nombre del campo
-        let icon = 'label';
-        const fieldLower = field.toLowerCase();
-        if (fieldLower.includes('estado')) icon = 'check_circle';
-        if (fieldLower.includes('tipo')) icon = 'category';
-        if (fieldLower.includes('nombre')) icon = 'person';
-        if (fieldLower.includes('ubicacion') || fieldLower.includes('ubicación')) icon = 'place';
-        if (fieldLower.includes('fecha')) icon = 'event';
-        
-        // Determinar si usar autocompletado basado en el número de items
-        const useAutocomplete = items.length > 15;
-        
-        // Crear la versión MultiSelectItem una sola vez
-        const multiSelectItems: MultiSelectItem[] = items.map(item => ({
-          value: item.label,
-          label: item.label,
-          selected: item.selected,
-          count: item.count
-        }));
-        
-        this.filterGroups.push({
-          name: field.charAt(0).toUpperCase() + field.slice(1),
-          icon,
-          expanded: false,
-          items,
-          searchControl,
-          filteredItems,
-          useAutocomplete,
-          multiSelectItems
-        });
-      }
+      // Create filter group with minimal information
+      this.createSimpleFilterGroup(fieldDisplayName, icon);
     });
+    
+    // Sort filter groups based on their position in columnsFilter if defined
+    if (this.columnsFilter && this.columnsFilter.length > 0) {
+      this.filterGroups.sort((a, b) => {
+        const indexA = this.columnsFilter.findIndex(field => 
+          field.toLowerCase() === a.name.toLowerCase());
+        const indexB = this.columnsFilter.findIndex(field => 
+          field.toLowerCase() === b.name.toLowerCase());
+        return indexA - indexB;
+      });
+    }
   }
   
-  createFilterGroup(name: string, icon: string, dataMap: Map<string, number>): void {
-    if (dataMap.size === 0) return;
-    
-    const items: FilterItem[] = [];
-    dataMap.forEach((count, label) => {
-      items.push({
-        label,
-        count,
-        selected: false
-      });
-    });
-    
-    // Ordenar por frecuencia descendente
-    items.sort((a, b) => b.count - a.count);
-    
-    const searchControl = new FormControl('');
-    const useAutocomplete = items.length > 15;
-    
-    const filteredItems = searchControl.valueChanges.pipe(
-      startWith(''),
-      map(value => this.filterItems(value, items))
-    );
-    
-    this.filterGroups.push({
+  /**
+   * Creates a simple filter group with just name and icon
+   * This is used with the new multi-select component that processes data internally
+   * @param name Display name for the filter group
+   * @param icon Icon to use for the filter group
+   */
+  createSimpleFilterGroup(name: string, icon: string): void {
+    // Create filter group options object with all needed properties
+    const options = {
       name,
       icon,
-      items,
-      searchControl,
-      filteredItems,
-      expanded: false,
-      useAutocomplete
-    });
-  }
-  
-  filterItems(value: string | null, items: FilterItem[]): FilterItem[] {
-    if (!value) return items;
-    const filterValue = value.toLowerCase();
-    return items.filter(item => item.label.toLowerCase().includes(filterValue));
-  }
-  
-  toggleSelection(item: FilterItem): void {
-    item.selected = !item.selected;
-    this.applyFilters();
-  }
-  
-  toggleExpand(group: FilterGroup): void {
-    group.expanded = !group.expanded;
-  }
-  
-  // Se eliminó el método clearFilters que ya no es necesario
-  
-  getSelectedCount(group: FilterGroup): number {
-    return group.items.filter(item => item.selected).length;
-  }
-  
-  /**
-   * Aplica los filtros basados en las selecciones actuales y emite el evento filterChange
-   */
-  applyFilters(): void {
-    const filters: {[key: string]: string[]} = {};
-    let hasActiveFilters = false;
+      rawData: this.originalData,
+      filterField: name
+    };
     
-    this.filterGroups.forEach(group => {
-      const selectedItems = group.items
-        .filter(item => item.selected)
-        .map(item => item.label);
-      
-      if (selectedItems.length > 0) {
-        filters[group.name.toLowerCase()] = selectedItems;
-        hasActiveFilters = true;
-      }
-    });
-    
-    // Emitir los filtros aplicados
-    console.log('[MetricsFilterComponent] applyFilters - Emitiendo filtros:', hasActiveFilters ? filters : {});
-    this.filterChange.emit(hasActiveFilters ? filters : {});
+    // Add to filter groups array
+    this.filterGroups.push(options);
   }
   
-  /**
-   * Devuelve los MultiSelectItems pre-generados del FilterGroup
-   */
-  getMultiSelectItems(group: FilterGroup): MultiSelectItem[] {
-    // Devolver la referencia estable en lugar de crear una nueva cada vez
-    return group.multiSelectItems || [];
-  }
+  // El método toggleExpand() ya no es necesario, ya que el componente multi-select ahora maneja internamente su propio estado
   
   /**
-   * Maneja los cambios de selección del componente multi-select
+   * Handle selection changes from the multi-select component
+   * Updates hierarchical filters based on selections
+   * @param selectedItems Selected items from multi-select
+   * @param group Filter group that was changed
    */
   handleSelectionChange(selectedItems: MultiSelectItem[], group: FilterGroup): void {
-    console.log(`[MetricsFilterComponent] handleSelectionChange - Recibido para grupo '${group.name}'`, selectedItems);
+    // Get selected values
+    const selectedValues = selectedItems
+      .filter(item => item.selected)
+      .map(item => item.value);
+
+    console.log('handleSelectionChange', selectedValues, group);
     
-    // Verificar si realmente hay cambios para evitar actualizaciones innecesarias
-    let hasChanges = false;
+    // Update hierarchical filters
+    this.updateHierarchicalFilters(group.name, selectedValues);
+  }
+  
+  /**
+   * Updates the hierarchical filters based on selection changes
+   * @param filterType Type of filter (lowercase field name)
+   * @param selectedValues Array of selected values
+   */
+  private updateHierarchicalFilters(filterType: string, selectedValues: string[]): void {
+    // Create a copy of the current filters
+    let hierarchicalFiltersTemp = [...this.hierarchicalFilters];
+    let selectValuesTemp = [...selectedValues];
     
-    // Obtener solo los valores seleccionados
-    const selectedValues = new Set(selectedItems.map(item => item.value));
-    
-    // Actualizar el estado de selección en los items del grupo
-    group.items.forEach(item => {
-      const shouldBeSelected = selectedValues.has(item.label);
-      if (item.selected !== shouldBeSelected) {
-        item.selected = shouldBeSelected;
-        hasChanges = true;
+    if (selectValuesTemp.length === 0) {
+      // If no values selected, remove this filter from hierarchy
+      hierarchicalFiltersTemp = hierarchicalFiltersTemp.filter(item => 
+        item.filterType !== filterType);
+    } else {
+      // Check if this filter type already exists in the hierarchy
+      const existingIndex = hierarchicalFiltersTemp.findIndex(item => 
+        item.filterType === filterType);
+      
+      if (existingIndex >= 0) {
+        // Update existing filter
+        hierarchicalFiltersTemp[existingIndex].filters = selectValuesTemp;
+      } else {
+        // Add new filter to hierarchy with next position
+        const position = hierarchicalFiltersTemp.length;
+        hierarchicalFiltersTemp.push({
+          position,
+          filterType,
+          filters: selectValuesTemp
+        });
       }
+    }
+    
+    // Sort by position to ensure correct hierarchy order
+    hierarchicalFiltersTemp.sort((a, b) => a.position - b.position);
+    
+    // Emit the updated hierarchical filters
+    console.log('HierarchicalFilters updated:', hierarchicalFiltersTemp);
+    this.hierarchicalFiltersChange.emit(hierarchicalFiltersTemp);
+    this.hierarchicalFilters = hierarchicalFiltersTemp;
+    
+    
+    // Also emit filtered data for backward compatibility
+    // const filteredData = this.applyFiltersToData();
+    // console.log('filteredData [MetricsFilterComponent]', filteredData);
+    // this.filterChange.emit(selectValuesTemp);
+    // console.log('filteredData [MetricsFilterComponent] EMIT', selectValuesTemp);
+  }
+  
+  /**
+   * Applies filters to the data
+   * @returns Filtered data
+   */
+  private applyFiltersToData(): any[] {
+    // If no hierarchical filters, return all data
+    if (this.hierarchicalFilters.length === 0) {
+      return this.originalData;
+    }
+    
+    // Apply filters one by one
+    let filteredData = [...this.originalData];
+    
+    this.hierarchicalFilters.forEach(filter => {
+      // Skip empty filters
+      if (filter.filters.length === 0) return;
+      
+      filteredData = filteredData.filter(item => 
+        filter.filters.includes(item[filter.filterType])
+      );
     });
     
-    // Actualizar también los MultiSelectItems del grupo para mantener sincronizado
-    if (group.multiSelectItems) {
-      group.multiSelectItems.forEach(item => {
-        const shouldBeSelected = selectedValues.has(item.value);
-        if (item.selected !== shouldBeSelected) {
-          item.selected = shouldBeSelected;
-        }
-      });
-    }
-    
-    // Aplicar los filtros solo si hubo cambios
-    if (hasChanges) {
-      console.log(`[MetricsFilterComponent] handleSelectionChange - Cambios detectados en grupo '${group.name}', aplicando filtros`);
-      this.applyFilters();
-    } else {
-      console.log(`[MetricsFilterComponent] handleSelectionChange - Sin cambios en grupo '${group.name}', no se aplican filtros`);
-    }
+    return filteredData;
   }
 }
+  

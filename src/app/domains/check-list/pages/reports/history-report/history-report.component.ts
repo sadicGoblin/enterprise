@@ -6,6 +6,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatSelectModule } from '@angular/material/select';
 import { DateAdapter, MAT_DATE_FORMATS, MAT_DATE_LOCALE, MatNativeDateModule } from '@angular/material/core';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
@@ -49,6 +50,7 @@ import { MessageComponent, MessageType } from '../../../../../shared/components/
     MatIconModule,
     MatProgressSpinnerModule,
     MatTabsModule,
+    MatSelectModule,
     HistoryTableComponent,
     HistoryMetricsComponent,
     MessageComponent
@@ -73,7 +75,17 @@ import { MessageComponent, MessageType } from '../../../../../shared/components/
 })
 export class HistoryReportComponent implements OnInit {
   historyForm!: FormGroup;
-  isLoading = false;
+  isLoading: boolean = false;
+  
+  // Pestaña actualmente seleccionada
+  selectedTab = 0;
+  
+  // Opciones para el tipo de reporte
+  reportTypeOptions = [
+    { value: 'customplan', label: 'Plan Personalizado' },
+    { value: 'repincident', label: 'Reporte de Incidencia' },
+    { value: 'inspsstma', label: 'Inspección STTMA' }
+  ];
   
   // Propiedades para el sistema de mensajes
   errorMessage = '';
@@ -123,11 +135,11 @@ export class HistoryReportComponent implements OnInit {
     endDate.setDate(endDate.getDate() - 1); // Ayer
     
     this.historyForm = this.fb.group({
+      reportType: ['customplan', Validators.required], // Por defecto seleccionamos 'Plan Personalizado'
       startDate: [startDate, Validators.required],
       endDate: [endDate, Validators.required]
     });
   }
-
   // Los métodos de filtrado ahora están en el componente HistoryTableComponent
 
   // Comentarios eliminados

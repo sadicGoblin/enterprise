@@ -10,6 +10,7 @@ import Chart from 'chart.js/auto';
 
 // Importar el modelo de configuración de reportes
 import { ReportConfig } from '../../models/report-config.model';
+import { HierarchicalFilterItem } from '../../../../../models/hierarchical-filter.model';
 
 @Component({
   selector: 'app-metrics-data',
@@ -31,6 +32,7 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
   @Input() completeData: any[] = []; // Datos completos sin filtrar (para SummaryKpi)
   @Input() activeFilters: {[key: string]: string[]} = {};
   @Input() reportConfig?: ReportConfig;
+  @Input() hierarchicalFilters: HierarchicalFilterItem[] = [];
   
   // Referencias a los elementos del DOM para los gráficos
   @ViewChild('estadosChart') estadosChartCanvas!: ElementRef<HTMLCanvasElement>;
@@ -46,19 +48,30 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
   registrosPorEstado: {[key: string]: number} = {};
   registrosPorObra: {[key: string]: number} = {};
   registrosPorUsuario: {[key: string]: number} = {};
+  _hierarchicalFilters: HierarchicalFilterItem[] = [];
   
   // Gráficos dinámicos por filtros activos
   dynamicCharts: {filterType: string, fieldName: string, selectedValues?: string[]}[] = [];
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log('MetricsDataComponent - ngOnChanges:', { 
-      data: changes['data']?.currentValue?.length || 0, 
-      activeFilters: changes['activeFilters']?.currentValue, 
-      hasFilters: changes['activeFilters'] && Object.keys(changes['activeFilters'].currentValue || {}).length > 0
-    });
-    if ((changes['data'] && this.data) || changes['activeFilters']) {
+    // console.log('MetricsDataComponent - ngOnChanges:', { 
+    //   data: changes['data']?.currentValue?.length || 0, 
+    //   activeFilters: changes['activeFilters']?.currentValue, 
+    //   hasFilters: changes['activeFilters'] && Object.keys(changes['activeFilters'].currentValue || {}).length > 0
+    // });
+
+    if (changes['hierarchicalFilters'] && this.hierarchicalFilters.length > 0) {
+      this._hierarchicalFilters = [...this.hierarchicalFilters];
+      console.log('[MetricsDataComponent] - ngOnChanges - handleHierarchicalFiltersChange:', this._hierarchicalFilters);
       this.procesarDatos();
     }
+    
+    // if ((changes['data'] && this.data) || changes['hierarchicalFilters']) {
+    //   this.procesarDatos();
+    // }
+
+    
+
   }
   
   /**
@@ -66,57 +79,22 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
    * sin depender de nombres de campos específicos
    */
   procesarDatos(): void {
-    console.log('MetricsDataComponent - procesarDatos - inicio', {
-      dataLength: this.data.length, 
-      activeFilters: this.activeFilters,
-      hasActiveFilters: Object.keys(this.activeFilters || {}).length > 0,
-      reportConfig: this.reportConfig
-    });
-    
-    // Reiniciar contadores
-    this.totalRegistros = this.data.length;
-    this.registrosPorTipo = {};
-    this.registrosPorEstado = {};
-    this.registrosPorObra = {};
-    this.registrosPorUsuario = {};
-    
-    if (this.data.length === 0) {
-      return;
-    }
-
-    // Detectar campos de cadena de texto en los datos (potenciales candidatos para filtros/gráficos)
-    const camposCadena = this.detectarCamposCadena(this.data[0]);
-    
-    // Procesar cada registro de forma dinámica
-    this.data.forEach((registro: any) => {
-      camposCadena.forEach(campo => {
-        // Si el registro tiene este campo y tiene un valor
-        if (registro[campo] !== undefined && registro[campo] !== null) {
-          // Seleccionamos el contador adecuado según el campo
-          let contadorCampo = null;
-          
-          // Intentamos mapear el campo a uno de nuestros contadores predefinidos
-          if (campo.toLowerCase().includes('tipo')) {
-            contadorCampo = this.registrosPorTipo;
-          } else if (campo.toLowerCase().includes('estado')) {
-            contadorCampo = this.registrosPorEstado;
-          } else if (campo.toLowerCase().includes('obra')) {
-            contadorCampo = this.registrosPorObra;
-          } else if (campo.toLowerCase().includes('usuario')) {
-            contadorCampo = this.registrosPorUsuario;
-          }
-          
-          // Si encontramos un contador adecuado, actualizamos el conteo
-          if (contadorCampo) {
-            const valorCampo = String(registro[campo]);
-            contadorCampo[valorCampo] = (contadorCampo[valorCampo] || 0) + 1;
-          }
+        this.dynamicCharts = [];
+        // Agregar configuración para este filtro
+        const sortedFilters = [...this.hierarchicalFilters].sort((a, b) => a.position - b.position);
+      
+      // Apply each filter in order using for...of to allow break statements
+      for (const filter of sortedFilters) {
+        if (filter.filters && filter.filters.length > 0) {
+          const filterType = filter.filterType;
+          const fieldName = this.getFieldNameFromFilterType(filterType);
+          this.dynamicCharts.push({
+            filterType: this.getFilterDisplayName(filterType),
+            fieldName,
+            selectedValues: []
+          });
         }
-      });
-    });
-    
-    // Generar gráficos dinámicos basados en filtros activos
-    this.generarGraficosDinamicos();
+      }
   }
   
   /**
@@ -256,18 +234,18 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
    * y cada componente se encarga de hacer su propio filtrado
    */
   private generarGraficosDinamicos(): void {
-    console.log('MetricsDataComponent - generarGraficosDinamicos - inicio', {
-      dataLength: this.data.length,
-      activeFilters: this.activeFilters,
-      filterKeys: Object.keys(this.activeFilters || {})
-    });
+    // console.log('MetricsDataComponent - generarGraficosDinamicos - inicio', {
+    //   dataLength: this.data.length,
+    //   activeFilters: this.activeFilters,
+    //   filterKeys: Object.keys(this.activeFilters || {})
+    // });
     
     // Si no hay filtros activos o datos, no generamos gráficos
-    if (!this.activeFilters || Object.keys(this.activeFilters).length === 0 || !this.data || this.data.length === 0) {
-      console.log('MetricsDataComponent - No hay filtros activos o datos para generar gráficos');
-      this.dynamicCharts = [];
-      return;
-    }
+    // if (this._hierarchicalFilters.length > 0 || !this.activeFilters || Object.keys(this.activeFilters).length === 0 || !this.data || this.data.length === 0) {
+    //   // console.log('MetricsDataComponent - No hay filtros activos o datos para generar gráficos');
+    //   this.dynamicCharts = [];
+    //   return;
+    // }
     
     // Limpiamos los gráficos dinámicos previos
     this.dynamicCharts = [];
@@ -284,18 +262,12 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
         // Ya no necesitamos filtrar los datos aquí, solo pasar la configuración
         // para que el componente dynamic-chart haga el filtrado
         
-        console.log('MetricsDataComponent - Configurando filtro para dynamic-chart:', {
-          filterType, 
-          fieldName,
-          selectedValues: selectedValues.length
-        });
+        // console.log('MetricsDataComponent - Configurando filtro para dynamic-chart:', {
+        //   filterType, 
+        //   fieldName,
+        //   selectedValues: selectedValues.length
+        // });
         
-        // Agregar configuración para este filtro
-        this.dynamicCharts.push({
-          filterType: this.getFilterDisplayName(filterType),
-          fieldName,
-          selectedValues: selectedValues
-        });
       }
     }
   }

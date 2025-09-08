@@ -9,6 +9,9 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Observable, map, startWith } from 'rxjs';
+import { getInputIcon } from '../../configs/icons.config';
+import { HierarchicalFilterItem } from '../../../domains/check-list/models/hierarchical-filter.model';
+import { filter as _filter, cloneDeep } from 'lodash';
 
 // Interfaces
 export interface MultiSelectItem {
@@ -39,13 +42,26 @@ export interface MultiSelectItem {
   encapsulation: ViewEncapsulation.None
 })
 export class MultiSelectComponent implements OnChanges, AfterViewInit {
+  // Traditional item-based input (for backwards compatibility)
   @Input() items: MultiSelectItem[] = [];
+  
+  // New data-driven approach
+  @Input() rawData: any[] = [];       // Raw unprocessed data
+  @Input() filterField: string = '';  // Field name to filter by
+  
   @Input() placeholder = 'Seleccionar...';
   @Input() label = '';
-  @Input() showCount = false;
+  @Input() showCount = true;
   @Input() useAutocomplete = false;
-  @Input() expanded = true;
+  @Input() expanded = false;
   @Input() maxHeight = '250px';
+  @Input() hierarchicalFilters: HierarchicalFilterItem[] = [];
+  
+  // Group/section header properties
+  @Input() groupName = '';
+  @Input() groupIcon = '';
+  @Input() showHeader = true;
+  @Input() selectedCount = 0;  // This will be calculated internally when using rawData
   
   @Output() selectionChange = new EventEmitter<MultiSelectItem[]>();
   
@@ -54,6 +70,7 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
   
   filteredItems: Observable<MultiSelectItem[]>;
   searchControl = new FormControl('');
+  rawDataFiltered: any[] = []; 
   
   constructor(private elementRef: ElementRef, private renderer: Renderer2) {
     this.filteredItems = this.searchControl.valueChanges.pipe(
@@ -71,33 +88,158 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
   }
   
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['items'] && this.items) {
-      // En lugar de modificar this.items, trabajamos con _internalItems
-      this._internalItems = this.items.map(item => ({
-        ...item,
-        selected: item.selected || false
-      }));
-      
-      // Actualizar items filtrados
-      this.searchControl.setValue(this.searchControl.value);
-      
-      // Reset del contador de emisiones
-      this._lastEmitLength = this.getSelectedItems().length;
-      
-      // Aplicar estilos cuando cambien los items
-      setTimeout(() => this.applyLabelStyles(), 100);
+    // Process raw data if provided
+    // console.log('Changes:', changes);
+    if (changes['rawData'] && this.rawData && this.rawData.length > 0 && this.filterField) {
+      this.processRawData();
     }
     
-    // Ya no determinamos automáticamente si usar autocomplete, siempre usaremos lista con buscador
-    // El autocomplete como tal ya no lo usamos
+    if (changes['hierarchicalFilters']) {
+      // Store original data to avoid data loss when filtering
+      // this.hierarchicalFilters = [...this.hierarchicalFilters];
+      this.processRawData();
+      
+    }
+    
+    // We no longer automatically determine whether to use autocomplete
+    // We'll always use a list with search functionality
     if (changes['useAutocomplete'] === undefined) {
       this.useAutocomplete = false;
     }
     
-    if (changes['expanded'] && this.expanded) {
-      // Cuando se expande el componente, aplicar estilos
-      setTimeout(() => this.applyLabelStyles(), 100);
-    }
+  }
+
+  processFilterHierarchical(rawData: any[] = []) {
+    console.log('processFilterHierarchical', this.filterField, this.hierarchicalFilters);
+    let rawDataFiltered: any[] = []; 
+    rawDataFiltered = [...rawData];
+    if (this.hierarchicalFilters && this.hierarchicalFilters.length > 0) {
+      // Start with a copy of all raw data
+      
+      let rawDataResult: any[] = []; 
+      
+      console.log('rawDataFiltered', rawDataFiltered);
+      
+      // Sort filters by position to ensure proper hierarchy
+      const sortedFilters = [...this.hierarchicalFilters].sort((a, b) => a.position - b.position);
+      
+      // Apply each filter in order using for...of to allow break statements
+      for (const filter of sortedFilters) {
+        if (filter.filters && filter.filters.length > 0) {
+          console.log('filter', filter);
+          const filterType = filter.filterType;
+          const filters = filter.filters;
+          const position = filter.position;
+          console.log('filterType', filterType, this.groupName);
+          
+          // Stop all filtering if we hit the current field name to avoid circular filtering
+          if(String(filterType) === String(this.groupName)){
+            break; // Exit the loop completely
+          }
+
+          // Apply the filter and store the result
+          const filteredData = _filter(rawDataFiltered, item => {
+            return filters.includes(item[filterType]);
+          });
+
+          // Update for next iteration
+          rawDataFiltered = filteredData;
+        }
+      }
+
+      
+
+      // this.rawData = rawDataFiltered;
+      
+      // Log the filtered results
+      // console.log('Raw data filtered by hierarchical filters:', this.filterField, this.rawData);
+    } 
+    console.log('rawDataResult', this.filterField, rawDataFiltered);
+    return rawDataFiltered;
+  }
+
+
+   /**
+   * Processes raw data to generate MultiSelectItems
+   * This method analyzes the raw data, extracts unique values for the specified field,
+   * counts occurrences, and generates MultiSelectItems
+   */
+   private processRawData(): void {
+    if (!this.rawData || !this.filterField) return;
+    let rawDataFiltered: any[] = []; 
+    rawDataFiltered = this.processFilterHierarchical(this.rawData);
+    
+    // Count occurrences of each unique value
+    const valueCountMap = new Map<string, number>();
+    
+    // Process each data item
+    rawDataFiltered.forEach(item => {
+      // Try to find the field by its exact name first
+      let fieldValue = this.getFieldValue(item, this.filterField);
+      
+      // If not found, try case-insensitive search for the field name
+      if (fieldValue === null || fieldValue === undefined) {
+        // Find the actual property name in the item regardless of case
+        const actualFieldName = Object.keys(item).find(
+          key => key.toLowerCase() === this.filterField.toLowerCase()
+        );
+        
+        // If we found a matching field name with different case, get its value
+        if (actualFieldName) {
+          fieldValue = item[actualFieldName];
+        }
+      }
+      
+      // Skip if still null or undefined
+      if (fieldValue === null || fieldValue === undefined) return;
+      
+      // Convert to string and normalize
+      const value = String(fieldValue).trim();
+      if (!value) return;
+      
+      // Count occurrences 
+      valueCountMap.set(value, (valueCountMap.get(value) || 0) + 1);
+    });
+    
+    // Save the selection state of existing items before creating new ones
+    const selectedValues = new Set<string>();
+    this._internalItems.forEach(item => {
+      if (item.selected) {
+        selectedValues.add(item.value);
+      }
+    });
+
+    // Convert to MultiSelectItems preserving previous selection state
+    const newItems: MultiSelectItem[] = [];
+    valueCountMap.forEach((count, value) => {
+      // Check if this value was previously selected
+      const wasSelected = selectedValues.has(value);
+      
+      newItems.push({
+        value: value,
+        label: value,
+        count: count,
+        selected: wasSelected // Preserve selection state
+      });
+    });
+    
+    // Sort items alphabetically
+    newItems.sort((a, b) => a.label.localeCompare(b.label));
+    
+    // Update internal items
+    this._internalItems = newItems;
+    
+    // Update filtered items
+    this.searchControl.setValue(this.searchControl.value);
+    
+    // Reset emission counter
+    this._lastEmitLength = 0;
+    
+    // Update the selectedCount for the header
+    this.updateSelectedCount();
+    
+    // Apply styles
+    setTimeout(() => this.applyLabelStyles(), 100);
   }
   
   filterItems(value: string | null): MultiSelectItem[] {
@@ -108,17 +250,17 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
   }
   
   toggleSelection(item: MultiSelectItem): void {
-    console.log('[MultiSelectComponent] toggleSelection - Item seleccionado:', item);
     if (item.disabled) return;
     
-    // Buscar el item en la colección interna y cambiar su estado
+    // Find the item in the internal collection and change its state
     const internalItem = this._internalItems.find(i => i.value === item.value);
     if (internalItem) {
       internalItem.selected = !internalItem.selected;
-      console.log('[MultiSelectComponent] toggleSelection - Nuevo estado:', internalItem.selected);
+      
+      // Update the selected count for the header
+      this.updateSelectedCount();
+      
       this.emitSelection();
-    } else {
-      console.log('[MultiSelectComponent] toggleSelection - ALERTA: No se encontró el item en _internalItems');
     }
   }
   
@@ -126,13 +268,16 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
     return this._internalItems.length > 0 && 
            this._internalItems.filter(item => !item.disabled).every(item => item.selected);
   }
+
+  toggleExpand(): void {
+    this.expanded = !this.expanded;
+    this.applyLabelStyles();
+  }
   
   toggleAll(): void {
-    console.log('[MultiSelectComponent] toggleAll - Inicio');
     const allSelected = this.isAllSelected();
-    console.log('[MultiSelectComponent] toggleAll - Estado actual:', allSelected ? 'Todos seleccionados' : 'No todos seleccionados');
     
-    // Cambiar el estado de todos los elementos (no deshabilitados)
+    // Change the state of all non-disabled elements
     this._internalItems.forEach(item => {
       if (!item.disabled) {
         item.selected = !allSelected;
@@ -142,9 +287,11 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
     // Limpiar la búsqueda
     this.searchControl.setValue('');
     
-    // Emitir los cambios directamente, sin generar múltiples eventos
+    // Update the selected count for the header
+    this.updateSelectedCount();
+    
+    // Emit changes directly without generating multiple events
     const selectedItems = this._internalItems.filter(item => item.selected);
-    console.log('[MultiSelectComponent] toggleAll - Emitiendo selección directamente:', selectedItems);
     this._lastEmitLength = selectedItems.length;
     this.selectionChange.emit(selectedItems);
   }
@@ -159,6 +306,10 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
     });
     if (changed) {
       this.searchControl.setValue('');
+      
+      // Update the selected count for the header
+      this.updateSelectedCount();
+      
       this.emitSelection();
     }
   }
@@ -172,11 +323,13 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
   }
   
   removeSelected(item: MultiSelectItem): void {
-    if (item.disabled) return;
-    
-    const foundItem = this._internalItems.find(i => i.value === item.value);
-    if (foundItem) {
-      foundItem.selected = false;
+    const internalItem = this._internalItems.find(i => i.value === item.value);
+    if (internalItem) {
+      internalItem.selected = false;
+      
+      // Actualizar el contador de selecciones para el encabezado
+      this.updateSelectedCount();
+      
       this.emitSelection();
     }
   }
@@ -187,13 +340,13 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
     
     // Siempre emitir la selección actual para garantizar que se propaga
     this._lastEmitLength = selectedItems.length;
-    console.log('[MultiSelectComponent] emitSelection - Emitiendo', selectedItems.length, 'items seleccionados:', selectedItems);
+    // console.log('[MultiSelectComponent] emitSelection - Emitiendo', selectedItems.length, 'items seleccionados:', selectedItems);
     
     // Emitir siempre para asegurar que los receptores reciben la información
     this.selectionChange.emit(selectedItems);
     
     // Agregar un log adicional para confirmar que el evento fue emitido
-    console.log('[MultiSelectComponent] emitSelection - Evento emitido correctamente');
+    // console.log('[MultiSelectComponent] emitSelection - Evento emitido correctamente');
   }
   
   /**
@@ -210,7 +363,7 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
   private applyLabelStyles() {
     // Usar setTimeout para asegurarnos de aplicar los estilos después del renderizado
     setTimeout(() => {
-      console.log('Aplicando estilos a los elementos del multi-select');
+      // console.log('Aplicando estilos a los elementos del multi-select');
       
       // 1. CONTENEDOR PRINCIPAL
       const optionsContainer = this.elementRef.nativeElement.querySelector('.options-container');
@@ -283,30 +436,6 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
         // // Para posicionar contador absolutamente
       });
       
-      // 3. OPCIÓN "VER TODOS"
-      // const allOption = this.elementRef.nativeElement.querySelector('.multi-select-all-option-fixed');
-      // if (allOption) {
-      //   // Estructura y layout
-      //   this.renderer.setStyle(allOption, 'font-size', '12px');
-      //   this.renderer.setStyle(allOption, 'font-weight', '500');
-      //   this.renderer.setStyle(allOption, 'color', '#333');
-      //   this.renderer.setStyle(allOption, 'line-height', '1.3');
-      //   this.renderer.setStyle(allOption, 'display', 'flex');
-      //   this.renderer.setStyle(allOption, 'align-items', 'center');
-      //   this.renderer.setStyle(allOption, 'justify-content', 'flex-start');
-      //   this.renderer.setStyle(allOption, 'padding', '8px');
-      //   this.renderer.setStyle(allOption, 'margin', '8px');
-        
-      //   // Dimensiones
-      //   this.renderer.setStyle(allOption, 'height', '30px');
-      //   this.renderer.setStyle(allOption, 'min-height', '30px');
-      //   this.renderer.setStyle(allOption, 'width', '100%');
-      //   this.renderer.setStyle(allOption, 'max-width', '100%');
-      //   this.renderer.setStyle(allOption, 'overflow', 'hidden');
-      //   this.renderer.setStyle(allOption, 'box-sizing', 'border-box');
-      //   this.renderer.setStyle(allOption, 'position', 'relative');
-      // }
-      
       // // 4. CHECKBOXES
       const checkboxes = this.elementRef.nativeElement.querySelectorAll('mat-checkbox');
       checkboxes.forEach((checkbox: HTMLElement) => {
@@ -319,44 +448,7 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
         this.renderer.setStyle(checkbox, 'padding-left', '0');
         this.renderer.setStyle(checkbox, 'margin-right', '0');
       });
-        
-      //   // Eliminar todos los márgenes y paddings internos
-      //   // const elements = checkbox.querySelectorAll('*');
-      //   // for (let i = 0; i < elements.length; i++) {
-      //   //   const el = elements[i] as HTMLElement;
-      //   //   if (el && el.style) {
-      //   //     this.renderer.setStyle(el, 'margin-left', '0');
-      //   //     this.renderer.setStyle(el, 'padding-left', '0');  
-      //   //   }
-      //   // }
-        
-      //   // Contenedor interno del checkbox
-      //   const checkboxInner = checkbox.querySelector('.mat-checkbox-inner-container');
-      //   if (checkboxInner) {
-      //     this.renderer.setStyle(checkboxInner, 'margin-left', '0');
-      //     this.renderer.setStyle(checkboxInner, 'margin-right', '0');
-      //   }
-      // });
-      
-      // // 5. CHECKBOX DE "VER TODOS" (específico)
-      // const allCheckbox = allOption?.querySelector('mat-checkbox');
-      // if (allCheckbox) {
-      //   this.renderer.setStyle(allCheckbox, 'width', '24px');
-      //   this.renderer.setStyle(allCheckbox, 'min-width', '24px');
-      //   this.renderer.setStyle(allCheckbox, 'display', 'inline-block');
-      //   this.renderer.setStyle(allCheckbox, 'margin-left', '-16px');
-        
-      //   // Eliminar márgenes y paddings internos
-      //   const elements = allCheckbox.querySelectorAll('*');
-      //   for (let i = 0; i < elements.length; i++) {
-      //     const el = elements[i] as HTMLElement;
-      //     if (el && el.style) {
-      //       this.renderer.setStyle(el, 'margin-left', '0');
-      //       this.renderer.setStyle(el, 'padding-left', '0');  
-      //     }
-      //   }
-      // }
-      
+
       // // 6. ETIQUETAS DE LOS CHECKBOXES
       const labels = this.elementRef.nativeElement.querySelectorAll('.checkbox-label');
       labels.forEach((label: HTMLElement) => {
@@ -379,20 +471,6 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
         this.renderer.setStyle(label, 'overflow', 'hidden');
         this.renderer.setStyle(label, 'text-overflow', 'ellipsis');
       });
-        
-      //   // Márgenes
-      //   this.renderer.setStyle(label, 'margin-left', '-6px');
-      //   this.renderer.setStyle(label, 'padding-left', '0');
-      // });
-      
-      // // 7. ETIQUETA DE "VER TODOS" (específico)
-      // const allLabel = allCheckbox?.querySelector('.mat-checkbox-label');
-      // if (allLabel) {
-      //   this.renderer.setStyle(allLabel, 'width', 'calc(100% - 30px)');
-      //   this.renderer.setStyle(allLabel, 'min-width', '120px');
-      //   this.renderer.setStyle(allLabel, 'margin-left', '-6px');
-      //   this.renderer.setStyle(allLabel, 'padding-left', '0');
-      // }
       
       // // 8. CONTADORES (badges)
       const counts = this.elementRef.nativeElement.querySelectorAll('.multi-select-count');
@@ -435,5 +513,44 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
     // Estimación basada en la longitud del texto
     // Asumimos que una línea típica puede contener aproximadamente 20 caracteres
     return text.length > 40;
+  }
+  
+  /**
+   * Gets the icon name from the centralized icon dictionary
+   * @param key The icon key to look up
+   * @returns The Material icon name
+   */
+  getIconName(key: string): string {
+    return getInputIcon(key);
+  }
+  
+ 
+  
+  /**
+   * Safely gets a field value from an object, supporting nested paths with dot notation
+   * @param item The data object
+   * @param fieldPath The field path (e.g. 'user.name' or just 'name')
+   * @returns The field value or null if not found
+   */
+  private getFieldValue(item: any, fieldPath: string): any {
+    if (!item || !fieldPath) return null;
+    
+    // Handle nested paths (e.g. 'user.name')
+    const parts = fieldPath.split('.');
+    let value = item;
+    
+    for (const part of parts) {
+      if (value === null || value === undefined) return null;
+      value = value[part];
+    }
+    
+    return value;
+  }
+  
+  /**
+   * Updates the selectedCount property based on internal selection state
+   */
+  private updateSelectedCount(): void {
+    this.selectedCount = this.getSelectedItems().length;
   }
 }

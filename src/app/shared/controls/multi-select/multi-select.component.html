@@ -1,91 +1,91 @@
 <div class="multi-select-container">
-  <!-- Etiqueta del componente si se proporciona -->
-  <div class="multi-select-header" *ngIf="label">
-    <span class="multi-select-label">{{ label }}</span>
-    <span class="multi-select-badge" *ngIf="getSelectedCount() > 0">
-      {{ getSelectedCount() }}
-    </span>
-    <!-- Botón de limpiar filtros eliminado -->
-  </div>
-  
-  <!-- Sección de chips seleccionados - no se muestran cuando se seleccionan todos -->
-  <!-- <div class="multi-select-chips" *ngIf="getSelectedCount() > 0 && !isAllSelected()">
-    <mat-chip-set>
-      <mat-chip
-        *ngFor="let item of getSelectedItems()"
-        [removable]="!item.disabled"
-        (removed)="removeSelected(item)">
-        {{ item.label }}
-        <mat-icon matChipRemove *ngIf="!item.disabled">cancel</mat-icon>
-      </mat-chip>
-    </mat-chip-set>
-  </div> -->
-  
-  <!-- Buscador simple para filtrar la lista con estilo consistente -->
-  <div *ngIf="expanded && internalItems.length > 15" class="multi-select-search">
-    <div class="custom-input-wrapper">
-      <div class="custom-input-container">
-        <mat-icon>search</mat-icon>
-        <input 
-          class="custom-input" 
-          type="text" 
-          [placeholder]="'Buscar elemento...'"
-          [formControl]="searchControl">
-      </div>
+  <!-- Encabezado expandible del grupo -->
+  <div class="group-header" *ngIf="showHeader" (click)="toggleExpand()">
+    <div class="header-left">
+      <mat-icon [color]="selectedCount > 0 ? 'primary' : ''">{{ groupIcon }}</mat-icon>
+      <span>{{ groupName }}</span>
+    </div>
+    <div class="header-right">
+      <span class="badge" *ngIf="selectedCount > 0">{{ selectedCount }}</span>
+      <mat-icon class="expand-icon">{{ expanded ? getIconName('collapse') : getIconName('expand') }}</mat-icon>
     </div>
   </div>
   
-  <!-- Opción Ver todos (fija, fuera del área de scroll) -->
-  <div *ngIf="expanded" class="multi-select-all-option-fixed">
-    <div class="ver-todos-container">
-      <mat-checkbox
-        [checked]="isAllSelected()"
-        [indeterminate]="getSelectedCount() > 0 && !isAllSelected()"
-        (change)="toggleAll()">
-      </mat-checkbox>
-      <span class="ver-todos-text">VER TODOS</span>
+  <!-- Contenido expandible -->
+  <div class="group-content" [class.expanded]="expanded">
+    <!-- Etiqueta del componente si se proporciona -->
+    <div class="multi-select-header" *ngIf="label">
+      <span class="multi-select-label">{{ label }}</span>
+      <span class="multi-select-badge" *ngIf="getSelectedCount() > 0">
+        {{ getSelectedCount() }}
+      </span>
     </div>
-  </div>
-  
-  <!-- Lista de elementos con scroll -->
-  <div *ngIf="expanded" class="multi-select-list" [style.maxHeight]="maxHeight">
     
-    <!-- Mostramos los elementos filtrados o limitados a 15 si hay muchos -->
-    <ng-container *ngIf="(filteredItems | async) as filteredList">
-      <div
-        *ngFor="let item of filteredList.slice(0, 15)"
-        class="multi-select-option"
-        [class.disabled]="item.disabled"
-        (click)="toggleSelection(item)">
-        <mat-checkbox
-          [checked]="item.selected"
-          [disabled]="item.disabled"
-          (change)="toggleSelection(item)"
-          (click)="$event.stopPropagation()">
-          <span 
-            class="checkbox-label custom-font-size" 
-            id="checkbox-label-text"
-            [matTooltip]="isTextOverflowing(item.label) ? item.label : ''" 
-            matTooltipPosition="above"
-            style="font-size: 10px !important; font-weight: 500 !important; color: #333 !important; max-width: 240px !important;">
-            {{ item.label }}
-          </span>
-        </mat-checkbox>
-        <span class="multi-select-count" *ngIf="showCount && item.count !== undefined">
-          ({{ item.count }})
-        </span>
-      </div>
-    </ng-container>
-    
-    <!-- Mensaje indicando que hay más elementos -->
-    <ng-container *ngIf="(filteredItems | async) as filteredList">
-      <div class="more-elements-indicator" *ngIf="filteredList.length > 15">
-        <mat-divider></mat-divider>
-        <div class="more-message">
-          <mat-icon class="more-icon">more_horiz</mat-icon>
-          <span class="more-text">Y {{ filteredList.length - 15 }} elementos más...</span>
+    <!-- Buscador simple para filtrar la lista con estilo consistente -->
+    <div *ngIf="expanded && internalItems.length > 15" class="multi-select-search">
+      <div class="custom-input-wrapper">
+        <div class="custom-input-container">
+          <mat-icon>{{ getIconName('search') }}</mat-icon>
+          <input 
+            class="custom-input" 
+            type="text" 
+            [placeholder]="'Buscar elemento...'"
+            [formControl]="searchControl">
         </div>
       </div>
-    </ng-container>
+    </div>
+    
+    <!-- Opción Ver todos (fija, fuera del área de scroll) -->
+    <div *ngIf="expanded" class="multi-select-all-option-fixed">
+      <div class="ver-todos-container">
+        <mat-checkbox
+          [checked]="isAllSelected()"
+          [indeterminate]="getSelectedCount() > 0 && !isAllSelected()"
+          (change)="toggleAll()">
+        </mat-checkbox>
+        <span class="ver-todos-text">VER TODOS</span>
+      </div>
+    </div>
+    
+    <!-- Lista de elementos con scroll -->
+    <div *ngIf="expanded" class="multi-select-list" [style.maxHeight]="maxHeight">
+      <!-- Mostramos los elementos filtrados o limitados a 15 si hay muchos -->
+      <ng-container *ngIf="(filteredItems | async) as filteredList">
+        <div
+          *ngFor="let item of filteredList.slice(0, 15)"
+          class="multi-select-option"
+          [class.disabled]="item.disabled"
+          (click)="toggleSelection(item)">
+          <mat-checkbox
+            [checked]="item.selected"
+            [disabled]="item.disabled"
+            (change)="toggleSelection(item)"
+            (click)="$event.stopPropagation()">
+            <span 
+              class="checkbox-label custom-font-size" 
+              id="checkbox-label-text"
+              [matTooltip]="isTextOverflowing(item.label) ? item.label : ''" 
+              matTooltipPosition="above"
+              style="font-size: 10px !important; font-weight: 500 !important; color: #333 !important; max-width: 240px !important;">
+              {{ item.label }}
+            </span>
+          </mat-checkbox>
+          <span class="multi-select-count" *ngIf="showCount && item.count !== undefined">
+            ({{ item.count }})
+          </span>
+        </div>
+      </ng-container>
+      
+      <!-- Mensaje indicando que hay más elementos -->
+      <ng-container *ngIf="(filteredItems | async) as filteredList">
+        <div class="more-elements-indicator" *ngIf="filteredList.length > 15">
+          <mat-divider></mat-divider>
+          <div class="more-message">
+            <mat-icon class="more-icon">{{ getIconName('more') }}</mat-icon>
+            <span class="more-text">Y {{ filteredList.length - 15 }} elementos más...</span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
   </div>
 </div>
