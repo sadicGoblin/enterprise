@@ -3,7 +3,7 @@
     <!-- Encabezado con totales -->
     <div class="chart-header">
       <div class="chart-title">
-        <mat-icon>dashboard</mat-icon>
+        <mat-icon>{{ getGeneralIcon('settings') }}</mat-icon>
         <h3>{{ title }}</h3>
       </div>
       <div class="total-badge">
@@ -23,7 +23,7 @@
               <div class="metrics-section"
                 *ngIf="summaryData[fieldName] && getObjectKeys(summaryData[fieldName]).length > 0">
                 <div class="section-header">
-                  <mat-icon>{{ getFieldIcon(fieldName) }}</mat-icon>
+                  <mat-icon>{{ getFieldIconForDisplay(fieldName) }}</mat-icon>
                   <span>{{ getFieldDisplayName(fieldName) | uppercase }}</span>
                   <span class="count-indicator">({{ getObjectKeys(summaryData[fieldName]).length }})</span>
                 </div>
@@ -42,7 +42,7 @@
               <div class="chart-container"
                 *ngIf="summaryData[fieldName] && getObjectKeys(summaryData[fieldName]).length > 0">
                 <div class="section-header">
-                  <mat-icon>pie_chart</mat-icon>
+                  <mat-icon>{{ getGeneralIcon('chart') || 'pie_chart' }}</mat-icon>
                   <span>GRÁFICO {{ getFieldDisplayName(fieldName) | uppercase }}</span>
                 </div>
                 <div class="pie-chart-container">

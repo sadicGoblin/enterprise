@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 
 // Importar la configuración del reporte
@@ -11,6 +11,7 @@ import { MetricsDataComponent } from './metrics-data/metrics-data.component';
 // Importar componentes de Material necesarios
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
+import { HierarchicalFilterItem } from '../../../../models/hierarchical-filter.model';
 
 @Component({
   selector: 'app-history-metrics',
@@ -31,6 +32,9 @@ export class HistoryMetricsComponent implements OnChanges {
   
   // Control para panel de filtros flotante
   filterPanelOpen = false;
+
+  // Hierarchical filter system
+  hierarchicalFilters: HierarchicalFilterItem[] = [];
   
   /**
    * Alterna la visibilidad del panel de filtros
@@ -38,6 +42,7 @@ export class HistoryMetricsComponent implements OnChanges {
   toggleFilterPanel(): void {
     this.filterPanelOpen = !this.filterPanelOpen;
   }
+  
   
   // Objeto para guardar filtros aplicados
   activeFilters: {[key: string]: string[]} = {};
@@ -60,12 +65,22 @@ handleFilterChange(filters: {[key: string]: string[]}) {
   const filtersChanged = this.haveFiltersChanged(this.activeFilters, filters);
   
   if (filtersChanged) {
-    console.log('[HistoryMetricsComponent] handleFilterChange - Cambios detectados, actualizando...');
+    // console.log('[HistoryMetricsComponent] handleFilterChange - Cambios detectados, actualizando...');
     this.activeFilters = { ...filters }; // Crear una nueva referencia del objeto
-    this.applyFilters();
+    // this.applyFilters();
   } else {
-    console.log('[HistoryMetricsComponent] handleFilterChange - Sin cambios, ignorando...');
+    // console.log('[HistoryMetricsComponent] handleFilterChange - Sin cambios, ignorando...');
   }
+}
+
+handleHierarchicalFiltersChange(filters: HierarchicalFilterItem[]) {
+  console.log('[HistoryMetricsComponent] handleHierarchicalFiltersChange - Filtros recibidos:', filters);
+  // let activeFilters: {[key: string]: string[]} = {};
+  // filters.forEach(filter => {
+  //   activeFilters[filter.filterType] = filter.filters;
+  // });
+  // this.activeFilters = activeFilters;
+  this.hierarchicalFilters = filters;
 }
 
 /**
@@ -124,12 +139,12 @@ applyFilters(): void {
   });
   
   // Agregar logs para verificar los valores de filtro
-  console.log('[HistoryMetricsComponent] applyFilters - Campos de filtro:', fieldMappings);
-  console.log('[HistoryMetricsComponent] applyFilters - Valores seleccionados:', this.activeFilters);
+  // console.log('[HistoryMetricsComponent] applyFilters - Campos de filtro:', fieldMappings);
+  // console.log('[HistoryMetricsComponent] applyFilters - Valores seleccionados:', this.activeFilters);
   
   // Ejemplo del primer elemento para depurar
   if (this.data.length > 0) {
-    console.log('[HistoryMetricsComponent] applyFilters - Ejemplo del primer registro:', this.data[0]);
+    // console.log('[HistoryMetricsComponent] applyFilters - Ejemplo del primer registro:', this.data[0]);
   }
   
   // Búsqueda de campos insensible a mayúsculas/minúsculas
@@ -159,12 +174,12 @@ applyFilters(): void {
       
       // Analizar los primeros elementos para depuración
       if (idx === 0) {
-        console.log(`[HistoryMetricsComponent] Comparando ${filterType}:`, { 
-          campo: fieldName,
-          valorEnDatos: fieldValue,
-          valoresSeleccionados: selectedValues,
-          coincide: fieldValue ? selectedValues.includes(fieldValue) : false
-        });
+        // console.log(`[HistoryMetricsComponent] Comparando ${filterType}:`, { 
+        //   campo: fieldName,
+        //   valorEnDatos: fieldValue,
+        //   valoresSeleccionados: selectedValues,
+        //   coincide: fieldValue ? selectedValues.includes(fieldValue) : false
+        // });
       }
       
       // Si el campo no existe en el item, no coincide con el filtro
@@ -177,12 +192,12 @@ applyFilters(): void {
     return result;
   });
   
-  console.log(`[HistoryMetricsComponent] applyFilters - Filtrados ${this.filteredData.length} de ${this.data.length} registros`);
+  // console.log(`[HistoryMetricsComponent] applyFilters - Filtrados ${this.filteredData.length} de ${this.data.length} registros`);
 }
 
   // Mapear el tipo de filtro a la propiedad del objeto de datos
 private getFieldNameByFilterType(filterType: string): string {
-  console.log(`[HistoryMetricsComponent] getFieldNameByFilterType - Mapeando tipo '${filterType}'`);
+  // console.log(`[HistoryMetricsComponent] getFieldNameByFilterType - Mapeando tipo '${filterType}'`);
   const mapping: {[key: string]: string} = {
     'tipo': 'tipo',
     'estado': 'estado',
@@ -190,7 +205,7 @@ private getFieldNameByFilterType(filterType: string): string {
     'usuario': 'usuario'
   };
   const resultado = mapping[filterType.toLowerCase()] || filterType.toLowerCase();
-  console.log(`[HistoryMetricsComponent] getFieldNameByFilterType - Resultado: '${resultado}'`);
+  // console.log(`[HistoryMetricsComponent] getFieldNameByFilterType - Resultado: '${resultado}'`);
   return resultado;
 }  
 }

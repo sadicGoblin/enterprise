@@ -10,40 +10,18 @@
   </div>
   
   <div class="filter-content">
-    
     <!-- Grupos de filtros expandibles -->
     <div class="filter-groups" *ngIf="filterGroups.length > 0">
-      <!-- Grupo de filtros -->
+      <!-- Grupo de filtros usando el nuevo multi-select con encabezado integrado -->
       <div class="filter-group" *ngFor="let group of filterGroups">
-        <!-- Cabecera expandible -->
-        <div class="group-header" (click)="toggleExpand(group)">
-          <div class="header-left">
-            <mat-icon [color]="getSelectedCount(group) > 0 ? 'primary' : ''">{{group.icon}}</mat-icon>
-            <span>{{group.name}}</span>
-          </div>
-          <div class="header-right">
-            <span class="badge" *ngIf="getSelectedCount(group) > 0">{{getSelectedCount(group)}}</span>
-            <mat-icon class="expand-icon">{{group.expanded ? 'expand_less' : 'expand_more'}}</mat-icon>
-          </div>
-        </div>
-        
-        <!-- Contenido expandible -->
-        <div class="group-content" [class.expanded]="group.expanded">
-          <!-- Se eliminó el buscador duplicado que estaba aquí -->
-          
-          <!-- Se eliminó el botón de limpiar filtros -->
-          
-          <!-- Componente multi-select reutilizable para todos los grupos -->
-          <app-multi-select 
-            *ngIf="group.expanded"
-            [items]="getMultiSelectItems(group)"
-            [label]="''"
-            [showCount]="true"
-            [useAutocomplete]="group.useAutocomplete"
-            [expanded]="true"
-            (selectionChange)="handleSelectionChange($event, group)">
-          </app-multi-select>
-        </div>
+        <app-multi-select
+          [groupName]="group.name"
+          [groupIcon]="getFieldIconName(group.name)"
+          [rawData]="data"
+          [filterField]="group.filterField"
+          [hierarchicalFilters]="hierarchicalFilters"
+          (selectionChange)="handleSelectionChange($event, group)">
+        </app-multi-select>
       </div>
     </div>
     

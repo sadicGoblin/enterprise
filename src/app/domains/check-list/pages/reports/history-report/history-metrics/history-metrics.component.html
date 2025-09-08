@@ -9,7 +9,7 @@
     <!-- Columna/Panel de filtros (flotante en móviles) -->
     <div class="metrics-filter-column" [class.active]="filterPanelOpen">
       <div class="filter-panel-header">
-        <h3>Filtros..</h3>
+        <h3>Filtros.</h3>
         <button class="close-filters" (click)="toggleFilterPanel()" mat-icon-button>
           <mat-icon>close</mat-icon>
         </button>
@@ -17,19 +17,19 @@
       <app-metrics-filter 
         [data]="data"
         [columnsFilter]="reportConfig?.columnsFilter || []"
-        (filterChange)="handleFilterChange($event)">
+        (hierarchicalFiltersChange)="handleHierarchicalFiltersChange($event)">
       </app-metrics-filter>
     </div>
     
     <!-- Overlay para cerrar el panel al hacer clic fuera -->
     <div class="filter-overlay" *ngIf="filterPanelOpen" (click)="toggleFilterPanel()"></div>
     
-    <!-- Columna para datos -->
+    <!-- Columna para datos [data]="filteredData" -->
     <div class="metrics-data-column">
       <app-metrics-data 
-        [data]="filteredData"
-        [completeData]="data"
+        [data]="data"
         [activeFilters]="activeFilters"
+        [hierarchicalFilters]="hierarchicalFilters"
         [reportConfig]="reportConfig">
       </app-metrics-data>
     </div>

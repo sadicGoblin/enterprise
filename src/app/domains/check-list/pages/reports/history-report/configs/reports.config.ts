@@ -21,8 +21,8 @@ export const REPORTS_CONFIG: GlobalReportsConfig = {
         { indexItem: 'no cumplida', color: '#e74c3c' }, // Rojo más moderno
         { indexItem: 'pendiente', color: '#f1c40f' }    // Amarillo más moderno
       ],
-      columnsTable: ['fecha', 'Obra', 'Usuario', 'Cargo', 'Periodo', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'Periocidad', 'tipo', 'estado'],
-      columnsFilter: ['fecha', 'Obra', 'Usuario', 'Cargo', 'Periodo', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'Periocidad', 'tipo', 'estado'],
+      columnsTable: ['fecha', 'Usuario', 'Cargo', 'Obra', 'Periodo', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'Periocidad', 'tipo', 'estado'],
+      columnsFilter: ['Obra', 'Cargo', 'Usuario', 'fecha', 'Periodo', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'Periocidad', 'tipo', 'estado'],
       title: 'Reporte Histórico'
     },
     // Additional reports can be added here

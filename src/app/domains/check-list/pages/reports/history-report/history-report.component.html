@@ -7,6 +7,7 @@
       </div>
     </div>
     
+    
     <div class="map-card-header">
       <h2 class="title">Reporte Histórico</h2>
     </div>
@@ -33,6 +34,21 @@
         
         <div class="filter-content" [ngClass]="{'collapsed': !isFilterExpanded}">
           <form [formGroup]="historyForm" (ngSubmit)="onSubmit()">
+            <!-- Selector de tipo de reporte -->
+            <div class="form-field-container">
+              <div class="form-field-label">Tipo de Reporte</div>
+              <mat-form-field appearance="outline" class="compact-select">
+                <mat-select formControlName="reportType">
+                  <mat-option *ngFor="let option of reportTypeOptions" [value]="option.value">
+                    {{ option.label }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+              <div class="field-error" *ngIf="historyForm.get('reportType')?.hasError('required') && historyForm.get('reportType')?.touched">
+                Requerido
+              </div>
+            </div>
+
             <div class="dates-container">
               <div class="date-field-container">
                 <div class="date-label">Fecha Desde</div>

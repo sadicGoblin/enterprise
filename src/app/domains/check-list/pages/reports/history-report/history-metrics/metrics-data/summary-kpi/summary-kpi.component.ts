@@ -7,6 +7,7 @@ import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, Simp
 import { Chart, ChartConfiguration } from 'chart.js/auto';
 import { ReportConfig } from '../../../models/report-config.model';
 import { NgChartsModule } from 'ng2-charts';
+import { getFieldIcon, getValueIcon, getGeneralIcon } from '../../../../../../../../shared/configs/icons.config';
 
 @Component({
   selector: 'app-summary-kpi',
@@ -36,15 +37,26 @@ export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy 
   
   // Mapa de instancias de Chart.js (dinámico)
   private chartInstances: Record<string, Chart> = {};
+
+  // Métodos para obtener iconos del diccionario centralizado
+  getFieldIcon(fieldName: string): string {
+    return getFieldIcon(fieldName);
+  }
+
+  getValueIcon(value: string): string {
+    return getValueIcon(value);
+  }
+
+  getGeneralIcon(key: string): string {
+    return getGeneralIcon(key);
+  }
   
-  // Mapa de iconos por tipo de campo
-  private fieldIcons: Record<string, string> = {
-    'estado': 'check_circle',
-    'tipo': 'category',
-    'obra': 'domain',
-    'fecha': 'calendar_today',
-    'default': 'label'
-  };
+  // La función getFieldDisplayName ya está implementada más abajo
+  
+  // Función para obtener el icono del campo para mostrar en la UI
+  getFieldIconForDisplay(fieldName: string): string {
+    return this.getFieldIcon(fieldName);
+  }
   
   // Colores para los gráficos
   chartColors: string[] = [
@@ -83,9 +95,9 @@ export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy 
     // Si cambia la configuración del reporte, actualizamos los campos a utilizar
     if (changes['reportConfig'] && this.reportConfig) {
       // Actualizamos el campo principal y secundario desde la configuración
-      this.principalValueField = this.reportConfig.principalValue || 'estado';
-      console.log('Configuración de reporte cargada:', 
-        { principalValue: this.principalValueField, summaryValues: this.reportConfig.summaryValues });
+      this.principalValueField = this.reportConfig.principalValue;
+      // console.log('Configuración de reporte cargada:', 
+      //   { principalValue: this.principalValueField, summaryValues: this.reportConfig.summaryValues });
     }
     
     // IMPORTANTE: Solo procesamos los datos cuando cambia la data completa o la configuración
@@ -124,7 +136,7 @@ export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy 
     // Realizamos una copia profunda (deep copy) para asegurar que no modificamos la data original
     const datosCompletos = JSON.parse(JSON.stringify(this.completeData));
     
-    console.log('Total de datos a procesar:', datosCompletos.length);
+    // console.log('Total de datos a procesar:', datosCompletos.length);
     
     // Procesar cada campo configurado en summaryValues
     this.reportConfig.summaryValues?.forEach(fieldName => {
@@ -145,7 +157,7 @@ export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy 
       });
     });
     
-    console.log('Datos procesados:', this.summaryData);
+    // console.log('Datos procesados:', this.summaryData);
   }
 
   ngAfterViewInit(): void {
@@ -267,11 +279,11 @@ export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy 
   }
 
   /**
-   * Devuelve el icono a mostrar para un campo específico
+   * Método auxiliar para obtener el icono de un campo en el template
+   * @param fieldName Nombre del campo
+   * @returns Nombre del icono de Material Design
    */
-  public getFieldIcon(fieldName: string): string {
-    return this.fieldIcons[fieldName?.toLowerCase()] || this.fieldIcons["default"];
-  }
+  // Eliminado el método duplicado getFieldIconForDisplay
   
   /**
    * Convierte el nombre técnico de un campo a un nombre legible
