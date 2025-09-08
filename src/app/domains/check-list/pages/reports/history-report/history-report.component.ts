@@ -82,9 +82,9 @@ export class HistoryReportComponent implements OnInit {
   
   // Opciones para el tipo de reporte
   reportTypeOptions = [
-    { value: 'customplan', label: 'Plan Personalizado' },
+    { value: 'custom-plans', label: 'Plan personalizado' },
     { value: 'repincident', label: 'Reporte de Incidencia' },
-    { value: 'inspsstma', label: 'Inspección STTMA' }
+    { value: 'inspsttma', label: 'Inspección STTMA' }
   ];
   
   // Propiedades para el sistema de mensajes
@@ -135,7 +135,7 @@ export class HistoryReportComponent implements OnInit {
     endDate.setDate(endDate.getDate() - 1); // Ayer
     
     this.historyForm = this.fb.group({
-      reportType: ['customplan', Validators.required], // Por defecto seleccionamos 'Plan Personalizado'
+      reportType: ['custom-plans', Validators.required], // Por defecto seleccionamos 'Plan personalizado'
       startDate: [startDate, Validators.required],
       endDate: [endDate, Validators.required]
     });
@@ -167,7 +167,7 @@ export class HistoryReportComponent implements OnInit {
     const startDateStr = this.reportService.formatDateForApi(formValues.startDate);
     const endDateStr = this.reportService.formatDateForApi(formValues.endDate);
 
-    this.reportService.getHistoricalReport(startDateStr, endDateStr)
+    this.reportService.getHistoricalReport(formValues.reportType, startDateStr, endDateStr)
       .pipe(
         catchError(error => {
           // Configuramos el mensaje principal para el usuario

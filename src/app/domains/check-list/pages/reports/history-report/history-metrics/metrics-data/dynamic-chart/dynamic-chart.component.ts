@@ -121,10 +121,49 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
             
             
   
-            // Apply the filter and store the result
+            console.log('Applying filter:', filterType, 'with values:', filters);
+            
+            // Log sample data item to see structure
+            if (rawDataFiltered.length > 0) {
+              console.log('Sample data item:', rawDataFiltered[0]);
+              console.log('Field value in sample:', filterType, '=', rawDataFiltered[0][filterType]);
+            }
+            
+            // Apply the filter and store the result with case-insensitive comparison
             const filteredData = _filter(rawDataFiltered, item => {
-              return filters.includes(item[filterType]);
+              // Get the value of the item
+              const itemValue = item[filterType];
+              
+              // Skip if value doesn't exist
+              if (itemValue === null || itemValue === undefined) {
+                console.log('Skipping item - missing field:', filterType);
+                return false;
+              }
+              
+              // Convert item value to lowercase string for comparison
+              const normalizedItemValue = String(itemValue).toLowerCase();
+              
+              // Debug logging for some items
+              const debugSample = Math.random() < 0.05; // Log ~5% of items
+              if (debugSample) {
+                console.log('Item value:', itemValue, 'normalized to:', normalizedItemValue);
+                console.log('Filter values:', filters.map(f => String(f).toLowerCase()));
+                
+                // Check if any match exists
+                const hasMatch = filters.some(filterValue => 
+                  String(filterValue).toLowerCase() === normalizedItemValue
+                );
+                console.log('Match found?', hasMatch);
+              }
+              
+              // Check if any filter value matches (case insensitive)
+              return filters.some(filterValue => 
+                String(filterValue).toLowerCase() === normalizedItemValue
+              );
             });
+            
+            console.log(`Filter applied: ${filterType} - Items before: ${rawDataFiltered.length}, after: ${filteredData.length}`);
+
   
             // Update for next iteration
             rawDataFiltered = filteredData;

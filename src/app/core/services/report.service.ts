@@ -55,10 +55,11 @@ export class ReportService {
    * @param endDate Fecha de fin en formato YYYY-MM-DD
    * @returns Observable con la respuesta del reporte histórico
    */
-  getHistoricalReport(startDate: string, endDate: string): Observable<HistoricalReportResponse> {
+  getHistoricalReport(reportType: string, startDate: string, endDate: string): Observable<HistoricalReportResponse> {
     
     const payload = {
       caso: 'ReporteHistorico',
+      reportType: reportType,
       fecha_inicio: startDate,
       fecha_fin: endDate
     };
