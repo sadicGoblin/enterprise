@@ -131,12 +131,19 @@
     </div>
     
     <!-- Modal Image -->
-    <div class="modal-image-container">
+    <div class="modal-image-container"
+         (mousemove)="onImageMouseMove($event)"
+         (mouseup)="onImageMouseUp($event)"
+         (mouseleave)="onImageMouseLeave()">
       <img 
         [src]="modalImageSrc" 
         alt="Imagen ampliada"
         class="modal-image"
         [style.transform]="modalImageTransform"
+        [style.cursor]="dragCursor"
+        (mousedown)="onImageMouseDown($event)"
+        (dragstart)="$event.preventDefault()"
+        (selectstart)="$event.preventDefault()"
       />
     </div>
   </div>

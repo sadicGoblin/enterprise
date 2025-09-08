@@ -32,6 +32,15 @@ export class ImgViewerComponent implements OnInit {
   modalImageSrc: string = '';
   modalRotation: number = 0;
   modalZoom: number = 1;
+  
+  // Drag/Pan properties
+  isDragging: boolean = false;
+  dragStartX: number = 0;
+  dragStartY: number = 0;
+  imageOffsetX: number = 0;
+  imageOffsetY: number = 0;
+  lastOffsetX: number = 0;
+  lastOffsetY: number = 0;
 
   ngOnInit(): void {
     if (this.autoPlay && this.images.length > 1) {
@@ -120,6 +129,11 @@ export class ImgViewerComponent implements OnInit {
     this.modalImageSrc = imageSrc;
     this.modalRotation = 0;
     this.modalZoom = 1;
+    this.imageOffsetX = 0;
+    this.imageOffsetY = 0;
+    this.lastOffsetX = 0;
+    this.lastOffsetY = 0;
+    this.isDragging = false;
     this.isModalOpen = true;
     document.body.style.overflow = 'hidden'; // Prevent background scrolling
   }
@@ -129,6 +143,11 @@ export class ImgViewerComponent implements OnInit {
     this.modalImageSrc = '';
     this.modalRotation = 0;
     this.modalZoom = 1;
+    this.imageOffsetX = 0;
+    this.imageOffsetY = 0;
+    this.lastOffsetX = 0;
+    this.lastOffsetY = 0;
+    this.isDragging = false;
     document.body.style.overflow = 'auto'; // Restore scrolling
   }
 
@@ -146,9 +165,59 @@ export class ImgViewerComponent implements OnInit {
 
   resetZoom(): void {
     this.modalZoom = 1;
+    this.imageOffsetX = 0;
+    this.imageOffsetY = 0;
+    this.lastOffsetX = 0;
+    this.lastOffsetY = 0;
   }
 
   get modalImageTransform(): string {
-    return `rotate(${this.modalRotation}deg) scale(${this.modalZoom})`;
+    return `translate(${this.imageOffsetX}px, ${this.imageOffsetY}px) rotate(${this.modalRotation}deg) scale(${this.modalZoom})`;
+  }
+
+  // Drag/Pan methods
+  onImageMouseDown(event: MouseEvent): void {
+    if (this.modalZoom > 1) { // Only allow dragging when zoomed
+      this.isDragging = true;
+      this.dragStartX = event.clientX;
+      this.dragStartY = event.clientY;
+      this.lastOffsetX = this.imageOffsetX;
+      this.lastOffsetY = this.imageOffsetY;
+      event.preventDefault();
+    }
+  }
+
+  onImageMouseMove(event: MouseEvent): void {
+    if (this.isDragging && this.modalZoom > 1) {
+      const deltaX = event.clientX - this.dragStartX;
+      const deltaY = event.clientY - this.dragStartY;
+      
+      this.imageOffsetX = this.lastOffsetX + deltaX;
+      this.imageOffsetY = this.lastOffsetY + deltaY;
+      
+      event.preventDefault();
+    }
+  }
+
+  onImageMouseUp(event: MouseEvent): void {
+    if (this.isDragging) {
+      this.isDragging = false;
+      event.preventDefault();
+    }
+  }
+
+  onImageMouseLeave(): void {
+    this.isDragging = false;
+  }
+
+  get canDrag(): boolean {
+    return this.modalZoom > 1;
+  }
+
+  get dragCursor(): string {
+    if (this.canDrag) {
+      return this.isDragging ? 'grabbing' : 'grab';
+    }
+    return 'default';
   }
 }
