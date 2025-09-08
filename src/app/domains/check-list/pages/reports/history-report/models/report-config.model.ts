@@ -10,13 +10,14 @@ export interface ColorConfig {
  * Configuración para un reporte específico
  */
 export interface ReportConfig {
-  indexName: string;           // Identificador único del reporte
-  principalValue: string;      // Campo principal a mostrar en gráficos (ej: 'estado')
-  summaryValues: string[];     // Campos para mostrar en resúmenes (ej: ['estado', 'tipo'])
-  chartColors?: ColorConfig[]; // Configuración de colores específicos para valores
-  columnsTable?: string[];     // Campos para mostrar en la tabla
-  columnsFilter?: string[];    // Campos para mostrar en el filtro
-  title?: string;              // Título opcional del reporte
+  indexName: string;                // Identificador único del reporte
+  principalValue: string;           // Campo principal a mostrar en gráficos (ej: 'estado')
+  principalValuePositive?: string;  // Valor del campo principal considerado "positivo" (ej: 'cumplida')
+  summaryValues: string[];          // Campos para mostrar en resúmenes (ej: ['estado', 'tipo'])
+  chartColors?: ColorConfig[];      // Configuración de colores específicos para valores
+  columnsTable?: string[];          // Campos para mostrar en la tabla
+  columnsFilter?: string[];         // Campos para mostrar en el filtro
+  title?: string;                   // Título opcional del reporte
 }
 
 /**

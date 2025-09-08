@@ -27,6 +27,11 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   @Input() reportConfig?: ReportConfig; // Configuración del reporte
   @Input() title: string = 'KPI OBRA'; // Título personalizable con valor predeterminado
 
+  // Propiedades para la tabla mensual
+  monthsInRange: string[] = [];
+  monthlyTableData: any[] = [];
+  yAxisLabel: string = ''; // Etiqueta para el eje vertical en la tabla
+
   @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
 
   @Output() dataFilter = new EventEmitter<any>();
@@ -74,7 +79,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     }
 
     if (changes['hierarchicalFilters'] && this.hierarchicalFilters.length > 0) {
-      console.log('[DynamicChartComponent] - ngOnChanges - handleHierarchicalFiltersChange:', this.hierarchicalFilters);
+      //console.log('[DynamicChartComponent] - ngOnChanges - handleHierarchicalFiltersChange:', this.hierarchicalFilters);
     }
 
     if (changes['completeData']
@@ -97,7 +102,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
 
 
   processFilterHierarchical(rawData: any[] = []) {
-      console.log('dynamicChartComponent - processFilterHierarchical', this.filterType, this.hierarchicalFilters);
+      //console.log('dynamicChartComponent - processFilterHierarchical', this.filterType, this.hierarchicalFilters);
       let rawDataFiltered: any[] = []; 
       rawDataFiltered = [...rawData];
       if (this.hierarchicalFilters && this.hierarchicalFilters.length > 0) {
@@ -105,7 +110,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
         
         let rawDataResult: any[] = []; 
         
-        console.log('rawDataFiltered', rawDataFiltered);
+        //console.log('rawDataFiltered', rawDataFiltered);
         
         // Sort filters by position to ensure proper hierarchy
         const sortedFilters = [...this.hierarchicalFilters].sort((a, b) => a.position - b.position);
@@ -113,20 +118,20 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
         // Apply each filter in order using for...of to allow break statements
         for (const filter of sortedFilters) {
           if (filter.filters && filter.filters.length > 0) {
-            console.log('filter', filter);
+            //console.log('filter', filter);
             const filterType = filter.filterType;
             const filters = filter.filters;
             const position = filter.position;
-            console.log('filterType', filterType, this.filterType);
+            //console.log('filterType', filterType, this.filterType);
             
             
   
-            console.log('Applying filter:', filterType, 'with values:', filters);
+            //console.log('Applying filter:', filterType, 'with values:', filters);
             
             // Log sample data item to see structure
             if (rawDataFiltered.length > 0) {
-              console.log('Sample data item:', rawDataFiltered[0]);
-              console.log('Field value in sample:', filterType, '=', rawDataFiltered[0][filterType]);
+              //console.log('Sample data item:', rawDataFiltered[0]);
+              //console.log('Field value in sample:', filterType, '=', rawDataFiltered[0][filterType]);
             }
             
             // Apply the filter and store the result with case-insensitive comparison
@@ -136,7 +141,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
               
               // Skip if value doesn't exist
               if (itemValue === null || itemValue === undefined) {
-                console.log('Skipping item - missing field:', filterType);
+                //console.log('Skipping item - missing field:', filterType);
                 return false;
               }
               
@@ -146,14 +151,14 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
               // Debug logging for some items
               const debugSample = Math.random() < 0.05; // Log ~5% of items
               if (debugSample) {
-                console.log('Item value:', itemValue, 'normalized to:', normalizedItemValue);
-                console.log('Filter values:', filters.map(f => String(f).toLowerCase()));
+                //console.log('Item value:', itemValue, 'normalized to:', normalizedItemValue);
+                //console.log('Filter values:', filters.map(f => String(f).toLowerCase()));
                 
                 // Check if any match exists
                 const hasMatch = filters.some(filterValue => 
                   String(filterValue).toLowerCase() === normalizedItemValue
                 );
-                console.log('Match found?', hasMatch);
+                //console.log('Match found?', hasMatch);
               }
               
               // Check if any filter value matches (case insensitive)
@@ -162,7 +167,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
               );
             });
             
-            console.log(`Filter applied: ${filterType} - Items before: ${rawDataFiltered.length}, after: ${filteredData.length}`);
+            //console.log(`Filter applied: ${filterType} - Items before: ${rawDataFiltered.length}, after: ${filteredData.length}`);
 
   
             // Update for next iteration
@@ -202,7 +207,12 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
 
     // Detectar el campo de filtrado (puede venir como 'Obra', 'obra', etc.)
     const campoFiltro = this.fieldToFilter.toLowerCase();
-    // console.log('Campo filtro:', campoFiltro);
+    
+    // Configurar el nombre para el eje vertical de la tabla
+    this.yAxisLabel = this.fieldToFilter;
+    
+    // Generar la tabla mensual
+    this.generateMonthlyTable(dataCopy);
 
     // Filtramos los datos usando activeFilters, similar a summary-kpi
     const datosFiltrados = dataCopy.filter((item: any) => {
@@ -520,7 +530,38 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
    * Obtiene el color correspondiente a un estado
    * @param estado Nombre del estado
    * @param index Índice alternativo para usar si no hay color configurado
-   * @returns Color en formato hexadecimal o rgba
+   * @returns Color en formato hexadecimal 
+  getEstadoColor(estado: string, index: number): string {
+    // Colores por defecto para los estados
+    if (!this.reportConfig || !this.reportConfig.estadosColors) {
+      const defaultColors = ['#4CAF50', '#FFC107', '#F44336', '#2196F3'];
+      return defaultColors[index % defaultColors.length];
+    }
+    
+    // Usamos los colores configurados si están disponibles
+    const colorMap = this.reportConfig.estadosColors;
+    return colorMap[estado] || '#757575'; // Gris por defecto
+  }
+  
+  /**
+   * Devuelve una clase CSS basada en el valor numérico para colorear la celda
+   * @param value Valor numérico (porcentaje)
+   * @returns Clase CSS correspondiente al rango de valor
+   */
+  getValueClass(value: number): string {
+    if (value === undefined || value === null) return 'no-data';
+    
+    if (value >= 90) return 'excellent';
+    if (value >= 70) return 'good';
+    if (value >= 50) return 'average';
+    return 'poor';
+  }
+  
+  /**
+   * Obtiene el color correspondiente a un estado para mostrar en los contadores
+   * @param estado Nombre del estado
+   * @param index Índice alternativo para usar si no hay color configurado
+   * @returns Color en formato hexadecimal
    */
   getEstadoColor(estado: string, index: number): string {
     // Primero buscamos en la configuración de colores del reporte
@@ -536,6 +577,252 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   }
 
   // Se ha eliminado el método getEstadoClass ya que ahora usamos getEstadoColor directamente
+  
+  /**
+   * Generates the monthly data table based on filtered data
+   * @param data Filtered data to process
+   */
+  generateMonthlyTable(data: any[]): void {
+    // Reset data if input is empty
+    if (!data || data.length === 0) {
+      this.monthsInRange = [];
+      this.monthlyTableData = [];
+      return;
+    }
+    
+    // Get field names from configuration or use defaults
+    const dateField = 'fecha';
+    const stateField = this.principalValueField || 'estado';
+    const categoryField = this.fieldToFilter;
+    
+    // Get the positive value from configuration
+    const positiveValue = this.reportConfig?.principalValuePositive || 'cumplida';
+    
+    console.log('Table configuration:', { 
+      dateField, 
+      stateField, 
+      categoryField,
+      positiveValue
+    });
+    
+    // Extract all months from data
+    const months = new Set<string>();
+    
+    // Structure to store category > month > state > count
+    interface CategoryData {
+      [month: string]: {
+        states: { [state: string]: number },
+        totalItems: number
+      }
+    }
+    
+    // Main data store
+    const categoriesData: { [category: string]: CategoryData } = {};
+    
+    // Imprimir los primeros 5 elementos de datos para verificar fechas
+    console.log('Primeros 5 datos recibidos:');
+    data.slice(0, 5).forEach(item => {
+      console.log('Fecha original:', item[dateField], 'Tipo:', typeof item[dateField]);
+    });
+    
+    // Define un tipo para los registros por mes
+    interface DateRecord {
+      original: string;
+      parsed: string;
+      month: number;
+      year: number;
+      category: string;
+      state: string;
+    }
+    
+    // Arrays para recolectar registros de julio y agosto para análisis
+    const julyRecords: DateRecord[] = [];
+    const augustRecords: DateRecord[] = [];
+    
+    // Process all data items
+    data.forEach(item => {
+      // Skip items without date
+      if (!item[dateField]) return;
+      
+      try {
+        // Convert date to month-year format
+        const originalDate = item[dateField];
+        const date = new Date(originalDate);
+        // getMonth() es 0-indexado (0=Enero, 7=Agosto), usamos directamente lo que viene en la fecha
+        const dateParts = String(originalDate).split('-');
+        // Si el formato es YYYY-MM-DD, usamos la parte MM directamente
+        const monthNumber = dateParts.length >= 2 ? parseInt(dateParts[1], 10) : (date.getMonth() + 1);
+        const yearShort = date.getFullYear().toString().substr(2);
+        const month = `${monthNumber}/${yearShort}`;
+        
+        // Guardar información de fechas por mes para diagnóstico
+        const recordInfo: DateRecord = {
+          original: String(originalDate),
+          parsed: date.toISOString(),
+          month: monthNumber,
+          year: date.getFullYear(),
+          category: String(item[categoryField] || 'N/A'),
+          state: String(item[stateField] || 'N/A')
+        };
+        
+        // Recolectar fechas de julio para análisis
+        if (monthNumber === 7) {
+          julyRecords.push(recordInfo);
+        } else if (monthNumber === 8) {
+          augustRecords.push(recordInfo);
+        }
+        
+        months.add(month);
+        
+        // Get category value (using field to filter by)
+        const category = String(item[categoryField] || '');
+        if (!category) return;
+        
+        // Get state value (using principal value field)
+        const state = String(item[stateField] || '');
+        if (!state) return;
+        
+        // Initialize category if needed
+        if (!categoriesData[category]) {
+          categoriesData[category] = {};
+        }
+        
+        // Initialize month for this category if needed
+        if (!categoriesData[category][month]) {
+          categoriesData[category][month] = {
+            states: {},
+            totalItems: 0
+          };
+        }
+        
+        // Update state count
+        const monthData = categoriesData[category][month];
+        monthData.states[state] = (monthData.states[state] || 0) + 1;
+        monthData.totalItems++;
+      } catch (e) {
+        console.error('Error processing date:', item[dateField], e);
+      }
+    });
+    
+    // Mostrar los registros recolectados para diagnóstico
+    //`=== REGISTROS DE JULIO (${julyRecords.length}) ===`);
+    julyRecords.forEach((record, index) => {
+      //console.log(`Record #${index + 1}:`, record);
+    });
+    console.log(`=== REGISTROS DE AGOSTO (mostrando primeros 5 de ${augustRecords.length}) ===`);
+    augustRecords.slice(0, 5).forEach((record, index) => {
+      //console.log(`Record #${index + 1}:`, record);
+    });
+    
+    // Sort months chronologically
+    this.monthsInRange = Array.from(months).sort((a, b) => {
+      const [monthA, yearA] = a.split('/');
+      const [monthB, yearB] = b.split('/');
+      const dateA = new Date(2000 + parseInt(yearA), parseInt(monthA) - 1, 1);
+      const dateB = new Date(2000 + parseInt(yearB), parseInt(monthB) - 1, 1);
+      return dateA.getTime() - dateB.getTime();
+    });
+    
+    // console.log('Detected months:', this.monthsInRange);
+    
+    // Generate table data
+    this.monthlyTableData = Object.entries(categoriesData).map(([category, categoryData]) => {
+      // Create row with category name
+      const rowData: any = { name: category, isTotal: false }; // Flag to identify normal rows
+      let totalSum = 0;
+      let monthCount = 0;
+      
+      // Process each month
+      this.monthsInRange.forEach(month => {
+        const monthInfo = categoryData[month];
+        if (monthInfo && monthInfo.totalItems > 0) {
+          // Get state counts for this month
+          const stateValues = monthInfo.states;
+          const totalItems = monthInfo.totalItems;
+          
+          //console.log(`States for ${category} in ${month}:`, stateValues);
+          
+          // Find positive states (matching the configured value)
+          let positiveStates = Object.keys(stateValues).filter(state => 
+            state.toLowerCase() === positiveValue.toLowerCase()
+          );
+          
+          // If no exact match, try partial match
+          if (positiveStates.length === 0) {
+            positiveStates = Object.keys(stateValues).filter(state => 
+              state.toLowerCase().includes(positiveValue.toLowerCase())
+            );
+          }
+          
+          // Sum up all positive state counts
+          const positiveCount = positiveStates.reduce((sum, state) => 
+            sum + (stateValues[state] || 0), 0
+          );
+          
+          // Calculate percentage of positive states
+          const percentage = Math.round((positiveCount / totalItems) * 100);
+          
+          // Store percentage for this month
+          rowData[month] = percentage;
+          
+          // Update totals for average calculation
+          totalSum += percentage;
+          monthCount++;
+        } else {
+          rowData[month] = null; // No data for this month
+        }
+      });
+      
+      // Calculate average percentage across all months
+      rowData.average = monthCount > 0 ? Math.round(totalSum / monthCount) : 0;
+      
+      return rowData;
+    });
+    
+    // Calcular el promedio general de todos los promedios
+    let grandTotalSum = 0;
+    let grandTotalCount = 0;
+    
+    // Sumar todos los promedios válidos
+    this.monthlyTableData.forEach(row => {
+      if (row.average !== null && row.average !== undefined && !isNaN(row.average)) {
+        grandTotalSum += row.average;
+        grandTotalCount++;
+      }
+    });
+    
+    // Calcular el promedio general
+    const grandTotalAverage = grandTotalCount > 0 ? Math.round(grandTotalSum / grandTotalCount) : 0;
+    
+    // Añadir fila de totalizador con promedios por mes
+    const totalsRow: any = {
+      name: 'PROMEDIO GENERAL',
+      isTotal: true,
+      average: grandTotalAverage
+    };
+    
+    // Calcular promedios por mes (columna) de todas las filas
+    this.monthsInRange.forEach(month => {
+      let monthSum = 0;
+      let monthCount = 0;
+      
+      // Sumar valores válidos de cada mes
+      this.monthlyTableData.forEach(row => {
+        if (row[month] !== null && row[month] !== undefined && !isNaN(row[month])) {
+          monthSum += row[month];
+          monthCount++;
+        }
+      });
+      
+      // Asignar el promedio del mes a la fila de totales
+      totalsRow[month] = monthCount > 0 ? Math.round(monthSum / monthCount) : null;
+    });
+    
+    // Agregar la fila de totalizador a la tabla
+    this.monthlyTableData.push(totalsRow);
+    
+    // console.log('Generated monthly table with totals:', this.monthlyTableData);
+  }
 
   /**
    * Método para obtener un nombre amigable para el filtro actual

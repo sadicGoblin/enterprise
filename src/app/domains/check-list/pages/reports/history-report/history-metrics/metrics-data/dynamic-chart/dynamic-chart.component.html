@@ -44,6 +44,43 @@
       </div>
     </div>
     
+    <!-- Nueva sección de tabla mensual -->
+    <div class="monthly-table-container" *ngIf="hasData">
+      <div class="monthly-table-header">
+        <h4>Datos por Mes</h4>
+      </div>
+      <div class="monthly-table-content">
+        <table class="monthly-data-table">
+          <thead>
+            <tr>
+              <th class="row-header">{{yAxisLabel || 'Ítem'}}</th>
+              <ng-container *ngFor="let month of monthsInRange">
+                <th>{{month}}</th>
+              </ng-container>
+              <th class="total-column">PROMEDIO TOTAL</th>
+            </tr>
+          </thead>
+          <tbody>
+            <ng-container *ngFor="let row of monthlyTableData">
+              <tr [class.total-row]="row.isTotal">
+                <th class="row-header" [class.total-row-header]="row.isTotal">{{row.name}}</th>
+                <ng-container *ngFor="let month of monthsInRange">
+                  <td [ngClass]="getValueClass(row[month])" [class.total-cell]="row.isTotal">
+                    <ng-container *ngIf="row[month] !== null && row[month] !== undefined">
+                      {{row[month] | number:'1.0-0'}}%
+                    </ng-container>
+                    <ng-container *ngIf="row[month] === null || row[month] === undefined">
+                      -
+                    </ng-container>
+                  </td>
+                </ng-container>
+                <td class="total-column" [class.total-cell]="row.isTotal">{{row.average | number:'1.0-0'}}%</td>
+              </tr>
+            </ng-container>
+          </tbody>
+        </table>
+      </div>
+    </div>
 
   </ng-container>
   
