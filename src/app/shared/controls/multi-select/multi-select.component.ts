@@ -176,6 +176,7 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
     rawDataFiltered.forEach(item => {
       // Try to find the field by its exact name first
       let fieldValue = this.getFieldValue(item, this.filterField);
+      // console.log('## fieldValue', this.filterField, fieldValue);
       
       // If not found, try case-insensitive search for the field name
       if (fieldValue === null || fieldValue === undefined) {
@@ -183,11 +184,13 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
         const actualFieldName = Object.keys(item).find(
           key => key.toLowerCase() === this.filterField.toLowerCase()
         );
+        // console.log('##actualFieldName', actualFieldName);
         
         // If we found a matching field name with different case, get its value
         if (actualFieldName) {
           fieldValue = item[actualFieldName];
         }
+        // console.log('## fieldValue', this.filterField, fieldValue);
       }
       
       // Skip if still null or undefined

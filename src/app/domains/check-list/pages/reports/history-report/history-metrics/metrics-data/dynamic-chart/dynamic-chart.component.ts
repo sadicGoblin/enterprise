@@ -136,9 +136,10 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
             
             // Apply the filter and store the result with case-insensitive comparison
             const filteredData = _filter(rawDataFiltered, item => {
-              // Get the value of the item
-              const itemValue = item[filterType];
-              
+              // Get the value of the item - using getCampoValor for case-insensitive field name matching
+              console.log('##item', item, filterType);
+              const itemValue = this.getCampoValor(item, filterType);
+              console.log('##item', item, filterType, itemValue);
               // Skip if value doesn't exist
               if (itemValue === null || itemValue === undefined) {
                 //console.log('Skipping item - missing field:', filterType);
@@ -162,9 +163,12 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
               }
               
               // Check if any filter value matches (case insensitive)
-              return filters.some(filterValue => 
-                String(filterValue).toLowerCase() === normalizedItemValue
-              );
+              return filters.some(filterValue => {
+                console.log('##filterValue', filterValue, normalizedItemValue);
+                const normalizedFilterValue = String(filterValue).toLowerCase();
+                console.log('##normalizedFilterValue', normalizedFilterValue, normalizedItemValue);
+                return normalizedFilterValue === normalizedItemValue;
+              });
             });
             
             //console.log(`Filter applied: ${filterType} - Items before: ${rawDataFiltered.length}, after: ${filteredData.length}`);
@@ -317,7 +321,8 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
    */
   private getCampoValor(item: any, campo: string): string {
     // Buscar el campo sin importar mayúsculas/minúsculas
-    const campoEncontrado = Object.keys(item).find(key => key.toLowerCase() === campo);
+    const campoEncontrado = Object.keys(item).find(key => key.toLowerCase() === campo.toLowerCase());
+    // console.log('Campo encontrado:', campoEncontrado, item, campo);
     return campoEncontrado ? item[campoEncontrado] : '';
   }
 
@@ -544,17 +549,26 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   }
   
   /**
-   * Devuelve una clase CSS basada en el valor numérico para colorear la celda
-   * @param value Valor numérico (porcentaje)
-   * @returns Clase CSS correspondiente al rango de valor
+   * Returns a CSS class based on the numeric value to color the cell
+   * @param value Numeric value (percentage or quantity)
+   * @returns CSS class corresponding to the value range
    */
   getValueClass(value: number): string {
     if (value === undefined || value === null) return 'no-data';
     
-    if (value >= 90) return 'excellent';
-    if (value >= 70) return 'good';
-    if (value >= 50) return 'average';
-    return 'poor';
+    // Check if we're in quantity mode
+    const isQuantityMode = this.reportConfig?.unit === 'quantity';
+    
+    if (isQuantityMode) {
+      // For quantity mode: any value >= 1 is excellent (green)
+      return value >= 1 ? 'excellent' : 'poor';
+    } else {
+      // For percentage mode: use the existing thresholds
+      if (value >= 90) return 'excellent';
+      if (value >= 70) return 'good';
+      if (value >= 50) return 'average';
+      return 'poor';
+    }
   }
   
   /**
@@ -595,14 +609,20 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     const stateField = this.principalValueField || 'estado';
     const categoryField = this.fieldToFilter;
     
-    // Get the positive value from configuration
+    // Get values from configuration
     const positiveValue = this.reportConfig?.principalValuePositive || 'cumplida';
+    const unit = this.reportConfig?.unit || 'percent'; // Default to percent if not specified
+    
+    // Determine calculation mode (percent vs quantity)
+    const isPercentMode = unit === 'percent';
     
     console.log('Table configuration:', { 
       dateField, 
       stateField, 
       categoryField,
-      positiveValue
+      positiveValue,
+      unit,
+      isPercentMode
     });
     
     // Extract all months from data
@@ -759,14 +779,22 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
             sum + (stateValues[state] || 0), 0
           );
           
-          // Calculate percentage of positive states
-          const percentage = Math.round((positiveCount / totalItems) * 100);
+          // Calculate value based on unit type (percent or quantity)
+          let cellValue;
           
-          // Store percentage for this month
-          rowData[month] = percentage;
+          if (isPercentMode) {
+            // Calculate percentage of positive states (for percent mode)
+            cellValue = Math.round((positiveCount / totalItems) * 100);
+          } else {
+            // For quantity mode, just use the count of positive items
+            cellValue = positiveCount;
+          }
+          
+          // Store calculated value for this month
+          rowData[month] = cellValue;
           
           // Update totals for average calculation
-          totalSum += percentage;
+          totalSum += cellValue;
           monthCount++;
         } else {
           rowData[month] = null; // No data for this month
@@ -794,14 +822,14 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     // Calcular el promedio general
     const grandTotalAverage = grandTotalCount > 0 ? Math.round(grandTotalSum / grandTotalCount) : 0;
     
-    // Añadir fila de totalizador con promedios por mes
+    // Añadir fila de totalizador con promedios o totales por mes según el modo
     const totalsRow: any = {
-      name: 'PROMEDIO GENERAL',
+      name: isPercentMode ? 'PROMEDIO GENERAL' : 'TOTAL GENERAL',
       isTotal: true,
       average: grandTotalAverage
     };
     
-    // Calcular promedios por mes (columna) de todas las filas
+    // Calcular valores por mes (columna) para la fila de totales
     this.monthsInRange.forEach(month => {
       let monthSum = 0;
       let monthCount = 0;
@@ -814,8 +842,14 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
         }
       });
       
-      // Asignar el promedio del mes a la fila de totales
-      totalsRow[month] = monthCount > 0 ? Math.round(monthSum / monthCount) : null;
+      // Asignar el valor del mes a la fila de totales según el modo
+      if (isPercentMode) {
+        // En modo porcentaje, calcular el promedio
+        totalsRow[month] = monthCount > 0 ? Math.round(monthSum / monthCount) : null;
+      } else {
+        // En modo cantidad, usar la suma total
+        totalsRow[month] = monthCount > 0 ? monthSum : null;
+      }
     });
     
     // Agregar la fila de totalizador a la tabla

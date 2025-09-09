@@ -15,6 +15,7 @@ export const REPORTS_CONFIG: GlobalReportsConfig = {
     {
       indexName: 'history-report',
       principalValue: 'estado',
+      unit: 'quantity',
       principalValuePositive: 'cumplida',
       summaryValues: ['estado', 'tipo'],
       chartColors: [

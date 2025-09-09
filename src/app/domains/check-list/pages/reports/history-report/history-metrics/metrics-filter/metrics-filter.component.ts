@@ -163,6 +163,7 @@ export class MetricsFilterComponent implements OnChanges {
    */
   handleSelectionChange(selectedItems: MultiSelectItem[], group: FilterGroup): void {
     // Get selected values
+    console.log('handleSelectionChange', selectedItems, group);
     const selectedValues = selectedItems
       .filter(item => item.selected)
       .map(item => item.value);
@@ -179,6 +180,7 @@ export class MetricsFilterComponent implements OnChanges {
    * @param selectedValues Array of selected values
    */
   private updateHierarchicalFilters(filterType: string, selectedValues: string[]): void {
+    console.log('updateHierarchicalFilters', filterType, selectedValues);
     // Create a copy of the current filters
     let hierarchicalFiltersTemp = [...this.hierarchicalFilters];
     let selectValuesTemp = [...selectedValues];

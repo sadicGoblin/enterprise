@@ -17,6 +17,7 @@ export const REPORTS_CONFIG: GlobalReportsConfig = {
       principalValue: 'estado',
       principalValuePositive: 'cumplida',
       summaryValues: ['estado', 'tipo'],
+      unit: 'percent',
       chartColors: [
         { indexItem: 'cumplida', color: '#2ecc71' },    // Verde más moderno
         { indexItem: 'no cumplida', color: '#e74c3c' }, // Rojo más moderno
