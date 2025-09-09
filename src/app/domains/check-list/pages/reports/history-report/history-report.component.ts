@@ -83,7 +83,7 @@ export class HistoryReportComponent implements OnInit {
   // Opciones para el tipo de reporte
   reportTypeOptions = [
     { value: 'custom-plans', label: 'Plan personalizado' },
-    { value: 'repincident', label: 'Reporte de Incidencia' },
+    { value: 'repincidents', label: 'Reporte de Incidencia' },
     { value: 'inspsttma', label: 'Inspección STTMA' }
   ];
   
@@ -134,11 +134,40 @@ export class HistoryReportComponent implements OnInit {
     const endDate = new Date();
     endDate.setDate(endDate.getDate() - 1); // Ayer
     
+    // Valor por defecto para el tipo de reporte
+    const defaultReportType = 'custom-plans';
+    
     this.historyForm = this.fb.group({
-      reportType: ['custom-plans', Validators.required], // Por defecto seleccionamos 'Plan personalizado'
+      reportType: [defaultReportType, Validators.required],
       startDate: [startDate, Validators.required],
       endDate: [endDate, Validators.required]
     });
+    
+    // Inicializamos la configuración con el tipo por defecto
+    this.reportConfigService.setReportType(defaultReportType);
+    this.reportConfig = this.reportConfigService.getReportConfig();
+    
+    // Nos suscribimos a los cambios en el tipo de reporte
+    this.historyForm.get('reportType')?.valueChanges.subscribe(reportType => {
+      this.onReportTypeChange(reportType);
+    });
+  }
+  
+  /**
+   * Handle changes in report type selection
+   * @param reportType The selected report type
+   */
+  onReportTypeChange(reportType: string): void {
+    console.log(`Report type changed to: ${reportType}`);
+    
+    // Update the configuration service with the new report type
+    this.reportConfigService.setReportType(reportType);
+    
+    // Get the configuration for the selected report type
+    this.reportConfig = this.reportConfigService.getReportConfig();
+    
+    // Reset table data when report type changes
+    this.tableData = [];
   }
   // Los métodos de filtrado ahora están en el componente HistoryTableComponent
 
@@ -155,6 +184,15 @@ export class HistoryReportComponent implements OnInit {
       });
       return;
     }
+    
+    // Get the currently selected report type
+    const selectedReportType = this.historyForm.get('reportType')?.value;
+    
+    // Update configuration in service if needed
+    if (this.reportConfigService.getCurrentReportType() !== selectedReportType) {
+      this.reportConfigService.setReportType(selectedReportType);
+      this.reportConfig = this.reportConfigService.getReportConfig();
+    }
 
     // Reseteamos el estado del mensaje y comenzamos la carga
     this.isLoading = true;
@@ -167,7 +205,16 @@ export class HistoryReportComponent implements OnInit {
     const startDateStr = this.reportService.formatDateForApi(formValues.startDate);
     const endDateStr = this.reportService.formatDateForApi(formValues.endDate);
 
-    this.reportService.getHistoricalReport(formValues.reportType, startDateStr, endDateStr)
+    // Determinar qué índice de reporte usar basado en la selección del usuario
+    const reportIndexToUse = selectedReportType || this.reportIndexName;
+    console.log(`Loading report data for index: ${reportIndexToUse} with config:`, this.reportConfig);
+    
+    // Comenzamos la llamada al API
+    this.reportService.getHistoricalReport(
+      reportIndexToUse,
+      startDateStr,
+      endDateStr
+    )
       .pipe(
         catchError(error => {
           // Configuramos el mensaje principal para el usuario
