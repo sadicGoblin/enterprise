@@ -27,7 +27,7 @@ import {
 } from '@angular/common/http';
 
 // Interfaz para los datos que se reciben como parámetro
-type SstmaModalData = number; // Solo recibimos el ID de la actividad
+type SstmaModalData = string | number | { idControl: string, day: number }; // ID simple desde reports o objeto desde planification
 
 // Interfaz para la respuesta de la API
 interface ApiResponse {
@@ -126,12 +126,25 @@ export class SstmaModalComponent implements OnInit {
     const baseUrl = environment.apiBaseUrl || 'https://inarco-ssoma.favric.cl';
 
     const url = `${baseUrl}/ws/ActividadSvcImpl.php`;
-    const body = {
-      caso: 'ConsultaSTTMAApp',
-      id: this.data,
-    };
-
-    console.log('Consultando datos SSTMA:', body);
+    
+    // Determinar si los datos vienen desde reports (string/número) o planification (objeto)
+    let body: any;
+    if (typeof this.data === 'object' && this.data !== null && 'idControl' in this.data && 'day' in this.data) {
+      // Viene desde planification table
+      body = {
+        caso: 'ConsultaSTTMAApp',
+        id: this.data.idControl,
+        dia: this.data.day
+      };
+      console.log('Consultando datos SSTMA desde Planification:', body);
+    } else {
+      // Viene desde reports table (string o number)
+      body = {
+        caso: 'ConsultaSTTMAApp',
+        id: this.data,
+      };
+      console.log('Consultando datos SSTMA desde Reports:', body);
+    }
 
     this.proxyService
       .post<ApiResponse>(url, body)

@@ -14,6 +14,7 @@ import { InspectionModalComponent } from '../inspection-modal/inspection-modal.c
 import { CheckListModalComponent } from './components/checklist-modal/checklist-modal.component';
 import { ARTViewModalComponent } from './components/art-view-modal/art-view-modal.component';
 import { ChecklistReportModalComponent } from '../checklist-report-modal/checklist-report-modal.component';
+import { SstmaModalComponent } from '../sstma-modal/sstma-modal.component';
 
 // Interface for Activity
 export interface Activity {
@@ -464,11 +465,16 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
       return;
     }
     
-    // Verificar si el nombre de la actividad contiene "SSOMA"
-    if (activity.name.includes('SSOMA')) {
-      console.log('Actividad SSOMA completada. Abriendo modal de inspección...');
-      console.log(`idControl: ${activity.idControl}, día: ${day}`);
-      this.openInspectionModal(activity.id, activity.idControl, day);
+    // Verificar si el nombre de la actividad contiene "SSOMA" o "SSTMA"
+    if (activity.name.includes('SSOMA') || activity.name.includes('SSTMA')) {
+      console.log('Actividad SSOMA/SSTMA completada. Abriendo modal SSTMA...');
+      console.log(`idActividad: ${activity.id}, idControl: ${activity.idControl}, día: ${day}`);
+      this.dialog.open(SstmaModalComponent, {
+        data: { 
+          idControl: activity.idControl, 
+          day: day 
+        }
+      });
     } 
     // Verificar si el nombre de la actividad contiene "CHECK LIST"
     else if (activity.name.includes('CHECK LIST')) {
