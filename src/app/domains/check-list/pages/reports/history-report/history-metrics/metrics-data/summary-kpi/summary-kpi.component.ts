@@ -93,6 +93,7 @@ export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy 
 
   ngOnChanges(changes: SimpleChanges): void {
     // Si cambia la configuración del reporte, actualizamos los campos a utilizar
+    console.log('SummaryKpiComponent - ngOnChanges:', changes);
     if (changes['reportConfig'] && this.reportConfig) {
       // Actualizamos el campo principal y secundario desde la configuración
       this.principalValueField = this.reportConfig.principalValue;

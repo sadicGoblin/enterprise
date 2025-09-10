@@ -117,7 +117,7 @@ export class HistoryReportComponent implements OnInit {
     this.initForm();
     
     // Cargar la configuración del reporte
-    this.reportConfig = this.reportConfigService.getReportConfig(this.reportIndexName);
+    // this.reportConfig = this.reportConfigService.getReportConfig(this.reportIndexName);
     
     if (!this.reportConfig) {
       console.warn(`No se encontró configuración para el reporte: ${this.reportIndexName}`);
@@ -143,14 +143,15 @@ export class HistoryReportComponent implements OnInit {
       endDate: [endDate, Validators.required]
     });
     
-    // Inicializamos la configuración con el tipo por defecto
-    this.reportConfigService.setReportType(defaultReportType);
-    this.reportConfig = this.reportConfigService.getReportConfig();
-    
-    // Nos suscribimos a los cambios en el tipo de reporte
+    // Primero nos suscribimos a los cambios en el tipo de reporte
+    // para capturar cambios futuros
     this.historyForm.get('reportType')?.valueChanges.subscribe(reportType => {
       this.onReportTypeChange(reportType);
     });
+    
+    // Llamamos explícitamente a onReportTypeChange con el valor por defecto
+    // para asegurar que se active la configuración correcta desde el inicio
+    // this.onReportTypeChange(defaultReportType);
   }
   
   /**
@@ -253,6 +254,7 @@ export class HistoryReportComponent implements OnInit {
         finalize(() => this.isLoading = false)
       )
       .subscribe(response => {
+        console.log('Response:', response);
         if (response.data.length === 0) {
           // Mostramos un mensaje de advertencia si no hay datos
           this.errorMessage = 'No se encontraron registros para el período seleccionado';

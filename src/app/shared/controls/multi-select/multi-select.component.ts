@@ -89,7 +89,7 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
   
   ngOnChanges(changes: SimpleChanges): void {
     // Process raw data if provided
-    // console.log('Changes:', changes);
+    // // console.log('Changes:', changes);
     if (changes['rawData'] && this.rawData && this.rawData.length > 0 && this.filterField) {
       this.processRawData();
     }
@@ -110,7 +110,7 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
   }
 
   processFilterHierarchical(rawData: any[] = []) {
-    console.log('processFilterHierarchical', this.filterField, this.hierarchicalFilters);
+    // console.log('processFilterHierarchical', this.filterField, this.hierarchicalFilters);
     let rawDataFiltered: any[] = []; 
     rawDataFiltered = [...rawData];
     if (this.hierarchicalFilters && this.hierarchicalFilters.length > 0) {
@@ -118,7 +118,7 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
       
       let rawDataResult: any[] = []; 
       
-      console.log('rawDataFiltered', rawDataFiltered);
+      // console.log('rawDataFiltered', rawDataFiltered);
       
       // Sort filters by position to ensure proper hierarchy
       const sortedFilters = [...this.hierarchicalFilters].sort((a, b) => a.position - b.position);
@@ -126,11 +126,11 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
       // Apply each filter in order using for...of to allow break statements
       for (const filter of sortedFilters) {
         if (filter.filters && filter.filters.length > 0) {
-          console.log('filter', filter);
+          // console.log('filter', filter);
           const filterType = filter.filterType;
           const filters = filter.filters;
           const position = filter.position;
-          console.log('filterType', filterType, this.groupName);
+          // console.log('filterType', filterType, this.groupName);
           
           // Stop all filtering if we hit the current field name to avoid circular filtering
           if(String(filterType) === String(this.groupName)){
@@ -152,9 +152,9 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
       // this.rawData = rawDataFiltered;
       
       // Log the filtered results
-      // console.log('Raw data filtered by hierarchical filters:', this.filterField, this.rawData);
+      // // console.log('Raw data filtered by hierarchical filters:', this.filterField, this.rawData);
     } 
-    console.log('rawDataResult', this.filterField, rawDataFiltered);
+    // console.log('rawDataResult', this.filterField, rawDataFiltered);
     return rawDataFiltered;
   }
 
@@ -176,7 +176,7 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
     rawDataFiltered.forEach(item => {
       // Try to find the field by its exact name first
       let fieldValue = this.getFieldValue(item, this.filterField);
-      // console.log('## fieldValue', this.filterField, fieldValue);
+      // // console.log('## fieldValue', this.filterField, fieldValue);
       
       // If not found, try case-insensitive search for the field name
       if (fieldValue === null || fieldValue === undefined) {
@@ -184,13 +184,13 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
         const actualFieldName = Object.keys(item).find(
           key => key.toLowerCase() === this.filterField.toLowerCase()
         );
-        // console.log('##actualFieldName', actualFieldName);
+        // // console.log('##actualFieldName', actualFieldName);
         
         // If we found a matching field name with different case, get its value
         if (actualFieldName) {
           fieldValue = item[actualFieldName];
         }
-        // console.log('## fieldValue', this.filterField, fieldValue);
+        // // console.log('## fieldValue', this.filterField, fieldValue);
       }
       
       // Skip if still null or undefined
@@ -343,13 +343,13 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
     
     // Siempre emitir la selección actual para garantizar que se propaga
     this._lastEmitLength = selectedItems.length;
-    // console.log('[MultiSelectComponent] emitSelection - Emitiendo', selectedItems.length, 'items seleccionados:', selectedItems);
+    // // console.log('[MultiSelectComponent] emitSelection - Emitiendo', selectedItems.length, 'items seleccionados:', selectedItems);
     
     // Emitir siempre para asegurar que los receptores reciben la información
     this.selectionChange.emit(selectedItems);
     
     // Agregar un log adicional para confirmar que el evento fue emitido
-    // console.log('[MultiSelectComponent] emitSelection - Evento emitido correctamente');
+    // // console.log('[MultiSelectComponent] emitSelection - Evento emitido correctamente');
   }
   
   /**
@@ -366,7 +366,7 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
   private applyLabelStyles() {
     // Usar setTimeout para asegurarnos de aplicar los estilos después del renderizado
     setTimeout(() => {
-      // console.log('Aplicando estilos a los elementos del multi-select');
+      // // console.log('Aplicando estilos a los elementos del multi-select');
       
       // 1. CONTENEDOR PRINCIPAL
       const optionsContainer = this.elementRef.nativeElement.querySelector('.options-container');
