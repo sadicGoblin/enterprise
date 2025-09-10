@@ -13,7 +13,7 @@ export const REPORTS_CONFIG: GlobalReportsConfig = {
   
   reports: [
     {
-      indexName: 'history-report',
+      indexName: 'custom-plans',
       principalValue: 'estado',
       principalValuePositive: 'cumplida',
       summaryValues: ['estado', 'tipo'],
@@ -25,8 +25,8 @@ export const REPORTS_CONFIG: GlobalReportsConfig = {
       ],
       columnsExport: ['fecha', 'Usuario', 'Cargo', 'Obra', 'Periodo', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'Periocidad', 'tipo', 'estado'],
       columnsTable: ['fecha', 'Usuario', 'Cargo', 'Obra', 'Periodo', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'Periocidad', 'tipo', 'estado'],
-      columnsFilter: ['Obra', 'Cargo', 'Usuario', 'fecha', 'Periodo', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'Periocidad', 'tipo', 'estado'],
-      title: 'Reporte Histórico'
+      columnsFilter: ['Obra', 'Usuario', 'Cargo', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'Periocidad', 'tipo', 'estado', 'fecha', 'Periodo'],
+      title: 'Plan personalizado'
     },
     // Additional reports can be added here
   ]

@@ -73,7 +73,7 @@ export class HistoryTableComponent implements OnChanges {
     const reportConfig = REPORTS_CONFIG.reports.find(report => report.indexName === 'history-report');
     
     // Definir columnas y filtros con valores por defecto si no se encuentra la configuración
-    const columnsTableConfig = reportConfig?.columnsTable || [];
+    const columnsTableConfig = reportConfig?.columnsExport || [];
     const columnsFilterConfig = reportConfig?.columnsFilter || [];
     
     // Sample data para verificar tipos y propiedades

@@ -13,20 +13,19 @@ export const REPORTS_CONFIG: GlobalReportsConfig = {
   
   reports: [
     {
-      indexName: 'history-report',
-      principalValue: 'estado',
+      indexName: 'inspsttma',
+      principalValue: 'cantidad',
+      principalValuePositive: '1',
       unit: 'quantity',
-      principalValuePositive: 'cumplida',
-      summaryValues: ['estado', 'tipo'],
+      summaryValues: ['ambitoInvolucrado', 'empresa'],
       chartColors: [
-        { indexItem: 'cumplida', color: '#2ecc71' },    // Verde más moderno
-        { indexItem: 'no cumplida', color: '#e74c3c' }, // Rojo más moderno
-        { indexItem: 'pendiente', color: '#f1c40f' }    // Amarillo más moderno
+        { indexItem: '1', color: '#2ecc71' },    // Verde más moderno
+        { indexItem: '0', color: '#e74c3c' }, // Rojo más moderno
       ],
-      columnsExport: ['fecha', 'Usuario', 'Cargo', 'Obra', 'Periodo', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'Periocidad', 'tipo', 'estado'],
-      columnsTable: ['fecha', 'Usuario', 'Cargo', 'Obra', 'Periodo', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'Periocidad', 'tipo', 'estado'],
-      columnsFilter: ['Obra', 'Cargo', 'Usuario', 'fecha', 'Periodo', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'Periocidad', 'tipo', 'estado'],
-      title: 'Reporte Histórico'
+      columnsExport: ['idInspeccionSSTMA', 'fecha', 'areaTrabajo', 'accion', 'trabajoAsociado', 'medidaControl', 'comunicadoA', 'correoA',   'Obra', 'periodo', 'empresa', 'profesionalResponsable','usuario', 'ambitoInvolucrado', 'riesgoAsociado'],
+      columnsTable: ['idInspeccionSSTMA', 'fecha', 'areaTrabajo', 'accion', 'trabajoAsociado', 'medidaControl', 'comunicadoA', 'correoA',   'Obra', 'periodo', 'empresa', 'profesionalResponsable','usuario', 'ambitoInvolucrado', 'riesgoAsociado'],
+      columnsFilter: ['Obra','usuario',  'areaTrabajo', 'accion', 'riesgoAsociado', 'trabajoAsociado', 'medidaControl', 'periodo', 'empresa', 'profesionalResponsable', 'ambitoInvolucrado', 'fecha'],
+      title: 'Inspeccion STTMA'
     },
     // Additional reports can be added here
   ]

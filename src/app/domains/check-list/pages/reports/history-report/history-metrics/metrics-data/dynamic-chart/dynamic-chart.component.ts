@@ -2,7 +2,13 @@ import { Component, Input, OnChanges, OnDestroy, AfterViewInit, ElementRef, View
 import { Chart, ChartConfiguration, ChartDataset } from 'chart.js';
 import { CommonModule } from '@angular/common';
 import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { filter as _filter, cloneDeep } from 'lodash';
+import * as moment from 'moment-timezone';
+// Configurar moment para usar español y zona horaria de Santiago de Chile
+import 'moment/locale/es';
 
 // Import report configuration model
 import { ReportConfig } from '../../../models/report-config.model';
@@ -15,16 +21,24 @@ import { HierarchicalFilterItem } from '../../../../../../models/hierarchical-fi
   standalone: true,
   imports: [
     CommonModule,
-    MatIconModule
+    MatIconModule,
+    MatButtonModule,
+    MatTooltipModule
   ]
 })
 export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestroy {
+  // Set moment locale and timezone
+  private readonly TIMEZONE = 'America/Santiago';
+  
   @Input() filterType: string = '';
   @Input() completeData: any[] = []; // Datos completos sin filtrar
   @Input() fieldToFilter: string = '';
   @Input() activeFilters: any = {}; // Filtros activos (igual que summary-kpi)
   @Input() hierarchicalFilters: HierarchicalFilterItem[] = [];
   @Input() reportConfig?: ReportConfig; // Configuración del reporte
+  
+  // Data filtrada para mostrar en el popup de detalles
+  filteredData: any[] = [];
   @Input() title: string = 'KPI OBRA'; // Título personalizable con valor predeterminado
 
   // Propiedades para la tabla mensual
@@ -69,9 +83,16 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   estados: string[] = [];
   valoresFiltro: string[] = [];
   estadosPorValor: Record<string, Record<string, number>> = {};
+  
+  // Constructor para inyectar servicios necesarios
+  constructor(private dialog: MatDialog) { 
+    // Configure moment to use Spanish locale and Santiago timezone
+    moment.locale('es');
+    moment.tz.setDefault(this.TIMEZONE);
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
-    // console.log('Cambiando cambios', this.fieldToFilter.toLowerCase(), changes);
+    // // console.log('Cambiando cambios', this.fieldToFilter.toLowerCase(), changes);
     // Si cambia la configuración del reporte, actualizamos los campos a utilizar
     if (changes['reportConfig'] && this.reportConfig) {
       // Actualizamos el campo principal desde la configuración
@@ -79,7 +100,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     }
 
     if (changes['hierarchicalFilters'] && this.hierarchicalFilters.length > 0) {
-      //console.log('[DynamicChartComponent] - ngOnChanges - handleHierarchicalFiltersChange:', this.hierarchicalFilters);
+      //// console.log('[DynamicChartComponent] - ngOnChanges - handleHierarchicalFiltersChange:', this.hierarchicalFilters);
     }
 
     if (changes['completeData']
@@ -102,15 +123,16 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
 
 
   processFilterHierarchical(rawData: any[] = []) {
-      //console.log('dynamicChartComponent - processFilterHierarchical', this.filterType, this.hierarchicalFilters);
+      //// console.log('dynamicChartComponent - processFilterHierarchical', this.filterType, this.hierarchicalFilters);
       let rawDataFiltered: any[] = []; 
       rawDataFiltered = [...rawData];
+      this.filteredData = []; // Reset filtered data array
       if (this.hierarchicalFilters && this.hierarchicalFilters.length > 0) {
         // Start with a copy of all raw data
         
         let rawDataResult: any[] = []; 
         
-        //console.log('rawDataFiltered', rawDataFiltered);
+        //// console.log('rawDataFiltered', rawDataFiltered);
         
         // Sort filters by position to ensure proper hierarchy
         const sortedFilters = [...this.hierarchicalFilters].sort((a, b) => a.position - b.position);
@@ -118,31 +140,30 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
         // Apply each filter in order using for...of to allow break statements
         for (const filter of sortedFilters) {
           if (filter.filters && filter.filters.length > 0) {
-            //console.log('filter', filter);
+            //// console.log('filter', filter);
             const filterType = filter.filterType;
             const filters = filter.filters;
             const position = filter.position;
-            //console.log('filterType', filterType, this.filterType);
+            //// console.log('filterType', filterType, this.filterType);
             
             
   
-            //console.log('Applying filter:', filterType, 'with values:', filters);
+            //// console.log('Applying filter:', filterType, 'with values:', filters);
             
             // Log sample data item to see structure
             if (rawDataFiltered.length > 0) {
-              //console.log('Sample data item:', rawDataFiltered[0]);
-              //console.log('Field value in sample:', filterType, '=', rawDataFiltered[0][filterType]);
+              //// console.log('Sample data item:', rawDataFiltered[0]);
+              //// console.log('Field value in sample:', filterType, '=', rawDataFiltered[0][filterType]);
             }
             
             // Apply the filter and store the result with case-insensitive comparison
             const filteredData = _filter(rawDataFiltered, item => {
               // Get the value of the item - using getCampoValor for case-insensitive field name matching
-              console.log('##item', item, filterType);
+             
               const itemValue = this.getCampoValor(item, filterType);
-              console.log('##item', item, filterType, itemValue);
               // Skip if value doesn't exist
               if (itemValue === null || itemValue === undefined) {
-                //console.log('Skipping item - missing field:', filterType);
+                //// console.log('Skipping item - missing field:', filterType);
                 return false;
               }
               
@@ -152,30 +173,30 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
               // Debug logging for some items
               const debugSample = Math.random() < 0.05; // Log ~5% of items
               if (debugSample) {
-                //console.log('Item value:', itemValue, 'normalized to:', normalizedItemValue);
-                //console.log('Filter values:', filters.map(f => String(f).toLowerCase()));
+                //// console.log('Item value:', itemValue, 'normalized to:', normalizedItemValue);
+                //// console.log('Filter values:', filters.map(f => String(f).toLowerCase()));
                 
                 // Check if any match exists
                 const hasMatch = filters.some(filterValue => 
                   String(filterValue).toLowerCase() === normalizedItemValue
                 );
-                //console.log('Match found?', hasMatch);
+                //// console.log('Match found?', hasMatch);
               }
               
               // Check if any filter value matches (case insensitive)
               return filters.some(filterValue => {
-                console.log('##filterValue', filterValue, normalizedItemValue);
                 const normalizedFilterValue = String(filterValue).toLowerCase();
-                console.log('##normalizedFilterValue', normalizedFilterValue, normalizedItemValue);
                 return normalizedFilterValue === normalizedItemValue;
               });
             });
             
-            //console.log(`Filter applied: ${filterType} - Items before: ${rawDataFiltered.length}, after: ${filteredData.length}`);
+            //// console.log(`Filter applied: ${filterType} - Items before: ${rawDataFiltered.length}, after: ${filteredData.length}`);
 
   
-            // Update for next iteration
+            // Store filtered data for processing
             rawDataFiltered = filteredData;
+            // Save last filtered data for details popup
+            this.filteredData = filteredData;
             // Stop all filtering if we hit the current field name to avoid circular filtering
             if(String(filterType) === String(this.filterType)){
               break; // Exit the loop completely
@@ -188,9 +209,9 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
         // this.rawData = rawDataFiltered;
         
         // Log the filtered results
-        // console.log('Raw data filtered by hierarchical filters:', this.filterField, this.rawData);
+        // // console.log('Raw data filtered by hierarchical filters:', this.filterField, this.rawData);
       } 
-      console.log('rawDataResult', this.filterType, rawDataFiltered);
+      // console.log('rawDataResult', this.filterType, rawDataFiltered);
       return rawDataFiltered;
     }
 
@@ -201,8 +222,8 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     this.hasData = this.completeData.length > 0;
     if (!this.hasData) return;
 
-    // console.log('Procesando datos para el gráfico dinámico');
-    // console.log('Total datos disponibles:', this.completeData.length,
+    // // console.log('Procesando datos para el gráfico dinámico');
+    // // console.log('Total datos disponibles:', this.completeData.length,
     //   'usando campo principal:', this.principalValueField);
 
     // Hacemos una copia profunda de los datos para evitar mutaciones no deseadas
@@ -222,7 +243,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     const datosFiltrados = dataCopy.filter((item: any) => {
       // Verificamos cada filtro activo
       for (const filterField in this.activeFilters) {
-        // // console.log('Campo filtros:', campoFiltro, filterField);
+        // // // console.log('Campo filtros:', campoFiltro, filterField);
         if(campoFiltro !== filterField.toLowerCase()) continue;
         if (this.activeFilters.hasOwnProperty(filterField) &&
           this.activeFilters[filterField] &&
@@ -245,7 +266,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
       return true;
     });
 
-    // console.log('Datos filtrados:', datosFiltrados.length);
+    // // console.log('Datos filtrados:', datosFiltrados.length);
 
     // Actualizamos el total de elementos para el footer
     this.totalElementos = datosFiltrados.length;
@@ -275,8 +296,8 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     });
 
     this.estados = Array.from(todosLosEstados);
-    // console.log('Estados detectados:', this.estados);
-    // console.log('Contadores por estado:', this.contadorEstados);
+    // // console.log('Estados detectados:', this.estados);
+    // // console.log('Contadores por estado:', this.contadorEstados);
 
     // Obtener valores únicos del campo de filtro
     const valoresFiltracion = new Set<string>();
@@ -312,7 +333,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
         this.estadosPorValor[valorFiltro][estado]++;
       }
     });
-    // console.log('Estadísticas por valor:', this.estadosPorValor);
+    // // console.log('Estadísticas por valor:', this.estadosPorValor);
     
   }
 
@@ -322,7 +343,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   private getCampoValor(item: any, campo: string): string {
     // Buscar el campo sin importar mayúsculas/minúsculas
     const campoEncontrado = Object.keys(item).find(key => key.toLowerCase() === campo.toLowerCase());
-    // console.log('Campo encontrado:', campoEncontrado, item, campo);
+    // // console.log('Campo encontrado:', campoEncontrado, item, campo);
     return campoEncontrado ? item[campoEncontrado] : '';
   }
 
@@ -332,7 +353,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   initChart(): void {
     if (!this.chartCanvas || !this.hasData) return;
 
-    // console.log('Inicializando gráfico');
+    // // console.log('Inicializando gráfico');
 
     if (this.chart) {
       this.chart.destroy();
@@ -341,7 +362,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     const ctx = this.chartCanvas.nativeElement.getContext('2d');
     if (!ctx) return;
 
-    // console.log('Inicializando gráfico dinámico');
+    // // console.log('Inicializando gráfico dinámico');
 
     // Ajustamos la altura del canvas basado en la cantidad de elementos
     this.adjustCanvasHeight();
@@ -378,7 +399,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
 
     // Crear nueva instancia de gráfico
     this.chart = new Chart(ctx, config);
-    // console.log('Gráfico creado', this.chart);
+    // // console.log('Gráfico creado', this.chart);
   }
 
   /**
@@ -616,14 +637,14 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     // Determine calculation mode (percent vs quantity)
     const isPercentMode = unit === 'percent';
     
-    console.log('Table configuration:', { 
-      dateField, 
-      stateField, 
-      categoryField,
-      positiveValue,
-      unit,
-      isPercentMode
-    });
+    // console.log('Table configuration:', { 
+    //   dateField, 
+    //   stateField, 
+    //   categoryField,
+    //   positiveValue,
+    //   unit,
+    //   isPercentMode
+    // });
     
     // Extract all months from data
     const months = new Set<string>();
@@ -640,9 +661,9 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     const categoriesData: { [category: string]: CategoryData } = {};
     
     // Imprimir los primeros 5 elementos de datos para verificar fechas
-    console.log('Primeros 5 datos recibidos:');
+    // console.log('Primeros 5 datos recibidos:');
     data.slice(0, 5).forEach(item => {
-      console.log('Fecha original:', item[dateField], 'Tipo:', typeof item[dateField]);
+      // console.log('#DATE Fecha original:', item[dateField], 'Tipo:', typeof item[dateField]);
     });
     
     // Define un tipo para los registros por mes
@@ -665,32 +686,38 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
       if (!item[dateField]) return;
       
       try {
-        // Convert date to month-year format
+        // Convert date to month-year format using moment
         const originalDate = item[dateField];
-        const date = new Date(originalDate);
-        // getMonth() es 0-indexado (0=Enero, 7=Agosto), usamos directamente lo que viene en la fecha
-        const dateParts = String(originalDate).split('-');
-        // Si el formato es YYYY-MM-DD, usamos la parte MM directamente
-        const monthNumber = dateParts.length >= 2 ? parseInt(dateParts[1], 10) : (date.getMonth() + 1);
-        const yearShort = date.getFullYear().toString().substr(2);
-        const month = `${monthNumber}/${yearShort}`;
+        // Crear objeto moment con la fecha original y la zona horaria configurada
+        const momentDate = moment.tz(originalDate, this.TIMEZONE);
+        
+        // Verificar si la fecha es válida
+        if (!momentDate.isValid()) {
+          // console.warn('#DATE Formato de fecha originalDate:', originalDate);
+          return; // Skip this item
+        }
+
+        // console.warn('#DATE Formato de fecha momentDate:', momentDate);
+        
+        // Obtener mes y año con moment (más confiable que Date)
+        const monthNumber = momentDate.month() + 1; // moment es 0-indexado para meses
+        const year = momentDate.year();
+        const yearShort = year.toString().substr(2);
+        
+        // Usar el nombre abreviado del mes en español en lugar del número
+        const monthName = momentDate.format('MMM'); // Devuelve 'ene', 'feb', etc.
+        const monthNameCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1); // 'Ene', 'Feb'
+        const month = `${monthNameCapitalized} ${yearShort}`;
         
         // Guardar información de fechas por mes para diagnóstico
         const recordInfo: DateRecord = {
           original: String(originalDate),
-          parsed: date.toISOString(),
+          parsed: momentDate.toISOString(),
           month: monthNumber,
-          year: date.getFullYear(),
+          year: momentDate.year(),
           category: String(item[categoryField] || 'N/A'),
           state: String(item[stateField] || 'N/A')
         };
-        
-        // Recolectar fechas de julio para análisis
-        if (monthNumber === 7) {
-          julyRecords.push(recordInfo);
-        } else if (monthNumber === 8) {
-          augustRecords.push(recordInfo);
-        }
         
         months.add(month);
         
@@ -724,28 +751,57 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
       }
     });
     
-    // Mostrar los registros recolectados para diagnóstico
-    //`=== REGISTROS DE JULIO (${julyRecords.length}) ===`);
-    julyRecords.forEach((record, index) => {
-      //console.log(`Record #${index + 1}:`, record);
-    });
-    console.log(`=== REGISTROS DE AGOSTO (mostrando primeros 5 de ${augustRecords.length}) ===`);
-    augustRecords.slice(0, 5).forEach((record, index) => {
-      //console.log(`Record #${index + 1}:`, record);
-    });
-    
-    // Sort months chronologically
+    // console.log('#DATE months:', months);
+    // Sort months chronologically using moment - updated for text month format
     this.monthsInRange = Array.from(months).sort((a, b) => {
-      const [monthA, yearA] = a.split('/');
-      const [monthB, yearB] = b.split('/');
-      const dateA = new Date(2000 + parseInt(yearA), parseInt(monthA) - 1, 1);
-      const dateB = new Date(2000 + parseInt(yearB), parseInt(monthB) - 1, 1);
-      return dateA.getTime() - dateB.getTime();
+      // Extract month name and year from format "Ene 25"
+      const monthNameA = a.split(' ')[0]; // "Ene", "Feb", etc.
+      const yearA = a.split(' ')[1];      // "25"
+      const monthNameB = b.split(' ')[0];
+      const yearB = b.split(' ')[1];
+      
+      // Create dates using the month name and year
+      let dateA, dateB;
+      
+      try {
+        // Create dates using the Spanish month names
+        if (yearA && monthNameA) {
+          // Parse Spanish month names in the same locale
+          dateA = moment.tz(`01-${monthNameA}-20${yearA}`, 'DD-MMM-YYYY', 'es', this.TIMEZONE);
+        } else {
+          dateA = moment.tz('2000-01-01', this.TIMEZONE);
+        }
+        
+        if (yearB && monthNameB) {
+          dateB = moment.tz(`01-${monthNameB}-20${yearB}`, 'DD-MMM-YYYY', 'es', this.TIMEZONE);
+        } else {
+          dateB = moment.tz('2000-01-01', this.TIMEZONE);
+        }
+        
+        // Verify that the dates are valid
+        if (!dateA.isValid()) {
+          console.warn('Invalid date A:', a, dateA);
+          dateA = moment.tz('2000-01-01', this.TIMEZONE);
+        }
+        if (!dateB.isValid()) {
+          console.warn('Invalid date B:', b, dateB);
+          dateB = moment.tz('2000-01-01', this.TIMEZONE);
+        }
+      } catch (e) {
+        console.error('Error sorting dates:', e, { a, b, monthNameA, yearA, monthNameB, yearB });
+        dateA = moment.tz('2000-01-01', this.TIMEZONE);
+        dateB = moment.tz('2000-01-01', this.TIMEZONE);
+      }
+      
+      // Comparar usando la función unix() que es más rápida que valueOf()
+      return dateA.unix() - dateB.unix();
     });
+
     
-    // console.log('Detected months:', this.monthsInRange);
+    // console.log('#DATE Detected months:', this.monthsInRange);
     
     // Generate table data
+    // console.log('#DATE categoriesData:', categoriesData);
     this.monthlyTableData = Object.entries(categoriesData).map(([category, categoryData]) => {
       // Create row with category name
       const rowData: any = { name: category, isTotal: false }; // Flag to identify normal rows
@@ -759,20 +815,15 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
           // Get state counts for this month
           const stateValues = monthInfo.states;
           const totalItems = monthInfo.totalItems;
+          // console.log('#DATE stateValues:', stateValues);
+          // console.log('#DATE totalItems:', totalItems);
           
-          //console.log(`States for ${category} in ${month}:`, stateValues);
+          //// console.log(`States for ${category} in ${month}:`, stateValues);
           
           // Find positive states (matching the configured value)
           let positiveStates = Object.keys(stateValues).filter(state => 
             state.toLowerCase() === positiveValue.toLowerCase()
           );
-          
-          // If no exact match, try partial match
-          if (positiveStates.length === 0) {
-            positiveStates = Object.keys(stateValues).filter(state => 
-              state.toLowerCase().includes(positiveValue.toLowerCase())
-            );
-          }
           
           // Sum up all positive state counts
           const positiveCount = positiveStates.reduce((sum, state) => 
@@ -784,7 +835,16 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
           
           if (isPercentMode) {
             // Calculate percentage of positive states (for percent mode)
-            cellValue = Math.round((positiveCount / totalItems) * 100);
+            const percentValue = Math.round((positiveCount / totalItems) * 100);
+            
+            // Store both the percentage and raw values for tooltip
+            cellValue = {
+              displayValue: percentValue,
+              tooltip: `${positiveCount}/${totalItems}`, // Raw values for tooltip
+              percent: true,                             // Flag to identify percent cells
+              positiveCount: positiveCount,              // Store raw values for reference
+              totalItems: totalItems
+            };
           } else {
             // For quantity mode, just use the count of positive items
             cellValue = positiveCount;
@@ -794,15 +854,27 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
           rowData[month] = cellValue;
           
           // Update totals for average calculation
-          totalSum += cellValue;
+          // Si es un objeto con displayValue (modo porcentaje), usar ese valor
+          if (typeof cellValue === 'object' && cellValue !== null && 'displayValue' in cellValue) {
+            totalSum += cellValue.displayValue;
+          } else {
+            // Si es un número simple (modo cantidad), usarlo directamente
+            totalSum += Number(cellValue);
+          }
           monthCount++;
         } else {
           rowData[month] = null; // No data for this month
         }
       });
       
-      // Calculate average percentage across all months
-      rowData.average = monthCount > 0 ? Math.round(totalSum / monthCount) : 0;
+      // Calculate average percentage or sum across all months depending on mode
+      if (isPercentMode) {
+        // En modo porcentaje, calcular el promedio
+        rowData.average = monthCount > 0 ? Math.round(totalSum / monthCount) : 0;
+      } else {
+        // En modo cantidad, calcular la suma total de la fila
+        rowData.average = totalSum;
+      }
       
       return rowData;
     });
@@ -819,8 +891,15 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
       }
     });
     
-    // Calcular el promedio general
-    const grandTotalAverage = grandTotalCount > 0 ? Math.round(grandTotalSum / grandTotalCount) : 0;
+    // Calcular el promedio general o la suma total según el modo
+    let grandTotalAverage;
+    if (isPercentMode) {
+      // En modo porcentaje, calcular el promedio
+      grandTotalAverage = grandTotalCount > 0 ? Math.round(grandTotalSum / grandTotalCount) : 0;
+    } else {
+      // En modo cantidad, simplemente sumar todos los totales
+      grandTotalAverage = grandTotalSum;
+    }
     
     // Añadir fila de totalizador con promedios o totales por mes según el modo
     const totalsRow: any = {
@@ -855,7 +934,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     // Agregar la fila de totalizador a la tabla
     this.monthlyTableData.push(totalsRow);
     
-    // console.log('Generated monthly table with totals:', this.monthlyTableData);
+    // // console.log('Generated monthly table with totals:', this.monthlyTableData);
   }
 
   /**
@@ -886,5 +965,41 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     return label.length > maxLength
       ? `${label.substring(0, maxLength)}...`
       : label;
+  }
+  
+  /**
+   * Abre popup con los datos filtrados que están generando el gráfico
+   * Utiliza las columnas definidas en la configuración del reporte si existen
+   */
+  openDetailsPopup(): void {
+    // Importación dinámica para evitar dependencias circulares
+    import('./details-data/details-data.component').then(({ DetailsDataComponent }) => {
+      // Obtener columnas a mostrar desde la configuración del reporte actual
+      let columnas: string[] = [];
+      
+      // Usar columnas de la configuración del reporte si están disponibles
+      if (this.reportConfig && this.reportConfig.columnsTable && this.reportConfig.columnsTable.length > 0) {
+        columnas = [...this.reportConfig.columnsTable];
+        // console.log('Usando columnas de configuración:', columnas);
+      }
+      
+      // Abrir diálogo con los datos filtrados
+      this.dialog.open(DetailsDataComponent, {
+        width: '700px', 
+        height: '600px',
+        maxWidth: '700px',
+        minWidth: '700px',
+        data: {
+          data: this.filteredData,
+          title: `${this.title} - Datos Filtrados`,
+          draggable: true,  // Marcador para habilitar arrastre en el componente
+          columns: columnas  // Pasar columnas desde la configuración
+        },
+        panelClass: ['details-data-dialog', 'compact-dialog', 'draggable-dialog'],
+        disableClose: false,
+        autoFocus: false,
+        hasBackdrop: true
+      });
+    });
   }
 }

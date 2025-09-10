@@ -29,6 +29,71 @@ $hover-color: rgba(255, 255, 255, 0.05);
     justify-content: space-between;
     min-height: 30px;
     
+    .title-container {
+      display: flex;
+      flex: 1;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .chart-title {
+      h3 {
+        display: flex;
+        align-items: center;
+        
+        .inline-details-button {
+          margin-left: 8px;
+          padding: 0;
+          height: 24px;
+          width: 24px;
+          line-height: 24px;
+          color: rgba(255, 255, 255, 0.7);
+          
+          &:hover {
+            color: white;
+          }
+          
+          .mat-icon {
+            font-size: 18px;
+            height: 18px;
+            width: 18px;
+          }
+        }
+      }
+    }
+    
+    .chart-actions {
+      display: flex;
+      align-items: center;
+      height: 100%;
+      
+      .details-button {
+        padding: 0;
+        height: 28px;
+        width: 28px;
+        line-height: 28px;
+        color: $text-primary;
+        opacity: 0.7;
+        transition: all 0.2s ease;
+        margin-top: 0;
+        
+        .mat-icon {
+          font-size: 20px;
+          height: 20px;
+          width: 20px;
+          line-height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        &:hover {
+          opacity: 1;
+          transform: scale(1.05);
+        }
+      }
+    }
+    
     .chart-title {
       display: flex;
       align-items: center;

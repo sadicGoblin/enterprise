@@ -2,11 +2,15 @@
   <ng-container *ngIf="hasData; else noData">
     <!-- Encabezado con título e indicador KPI -->
     <div class="chart-header">
-      <div class="chart-title">
-        <mat-icon>bar_chart</mat-icon>
-        <h3>{{ title }}</h3>
+      <div class="title-container">
+        <div class="chart-title">
+          <mat-icon>bar_chart</mat-icon>
+          <h3>{{ title }}</h3>
+        </div>
+        <button mat-icon-button (click)="openDetailsPopup()" class="details-button" title="Ver datos filtrados">
+          <mat-icon style="font-size: 20px; vertical-align: middle; color: white;">grid_on</mat-icon>
+        </button>
       </div>
-      
     </div>
     
     <!-- Contenido del gráfico -->
@@ -67,7 +71,16 @@
                 <ng-container *ngFor="let month of monthsInRange">
                   <td [ngClass]="getValueClass(row[month])" [class.total-cell]="row.isTotal">
                     <ng-container *ngIf="row[month] !== null && row[month] !== undefined">
-                      {{row[month] | number:'1.0-0'}}{{reportConfig?.unit === 'percent' ? '%' : ''}}
+                      <!-- Caso para valor de objeto (con tooltip) -->
+                      <span *ngIf="row[month]?.percent" 
+                            [matTooltip]="row[month].tooltip"
+                            matTooltipPosition="above">
+                        {{row[month].displayValue | number:'1.0-0'}}%
+                      </span>
+                      <!-- Caso para valor simple -->
+                      <ng-container *ngIf="!row[month]?.percent">
+                        {{row[month] | number:'1.0-0'}}{{reportConfig?.unit === 'percent' ? '%' : ''}}
+                      </ng-container>
                     </ng-container>
                     <ng-container *ngIf="row[month] === null || row[month] === undefined">
                       -
