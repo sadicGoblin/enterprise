@@ -367,7 +367,7 @@ export class ReportsTableComponent implements OnInit {
         data: idActivity
       });
     }else{
-      if(report.tipo.toUpperCase().includes('SSTMA')){
+      if(report.tipo.toUpperCase().includes('SSTMA') || report.tipo.toUpperCase().includes('SSOMA')){
         this.dialog.open(SstmaModalComponent, {
           data: idActivity
         });
