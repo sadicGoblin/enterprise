@@ -132,8 +132,8 @@ export class SstmaModalComponent implements OnInit {
     if (typeof this.data === 'object' && this.data !== null && 'idControl' in this.data && 'day' in this.data) {
       // Viene desde planification table
       body = {
-        caso: 'ConsultaSTTMAApp',
-        id: this.data.idControl,
+        caso: 'ConsultaInspeccionSSOMA',
+        idControl: this.data.idControl,
         dia: this.data.day
       };
       console.log('Consultando datos SSTMA desde Planification:', body);
