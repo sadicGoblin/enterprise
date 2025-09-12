@@ -585,7 +585,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
       return value >= 1 ? 'excellent' : 'poor';
     } else {
       // For percentage mode: use the existing thresholds
-      if (value >= 90) return 'excellent';
+      if (value >= 95) return 'excellent';
       if (value >= 70) return 'good';
       if (value >= 50) return 'average';
       return 'poor';
