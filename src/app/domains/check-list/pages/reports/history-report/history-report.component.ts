@@ -82,9 +82,9 @@ export class HistoryReportComponent implements OnInit {
   
   // Opciones para el tipo de reporte
   reportTypeOptions = [
-    { value: 'custom-plans', label: 'Plan personalizado' },
-    { value: 'repincidents', label: 'Reporte de Incidencia' },
-    { value: 'inspsttma', label: 'Inspección STTMA' }
+    { value: 'custom-plans', label: 'PLAN PERSONALIZADO' },
+    { value: 'repincidents', label: 'REPORTE DE INCIDENTE' },
+    { value: 'inspsttma', label: 'INSPECCIÓN STTMA' }
   ];
   
   // Propiedades para el sistema de mensajes
@@ -98,7 +98,7 @@ export class HistoryReportComponent implements OnInit {
   
   // Configuración del reporte actual
   reportConfig?: ReportConfig;
-  readonly reportIndexName = 'history-report';
+  readonly reportIndexName = 'custom-plans';
   
   // Datos para la tabla
   tableData: HistoricalReportItem[] = [];
@@ -135,7 +135,7 @@ export class HistoryReportComponent implements OnInit {
     endDate.setDate(endDate.getDate() - 1); // Ayer
     
     // Valor por defecto para el tipo de reporte
-    const defaultReportType = 'custom-plans';
+    const defaultReportType = this.reportIndexName;
     
     this.historyForm = this.fb.group({
       reportType: [defaultReportType, Validators.required],
@@ -146,6 +146,7 @@ export class HistoryReportComponent implements OnInit {
     // Primero nos suscribimos a los cambios en el tipo de reporte
     // para capturar cambios futuros
     this.historyForm.get('reportType')?.valueChanges.subscribe(reportType => {
+      console.log(`Report type changed to1: ${reportType}`);
       this.onReportTypeChange(reportType);
     });
     
@@ -159,7 +160,7 @@ export class HistoryReportComponent implements OnInit {
    * @param reportType The selected report type
    */
   onReportTypeChange(reportType: string): void {
-    console.log(`Report type changed to: ${reportType}`);
+    console.log(`Report type changed to2: ${reportType}`);
     
     // Update the configuration service with the new report type
     this.reportConfigService.setReportType(reportType);
@@ -254,7 +255,7 @@ export class HistoryReportComponent implements OnInit {
         finalize(() => this.isLoading = false)
       )
       .subscribe(response => {
-        console.log('Response:', response);
+        // console.log('Response General Data:', response);
         if (response.data.length === 0) {
           // Mostramos un mensaje de advertencia si no hay datos
           this.errorMessage = 'No se encontraron registros para el período seleccionado';
@@ -312,7 +313,16 @@ export class HistoryReportComponent implements OnInit {
     }
   }
   
-  // Formatea la fecha para mostrarla con nombre de mes en español
+  // Get the label text for the selected report type
+  getSelectedReportTypeLabel(): string {
+    const selectedValue = this.historyForm?.get('reportType')?.value;
+    if (!selectedValue) return '';
+    
+    const selectedOption = this.reportTypeOptions.find(option => option.value === selectedValue);
+    return selectedOption ? selectedOption.label : '';
+  }
+
+  // Formatea la fecha para mostrarla con formato compacto
   formatDateForDisplay(date: Date): string {
     if (!date) return '';
     
@@ -320,14 +330,14 @@ export class HistoryReportComponent implements OnInit {
     const day = d.getDate().toString().padStart(2, '0');
     const year = d.getFullYear();
     
-    // Nombres de los meses en español
+    // Nombres de los meses abreviados en español (3 letras) con primera letra mayúscula
     const meses = [
-      'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
-      'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+      'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'
     ];
     const mes = meses[d.getMonth()];
     
-    return `${day} de ${mes} de ${year}`;
+    return `${day} ${mes} ${year}`;
   }
 
   // Helper method to mark all form controls as touched

@@ -160,7 +160,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
             const filteredData = _filter(rawDataFiltered, item => {
               // Get the value of the item - using getCampoValor for case-insensitive field name matching
              
-              const itemValue = this.getCampoValor(item, filterType);
+              const itemValue = this.findValueByKey(item, filterType);
               // Skip if value doesn't exist
               if (itemValue === null || itemValue === undefined) {
                 //// console.log('Skipping item - missing field:', filterType);
@@ -250,7 +250,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
           this.activeFilters[filterField].length > 0) {
 
           // Obtenemos el valor del item para este campo de filtro
-          const itemValue = this.getCampoValor(item, filterField.toLowerCase());
+          const itemValue = this.findValueByKey(item, filterField.toLowerCase());
           if (!itemValue) return false;
 
           // Si el valor del item no está en los filtros seleccionados, excluimos el item
@@ -302,7 +302,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     // Obtener valores únicos del campo de filtro
     const valoresFiltracion = new Set<string>();
     datosFiltrados.forEach((item: any) => {
-      const valorFiltro = this.getCampoValor(item, campoFiltro);
+      const valorFiltro = this.findValueByKey(item, campoFiltro);
       if (valorFiltro) {
         valoresFiltracion.add(valorFiltro);
       }
@@ -324,7 +324,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
 
     // Contar registros para cada combinación de estado y valor de filtro
     datosFiltrados.forEach((item: any) => {
-      const valorFiltro = this.getCampoValor(item, campoFiltro);
+      const valorFiltro = this.findValueByKey(item, campoFiltro);
       const estado = item[this.principalValueField]; // Usar el campo principal configurado
       if (valorFiltro && estado && this.estadosPorValor[valorFiltro]) {
         if (!this.estadosPorValor[valorFiltro][estado]) {
@@ -340,11 +340,11 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   /**
    * Obtiene el valor de un campo en un objeto, sin importar si está en mayúsculas/minúsculas
    */
-  private getCampoValor(item: any, campo: string): string {
+  private findValueByKey(item: any, fieldName: string): string {
     // Buscar el campo sin importar mayúsculas/minúsculas
-    const campoEncontrado = Object.keys(item).find(key => key.toLowerCase() === campo.toLowerCase());
-    // // console.log('Campo encontrado:', campoEncontrado, item, campo);
-    return campoEncontrado ? item[campoEncontrado] : '';
+    const fieldFound = Object.keys(item).find(key => key.toLowerCase() === fieldName.toLowerCase());
+    // // console.log('Campo encontrado:', campoEncontrado, item, fieldName);
+    return fieldFound ? item[fieldFound] : '';
   }
 
   /**
