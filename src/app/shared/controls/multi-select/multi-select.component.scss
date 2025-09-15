@@ -214,6 +214,25 @@ $spacing-lg: 16px;
         color: rgba(0, 0, 0, 0.54);
         font-size: 12px;
       }
+      
+      // Zebra striping - colores intercalados para mejor legibilidad
+      &.even-row {
+        background-color: #f8f9fa; // Filas pares - blanco
+      }
+      
+      &.odd-row {
+        background-color: #fefefe; // Filas impares - gris muy claro
+      }
+      
+      // Mantener el hover por encima de los colores de zebra
+      &:hover {
+        background-color: $hover-color !important;
+      }
+      
+      // Para elementos seleccionados, usar un color diferente
+      &.selected {
+        background-color: #e3f2fd !important; // Azul muy claro para seleccionados
+      }
     }
 
     .multi-select-all-option {
@@ -231,6 +250,26 @@ $spacing-lg: 16px;
         padding: $spacing-sm;
         font-size: 14px;
         color: rgba(0, 0, 0, 0.54);
+        transition: all 0.2s ease;
+        
+        &.clickable {
+          cursor: pointer;
+          border-radius: 4px;
+          
+          &:hover {
+            background-color: #f0f0f0;
+            color: #1976d2;
+            
+            mat-icon {
+              color: #1976d2;
+            }
+          }
+          
+          &:active {
+            background-color: #e0e0e0;
+            transform: scale(0.98);
+          }
+        }
         
         mat-icon {
           font-size: 18px;
@@ -238,6 +277,7 @@ $spacing-lg: 16px;
           width: 18px;
           margin-right: $spacing-xs;
           vertical-align: middle;
+          transition: color 0.2s ease;
         }
       }
     }

@@ -1,4 +1,4 @@
-<div class="chart-card kpi-dashboard-card mt-4">
+<div #kpiContainer class="chart-card kpi-dashboard-card mt-4">
   <ng-container *ngIf="hasData; else noData">
     <!-- Encabezado con totales -->
     <div class="chart-header">
@@ -6,9 +6,21 @@
         <mat-icon>{{ getGeneralIcon('settings') }}</mat-icon>
         <h3>{{ title }}</h3>
       </div>
-      <div class="total-badge">
-        <span class="total-value">{{ getTotalRegistros() | number }}</span>
-        <span class="total-label">REGISTROS</span>
+      <div class="header-actions">
+        <div class="total-badge">
+          <span class="total-value">{{ getTotalRegistros() | number }}</span>
+          <span class="total-label">REGISTROS</span>
+        </div>
+        <div class="action-buttons">
+          <button 
+            #exportButton 
+            mat-icon-button 
+            (click)="exportToPNG()" 
+            matTooltip="Exportar como PNG"
+            class="export-btn">
+            <mat-icon>download</mat-icon>
+          </button>
+        </div>
       </div>
     </div>
 

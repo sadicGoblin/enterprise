@@ -1,4 +1,19 @@
 <div class="metrics-container">
+  <!-- Breadcrumbs para filtros activos -->
+  <div class="filters-breadcrumbs" *ngIf="hierarchicalFilters && hierarchicalFilters.length > 0">
+    <div class="breadcrumb-header">
+      <mat-icon class="breadcrumb-icon">filter_list</mat-icon>
+      <span>Filtros aplicados:</span>
+    </div>
+    <div class="breadcrumb-items">
+      <div class="breadcrumb-item" *ngFor="let filter of hierarchicalFilters; let last = last">
+        <span class="filter-type">{{filter.filterType}}</span>
+        <span class="filter-count">({{filter.filters.length}})</span>
+        <span class="breadcrumb-separator" *ngIf="!last">›</span>
+      </div>
+    </div>
+  </div>
+
   <!-- Botón de filtros para dispositivos móviles -->
   <button class="filter-toggle-button" (click)="toggleFilterPanel()">
     <mat-icon>filter_list</mat-icon>

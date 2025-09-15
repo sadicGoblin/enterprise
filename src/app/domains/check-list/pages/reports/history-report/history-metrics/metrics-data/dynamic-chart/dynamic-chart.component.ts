@@ -1,6 +1,7 @@
 import { Component, Input, OnChanges, OnDestroy, AfterViewInit, ElementRef, ViewChild, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { Chart, ChartConfiguration, ChartDataset } from 'chart.js';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -9,6 +10,7 @@ import { filter as _filter, cloneDeep } from 'lodash';
 import * as moment from 'moment-timezone';
 // Configurar moment para usar español y zona horaria de Santiago de Chile
 import 'moment/locale/es';
+import { ExportService } from '../../../../../../../../shared/services/export.service';
 
 // Import report configuration model
 import { ReportConfig } from '../../../models/report-config.model';
@@ -21,6 +23,7 @@ import { HierarchicalFilterItem } from '../../../../../../models/hierarchical-fi
   standalone: true,
   imports: [
     CommonModule,
+    FormsModule,
     MatIconModule,
     MatButtonModule,
     MatTooltipModule
@@ -40,6 +43,10 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   // Data filtrada para mostrar en el popup de detalles
   filteredData: any[] = [];
   @Input() title: string = 'KPI OBRA'; // Título personalizable con valor predeterminado
+  
+  // Propiedades para título editable
+  isEditingTitle: boolean = false;
+  editableTitle: string = '';
 
   // Propiedades para la tabla mensual
   monthsInRange: string[] = [];
@@ -47,6 +54,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   yAxisLabel: string = ''; // Etiqueta para el eje vertical en la tabla
 
   @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
+  @ViewChild('chartContainer') chartContainer!: ElementRef<HTMLElement>;
 
   @Output() dataFilter = new EventEmitter<any>();
 
@@ -85,7 +93,10 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   estadosPorValor: Record<string, Record<string, number>> = {};
   
   // Constructor para inyectar servicios necesarios
-  constructor(private dialog: MatDialog) { 
+  constructor(
+    private dialog: MatDialog,
+    private exportService: ExportService
+  ) { 
     // Configure moment to use Spanish locale and Santiago timezone
     moment.locale('es');
     moment.tz.setDefault(this.TIMEZONE);
@@ -959,6 +970,24 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   // - getKpiClass()
 
   /**
+   * Exports the chart container as PNG image using ExportService
+   */
+  async exportToPNG(): Promise<void> {
+    const element = this.chartContainer?.nativeElement;
+    if (!element) {
+      console.error('Chart container not found');
+      return;
+    }
+
+    const fileName = this.title || 'Grafico';
+    await this.exportService.exportElementToPNG(element, {
+      fileName: fileName,
+      scale: 2,
+      backgroundColor: '#ffffff'
+    });
+  }
+
+  /**
    * Trunca una etiqueta si es demasiado larga
    */
   private truncateLabel(label: string, maxLength: number): string {
@@ -1001,5 +1030,51 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
         hasBackdrop: true
       });
     });
+  }
+
+  /**
+   * Inicia la edición del título
+   */
+  startEditingTitle(): void {
+    this.isEditingTitle = true;
+    this.editableTitle = this.title;
+    
+    // Enfocar el input después de que se renderice
+    setTimeout(() => {
+      const input = document.querySelector('.title-input') as HTMLInputElement;
+      if (input) {
+        input.focus();
+        input.select(); // Seleccionar todo el texto
+      }
+    }, 0);
+  }
+
+  /**
+   * Guarda el título editado
+   */
+  saveTitleEdit(): void {
+    if (this.editableTitle.trim()) {
+      this.title = this.editableTitle.trim();
+    }
+    this.isEditingTitle = false;
+  }
+
+  /**
+   * Cancela la edición del título
+   */
+  cancelTitleEdit(): void {
+    this.isEditingTitle = false;
+    this.editableTitle = '';
+  }
+
+  /**
+   * Maneja las teclas presionadas durante la edición del título
+   */
+  onTitleKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      this.saveTitleEdit();
+    } else if (event.key === 'Escape') {
+      this.cancelTitleEdit();
+    }
   }
 }

@@ -59,10 +59,10 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
     //   activeFilters: changes['activeFilters']?.currentValue, 
     //   hasFilters: changes['activeFilters'] && Object.keys(changes['activeFilters'].currentValue || {}).length > 0
     // });
-
-    if (changes['hierarchicalFilters'] && this.hierarchicalFilters.length > 0) {
+    // console.log('[MetricsDataComponent] - ngOnChanges - handleHierarchicalFiltersChange1:', this.hierarchicalFilters);
+    if (changes['hierarchicalFilters'] && this.hierarchicalFilters != null) {
       this._hierarchicalFilters = [...this.hierarchicalFilters];
-      console.log('[MetricsDataComponent] - ngOnChanges - handleHierarchicalFiltersChange:', this._hierarchicalFilters);
+      console.log('[MetricsDataComponent] - ngOnChanges - handleHierarchicalFiltersChange2:', this._hierarchicalFilters);
       this.procesarDatos();
     }
     

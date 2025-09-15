@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import * as ExcelJS from 'exceljs';
 import { saveAs } from 'file-saver';
+import html2canvas from 'html2canvas';
 
 /**
  * Interface for column definition used in Excel export
@@ -36,6 +37,26 @@ export interface ExportOptions {
   autoSizeColumns?: boolean;
   /** Maximum column width when auto-sizing (default: 30) */
   maxColumnWidth?: number;
+}
+
+/**
+ * Configuration options for PNG export
+ */
+export interface PngExportOptions {
+  /** Filename for the exported PNG (without extension) */
+  fileName?: string;
+  /** Scale factor for image quality (default: 2) */
+  scale?: number;
+  /** Background color for the image (default: '#ffffff') */
+  backgroundColor?: string;
+  /** Enable CORS for external resources (default: true) */
+  useCORS?: boolean;
+  /** Falsed content (default: true) */
+  allowTaint?: boolean;
+  /** Custom width for the capture */
+  width?: number;
+  /** Custom height for the capture */
+  height?: number;
 }
 
 /**
@@ -189,5 +210,84 @@ export class ExportService {
     }
     
     return value;
+  }
+
+  /**
+   * Exports an HTML element as PNG image
+   * @param element HTML element to capture
+   * @param options PNG export configuration options
+   */
+  async exportElementToPNG(element: HTMLElement, options?: PngExportOptions): Promise<void> {
+    try {
+      if (!element) {
+        console.error('No element provided for PNG export');
+        return;
+      }
+
+      const defaultOptions: PngExportOptions = {
+        fileName: 'Export',
+        scale: 2,
+        backgroundColor: '#ffffff',
+        useCORS: true,
+        allowTaint: true
+      };
+
+      const exportOptions = { ...defaultOptions, ...options };
+
+      // Configure html2canvas options
+      const canvasOptions: any = {
+        scale: exportOptions.scale,
+        useCORS: exportOptions.useCORS,
+        allowTaint: exportOptions.allowTaint,
+        backgroundColor: exportOptions.backgroundColor,
+        scrollX: 0,
+        scrollY: 0
+      };
+
+      // Add custom dimensions if provided
+      if (exportOptions.width) {
+        canvasOptions.width = exportOptions.width;
+      } else {
+        canvasOptions.width = element.scrollWidth;
+      }
+
+      if (exportOptions.height) {
+        canvasOptions.height = exportOptions.height;
+      } else {
+        canvasOptions.height = element.scrollHeight;
+      }
+
+      // Capture the element
+      const canvas = await html2canvas(element, canvasOptions);
+
+      // Convert to blob and download
+      canvas.toBlob((blob) => {
+        if (blob) {
+          const date = new Date().toISOString().split('T')[0];
+          const fileName = exportOptions.fileName || 'Export';
+          saveAs(blob, `${fileName}_${date}.png`);
+        } else {
+          console.error('Failed to create blob from canvas');
+        }
+      }, 'image/png');
+
+    } catch (error) {
+      console.error('Error exporting to PNG:', error);
+    }
+  }
+
+  /**
+   * Exports an element by selector as PNG image
+   * @param selector CSS selector for the element to capture
+   * @param options PNG export configuration options
+   */
+  async exportElementBySelectorToPNG(selector: string, options?: PngExportOptions): Promise<void> {
+    const element = document.querySelector(selector) as HTMLElement;
+    if (!element) {
+      console.error(`Element with selector '${selector}' not found`);
+      return;
+    }
+    
+    await this.exportElementToPNG(element, options);
   }
 }

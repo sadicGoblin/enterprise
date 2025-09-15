@@ -2,9 +2,18 @@
   <div class="filter-header improved-header">
     <div class="header-content">
       <h3>Filtros</h3>
-      <div class="total-count">
-        <mat-icon>analytics</mat-icon>
-        <span>Total registros: <strong>{{totalRegistros}}</strong></span>
+      <div class="actions-container">
+        <div class="total-count">
+          <mat-icon>analytics</mat-icon>
+          <span>Total: <strong>{{totalRegistros}}</strong></span>
+        </div>
+        <button mat-icon-button 
+                class="clear-filters-btn" 
+                (click)="clearAllFilters()" 
+                *ngIf="hierarchicalFilters.length > 0"
+                matTooltip="Limpiar todos los filtros">
+          <mat-icon>filter_alt_off</mat-icon>
+        </button>
       </div>
     </div>
   </div>

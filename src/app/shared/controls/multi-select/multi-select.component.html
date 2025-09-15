@@ -49,12 +49,15 @@
     
     <!-- Lista de elementos con scroll -->
     <div *ngIf="expanded" class="multi-select-list" [style.maxHeight]="maxHeight">
-      <!-- Mostramos los elementos filtrados o limitados a 15 si hay muchos -->
+      <!-- Mostramos los elementos filtrados - todos o limitados a 15 según showAllItems -->
       <ng-container *ngIf="(filteredItems | async) as filteredList">
         <div
-          *ngFor="let item of filteredList.slice(0, 15)"
+          *ngFor="let item of (showAllItems ? filteredList : filteredList.slice(0, 15)); let i = index"
           class="multi-select-option"
           [class.disabled]="item.disabled"
+          [class.even-row]="i % 2 === 0"
+          [class.odd-row]="i % 2 === 1"
+          [class.selected]="item.selected"
           (click)="toggleSelection(item)">
           <mat-checkbox
             [checked]="item.selected"
@@ -76,13 +79,15 @@
         </div>
       </ng-container>
       
-      <!-- Mensaje indicando que hay más elementos -->
+      <!-- Mensaje clickeable para mostrar más elementos o colapsar -->
       <ng-container *ngIf="(filteredItems | async) as filteredList">
         <div class="more-elements-indicator" *ngIf="filteredList.length > 15">
           <mat-divider></mat-divider>
-          <div class="more-message">
-            <mat-icon class="more-icon">{{ getIconName('more') }}</mat-icon>
-            <span class="more-text">Y {{ filteredList.length - 15 }} elementos más...</span>
+          <div class="more-message clickable" (click)="toggleShowAllItems()">
+            <mat-icon class="more-icon">{{ showAllItems ? getIconName('collapse') : getIconName('more') }}</mat-icon>
+            <span class="more-text">
+              {{ showAllItems ? 'Mostrar menos...' : 'Y ' + (filteredList.length - 15) + ' elementos más...' }}
+            </span>
           </div>
         </div>
       </ng-container>

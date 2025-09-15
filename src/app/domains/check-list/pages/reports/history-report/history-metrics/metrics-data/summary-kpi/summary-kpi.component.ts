@@ -3,10 +3,11 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
 import { Chart, ChartConfiguration } from 'chart.js/auto';
 import { ReportConfig } from '../../../models/report-config.model';
 import { NgChartsModule } from 'ng2-charts';
+import { ExportService } from '../../../../../../../../shared/services/export.service';
 import { getFieldIcon, getValueIcon, getGeneralIcon } from '../../../../../../../../shared/configs/icons.config';
 
 @Component({
@@ -29,6 +30,9 @@ export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy 
   @Input() reportConfig?: ReportConfig;
   @Input() title: string = 'RESUMEN KPI'; // Título personalizable con valor predeterminado
   
+  // ViewChild reference for PNG export
+  @ViewChild('kpiContainer', { static: false }) kpiContainer!: ElementRef;
+  
   // Indicador de si hay datos para mostrar
   hasData: boolean = false;
   
@@ -37,6 +41,8 @@ export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy 
   
   // Mapa de instancias de Chart.js (dinámico)
   private chartInstances: Record<string, Chart> = {};
+
+  constructor(private exportService: ExportService) {}
 
   // Métodos para obtener iconos del diccionario centralizado
   getFieldIcon(fieldName: string): string {
@@ -112,11 +118,12 @@ export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy 
   
   // Método para obtener el total de registros
   getTotalRegistros(): number {
-    if (!this.reportConfig?.principalValue || !this.summaryData[this.reportConfig.principalValue]) {
-      return 0;
-    }
+    // if (!this.reportConfig?.principalValue || !this.summaryData[this.reportConfig.principalValue]) {
+    //   return 0;
+    // }
     
-    return Object.values(this.summaryData[this.reportConfig.principalValue]).reduce((a, b) => a + b, 0);
+    // return Object.values(this.summaryData[this.reportConfig.principalValue]).reduce((a, b) => a + b, 0);
+    return this.completeData.length;
   }
   
   /**
@@ -310,5 +317,23 @@ export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy 
     if (!this.reportConfig) return true;
     if (!this.reportConfig.summaryValues) return true;
     return this.reportConfig.summaryValues.length === 0;
+  }
+
+  /**
+   * Exports the KPI component as PNG image using ExportService
+   */
+  async exportToPNG(): Promise<void> {
+    const element = this.kpiContainer?.nativeElement;
+    if (!element) {
+      console.error('KPI container not found');
+      return;
+    }
+
+    const fileName = this.title || 'Resumen_KPI';
+    await this.exportService.exportElementToPNG(element, {
+      fileName: fileName,
+      scale: 2,
+      backgroundColor: '#ffffff'
+    });
   }
 }

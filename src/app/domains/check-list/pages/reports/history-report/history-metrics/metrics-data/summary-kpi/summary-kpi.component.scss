@@ -49,25 +49,73 @@ $hover-color: rgba(255, 255, 255, 0.05);
       }
     }
     
-    .total-badge {
+    .header-actions {
       display: flex;
       align-items: center;
-      background-color: $badge-bg;
-      padding: 2px 8px;
-      border-radius: 4px;
-      height: 22px;
+      gap: 8px;
       
-      .total-value {
-        font-weight: 600;
-        font-size: 12px;
-        color: #60a5fa;
-        margin-right: 4px;
+      .total-badge {
+        display: flex;
+        align-items: center;
+        background-color: $badge-bg;
+        padding: 2px 8px;
+        border-radius: 4px;
+        height: 22px;
+        
+        .total-value {
+          font-weight: 600;
+          font-size: 12px;
+          color: #60a5fa;
+          margin-right: 4px;
+        }
+        
+        .total-label {
+          font-size: 10px;
+          font-weight: 500;
+          color: $text-secondary;
+        }
       }
       
-      .total-label {
-        font-size: 10px;
-        font-weight: 500;
-        color: $text-secondary;
+      .action-buttons {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        
+        .export-btn {
+          width: 24px;
+          height: 24px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background-color: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 4px;
+          transition: all 0.2s ease;
+          min-width: 24px; // Prevent shrinking
+          padding: 0; // Remove default padding
+          
+          mat-icon {
+            font-size: 14px;
+            height: 14px;
+            width: 14px;
+            color: $text-secondary;
+            line-height: 1; // Reset line-height for icon
+          }
+          
+          &:hover {
+            background-color: $hover-color;
+            border-color: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+            
+            mat-icon {
+              color: $text-primary;
+            }
+          }
+          
+          &:active {
+            transform: scale(0.95);
+          }
+        }
       }
     }
   }
