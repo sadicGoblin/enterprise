@@ -6,8 +6,8 @@ import { EnvironmentConfig } from './environment.config';
 export const environment = {
   production: false,
 
-  //apiBaseUrl: 'https://inarco-ssoma.favric.cl',
-  apiBaseUrl: 'http://localhost:8080',
+  apiBaseUrl: 'https://inarco-ssoma.favric.cl',
+  // apiBaseUrl: 'http://localhost:8080',
   firebaseConfig: {
     apiKey: "AIzaSyApcxpJIrf2fOEjoeyBbXiLr-5DCLPHgPo",
     authDomain: "inarco-webapp.firebaseapp.com",

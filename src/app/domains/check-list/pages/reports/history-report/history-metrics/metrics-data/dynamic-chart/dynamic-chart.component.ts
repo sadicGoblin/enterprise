@@ -582,25 +582,51 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   
   /**
    * Returns a CSS class based on the numeric value to color the cell
-   * @param value Numeric value (percentage or quantity)
+   * @param value Numeric value (percentage or quantity) or object with displayValue
    * @returns CSS class corresponding to the value range
    */
-  getValueClass(value: number): string {
+  getValueClass(value: number | any): string {
     if (value === undefined || value === null) return 'no-data';
+    
+    // Debug logging
+    console.log('getValueClass input:', value, 'type:', typeof value);
+    
+    // Extract numeric value - handle both simple numbers and object format
+    let numericValue: number;
+    if (typeof value === 'object' && value.displayValue !== undefined) {
+      numericValue = value.displayValue;
+      console.log('Object format detected, extracted displayValue:', numericValue);
+    } else if (typeof value === 'number') {
+      numericValue = value;
+      console.log('Number format detected:', numericValue);
+    } else {
+      console.log('Unrecognized format, returning no-data');
+      return 'no-data';
+    }
     
     // Check if we're in quantity mode
     const isQuantityMode = this.reportConfig?.unit === 'quantity';
+    console.log('isQuantityMode:', isQuantityMode, 'unit:', this.reportConfig?.unit);
     
+    let resultClass: string;
     if (isQuantityMode) {
       // For quantity mode: any value >= 1 is excellent (green)
-      return value >= 1 ? 'excellent' : 'poor';
+      resultClass = numericValue >= 1 ? 'excellent' : 'poor';
     } else {
       // For percentage mode: use the existing thresholds
-      if (value >= 95) return 'excellent';
-      if (value >= 70) return 'good';
-      if (value >= 50) return 'average';
-      return 'poor';
+      if (numericValue >= 95) {
+        resultClass = 'excellent';
+      } else if (numericValue >= 70) {
+        resultClass = 'good';
+      } else if (numericValue >= 50) {
+        resultClass = 'average';
+      } else {
+        resultClass = 'poor';
+      }
     }
+    
+    console.log('Final result for value', numericValue, ':', resultClass);
+    return resultClass;
   }
   
   /**
