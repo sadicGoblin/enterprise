@@ -1,0 +1,257 @@
+// Estilos para la barra de herramientas de exportación
+.export-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  
+  .export-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    
+    .export-mode-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background-color: #ffffff;
+      border: 2px solid #dee2e6;
+      transition: all 0.3s ease;
+      
+      mat-icon {
+        color: #6c757d;
+        font-size: 20px;
+      }
+      
+      &.active {
+        background-color: #007bff;
+        border-color: #007bff;
+        
+        mat-icon {
+          color: white;
+        }
+      }
+      
+      &:hover {
+        border-color: #007bff;
+        
+        mat-icon {
+          color: #007bff;
+        }
+        
+        &.active {
+          background-color: #0056b3;
+          
+          mat-icon {
+            color: white;
+          }
+        }
+      }
+    }
+    
+    .export-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      
+      .selected-count {
+        font-size: 14px;
+        font-weight: 500;
+        color: #495057;
+        padding: 4px 8px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+      }
+      
+      .clear-selection-btn {
+        font-size: 12px;
+        padding: 4px 8px;
+        min-width: unset;
+        height: 28px;
+        
+        mat-icon {
+          font-size: 16px;
+          margin-right: 4px;
+        }
+      }
+    }
+  }
+}
+
+// Estilos para los contenedores de componentes con selección
+.component-wrapper {
+  position: relative;
+  margin-bottom: 24px;
+  transition: all 0.3s ease;
+  
+  &.export-mode {
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 4px;
+    
+    &:hover {
+      border-color: #007bff;
+      background-color: rgba(0, 123, 255, 0.05);
+    }
+  }
+  
+  .selection-overlay {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    z-index: 10;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    
+    .selection-icon {
+      font-size: 20px;
+      color: #6c757d;
+      transition: all 0.3s ease;
+    }
+    
+    &:hover {
+      background-color: white;
+      transform: scale(1.1);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      
+      .selection-icon {
+        color: #007bff;
+      }
+    }
+    
+    &.selected {
+      background-color: #007bff;
+      
+      .selection-icon {
+        color: white;
+      }
+      
+      &:hover {
+        background-color: #0056b3;
+      }
+    }
+  }
+}
+
+// Estilos específicos para la grilla de gráficos dinámicos
+.dynamic-charts-container {
+  .dynamic-charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 24px;
+    
+    .component-wrapper {
+      margin-bottom: 0; // Sobrescribir el margin-bottom general
+    }
+  }
+}
+
+// Panel de elementos seleccionados
+.selected-elements-panel {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 8px;
+  
+  .panel-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    
+    mat-icon {
+      color: #1976d2;
+      margin-right: 8px;
+      font-size: 20px;
+    }
+    
+    h4 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: #1976d2;
+    }
+  }
+  
+  .selected-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    
+    .selected-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      background-color: white;
+      border: 1px solid #90caf9;
+      border-radius: 20px;
+      font-size: 12px;
+      
+      .item-icon {
+        font-size: 16px;
+        margin-right: 6px;
+        color: #1976d2;
+      }
+      
+      .item-name {
+        margin-right: 6px;
+        font-weight: 500;
+        color: #333;
+      }
+      
+      .remove-item-btn {
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        padding: 0;
+        min-width: unset;
+        
+        mat-icon {
+          font-size: 14px;
+          color: #666;
+        }
+        
+        &:hover {
+          mat-icon {
+            color: #d32f2f;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Mensaje de sin datos
+.no-data-message {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 20px;
+  color: #6c757d;
+  
+  mat-icon {
+    font-size: 48px;
+    height: 48px;
+    width: 48px;
+    margin-bottom: 16px;
+    opacity: 0.6;
+  }
+  
+  span {
+    font-size: 16px;
+    font-weight: 500;
+  }
+}

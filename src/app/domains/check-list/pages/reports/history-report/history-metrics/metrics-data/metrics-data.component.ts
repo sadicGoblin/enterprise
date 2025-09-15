@@ -6,6 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatButtonModule } from '@angular/material/button';
 import Chart from 'chart.js/auto';
 
 // Importar el modelo de configuración de reportes
@@ -21,6 +22,7 @@ import { HierarchicalFilterItem } from '../../../../../models/hierarchical-filte
     MatCardModule, 
     MatDividerModule, 
     MatTooltipModule,
+    MatButtonModule,
     DynamicChartComponent,
     SummaryKpiComponent
   ],
@@ -33,6 +35,10 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
   @Input() activeFilters: {[key: string]: string[]} = {};
   @Input() reportConfig?: ReportConfig;
   @Input() hierarchicalFilters: HierarchicalFilterItem[] = [];
+  
+  // Sistema de exportación masiva
+  selectedForExport: Set<string> = new Set();
+  exportMode: boolean = false;
   
   // Referencias a los elementos del DOM para los gráficos
   @ViewChild('estadosChart') estadosChartCanvas!: ElementRef<HTMLCanvasElement>;
@@ -443,5 +449,85 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
     };
   }
 
-  // Métodos eliminados para evitar duplicaciones
+  /**
+   * Alterna el modo de exportación masiva
+   */
+  toggleExportMode(): void {
+    this.exportMode = !this.exportMode;
+    if (!this.exportMode) {
+      this.selectedForExport.clear();
+    }
+  }
+  
+  /**
+   * Alterna la selección de un elemento para exportación
+   * @param elementId ID del elemento a seleccionar/deseleccionar
+   */
+  toggleElementSelection(elementId: string): void {
+    if (this.selectedForExport.has(elementId)) {
+      this.selectedForExport.delete(elementId);
+    } else {
+      this.selectedForExport.add(elementId);
+    }
+  }
+  
+  /**
+   * Verifica si un elemento está seleccionado para exportación
+   * @param elementId ID del elemento
+   * @returns true si está seleccionado
+   */
+  isElementSelected(elementId: string): boolean {
+    return this.selectedForExport.has(elementId);
+  }
+  
+  /**
+   * Obtiene la lista de elementos seleccionados para exportación
+   * @returns Array con los IDs de los elementos seleccionados
+   */
+  getSelectedElements(): string[] {
+    return Array.from(this.selectedForExport);
+  }
+  
+  /**
+   * Limpia la selección de elementos para exportación
+   */
+  clearSelection(): void {
+    this.selectedForExport.clear();
+  }
+  
+  /**
+   * Obtiene el nombre descriptivo de un elemento
+   * @param elementId ID del elemento
+   * @returns Nombre descriptivo del elemento
+   */
+  getElementName(elementId: string): string {
+    if (elementId === 'summary-kpi') {
+      return 'Resumen KPI - Datos Globales';
+    }
+    
+    if (elementId.startsWith('dynamic-chart-')) {
+      const index = parseInt(elementId.replace('dynamic-chart-', ''));
+      const chart = this.dynamicCharts[index];
+      return chart ? `Gráfico Dinámico - ${chart.filterType}` : 'Gráfico Dinámico';
+    }
+    
+    return elementId;
+  }
+  
+  /**
+   * Obtiene el icono correspondiente a un elemento
+   * @param elementId ID del elemento
+   * @returns Nombre del icono de Material
+   */
+  getElementIcon(elementId: string): string {
+    if (elementId === 'summary-kpi') {
+      return 'dashboard';
+    }
+    
+    if (elementId.startsWith('dynamic-chart-')) {
+      return 'bar_chart';
+    }
+    
+    return 'insert_drive_file';
+  }
 }

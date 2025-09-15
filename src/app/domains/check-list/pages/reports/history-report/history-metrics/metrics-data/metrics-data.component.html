@@ -1,11 +1,71 @@
+<!-- Barra de herramientas para exportación masiva -->
+<div class="export-toolbar" style="display: none">
+  <div class="export-controls" >
+    <button mat-icon-button 
+            class="export-mode-btn" 
+            [class.active]="exportMode"
+            (click)="toggleExportMode()" 
+            matTooltip="{{exportMode ? 'Salir del modo exportación' : 'Activar modo exportación masiva'}}">
+      <mat-icon>{{exportMode ? 'close' : 'select_all'}}</mat-icon>
+    </button>
+    
+    <div class="export-info" *ngIf="exportMode">
+      <span class="selected-count">{{selectedForExport.size}} elementos seleccionados</span>
+      <button mat-button 
+              class="clear-selection-btn" 
+              (click)="clearSelection()" 
+              *ngIf="selectedForExport.size > 0"
+              matTooltip="Limpiar selección">
+        <mat-icon>clear</mat-icon>
+        Limpiar
+      </button>
+      <button mat-button 
+              class="view-selection-btn" 
+              *ngIf="selectedForExport.size > 0"
+              matTooltip="Ver elementos seleccionados">
+        <mat-icon>visibility</mat-icon>
+        Ver selección
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Panel de elementos seleccionados -->
+<div class="selected-elements-panel" *ngIf="exportMode && selectedForExport.size > 0">
+  <div class="panel-header">
+    <mat-icon>checklist</mat-icon>
+    <h4>Elementos seleccionados para exportación:</h4>
+  </div>
+  <div class="selected-list">
+    <div class="selected-item" *ngFor="let elementId of getSelectedElements()">
+      <mat-icon class="item-icon">{{getElementIcon(elementId)}}</mat-icon>
+      <span class="item-name">{{getElementName(elementId)}}</span>
+      <button mat-icon-button 
+              class="remove-item-btn" 
+              (click)="toggleElementSelection(elementId)"
+              matTooltip="Quitar de la selección">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Primer componente: summary-kpi con diseño idéntico al tradicional -->
 <!-- IMPORTANTE: Usamos completeData (datos sin filtrar) para este componente -->
 <!-- Esto garantiza que siempre muestre la distribución total de los datos -->
-<app-summary-kpi 
-  [completeData]="data" 
-  [reportConfig]="reportConfig"
-  [title]="'DATOS GLOBALES'">
-</app-summary-kpi>
+<div class="component-wrapper" [class.export-mode]="exportMode">
+  <div class="selection-overlay" 
+       *ngIf="exportMode" 
+       [class.selected]="isElementSelected('summary-kpi')"
+       (click)="toggleElementSelection('summary-kpi')">
+    <mat-icon class="selection-icon">{{isElementSelected('summary-kpi') ? 'check_circle' : 'radio_button_unchecked'}}</mat-icon>
+  </div>
+  <app-summary-kpi 
+    [completeData]="data" 
+    [reportConfig]="reportConfig"
+    [title]="'DATOS GLOBALES'">
+  </app-summary-kpi>
+</div>
 
 
 <!-- Sección dinámica de gráficos basados en filtros activos (componente completamente separado) -->
@@ -16,11 +76,24 @@
     </div>
 
     <div class="dynamic-charts-grid">
-      <app-dynamic-chart *ngFor="let chart of dynamicCharts" [filterType]="chart.filterType"
-        [hierarchicalFilters]="_hierarchicalFilters"
-        [fieldToFilter]="chart.fieldName" [completeData]="data"
-        [reportConfig]="reportConfig" [title]="'KPI ' + (chart.filterType || '.')">
-      </app-dynamic-chart>
+      <div class="component-wrapper" 
+           [class.export-mode]="exportMode"
+           *ngFor="let chart of dynamicCharts; let i = index">
+        <div class="selection-overlay" 
+             *ngIf="exportMode" 
+             [class.selected]="isElementSelected('dynamic-chart-' + i)"
+             (click)="toggleElementSelection('dynamic-chart-' + i)">
+          <mat-icon class="selection-icon">{{isElementSelected('dynamic-chart-' + i) ? 'check_circle' : 'radio_button_unchecked'}}</mat-icon>
+        </div>
+        <app-dynamic-chart 
+          [filterType]="chart.filterType"
+          [hierarchicalFilters]="_hierarchicalFilters"
+          [fieldToFilter]="chart.fieldName" 
+          [completeData]="data"
+          [reportConfig]="reportConfig" 
+          [title]="'KPI ' + (chart.filterType || '.')">
+        </app-dynamic-chart>
+      </div>
     </div>
   </div>
 
