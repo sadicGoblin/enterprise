@@ -1,15 +1,32 @@
-<div class="chart-card kpi-dashboard-card">
+<div class="chart-card kpi-dashboard-card" #chartContainer>
   <ng-container *ngIf="hasData; else noData">
     <!-- Encabezado con título e indicador KPI -->
     <div class="chart-header">
       <div class="title-container">
         <div class="chart-title">
           <mat-icon>bar_chart</mat-icon>
-          <h3>{{ title }}</h3>
+          <h3 *ngIf="!isEditingTitle" 
+              (dblclick)="startEditingTitle()" 
+              class="editable-title"
+              matTooltip="Doble click para editar" matTooltipPosition="above">
+            {{ title }}
+          </h3>
+          <input *ngIf="isEditingTitle"
+                 type="text"
+                 [(ngModel)]="editableTitle"
+                 (keydown)="onTitleKeydown($event)"
+                 (blur)="saveTitleEdit()"
+                 class="title-input"
+                 maxlength="50">
         </div>
-        <button mat-icon-button (click)="openDetailsPopup()" class="details-button" title="Ver datos filtrados">
-          <mat-icon style="font-size: 20px; vertical-align: middle; color: white;">grid_on</mat-icon>
-        </button>
+        <div class="action-buttons">
+          <button mat-icon-button (click)="exportToPNG()" class="export-button" matTooltip="Exportar como PNG" matTooltipPosition="above">
+            <mat-icon style="font-size: 20px; vertical-align: middle; color: white;">download</mat-icon>
+          </button>
+          <button mat-icon-button (click)="openDetailsPopup()" class="details-button" matTooltip="Ver datos filtrados" matTooltipPosition="above">
+            <mat-icon style="font-size: 20px; vertical-align: middle; color: white;">grid_on</mat-icon>
+          </button>
+        </div>
       </div>
     </div>
     

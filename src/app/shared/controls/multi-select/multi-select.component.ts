@@ -70,12 +70,20 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
   
   filteredItems: Observable<MultiSelectItem[]>;
   searchControl = new FormControl('');
-  rawDataFiltered: any[] = []; 
+  rawDataFiltered: any[] = [];
+  
+  // Control para mostrar todos los elementos o solo los primeros 15
+  showAllItems = false; 
   
   constructor(private elementRef: ElementRef, private renderer: Renderer2) {
     this.filteredItems = this.searchControl.valueChanges.pipe(
       startWith(''),
-      map(value => this.filterItems(value))
+      map(value => {
+        const filtered = this.filterItems(value);
+        // Apply styles after filtering changes
+        setTimeout(() => this.applyLabelStyles(), 50);
+        return filtered;
+      })
     );
   }
   
@@ -141,7 +149,7 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
           const filteredData = _filter(rawDataFiltered, item => {
             // console.log('item', item);
             const value = this.findValueByKey(item, filterType);
-            console.log('filterType', filterType, this.groupName, value);
+            // console.log('filterType', filterType, this.groupName, value);
             // return filters.map(f => f.toLowerCase()).includes(value);
             return filters.includes(value);
           });
@@ -290,9 +298,19 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
 
   toggleExpand(): void {
     this.expanded = !this.expanded;
-    this.applyLabelStyles();
+    // Apply styles after expanding/collapsing
+    setTimeout(() => this.applyLabelStyles(), 50);
   }
   
+  /**
+   * Toggles between showing only first 15 items or all items
+   */
+  toggleShowAllItems(): void {
+    this.showAllItems = !this.showAllItems;
+    // Apply styles after changing visibility
+    setTimeout(() => this.applyLabelStyles(), 50);
+  }
+
   toggleAll(): void {
     const allSelected = this.isAllSelected();
     

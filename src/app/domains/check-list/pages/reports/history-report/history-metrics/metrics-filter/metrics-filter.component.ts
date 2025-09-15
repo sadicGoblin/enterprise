@@ -52,6 +52,24 @@ export class MetricsFilterComponent implements OnChanges {
   constructor() {}
   
   /**
+   * Limpia todos los filtros aplicados y todos los ítems seleccionados
+   */
+  clearAllFilters(): void {
+    // Reinicia los filtros jerárquicos
+    this.hierarchicalFilters = [];
+    
+    // Reinicia los filtros en los componentes multi-select
+    // Se hace a través de la propagación de cambios de hierarchicalFilters
+    // los componentes multi-select detectarán los cambios mediante sus @Input()
+    
+    // Emite el evento de cambio de filtros jerárquicos vacío
+    this.hierarchicalFiltersChange.emit([]);
+    
+    // También reinicializa los filterGroups para una limpieza completa
+    this.initializeFilters();
+  }
+  
+  /**
    * When input changes, initialize filters and process data
    */
   ngOnChanges(changes: SimpleChanges): void {

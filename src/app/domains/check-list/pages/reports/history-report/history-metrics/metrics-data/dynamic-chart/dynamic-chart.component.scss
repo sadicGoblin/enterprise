@@ -62,6 +62,48 @@ $hover-color: rgba(255, 255, 255, 0.05);
       }
     }
     
+    .action-buttons {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      height: 100%;
+      
+      .details-button,
+      .export-button {
+        padding: 0;
+        height: 28px;
+        width: 28px;
+        line-height: 28px;
+        color: $text-primary;
+        opacity: 0.7;
+        transition: all 0.2s ease;
+        margin-top: 0;
+        
+        .mat-icon {
+          font-size: 20px;
+          height: 20px;
+          width: 20px;
+          line-height: 20px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        
+        &:hover {
+          opacity: 1;
+          transform: scale(1.05);
+        }
+      }
+      
+      .export-button {
+        &:hover {
+          .mat-icon {
+            color: #4CAF50; // Verde para indicar descarga
+          }
+        }
+      }
+    }
+    
     .chart-actions {
       display: flex;
       align-items: center;
@@ -98,6 +140,36 @@ $hover-color: rgba(255, 255, 255, 0.05);
       display: flex;
       align-items: center;
       gap: 8px;
+      
+      .editable-title {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-radius: 4px;
+        padding: 2px 4px;
+        
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+          transform: scale(1.02);
+        }
+      }
+      
+      .title-input {
+        background: rgba(255, 255, 255, 0.9);
+        color: #333;
+        border: 2px solid #1976d2;
+        border-radius: 4px;
+        padding: 4px 8px;
+        font-size: 1.125rem;
+        font-weight: 500;
+        font-family: inherit;
+        outline: none;
+        min-width: 200px;
+        
+        &:focus {
+          border-color: #2196f3;
+          box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+      }
       
       mat-icon {
         font-size: 13px;

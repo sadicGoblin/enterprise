@@ -1,6 +1,70 @@
 .metrics-container {
   font-family: 'Roboto', sans-serif;
   padding: 16px 0;
+
+  // Estilos para los breadcrumbs de filtros activos
+  .filters-breadcrumbs {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    background: rgba(25, 118, 210, 0.05);
+    border: 1px solid rgba(25, 118, 210, 0.1);
+    
+    .breadcrumb-header {
+      display: flex;
+      align-items: center;
+      margin-right: 12px;
+      color: #000000;
+      font-weight: 400;
+      font-size: 12px;
+      
+      .breadcrumb-icon {
+        font-size: 16px;
+        height: 16px;
+        width: 16px;
+        margin-right: 6px;
+      }
+    }
+    
+    .breadcrumb-items {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+      
+      .breadcrumb-item {
+        display: flex;
+        align-items: center;
+        
+        .filter-type {
+          font-weight: 500;
+          color: #455a64;
+          text-transform: capitalize;
+          margin-right: 4px;
+        }
+        
+        .filter-count {
+          font-size: 11px;
+          font-weight: 500;
+          color: #1976d2;
+          background-color: rgba(25, 118, 210, 0.1);
+          border-radius: 10px;
+          padding: 1px 6px;
+          min-width: 20px;
+          text-align: center;
+        }
+        
+        .breadcrumb-separator {
+          margin: 0 8px;
+          color: #90a4ae;
+          font-size: 18px;
+        }
+      }
+    }
+  }
   
   // Botón de filtros (visible solo en móviles)
   .filter-toggle-button {
