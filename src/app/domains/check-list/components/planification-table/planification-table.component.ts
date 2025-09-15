@@ -466,7 +466,8 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     }
     
     // Verificar si el nombre de la actividad contiene "SSOMA" o "SSTMA"
-    if (activity.name.includes('SSOMA') || activity.name.includes('SSTMA')) {
+    console.log("activity.name", activity.name)
+    if (activity.name.includes('INSPECCION SSOMA') || activity.name.includes('INSPECCION SSTMA')) {
       console.log('Actividad SSOMA/SSTMA completada. Abriendo modal SSTMA...');
       console.log(`idActividad: ${activity.id}, idControl: ${activity.idControl}, día: ${day}`);
       this.dialog.open(SstmaModalComponent, {
