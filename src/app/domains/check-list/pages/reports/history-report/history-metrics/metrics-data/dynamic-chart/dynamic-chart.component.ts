@@ -582,24 +582,37 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   
   /**
    * Returns a CSS class based on the numeric value to color the cell
-   * @param value Numeric value (percentage or quantity)
+   * @param value Numeric value (percentage or quantity) or object with displayValue
    * @returns CSS class corresponding to the value range
    */
-  getValueClass(value: number): string {
+  getValueClass(value: any): string {
     if (value === undefined || value === null) return 'no-data';
+    
+    // Extract numeric value from object or use direct value
+    let numericValue: number;
+    if (typeof value === 'object' && value !== null) {
+      // Handle object format {displayValue: 100, percent: true, tooltip: "..."}
+      numericValue = value.displayValue || value.value || 0;
+    } else {
+      // Handle direct numeric value
+      numericValue = Number(value);
+    }
     
     // Check if we're in quantity mode
     const isQuantityMode = this.reportConfig?.unit === 'quantity';
     
     if (isQuantityMode) {
       // For quantity mode: any value >= 1 is excellent (green)
-      return value >= 1 ? 'excellent' : 'poor';
+      return numericValue >= 1 ? 'excellent' : 'poor';
     } else {
       // For percentage mode: use the existing thresholds
-      if (value >= 95) return 'excellent';
-      if (value >= 70) return 'good';
-      if (value >= 50) return 'average';
-      return 'poor';
+      if (numericValue >= 95) {
+        return 'excellent';
+      } else if (numericValue >= 70) {
+        return 'average';
+      } else {
+        return 'poor';
+      }
     }
   }
   
