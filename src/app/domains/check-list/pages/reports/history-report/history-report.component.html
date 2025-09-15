@@ -19,9 +19,10 @@
           <h3>
             <mat-icon class="header-icon">filter_alt</mat-icon> 
             <span *ngIf="isFilterExpanded">Búsqueda por rangos</span>
-            <span *ngIf="!isFilterExpanded && selectedDateRange" class="date-range-summary">
-              {{ formatDateForDisplay(historyForm.value.startDate) }} - {{ formatDateForDisplay(historyForm.value.endDate) }}
-            </span>
+            <div *ngIf="!isFilterExpanded && selectedDateRange" class="date-range-summary">
+              <div class="report-type-line">{{ getSelectedReportTypeLabel() }}</div>
+              <div class="date-range-line">{{ formatDateForDisplay(historyForm.value.startDate) }} - {{ formatDateForDisplay(historyForm.value.endDate) }}</div>
+            </div>
           </h3>
           <span class="icon-container">
             <button mat-icon-button class="expand-button" (click)="toggleFilterVisibility()" type="button" aria-label="Expandir/colapsar">

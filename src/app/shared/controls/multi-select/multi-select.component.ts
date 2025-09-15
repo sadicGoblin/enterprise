@@ -139,7 +139,11 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
 
           // Apply the filter and store the result
           const filteredData = _filter(rawDataFiltered, item => {
-            return filters.includes(item[filterType]);
+            // console.log('item', item);
+            const value = this.findValueByKey(item, filterType);
+            console.log('filterType', filterType, this.groupName, value);
+            // return filters.map(f => f.toLowerCase()).includes(value);
+            return filters.includes(value);
           });
 
           // Update for next iteration
@@ -160,6 +164,18 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
 
 
    /**
+   * Obtiene el valor de un campo en un objeto, sin importar si está en mayúsculas/minúsculas
+   */
+   private findValueByKey(item: any, fieldName: string): string {
+    // Buscar el campo sin importar mayúsculas/minúsculas
+    const fieldFound = Object.keys(item).find(key => key.toLowerCase() === fieldName.toLowerCase());
+    // // console.log('Campo encontrado:', campoEncontrado, item, fieldName);
+    return fieldFound ? item[fieldFound] : '';
+  }
+
+
+
+   /**
    * Processes raw data to generate MultiSelectItems
    * This method analyzes the raw data, extracts unique values for the specified field,
    * counts occurrences, and generates MultiSelectItems
@@ -175,7 +191,7 @@ export class MultiSelectComponent implements OnChanges, AfterViewInit {
     // Process each data item
     rawDataFiltered.forEach(item => {
       // Try to find the field by its exact name first
-      let fieldValue = this.getFieldValue(item, this.filterField);
+      let fieldValue = this.findValueByKey(item, this.filterField);
       // // console.log('## fieldValue', this.filterField, fieldValue);
       
       // If not found, try case-insensitive search for the field name

@@ -22,10 +22,10 @@ export const REPORTS_CONFIG: GlobalReportsConfig = {
         { indexItem: '1', color: '#2ecc71' },    // Verde más moderno
         { indexItem: '0', color: '#e74c3c' }, // Rojo más moderno
       ],
-      columnsExport: ['idReporteIncidente', 'IdObra', 'Obra', 'periodo', 'dia', 'fecha', 'potencialGravedad', 'amerita', 'situacionObservada', 'tipoIncidente', 'accionRealizar', 'profesionalResponsable', 'Usuario', 'descripcionAccionRealizar', 'comunicadoA', 'enviado', 'files', 'sector', 'ident_causas', 'personas_involucradas', 'riesgoAsociado', 'empresa', 'idControl', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'cantidad'],
-      columnsTable: ['Obra', 'fecha', 'tipoIncidente', 'riesgoAsociado','potencialGravedad', 'empresa', 'periodo', 'Usuario', 'profesionalResponsable', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad'],
-      columnsFilter: ['Obra', 'tipoIncidente', 'riesgoAsociado','potencialGravedad', 'empresa', 'periodo', 'Usuario', 'profesionalResponsable', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'fecha'],
-      title: 'Reporte Incidentes'
+      columnsExport: ['idReporteIncidente', 'IdObra', 'Obra', 'periodo', 'dia', 'fecha', 'potencialGravedad', 'amerita', 'situacionObservada', 'tipoIncidente', 'accionRealizar', 'profesionalResponsable', 'Usuario', 'cargo', 'descripcionAccionRealizar', 'comunicadoA', 'enviado', 'files', 'sector', 'ident_causas', 'personas_involucradas', 'riesgoAsociado', 'empresa', 'idControl', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'cantidad'],
+      columnsTable: ['Obra', 'fecha', 'tipoIncidente', 'riesgoAsociado','potencialGravedad', 'empresa', 'periodo', 'Usuario', 'cargo', 'profesionalResponsable', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad'],
+      columnsFilter: ['Obra', 'Usuario', 'cargo', 'tipoIncidente', 'riesgoAsociado','potencialGravedad', 'empresa', 'periodo', 'profesionalResponsable', 'EtapaConst', 'SubProceso', 'Ambito', 'Actividad', 'fecha'],
+      title: 'Reporte de Incidentes'
     },
     // Additional reports can be added here
   ]
