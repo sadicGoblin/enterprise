@@ -113,7 +113,6 @@ jobs:
               --name enterprise-app-prod \
               --restart unless-stopped \
               -p 4200:80 \
-              -p 443:443 \
               -v /etc/letsencrypt:/etc/letsencrypt:ro \
               -e NODE_ENV=production \
               ${{ secrets.DOCKER_HUB_USERNAME }}/${{ env.DOCKER_IMAGE_NAME }}:latest
