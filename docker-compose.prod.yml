@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  enterprise-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: enterprise-app-prod
+    ports:
+      - "4200:80"
+      - "443:443"
+    environment:
+      - NODE_ENV=production
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - ./logs:/var/log/nginx
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - enterprise-network
+
+networks:
+  enterprise-network:
+    driver: bridge

@@ -1,8 +1,17 @@
 {
   "projects": {
-    "default": "inarco-webapp",
-    "inarco-webapp": "inarco-webapp"
+    "default": "inarco-web"
   },
-  "targets": {},
-  "etags": {}
+  "targets": {
+    "inarco-web": {
+      "hosting": {
+        "site1": [
+          "inarco-web"
+        ],
+        "site2": [
+          "inapp25"
+        ]
+      }
+    }
+  }
 }
