@@ -121,11 +121,3 @@ jobs:
             # Clean up old images
             docker image prune -f
 
-      - name: Notify deployment success
-        uses: 8398a7/action-slack@v3
-        if: success()
-        with:
-          status: success
-          text: "✅ Production deployment successful!"
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
