@@ -1,5 +1,5 @@
 # Multi-stage build for Angular application
-FROM node:18-alpine as build
+FROM node:20-alpine as build
 
 WORKDIR /app
 
@@ -12,8 +12,8 @@ RUN npm ci --only=production
 # Copy source code
 COPY . .
 
-# Build the Angular app
-RUN npm run build:prod
+# Build the Angular app using npx (sin instalar Angular CLI global)
+RUN npx ng build --configuration production
 
 # Production stage with Nginx
 FROM nginx:alpine as production
@@ -35,11 +35,12 @@ RUN addgroup -g 1001 -S nginx && \
 # Switch to non-root user
 USER nginx
 
-# Expose port 80
+# Expose ports
 EXPOSE 80
+EXPOSE 443
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD curl -f http://localhost:80/ || exit 1
 
 # Start nginx
