@@ -27,9 +27,11 @@ jobs:
       - name: Build Docker image
         run: |
           docker build -t enterprise-app .
-          docker save enterprise-app | gzip > enterprise-app.tar.gz
 
-      - name: Deploy to server
+      - name: Save image as tarball
+        run: docker save enterprise-app | gzip > enterprise-app.tar.gz
+
+      - name: Copy image to server
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.SERVER_HOST }}
@@ -48,4 +50,4 @@ jobs:
             docker load < enterprise-app.tar.gz
             docker stop enterprise-app || true
             docker rm enterprise-app || true
-            docker run -d --name enterprise-app -p 8090:80 enterprise-app
+            docker run -d --name enterprise-app -p 4200:4200 enterprise-app
