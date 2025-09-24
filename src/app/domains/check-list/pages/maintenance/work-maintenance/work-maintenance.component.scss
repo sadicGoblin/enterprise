@@ -161,6 +161,70 @@ button.mat-raised-button {
   }
 }
 
+// Actions column styling
+.actions-header {
+  width: 120px !important;
+  max-width: 120px !important;
+  text-align: center !important;
+}
+
+.actions-cell {
+  width: 120px !important;
+  max-width: 120px !important;
+  padding: 8px !important;
+}
+
+.actions-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-height: 50px;
+}
+
+.edit-btn {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+  }
+}
+
+.status-toggle {
+  // Reset to normal size
+  transform: scale(1);
+}
+
+// Optimize column widths
+th.mat-header-cell:nth-child(2), // Obra column
+td.mat-cell:nth-child(2) {
+  width: 35% !important;
+  max-width: 35% !important;
+}
+
+th.mat-header-cell:nth-child(3), // Comuna column
+td.mat-cell:nth-child(3) {
+  width: 15% !important;
+  max-width: 15% !important;
+}
+
+th.mat-header-cell:nth-child(4), // Inicio column
+td.mat-cell:nth-child(4) {
+  width: 12% !important;
+  max-width: 12% !important;
+}
+
+th.mat-header-cell:nth-child(5), // Término column
+td.mat-cell:nth-child(5) {
+  width: 12% !important;
+  max-width: 12% !important;
+}
+
 // Responsive layout
 @media (max-width: 768px) {
   .container {
@@ -169,5 +233,13 @@ button.mat-raised-button {
   
   mat-card {
     padding: 1rem;
+  }
+  
+  .actions-container {
+    min-height: 60px;
+  }
+  
+  .toggle-status-text {
+    font-size: 0.7rem;
   }
 }

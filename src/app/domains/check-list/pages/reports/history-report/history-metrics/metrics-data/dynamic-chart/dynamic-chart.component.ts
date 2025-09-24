@@ -1,5 +1,6 @@
 import { Component, Input, OnChanges, OnDestroy, AfterViewInit, ElementRef, ViewChild, SimpleChanges, Output, EventEmitter } from '@angular/core';
 import { Chart, ChartConfiguration, ChartDataset, registerables } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -102,7 +103,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     moment.tz.setDefault(this.TIMEZONE);
     
     // Register Chart.js plugins
-    Chart.register(...registerables);
+    Chart.register(...registerables, ChartDataLabels);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -401,49 +402,6 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
       });
     });
 
-    // Plugin personalizado para mostrar números al final de las barras
-    const dataLabelsPlugin = {
-      id: 'dataLabels',
-      afterDatasetsDraw: (chart: Chart) => {
-        const ctx = chart.ctx;
-        ctx.save();
-        
-        chart.data.datasets.forEach((dataset, datasetIndex) => {
-          const meta = chart.getDatasetMeta(datasetIndex);
-          if (!meta.visible) return;
-          
-          meta.data.forEach((bar: any, index: number) => {
-            const value = dataset.data[index] as number;
-            if (value && value > 0) {
-              // Configurar el texto
-              ctx.fillStyle = '#ffffff';
-              ctx.font = 'bold 11px Arial';
-              ctx.textAlign = 'left';
-              ctx.textBaseline = 'middle';
-              
-              // Calcular posición al final de la barra
-              const x = bar.x + 8; // 8px después del final de la barra
-              const y = bar.y;
-              
-              // Dibujar fondo para el texto
-              const text = value.toString();
-              const textWidth = ctx.measureText(text).width;
-              const padding = 6;
-              
-              ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-              ctx.fillRect(x - 2, y - 8, textWidth + padding, 16);
-              
-              // Dibujar el texto
-              ctx.fillStyle = '#ffffff';
-              ctx.fillText(text, x + 2, y);
-            }
-          });
-        });
-        
-        ctx.restore();
-      }
-    };
-
     // Configuración del gráfico
     const config: ChartConfiguration = {
       type: 'bar',
@@ -452,7 +410,6 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
         datasets: datasets
       },
       options: this.getChartOptions(),
-      plugins: [dataLabelsPlugin]
     };
 
     // Crear nueva instancia de gráfico
@@ -517,6 +474,24 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
               const value = context.parsed.x || 0;
               return `${label}: ${value}`;
             }
+          }
+        },
+        datalabels: {
+          color: 'white',
+          anchor: 'start',
+          align: 'right',
+          font: {
+            size: 10,
+            weight: 'bold'
+          },
+          display: function(context: any) {
+            const value = context.dataset.data[context.dataIndex];
+            // Solo mostrar si el valor es mayor a 0 y es un número válido
+            return typeof value === 'number' && value > 60;
+          },
+          formatter: function(value: any) {
+            // Usar Math.round como en el ejemplo para asegurar enteros
+            return Math.round(value);
           }
         }
       },

@@ -378,8 +378,11 @@ export class ReportsTableComponent implements OnInit {
           });
         }else{
           if(report.tipo.toUpperCase().includes('CHECKLIST') || report.tipo.toUpperCase().includes('CHECK LIST')){
+            // Extraer el día de la fecha (formato: "2025-09-23 00:00:00")
+            const day = new Date(report.fecha).getDate();
+            
             this.dialog.open(ChecklistReportModalComponent, {
-              data: idControl
+              data: { "idControl": idControl, "day": day }
             });
           }
         }

@@ -1,34 +1,20 @@
 {
-  "hosting": [
-    {
-      "target": "site1",
-      "public": "dist/enterprise-app/browser",
-      "ignore": [
-        "firebase.json",
-        "**/.",
-        "**/node_modules/**"
-      ],
-      "rewrites": [
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
-      ]
-    },
-    {
-      "target": "site2",
-      "public": "dist/enterprise-app/browser",
-      "ignore": [
-        "firebase.json",
-        "**/.",
-        "**/node_modules/**"
-      ],
-      "rewrites": [
-        {
-          "source": "**",
-          "destination": "/index.html"
-        }
-      ]
-    }
-  ]
+  "hosting": {
+    "public": "dist/enterprise-app/browser",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/ws/**",
+        "destination": "https://inarco-ssoma.favric.cl/ws/**"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
 }

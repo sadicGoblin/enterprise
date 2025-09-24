@@ -81,7 +81,7 @@ export class ChecklistReportModalComponent implements OnInit {
     private proxyService: ProxyService,
     private dialogRef: MatDialogRef<ChecklistReportModalComponent>,
     private snackBar: MatSnackBar,
-    @Inject(MAT_DIALOG_DATA) private idControl: string
+    @Inject(MAT_DIALOG_DATA) private data: { idControl: string, day: number }
   ) {}
 
   ngOnInit(): void {
@@ -95,9 +95,13 @@ export class ChecklistReportModalComponent implements OnInit {
     this.isLoading = true;
     this.error = null;
 
+    console.log('idControl', this.data.idControl);
+    console.log('day', this.data.day);
+
     const requestBody = {
-      caso: 'GetControlChecklist',
-      idControl: parseInt(this.idControl)
+      caso: 'GetControlChecklistDay',
+      idControl: parseInt(this.data.idControl),
+      dia: this.data.day
     };
 
     console.log('Cargando datos de checklist:', requestBody);
@@ -436,7 +440,7 @@ export class ChecklistReportModalComponent implements OnInit {
     // Crear el objeto para enviar a la API
     const requestBody = {
       html: htmlContent,
-      filename: `reporte-checklist-${this.idControl}.pdf`,
+      filename: `reporte-checklist-${this.data.idControl}.pdf`,
       title: 'Reporte de Checklist',
       sheet_type: 'V', // V para vertical
     };
