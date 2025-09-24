@@ -93,18 +93,34 @@ export class ObraService {
   }
 
   /**
-   * Delete an existing obra
-   * @param idObra ID of the obra to delete
-   * @returns Observable with the delete response
+   * Activate an existing obra
+   * @param idObra ID of the obra to activate
+   * @returns Observable with the activation response
    */
-  deleteObra(idObra: string | number): Observable<ObrasFullResponse> {
-    // Request body for deleting an obra
+  activateObra(idObra: string | number): Observable<ObrasFullResponse> {
+    // Request body for activating an obra
+    const request = {
+      caso: 'Activa',
+      idObra: idObra
+    };
+    
+    console.log('[ObraService] Activating obra with request:', request);
+    return this.proxyService.post<ObrasFullResponse>(environment.apiBaseUrl + this.apiUrl, request);
+  }
+
+  /**
+   * Deactivate an existing obra (same as delete but for clarity)
+   * @param idObra ID of the obra to deactivate
+   * @returns Observable with the deactivation response
+   */
+   deactivateObra(idObra: string | number): Observable<ObrasFullResponse> {
+    // Request body for deactivating an obra
     const request = {
       caso: 'Elimina',
       idObra: idObra
     };
     
-    console.log('[ObraService] Deleting obra with request:', request);
+    console.log('[ObraService] Deactivating obra with request:', request);
     return this.proxyService.post<ObrasFullResponse>(environment.apiBaseUrl + this.apiUrl, request);
   }
 }

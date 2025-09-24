@@ -1,5 +1,6 @@
 import { Component, Input, OnChanges, OnDestroy, AfterViewInit, ElementRef, ViewChild, SimpleChanges, Output, EventEmitter } from '@angular/core';
-import { Chart, ChartConfiguration, ChartDataset } from 'chart.js';
+import { Chart, ChartConfiguration, ChartDataset, registerables } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
@@ -100,6 +101,9 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     // Configure moment to use Spanish locale and Santiago timezone
     moment.locale('es');
     moment.tz.setDefault(this.TIMEZONE);
+    
+    // Register Chart.js plugins
+    Chart.register(...registerables, ChartDataLabels);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -405,7 +409,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
         labels: this.valoresFiltro,
         datasets: datasets
       },
-      options: this.getChartOptions()
+      options: this.getChartOptions(),
     };
 
     // Crear nueva instancia de gráfico
@@ -471,6 +475,24 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
               return `${label}: ${value}`;
             }
           }
+        },
+        datalabels: {
+          color: 'white',
+          anchor: 'start',
+          align: 'right',
+          font: {
+            size: 10,
+            weight: 'bold'
+          },
+          display: function(context: any) {
+            const value = context.dataset.data[context.dataIndex];
+            // Solo mostrar si el valor es mayor a 0 y es un número válido
+            return typeof value === 'number' && value > 60;
+          },
+          formatter: function(value: any) {
+            // Usar Math.round como en el ejemplo para asegurar enteros
+            return Math.round(value);
+          }
         }
       },
       scales: {
@@ -503,7 +525,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
           },
           position: 'left', // Asegura que las etiquetas estén a la izquierda
           // Aumentamos el espacio reservado para las etiquetas del eje Y
-          afterFit: (axis) => {
+          afterFit: (axis: any) => {
             // Reservamos 100px más de espacio para las etiquetas
             axis.width = axis.width + 80;
           },

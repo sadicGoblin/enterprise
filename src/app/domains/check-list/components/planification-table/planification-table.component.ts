@@ -481,7 +481,7 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
     else if (activity.name.includes('CHECK LIST')) {
       console.log('Actividad CHECK LIST completada. Abriendo modal de checklist...');
       console.log(`idControl: ${activity.idControl}, día: ${day}, idParam: ${activity.idParam}`);
-      this.openChecklistModal(activity.idControl);
+      this.openChecklistModal(activity.idControl, day);
     } else {
       console.log('Actividad completada pero no es de tipo SSOMA ni CHECK LIST');
       console.log('Abriendo modal ART...');
@@ -530,10 +530,10 @@ export class PlanificationTableComponent implements OnInit, OnChanges {
    * @param idControl ID de control asociado a la actividad
    * @param day Día seleccionado de la actividad
    */
-  openChecklistModal(idControl?: string): void {
-
+  openChecklistModal(idControl?: string, day?: number): void {
+    
     this.dialog.open(ChecklistReportModalComponent, {
-      data: idControl
+      data: { "idControl": idControl, "day": day }
     });
   }
 

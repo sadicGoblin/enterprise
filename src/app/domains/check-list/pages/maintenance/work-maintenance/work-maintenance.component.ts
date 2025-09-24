@@ -14,6 +14,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatSlideToggleModule, MatSlideToggleChange } from '@angular/material/slide-toggle';
 
 // Import custom select component
 import { CustomSelectComponent, ParameterType, SelectOption } from '../../../../../shared/controls/custom-select/custom-select.component';
@@ -31,11 +32,11 @@ const MY_DATE_FORMATS = {
     monthYearA11yLabel: 'MMMM YYYY',
   },
 };
-import { Obra, ObrasFullResponse } from '../../../models/obra.models';
+import { ObrasFullResponse } from '../../../models/obra.models';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../../shared/components/confirm-dialog/confirm-dialog.component';
 
 // Interfaz que coincide con la respuesta de la API de obras
-interface Work {
+interface Obra {
   IdObra: string;
   Codigo: string;
   Obra: string;
@@ -48,6 +49,7 @@ interface Work {
   FechaTermino: string;
   Observaciones?: string;
   docfile?: string; // URL del archivo Excel asociado
+  is_active: string; // "0" = inactive, "1" = active
 }
 
 @Component({
@@ -70,6 +72,7 @@ interface Work {
     MatProgressSpinnerModule,
     MatSnackBarModule,
     MatDialogModule,
+    MatSlideToggleModule,
     CustomSelectComponent
   ],
   providers: [
@@ -98,8 +101,8 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
   communes: { id: string, name: string }[] = [];
   regions: { id: string, name: string }[] = [];
 
-  works: Work[] = [];
-  dataSource = new MatTableDataSource<Work>(this.works);
+  works: Obra[] = [];
+  dataSource = new MatTableDataSource<Obra>(this.works);
 
   isEditing = false;
   editingIndex: number | null = null;
@@ -226,7 +229,7 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
         
         // Check for successful response (supporting both new and legacy formats)
         if (response.success === true || response.codigo === 0) {
-          const works: Work[] = response.data.map(obra => ({
+          const works: Obra[] = response.data.map(obra => ({
             IdObra: obra.IdObra,
             Codigo: obra.Codigo,
             Obra: obra.Obra,
@@ -238,7 +241,8 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
             FechaInicio: obra.FechaInicio,
             FechaTermino: obra.FechaTermino,
             Observaciones: obra.Observaciones,
-            docfile: (obra as any).docfile || '' // URL del archivo Excel
+            docfile: (obra as any).docfile || '', // URL del archivo Excel
+            is_active: (obra as any).is_active || '1' // Default to active if not provided
           }));
           this.works = works;
           this.dataSource.data = works;
@@ -377,23 +381,26 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
         if (result === true) {
           this.isLoading = true;
           
-          // Llamar al servicio para eliminar la obra
-          this.obraService.deleteObra(idObra).subscribe({
-            next: (response) => {
+          // Llamar al servicio para desactivar la obra
+          this.obraService.deactivateObra(idObra).subscribe({
+            next: (response: ObrasFullResponse) => {
               console.log('Respuesta de eliminación:', response);
               
               if (response.success === true || response.codigo === 0) {
-                // Actualizar la lista local si la eliminación fue exitosa
-                this.works.splice(index, 1);
-                this.dataSource.data = [...this.works]; // Crear nueva referencia para activar detección de cambios
-                this.showMessage('Obra eliminada correctamente');
+                // Actualizar el estado local en lugar de eliminar completamente
+                const obraIndex = this.works.findIndex(w => w.IdObra === idObra);
+                if (obraIndex !== -1) {
+                  this.works[obraIndex].is_active = '0';
+                  this.dataSource.data = [...this.works]; // Crear nueva referencia para activar detección de cambios
+                }
+                this.showMessage('Obra desactivada correctamente');
               } else {
                 const errorMsg = response.message || response.glosa || 'Error desconocido';
-                this.showMessage(`Error al eliminar obra: ${errorMsg}`);
+                this.showMessage(`Error al desactivar obra: ${errorMsg}`);
               }
             },
-            error: (error) => {
-              console.error('Error al eliminar obra', error);
+            error: (error: any) => {
+              console.error('Error al desactivar obra', error);
               this.showMessage('Error al eliminar obra. Por favor, inténtelo de nuevo.');
               this.isLoading = false;
             },
@@ -412,6 +419,106 @@ export class WorkMaintenanceComponent implements OnInit, AfterViewInit {
     this.workForm.reset();
     this.editingIndex = null;
     this.resetForm();
+  }
+
+  /**
+   * Toggle obra active/inactive status
+   * @param index Index of the obra in the array
+   * @param event MatSlideToggleChange event
+   */
+  toggleObraStatus(index: number, event: MatSlideToggleChange): void {
+    const obra = this.works[index];
+    const newStatus = event.checked;
+    
+    if (!newStatus) {
+      // Deactivating obra
+      const dialogData: ConfirmDialogData = {
+        title: 'Desactivar Obra',
+        message: `¿Está seguro que desea desactivar la obra "${obra.Obra}"?`,
+        confirmText: 'Desactivar',
+        cancelText: 'Cancelar'
+      };
+
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        data: dialogData,
+        width: '400px'
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.updateObraStatus(index, false);
+        } else {
+          // Reset the toggle if user cancelled
+          event.source.checked = true;
+        }
+      });
+    } else {
+      // Activating obra - also show confirmation
+      const dialogData: ConfirmDialogData = {
+        title: 'Activar Obra',
+        message: `¿Está seguro que desea activar la obra "${obra.Obra}"?`,
+        confirmText: 'Activar',
+        cancelText: 'Cancelar'
+      };
+
+      const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+        data: dialogData,
+        width: '400px'
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        if (result) {
+          this.updateObraStatus(index, true);
+        } else {
+          // Reset the toggle if user cancelled
+          event.source.checked = false;
+        }
+      });
+    }
+  }
+
+  /**
+   * Update obra status via API
+   * @param index Index of the obra in the array
+   * @param activate true to activate, false to deactivate
+   */
+  private updateObraStatus(index: number, activate: boolean): void {
+    const obra = this.works[index];
+    this.isLoading = true;
+
+    const apiCall = activate 
+      ? this.obraService.activateObra(obra.IdObra)
+      : this.obraService.deactivateObra(obra.IdObra);
+
+    apiCall.subscribe({
+      next: (response) => {
+        console.log(`[WorkMaintenanceComponent] ${activate ? 'Activate' : 'Deactivate'} Response:`, response);
+        
+        if (response.success === true || response.codigo === 0) {
+          // Update local data
+          this.works[index].is_active = activate ? '1' : '0';
+          this.dataSource.data = [...this.works]; // Trigger table refresh
+          
+          const action = activate ? 'activada' : 'desactivada';
+          this.showMessage(`Obra ${action} exitosamente`);
+        } else {
+          this.showMessage(`Error al ${activate ? 'activar' : 'desactivar'} la obra: ${response.message || 'Error desconocido'}`);
+          // Reset the toggle state on error
+          this.works[index].is_active = activate ? '0' : '1';
+          this.dataSource.data = [...this.works];
+        }
+      },
+      error: (error) => {
+        console.error(`Error al ${activate ? 'activar' : 'desactivar'} obra:`, error);
+        this.showMessage(`Error al ${activate ? 'activar' : 'desactivar'} la obra. Por favor, inténtelo de nuevo.`);
+        // Reset the toggle state on error
+        this.works[index].is_active = activate ? '0' : '1';
+        this.dataSource.data = [...this.works];
+      },
+      complete: () => {
+        this.isLoading = false;
+      }
+    });
   }
   
   resetForm(): void {
