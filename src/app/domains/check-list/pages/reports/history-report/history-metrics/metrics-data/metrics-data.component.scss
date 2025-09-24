@@ -1,156 +1,75 @@
 // Estilos para la barra de herramientas de exportación
-.export-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  margin-bottom: 16px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-  
-  .export-controls {
-    display: flex;
-    align-items: center;
-    gap: 16px;
-    
-    .export-mode-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
-      background-color: #ffffff;
-      border: 2px solid #dee2e6;
-      transition: all 0.3s ease;
-      
-      mat-icon {
-        color: #6c757d;
-        font-size: 20px;
-      }
-      
-      &.active {
-        background-color: #007bff;
-        border-color: #007bff;
-        
-        mat-icon {
-          color: white;
-        }
-      }
-      
-      &:hover {
-        border-color: #007bff;
-        
-        mat-icon {
-          color: #007bff;
-        }
-        
-        &.active {
-          background-color: #0056b3;
-          
-          mat-icon {
-            color: white;
-          }
-        }
-      }
-    }
-    
-    .export-info {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      
-      .selected-count {
-        font-size: 14px;
-        font-weight: 500;
-        color: #495057;
-        padding: 4px 8px;
-        background-color: #e9ecef;
-        border-radius: 4px;
-      }
-      
-      .clear-selection-btn {
-        font-size: 12px;
-        padding: 4px 8px;
-        min-width: unset;
-        height: 28px;
-        
-        mat-icon {
-          font-size: 16px;
-          margin-right: 4px;
-        }
-      }
-    }
-  }
-}
 
 // Estilos para los contenedores de componentes con selección
-.component-wrapper {
-  position: relative;
-  margin-bottom: 24px;
-  transition: all 0.3s ease;
+// .component-wrapper {
+//   position: relative;
+//   margin-bottom: 24px;
+//   transition: all 0.3s ease;
   
-  &.export-mode {
-    border: 2px solid transparent;
-    border-radius: 8px;
-    padding: 4px;
+//   &.export-mode {
+//     border: 2px solid transparent;
+//     border-radius: 8px;
+//     padding: 4px;
     
-    &:hover {
-      border-color: #007bff;
-      background-color: rgba(0, 123, 255, 0.05);
-    }
-  }
+//     &:hover {
+//       border-color: #007bff;
+//       background-color: rgba(0, 123, 255, 0.05);
+//     }
+//   }
   
-  .selection-overlay {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    z-index: 10;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 50%;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+//   .selection-overlay {
+//     position: absolute;
+//     top: 8px;
+//     right: 8px;
+//     z-index: 10;
+//     width: 32px;
+//     height: 32px;
+//     display: flex;
+//     align-items: center;
+//     justify-content: center;
+//     background-color: rgba(255, 255, 255, 0.9);
+//     border-radius: 50%;
+//     cursor: pointer;
+//     transition: all 0.3s ease;
+//     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     
-    .selection-icon {
-      font-size: 20px;
-      color: #6c757d;
-      transition: all 0.3s ease;
-    }
+//     .selection-icon {
+//       font-size: 20px;
+//       color: #6c757d;
+//       transition: all 0.3s ease;
+//     }
     
-    &:hover {
-      background-color: white;
-      transform: scale(1.1);
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+//     &:hover {
+//       background-color: white;
+//       transform: scale(1.1);
+//       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
       
-      .selection-icon {
-        color: #007bff;
-      }
-    }
+//       .selection-icon {
+//         color: #007bff;
+//       }
+//     }
     
-    &.selected {
-      background-color: #007bff;
+//     &.selected {
+//       background-color: #007bff;
       
-      .selection-icon {
-        color: white;
-      }
+//       .selection-icon {
+//         color: white;
+//       }
       
-      &:hover {
-        background-color: #0056b3;
-      }
-    }
-  }
-}
+//       &:hover {
+//         background-color: #0056b3;
+//       }
+//     }
+//   }
+// }
 
 // Estilos específicos para la grilla de gráficos dinámicos
 .dynamic-charts-container {
   .dynamic-charts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 24px;
+    display: block;
+    width: 100%;
+    // grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    // gap: 24px;
     
     .component-wrapper {
       margin-bottom: 0; // Sobrescribir el margin-bottom general
@@ -185,53 +104,81 @@
     }
   }
   
-  .selected-list {
+  // Estilos básicos de Material Design para drag & drop
+  .example-list {
+    width: 100%;
+    max-width: 100%;
+    border: solid 1px #ccc;
+    min-height: 60px;
     display: flex;
+    flex-direction: row;
+    background: white;
+    border-radius: 4px;
+    overflow: hidden;
+    font-family: sans-serif;
     flex-wrap: wrap;
-    gap: 8px;
+  }
+  
+  .example-box {
+    padding: 20px 10px;
+    border-right: solid 1px #ccc;
+    color: rgba(0, 0, 0, 0.87);
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    box-sizing: border-box;
+    cursor: move;
+    background: white;
+    font-size: 14px;
+    flex-grow: 1;
+    flex-basis: 0;
+    font-family: sans-serif;
     
-    .selected-item {
-      display: flex;
-      align-items: center;
-      padding: 6px 12px;
-      background-color: white;
-      border: 1px solid #90caf9;
-      border-radius: 20px;
-      font-size: 12px;
-      
-      .item-icon {
-        font-size: 16px;
-        margin-right: 6px;
-        color: #1976d2;
-      }
-      
-      .item-name {
-        margin-right: 6px;
-        font-weight: 500;
-        color: #333;
-      }
-      
-      .remove-item-btn {
-        width: 20px;
-        height: 20px;
-        line-height: 20px;
-        padding: 0;
-        min-width: unset;
-        
-        mat-icon {
-          font-size: 14px;
-          color: #666;
-        }
-        
-        &:hover {
-          mat-icon {
-            color: #d32f2f;
-          }
-        }
-      }
+    &:last-child {
+      border: none;
     }
   }
 }
+
+// Estilos básicos de Material Design para drag & drop
+.cdk-drag-preview {
+  box-sizing: border-box !important;
+  border-radius: 4px !important;
+  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+              0 8px 10px 1px rgba(0, 0, 0, 0.14),
+              0 3px 14px 2px rgba(0, 0, 0, 0.12) !important;
+  
+  // Copiar exactamente los estilos del elemento original
+  padding: 20px 10px !important;
+  border-right: solid 1px #ccc !important;
+  color: rgba(0, 0, 0, 0.87) !important;
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  background: white !important;
+  font-size: 14px !important;
+  font-family: sans-serif !important;
+  min-width: 120px !important;
+  white-space: nowrap !important;
+}
+
+.cdk-drag-placeholder {
+  opacity: 0;
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.example-list.cdk-drop-list-dragging .example-box:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+
+
+
 
 // Mensaje de sin datos
 .no-data-message {

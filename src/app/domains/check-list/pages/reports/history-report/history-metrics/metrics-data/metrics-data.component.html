@@ -1,54 +1,18 @@
-<!-- Barra de herramientas para exportación masiva -->
-<div class="export-toolbar" style="display: none">
-  <div class="export-controls" >
-    <button mat-icon-button 
-            class="export-mode-btn" 
-            [class.active]="exportMode"
-            (click)="toggleExportMode()" 
-            matTooltip="{{exportMode ? 'Salir del modo exportación' : 'Activar modo exportación masiva'}}">
-      <mat-icon>{{exportMode ? 'close' : 'select_all'}}</mat-icon>
-    </button>
-    
-    <div class="export-info" *ngIf="exportMode">
-      <span class="selected-count">{{selectedForExport.size}} elementos seleccionados</span>
-      <button mat-button 
-              class="clear-selection-btn" 
-              (click)="clearSelection()" 
-              *ngIf="selectedForExport.size > 0"
-              matTooltip="Limpiar selección">
-        <mat-icon>clear</mat-icon>
-        Limpiar
-      </button>
-      <button mat-button 
-              class="view-selection-btn" 
-              *ngIf="selectedForExport.size > 0"
-              matTooltip="Ver elementos seleccionados">
-        <mat-icon>visibility</mat-icon>
-        Ver selección
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Panel de elementos seleccionados -->
-<div class="selected-elements-panel" *ngIf="exportMode && selectedForExport.size > 0">
-  <div class="panel-header">
-    <mat-icon>checklist</mat-icon>
-    <h4>Elementos seleccionados para exportación:</h4>
-  </div>
-  <div class="selected-list">
-    <div class="selected-item" *ngFor="let elementId of getSelectedElements()">
-      <mat-icon class="item-icon">{{getElementIcon(elementId)}}</mat-icon>
-      <span class="item-name">{{getElementName(elementId)}}</span>
-      <button mat-icon-button 
-              class="remove-item-btn" 
-              (click)="toggleElementSelection(elementId)"
-              matTooltip="Quitar de la selección">
-        <mat-icon>close</mat-icon>
-      </button>
-    </div>
-  </div>
-</div>
+<!-- Componente genérico de exportación -->
+<!-- <app-export-selector
+  style="display: none;"
+  [exportableItems]="exportableItems"
+  [externalSelectedIds]="getSelectedElements()"
+  [externalSelectedOrder]="selectedElementsOrder"
+  [showToolbar]="true"
+  [showSelectedPanel]="true"
+  toolbarTitle="Exportación de Reportes"
+  selectedPanelTitle="Elementos seleccionados para exportación:"
+  (exportModeChange)="onExportModeChange($event)"
+  (selectionChange)="onSelectionChange($event)"
+  (exportRequested)="onExportRequested($event)"
+  (orderChange)="onOrderChange($event)">
+</app-export-selector> -->
 
 <!-- Primer componente: summary-kpi con diseño idéntico al tradicional -->
 <!-- IMPORTANTE: Usamos completeData (datos sin filtrar) para este componente -->
