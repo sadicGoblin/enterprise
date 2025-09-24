@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HistoricalReportItem } from '../../../../../../core/services/report.service';
 import { DataTableComponent } from '../../../../../../shared/controls/datatable/datatable.component';
 import { DataTableColumn, DataTableConfig } from '../../../../../../shared/controls/datatable/datatable.models';
-import { REPORTS_CONFIG } from '../configs/reports.config';
+import { ReportConfig } from '../models/report-config.model';
 
 @Component({
   selector: 'app-history-table',
@@ -19,6 +19,8 @@ import { REPORTS_CONFIG } from '../configs/reports.config';
 export class HistoryTableComponent implements OnChanges {  
   // Input para recibir los datos de la tabla
   @Input() data: HistoricalReportItem[] = [];
+  // Input para recibir la configuración del reporte
+  @Input() reportConfig?: ReportConfig;
   
   // Variables para la tabla dinámica
   dynamicTableConfig: DataTableConfig = {
@@ -69,12 +71,10 @@ export class HistoryTableComponent implements OnChanges {
       return;
     }
     
-    // Obtener configuración del reporte desde el archivo de configuración global
-    const reportConfig = REPORTS_CONFIG.reports.find(report => report.indexName === 'history-report');
-    
+    // Usar la configuración del reporte recibida por Input
     // Definir columnas y filtros con valores por defecto si no se encuentra la configuración
-    const columnsTableConfig = reportConfig?.columnsExport || [];
-    const columnsFilterConfig = reportConfig?.columnsFilter || [];
+    const columnsTableConfig = this.reportConfig?.columnsTable || [];
+    const columnsFilterConfig = this.reportConfig?.columnsFilter || [];
     
     // Sample data para verificar tipos y propiedades
     const sample = data[0];
