@@ -1,0 +1,94 @@
+<!-- Barra de herramientas para exportación masiva -->
+<div class="export-toolbar" *ngIf="showToolbar">
+  <div class="export-controls">
+    <button mat-icon-button 
+            class="export-mode-btn" 
+            [class.active]="exportMode"
+            (click)="toggleExportMode()" 
+            matTooltip="{{exportMode ? 'Salir del modo exportación' : 'Activar modo exportación masiva'}}">
+      <mat-icon>{{exportMode ? 'close' : 'select_all'}}</mat-icon>
+    </button>
+    
+    <div class="export-info" *ngIf="exportMode">
+      <span class="selected-count">{{selectedCount}} de {{totalCount}} elementos seleccionados</span>
+      
+      <button mat-button 
+              class="select-all-btn" 
+              (click)="selectAll()" 
+              *ngIf="selectedCount < totalCount"
+              matTooltip="Seleccionar todos">
+        <mat-icon>select_all</mat-icon>
+        Todos
+      </button>
+      
+      <button mat-button 
+              class="clear-selection-btn" 
+              (click)="clearSelection()" 
+              *ngIf="selectedCount > 0"
+              matTooltip="Limpiar selección">
+        <mat-icon>clear</mat-icon>
+        Limpiar
+      </button>
+      
+      <button mat-raised-button 
+              color="primary"
+              class="export-btn" 
+              (click)="requestExport()" 
+              *ngIf="selectedCount > 0"
+              matTooltip="Exportar elementos seleccionados">
+        <mat-icon>download</mat-icon>
+        Exportar ({{selectedCount}})
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Panel de elementos seleccionados -->
+<div class="selected-elements-panel" 
+     *ngIf="showSelectedPanel && exportMode && selectedCount > 0">
+  <div class="panel-header">
+    <mat-icon>checklist</mat-icon>
+    <h4>{{selectedPanelTitle}}</h4>
+  </div>
+  <!-- Lista mejorada de drag & drop con orientación mixta -->
+  <div class="example-list" 
+       cdkDropList 
+       [cdkDropListData]="getSelectedElementsInOrder()"
+       (cdkDropListDropped)="onDrop($event)">
+    @for (elementId of getSelectedElementsInOrder(); track elementId; let i = $index) {
+      <div class="example-box" cdkDrag [attr.data-element-id]="elementId" [attr.data-index]="i">
+        <div class="element-content">
+          <!-- Handle de arrastre -->
+          <mat-icon class="drag-handle" cdkDragHandle>drag_indicator</mat-icon>
+          
+          <!-- Información del elemento -->
+          <div class="element-info">
+            <mat-icon class="element-icon">{{ getExportableItem(elementId)?.icon || 'insert_drive_file' }}</mat-icon>
+            <span class="element-name">{{ getExportableItem(elementId)?.name || elementId }}</span>
+          </div>
+          
+          <!-- Botón para quitar -->
+          <button 
+            mat-icon-button 
+            class="remove-button"
+            (click)="toggleElementSelection(elementId)"
+            matTooltip="Quitar de la selección">
+            <mat-icon>close</mat-icon>
+          </button>
+        </div>
+      </div>
+    }
+  </div>
+</div>
+
+<!-- Overlay de selección para proyectar sobre elementos -->
+<ng-template #selectionOverlay let-elementId="elementId">
+  <div class="selection-overlay" 
+       *ngIf="exportMode" 
+       [class.selected]="isElementSelected(elementId)"
+       (click)="toggleElementSelection(elementId)">
+    <mat-icon class="selection-icon">
+      {{isElementSelected(elementId) ? 'check_circle' : 'radio_button_unchecked'}}
+    </mat-icon>
+  </div>
+</ng-template>

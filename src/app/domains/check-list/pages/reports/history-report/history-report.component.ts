@@ -13,6 +13,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
+import { MatBadgeModule } from '@angular/material/badge';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 // Para localización española del datepicker
 import { registerLocaleData } from '@angular/common';
@@ -34,6 +36,9 @@ import { HistoryMetricsComponent } from './history-metrics/history-metrics.compo
 // Importamos el componente de mensajes
 import { MessageComponent, MessageType } from '../../../../../shared/components/message/message.component';
 
+// Importamos el componente de exportación
+import { ExportSelectorComponent, ExportableItem } from '../../../../../shared/components/export-selector/export-selector.component';
+
 @Component({
   selector: 'app-history-report',
   standalone: true,
@@ -50,10 +55,13 @@ import { MessageComponent, MessageType } from '../../../../../shared/components/
     MatIconModule,
     MatProgressSpinnerModule,
     MatTabsModule,
+    MatBadgeModule,
     MatSelectModule,
+    MatTooltipModule,
     HistoryTableComponent,
     HistoryMetricsComponent,
-    MessageComponent
+    MessageComponent,
+    ExportSelectorComponent
   ],
   providers: [
     // Configuración para el datepicker en español
@@ -102,6 +110,13 @@ export class HistoryReportComponent implements OnInit {
   
   // Datos para la tabla
   tableData: HistoricalReportItem[] = [];
+  
+  // Propiedades del carrito de exportación
+  isExportCartOpen = false;
+  exportCartCount = 0;
+  exportableItems: ExportableItem[] = [];
+  selectedElementsForExport = new Set<string>();
+  selectedElementsOrder: string[] = [];
   
   constructor(
     private fb: FormBuilder,
@@ -350,5 +365,42 @@ export class HistoryReportComponent implements OnInit {
         this.markFormGroupTouched(control);
       }
     });
+  }
+  
+  // Métodos del carrito de exportación
+  toggleExportCart(): void {
+    this.isExportCartOpen = !this.isExportCartOpen;
+  }
+  
+  closeExportCart(): void {
+    this.isExportCartOpen = false;
+  }
+  
+  getSelectedElements(): string[] {
+    return Array.from(this.selectedElementsForExport);
+  }
+  
+  onExportModeChange(exportMode: boolean): void {
+    // Handle export mode change if needed
+    console.log('Export mode changed:', exportMode);
+  }
+  
+  onSelectionChange(selectedItemIds: string[]): void {
+    this.selectedElementsForExport.clear();
+    selectedItemIds.forEach(id => this.selectedElementsForExport.add(id));
+    this.exportCartCount = selectedItemIds.length;
+  }
+  
+  onExportRequested(selectedItemIds: string[]): void {
+    console.log('Export requested for items:', selectedItemIds);
+    // TODO: Implement actual export logic
+    this.snackBar.open(`Exportando ${selectedItemIds.length} elementos...`, 'Cerrar', {
+      duration: 3000
+    });
+  }
+  
+  onOrderChange(newOrder: string[]): void {
+    this.selectedElementsOrder = [...newOrder];
+    console.log('Order changed:', newOrder);
   }
 }
