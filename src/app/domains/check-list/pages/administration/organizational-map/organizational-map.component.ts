@@ -63,6 +63,9 @@ export class OrganizationalMapComponent implements OnInit {
   cargosOptions: SelectOption[] = [];
   accesosOptions: SelectOption[] = [];
   empresasOptions: SelectOption[] = [];
+  
+  // Flag to track if select options are loaded
+  private selectOptionsLoaded = false;
 
   // Configuration for the data table
   tableColumns = [
@@ -207,8 +210,46 @@ export class OrganizationalMapComponent implements OnInit {
    * Load all data needed for the page
    */
   loadData() {
-    // Just load user data - the custom select components will load their own options
+    // Load both user data and select options
+    this.loadSelectOptions();
     this.loadUsers();
+  }
+  
+  /**
+   * Load select options data for cargo, tipo acceso, and empresa
+   */
+  loadSelectOptions() {
+    this.subParametroService.getAllParametros()
+      .subscribe({
+        next: (response) => {
+          console.log('Loaded select options:', response);
+          this.cargosOptions = response.cargos;
+          this.accesosOptions = response.tipoAccesos;
+          this.empresasOptions = response.empresas;
+          this.selectOptionsLoaded = true;
+        },
+        error: (error) => {
+          console.error('Error loading select options:', error);
+        }
+      });
+  }
+  
+  /**
+   * Map text label to select option ID
+   * @param text The text label to find
+   * @param options The options array to search in
+   * @returns The ID if found, empty string otherwise
+   */
+  private mapTextToId(text: string, options: SelectOption[]): string {
+    if (!text || !options || options.length === 0) {
+      return '';
+    }
+    
+    const option = options.find(opt => 
+      opt.label && opt.label.toLowerCase().trim() === text.toLowerCase().trim()
+    );
+    
+    return option ? option.value : '';
   }
   
   /**
@@ -282,19 +323,58 @@ export class OrganizationalMapComponent implements OnInit {
     this.currentEditIndex = index;
     this.currentUserId = element.userId;
     
+    // Wait for select options to be loaded before patching values
+    if (this.selectOptionsLoaded) {
+      this.patchUserFormValues(element);
+    } else {
+      // Wait a bit for the options to load and then patch
+      const checkInterval = setInterval(() => {
+        if (this.selectOptionsLoaded) {
+          this.patchUserFormValues(element);
+          clearInterval(checkInterval);
+        }
+      }, 100);
+      
+      // Timeout after 5 seconds to avoid infinite loop
+      setTimeout(() => {
+        clearInterval(checkInterval);
+        if (!this.selectOptionsLoaded) {
+          console.warn('Select options not loaded, patching with available data');
+          this.patchUserFormValues(element);
+        }
+      }, 5000);
+    }
+    
+    console.log('Editing user:', element);
+  }
+  
+  /**
+   * Patch form values with user data, mapping text values to IDs
+   * @param element User data object
+   */
+  private patchUserFormValues(element: any): void {
+    // Map text values to select IDs
+    const cargoId = this.mapTextToId(element.cargo, this.cargosOptions);
+    const tipoAccesoId = this.mapTextToId(element.tipoAcceso, this.accesosOptions);
+    const empresaId = this.mapTextToId(element.empresa, this.empresasOptions);
+    
+    console.log('Mapping results:', {
+      cargo: { text: element.cargo, id: cargoId },
+      tipoAcceso: { text: element.tipoAcceso, id: tipoAccesoId },
+      empresa: { text: element.empresa, id: empresaId }
+    });
+    
     // Llenar el formulario con los datos del elemento seleccionado
     this.editForm.patchValue({
       usuario: element.usuario,
       nombre: element.nombre,
-      idCargo: element.idCargo || '',  // Usar ID para el valor del control, no el texto
-      idTipoAcceso: element.idTipoAcceso || '',
-      idEmpresaContratista: element.idEmpresaContratista || '',
+      idCargo: cargoId,
+      idTipoAcceso: tipoAccesoId,
+      idEmpresaContratista: empresaId,
       eMail: element.email,  // Mantener consistente con la API (eMail)
       celular: element.celular,
       // No incluimos clave ya que no queremos modificarla automáticamente
     });
-    
-    console.log('Editing user:', element);
   }
 
   /**
