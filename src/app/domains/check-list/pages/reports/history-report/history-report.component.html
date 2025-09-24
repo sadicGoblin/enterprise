@@ -10,6 +10,17 @@
     
     <div class="map-card-header">
       <h2 class="title">Reporte Histórico</h2>
+      
+      <!-- Icono del carrito de exportación -->
+      <button mat-icon-button 
+              class="export-cart-btn"
+              (click)="toggleExportCart()"
+              [class.has-items]="exportCartCount > 0"
+              matTooltip="Carrito de exportación ({{exportCartCount}} elementos)"
+              style="visibility: hidden;">
+        <mat-icon>shopping_cart</mat-icon>
+        <span class="cart-badge" *ngIf="exportCartCount > 0">{{exportCartCount}}</span>
+      </button>
     </div>
     
     <div class="map-card-content">
@@ -114,4 +125,36 @@
       </div>
     </div>
   </mat-card>
+</div>
+
+<!-- Sidebar del carrito de exportación -->
+<div class="export-cart-sidebar" [class.open]="isExportCartOpen">
+  <div class="cart-overlay" (click)="closeExportCart()"></div>
+  <div class="cart-content">
+    <div class="cart-header">
+      <h3>
+        <mat-icon>shopping_cart</mat-icon>
+        Carrito de Exportación
+      </h3>
+      <button mat-icon-button (click)="closeExportCart()" class="close-btn">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    
+    <div class="cart-body">
+      <app-export-selector
+        [exportableItems]="exportableItems"
+        [externalSelectedIds]="getSelectedElements()"
+        [externalSelectedOrder]="selectedElementsOrder"
+        [showToolbar]="true"
+        [showSelectedPanel]="true"
+        toolbarTitle="Elementos para Exportar"
+        selectedPanelTitle="Arrastra para reordenar:"
+        (exportModeChange)="onExportModeChange($event)"
+        (selectionChange)="onSelectionChange($event)"
+        (exportRequested)="onExportRequested($event)"
+        (orderChange)="onOrderChange($event)">
+      </app-export-selector>
+    </div>
+  </div>
 </div>

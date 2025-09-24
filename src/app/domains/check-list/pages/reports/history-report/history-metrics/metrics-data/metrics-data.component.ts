@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges, AfterViewInit, OnInit, ViewChild, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DynamicChartComponent } from './dynamic-chart/dynamic-chart.component';
 import { SummaryKpiComponent } from './summary-kpi/summary-kpi.component';
@@ -13,6 +13,11 @@ import Chart from 'chart.js/auto';
 import { ReportConfig } from '../../models/report-config.model';
 import { HierarchicalFilterItem } from '../../../../../models/hierarchical-filter.model';
 
+// Importar componente genérico de exportación
+import { ExportSelectorComponent, ExportableItem } from '../../../../../../../shared/components/export-selector/export-selector.component';
+// Importar CDK para drag & drop (usado por el componente genérico)
+import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
+
 @Component({
   selector: 'app-metrics-data',
   standalone: true,
@@ -23,13 +28,14 @@ import { HierarchicalFilterItem } from '../../../../../models/hierarchical-filte
     MatDividerModule, 
     MatTooltipModule,
     MatButtonModule,
+    ExportSelectorComponent,
     DynamicChartComponent,
     SummaryKpiComponent
   ],
   templateUrl: './metrics-data.component.html',
   styleUrls: ['./metrics-data.component.scss']
 })
-export class MetricsDataComponent implements OnChanges, AfterViewInit {
+export class MetricsDataComponent implements OnInit, OnChanges, AfterViewInit {
   @Input() data: any[] = [];         // Datos filtrados para mostrar en las métricas y gráficos
   @Input() completeData: any[] = []; // Datos completos sin filtrar (para SummaryKpi)
   @Input() activeFilters: {[key: string]: string[]} = {};
@@ -38,7 +44,9 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
   
   // Sistema de exportación masiva
   selectedForExport: Set<string> = new Set();
+  selectedElementsOrder: string[] = []; // Array para mantener el orden
   exportMode: boolean = false;
+  exportableItems: ExportableItem[] = []; // Items para el componente genérico
   
   // Referencias a los elementos del DOM para los gráficos
   @ViewChild('estadosChart') estadosChartCanvas!: ElementRef<HTMLCanvasElement>;
@@ -58,6 +66,10 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
   
   // Gráficos dinámicos por filtros activos
   dynamicCharts: {filterType: string, fieldName: string, selectedValues?: string[]}[] = [];
+
+  ngOnInit(): void {
+    // Componente inicializado
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     // console.log('MetricsDataComponent - ngOnChanges:', { 
@@ -466,9 +478,45 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
   toggleElementSelection(elementId: string): void {
     if (this.selectedForExport.has(elementId)) {
       this.selectedForExport.delete(elementId);
+      // Remove from order array
+      const index = this.selectedElementsOrder.indexOf(elementId);
+      if (index > -1) {
+        this.selectedElementsOrder.splice(index, 1);
+      }
     } else {
       this.selectedForExport.add(elementId);
+      // Add to order array
+      this.selectedElementsOrder.push(elementId);
+      // Add to exportableItems if not exists
+      this.ensureExportableItemExists(elementId);
     }
+    
+    // Sincronizar con el componente genérico
+    this.syncWithGenericComponent();
+  }
+  
+  /**
+   * Asegura que existe un elemento exportable para el ID dado
+   * @param elementId ID del elemento
+   */
+  private ensureExportableItemExists(elementId: string): void {
+    const exists = this.exportableItems.find(item => item.id === elementId);
+    if (!exists) {
+      this.exportableItems.push({
+        id: elementId,
+        name: this.getElementName(elementId),
+        icon: this.getElementIcon(elementId),
+        type: this.getElementType(elementId)
+      });
+    }
+  }
+  
+  /**
+   * Sincroniza el estado con el componente genérico
+   */
+  private syncWithGenericComponent(): void {
+    // El componente genérico se actualizará automáticamente a través de los bindings
+    // pero podemos forzar la detección de cambios si es necesario
   }
   
   /**
@@ -493,25 +541,39 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
    */
   clearSelection(): void {
     this.selectedForExport.clear();
+    this.selectedElementsOrder = [];
   }
+  
+
   
   /**
    * Obtiene el nombre descriptivo de un elemento
    * @param elementId ID del elemento
-   * @returns Nombre descriptivo del elemento
+   * @returns Nombre descriptivo
    */
   getElementName(elementId: string): string {
+    // Devolver títulos de header reales para cada elemento
     if (elementId === 'summary-kpi') {
-      return 'Resumen KPI - Datos Globales';
+      return 'DATOS GLOBALES';
     }
     
     if (elementId.startsWith('dynamic-chart-')) {
-      const index = parseInt(elementId.replace('dynamic-chart-', ''));
-      const chart = this.dynamicCharts[index];
-      return chart ? `Gráfico Dinámico - ${chart.filterType}` : 'Gráfico Dinámico';
+      // Extraer el tipo de gráfico del ID
+      const chartType = elementId.replace('dynamic-chart-', '');
+      return `Gráfico de ${this.capitalizeFirst(chartType)}`;
     }
     
-    return elementId;
+    // Fallback para otros elementos
+    return this.capitalizeFirst(elementId.replace(/[-_]/g, ' '));
+  }
+  
+  /**
+   * Capitaliza la primera letra de una cadena
+   * @param str Cadena a capitalizar
+   * @returns Cadena con primera letra en mayúscula
+   */
+  private capitalizeFirst(str: string): string {
+    return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
   }
   
   /**
@@ -529,5 +591,56 @@ export class MetricsDataComponent implements OnChanges, AfterViewInit {
     }
     
     return 'insert_drive_file';
+  }
+  
+  /**
+   * Obtiene el tipo de un elemento
+   * @param elementId ID del elemento
+   * @returns Tipo del elemento
+   */
+  getElementType(elementId: string): string {
+    if (elementId === 'summary-kpi') {
+      return 'KPI';
+    }
+    
+    if (elementId.startsWith('dynamic-chart-')) {
+      return 'Gráfico';
+    }
+    
+    return 'Elemento';
+  }
+  
+  /**
+   * Maneja el cambio de modo de exportación
+   * @param exportMode Estado del modo de exportación
+   */
+  onExportModeChange(exportMode: boolean): void {
+    this.exportMode = exportMode;
+  }
+  
+  /**
+   * Maneja el cambio de selección de elementos
+   * @param selectedIds Array de IDs seleccionados
+   */
+  onSelectionChange(selectedIds: string[]): void {
+    this.selectedForExport.clear();
+    selectedIds.forEach(id => this.selectedForExport.add(id));
+  }
+  
+  /**
+   * Maneja la solicitud de exportación
+   * @param selectedIds Array de IDs a exportar
+   */
+  onExportRequested(selectedIds: string[]): void {
+    console.log('Exportando elementos:', selectedIds);
+    // Aquí iría la lógica de exportación
+  }
+  
+  /**
+   * Maneja el cambio de orden de elementos
+   * @param order Array con el nuevo orden de IDs
+   */
+  onOrderChange(order: string[]): void {
+    this.selectedElementsOrder = order;
   }
 }

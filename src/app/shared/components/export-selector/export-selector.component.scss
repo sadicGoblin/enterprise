@@ -1,0 +1,531 @@
+// Estilos para la barra de herramientas de exportación
+.export-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+  
+  .export-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+    
+    .export-mode-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background-color: #ffffff;
+      border: 2px solid #dee2e6;
+      transition: all 0.3s ease;
+      
+      mat-icon {
+        color: #6c757d;
+        font-size: 20px;
+      }
+      
+      &.active {
+        background-color: #007bff;
+        border-color: #007bff;
+        
+        mat-icon {
+          color: white;
+        }
+      }
+      
+      &:hover {
+        border-color: #007bff;
+        
+        mat-icon {
+          color: #007bff;
+        }
+        
+        &.active {
+          background-color: #0056b3;
+          
+          mat-icon {
+            color: white;
+          }
+        }
+      }
+    }
+    
+    .export-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex: 1;
+      justify-content: space-between;
+      
+      .selected-count {
+        font-size: 14px;
+        font-weight: 500;
+        color: #495057;
+        padding: 4px 8px;
+        background-color: #e9ecef;
+        border-radius: 4px;
+      }
+      
+      .select-all-btn,
+      .clear-selection-btn {
+        font-size: 12px;
+        padding: 4px 8px;
+        min-width: unset;
+        height: 28px;
+        
+        mat-icon {
+          font-size: 16px;
+          margin-right: 4px;
+        }
+      }
+      
+      .export-btn {
+        font-size: 12px;
+        padding: 6px 12px;
+        height: 32px;
+        
+        mat-icon {
+          font-size: 16px;
+          margin-right: 6px;
+        }
+      }
+    }
+  }
+}
+
+// Panel de elementos seleccionados
+.selected-elements-panel {
+  margin-bottom: 24px;
+  padding: 16px;
+  background-color: #e3f2fd;
+  border: 1px solid #bbdefb;
+  border-radius: 8px;
+  
+  .panel-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    
+    mat-icon {
+      color: #1976d2;
+      margin-right: 8px;
+      font-size: 20px;
+    }
+    
+    h4 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: #1976d2;
+    }
+  }
+  
+  .selected-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    
+    .selected-item {
+      display: flex;
+      align-items: center;
+      padding: 6px 12px;
+      background-color: white;
+      border: 1px solid #90caf9;
+      border-radius: 20px;
+      font-size: 12px;
+      cursor: move;
+      transition: all 0.3s ease;
+      
+      &:hover {
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        transform: translateY(-1px);
+      }
+      
+      &.cdk-drag-dragging {
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        transform: rotate(2deg);
+        z-index: 1000;
+      }
+      
+      .order-indicator {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 20px;
+        height: 20px;
+        margin-right: 6px;
+        background-color: #1976d2;
+        color: white;
+        border-radius: 50%;
+        font-size: 10px;
+        font-weight: bold;
+        min-width: 20px;
+      }
+      
+      .drag-handle {
+        display: flex;
+        align-items: center;
+        margin-right: 6px;
+        cursor: grab;
+        color: #999;
+        
+        &:active {
+          cursor: grabbing;
+        }
+        
+        mat-icon {
+          font-size: 14px;
+          width: 14px;
+          height: 14px;
+        }
+      }
+      
+      .item-icon {
+        font-size: 16px;
+        margin-right: 6px;
+        color: #1976d2;
+      }
+      
+      .item-name {
+        margin-right: 6px;
+        font-weight: 500;
+        color: #333;
+      }
+      
+      .item-type {
+        margin-right: 6px;
+        font-size: 10px;
+        color: #666;
+        font-style: italic;
+      }
+      
+      .remove-item-btn {
+        width: 20px;
+        height: 20px;
+        line-height: 20px;
+        padding: 0;
+        min-width: unset;
+        
+        mat-icon {
+          font-size: 14px;
+          color: #666;
+        }
+        
+        &:hover {
+          mat-icon {
+            color: #d32f2f;
+          }
+        }
+      }
+    }
+  }
+}
+
+// Estilos básicos de Material Design para drag & drop
+.example-list {
+  display: block;
+  width: 505px;
+  max-width: 100%;
+  padding: 15px;
+  border: solid 1px #ccc;
+  min-height: 60px;
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: sans-serif;
+  
+}
+
+.example-box {
+  // Margin para simular gap
+  margin: 0 15px 15px 0;
+  
+  &:last-child {
+    margin-right: 0;
+  }
+  // Estilos exactos del ejemplo oficial
+  padding: 20px 10px;
+  border: solid 1px #ccc;
+  border-radius: 4px;
+  color: rgba(0, 0, 0, 0.87);
+  display: inline-block;
+  box-sizing: border-box;
+  cursor: move;
+  background: white;
+  text-align: center;
+  font-size: 14px;
+  min-width: 115px;
+  font-family: sans-serif;
+  
+  // Adaptaciones mínimas para nuestro contenido
+  width: 140px;
+  height: 40px;
+  padding: 8px 12px;
+  font-size: 11px;
+  
+  // Contenedor interno para nuestros elementos
+  position: relative;
+  
+  .element-content {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    height: 100%;
+    width: 100%;
+  }
+  
+  .drag-handle {
+    color: #666;
+    cursor: grab;
+    flex-shrink: 0;
+    font-size: 14px;
+    width: 14px;
+    height: 14px;
+    
+    &:active {
+      cursor: grabbing;
+    }
+  }
+  
+  .element-info {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+    
+    .element-icon {
+      color: #1976d2;
+      flex-shrink: 0;
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+    }
+    
+    .element-name {
+      font-weight: 500;
+      color: #333;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      font-size: 10px;
+      line-height: 1.2;
+      flex: 1;
+      min-width: 0;
+    }
+  }
+  
+  .remove-button {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    min-width: 24px;
+    
+    mat-icon {
+      font-size: 14px;
+      width: 14px;
+      height: 14px;
+      line-height: 1;
+    }
+  }
+}
+
+.cdk-drag-preview {
+  box-sizing: border-box;
+  border-radius: 4px;
+  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, 0.2),
+              0 8px 10px 1px rgba(0, 0, 0, 0.14),
+              0 3px 14px 2px rgba(0, 0, 0, 0.12);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0;
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.cdk-drag-animating {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.example-list.cdk-drop-list-dragging .example-box:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// Comportamiento exacto como el ejemplo oficial de Angular Material
+.example-list {
+  &.cdk-drop-list-dragging {
+    .example-box {
+      &:not(.cdk-drag-placeholder) {
+        transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+      }
+    }
+  }
+}
+
+.selected-list.cdk-drop-list-dragging .selected-item:not(.cdk-drag-placeholder) {
+  transition: transform 250ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+// Estilos para el panel de elementos disponibles
+.available-elements-panel {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  margin: 16px 0;
+  padding: 16px;
+  
+  .panel-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 16px;
+    
+    mat-icon {
+      color: #1976d2;
+    }
+    
+    h4 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: #333;
+    }
+  }
+  
+  .available-items-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
+  
+  .available-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background: white;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    
+    &:hover {
+      border-color: #1976d2;
+      box-shadow: 0 2px 8px rgba(25, 118, 210, 0.1);
+    }
+    
+    &.selected {
+      border-color: #1976d2;
+      background: #e3f2fd;
+      
+      .selection-status {
+        color: #1976d2;
+      }
+    }
+    
+    .item-icon {
+      color: #666;
+      font-size: 24px;
+      width: 24px;
+      height: 24px;
+    }
+    
+    .item-content {
+      flex: 1;
+      
+      .item-name {
+        display: block;
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+      }
+      
+      .item-type {
+        display: block;
+        font-size: 12px;
+        color: #666;
+        margin-top: 2px;
+      }
+    }
+    
+    .selection-status {
+      color: #ccc;
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+    }
+  }
+}
+
+// Overlay de selección (para usar con ng-template)
+.selection-overlay {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 10;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(255, 255, 255, 0.9);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  
+  .selection-icon {
+    font-size: 20px;
+    color: #6c757d;
+    transition: all 0.3s ease;
+  }
+  
+  &:hover {
+    background-color: white;
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    
+    .selection-icon {
+      color: #007bff;
+    }
+  }
+  
+  &.selected {
+    background-color: #007bff;
+    
+    .selection-icon {
+      color: white;
+    }
+    
+    &:hover {
+      background-color: #0056b3;
+    }
+  }
+}
+
+// Wrapper para elementos exportables (para usar en componentes padre)
+:host ::ng-deep .exportable-wrapper {
+  position: relative;
+  transition: all 0.3s ease;
+  
+  &.export-mode {
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 4px;
+    
+    &:hover {
+      border-color: #007bff;
+      background-color: rgba(0, 123, 255, 0.05);
+    }
+  }
+}
