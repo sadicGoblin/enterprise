@@ -66,9 +66,10 @@
 // Estilos específicos para la grilla de gráficos dinámicos
 .dynamic-charts-container {
   .dynamic-charts-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-    gap: 24px;
+    display: block;
+    width: 100%;
+    // grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    // gap: 24px;
     
     .component-wrapper {
       margin-bottom: 0; // Sobrescribir el margin-bottom general
