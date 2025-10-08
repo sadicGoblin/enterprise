@@ -22,8 +22,8 @@ export const REPORTS_CONFIG: GlobalReportsConfig = {
         { indexItem: '1', color: '#2ecc71' },    // Verde más moderno
         { indexItem: '0', color: '#e74c3c' }, // Rojo más moderno
       ],
-      columnsExport: ['idInspeccionSSTMA', 'fecha', 'areaTrabajo', 'accion', 'trabajoAsociado', 'medidaControl', 'comunicadoA', 'correoA',   'Obra', 'periodo', 'empresa', 'profesionalResponsable','usuario', 'cargo', 'ambitoInvolucrado', 'riesgoAsociado'],
-      columnsTable: ['idInspeccionSSTMA', 'fecha', 'areaTrabajo', 'accion', 'trabajoAsociado', 'medidaControl', 'comunicadoA', 'correoA',   'Obra', 'periodo', 'empresa', 'profesionalResponsable','usuario', 'cargo', 'ambitoInvolucrado', 'riesgoAsociado'],
+      columnsExport: ['idInspeccionSSTMA', 'fecha', 'areaTrabajo', 'accion', 'trabajoAsociado', 'medidaControl', 'comunicadoA', 'Obra', 'periodo', 'empresa', 'profesionalResponsable','usuario', 'cargo', 'ambitoInvolucrado', 'riesgoAsociado'],
+      columnsTable: ['Obra','fecha', 'empresa', 'periodo', 'usuario', 'cargo', 'areaTrabajo', 'profesionalResponsable'],
       columnsFilter: ['Obra','usuario', 'cargo', 'areaTrabajo', 'accion', 'riesgoAsociado', 'trabajoAsociado', 'medidaControl', 'periodo', 'empresa', 'profesionalResponsable', 'ambitoInvolucrado', 'fecha'],
       title: 'Inspeccion STTMA'
     },

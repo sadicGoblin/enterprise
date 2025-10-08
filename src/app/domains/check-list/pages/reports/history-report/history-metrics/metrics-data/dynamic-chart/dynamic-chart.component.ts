@@ -424,19 +424,25 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   private adjustCanvasHeight(): void {
     if (!this.valoresFiltro || this.valoresFiltro.length === 0) return;
 
-    // Calculamos una altura dinámica basada en la cantidad de elementos
-    // Aumentamos considerablemente la asignación de espacio vertical
-    const baseHeight = 200; // Altura base más grande
     const itemCount = this.valoresFiltro.length;
-    const minItemsForBase = 3; // Menos elementos antes de empezar a crecer
-    const heightPerExtraItem = 10; // Más espacio por cada elemento adicional
-
-    let calculatedHeight = baseHeight;
-    if (itemCount > minItemsForBase) {
-      calculatedHeight += (itemCount - minItemsForBase) * heightPerExtraItem;
+    
+    // Altura mínima por fila para garantizar legibilidad de números
+    const minHeightPerRow = 30; // Altura mínima por fila (más generosa)
+    const paddingTop = 40; // Espacio superior
+    const paddingBottom = 40; // Espacio inferior
+    
+    // Calcular altura basada en número de filas con mínimo garantizado
+    let calculatedHeight = (itemCount * minHeightPerRow) + paddingTop + paddingBottom;
+    
+    // Altura mínima absoluta para pocos elementos
+    const absoluteMinHeight = 250;
+    calculatedHeight = Math.max(calculatedHeight, absoluteMinHeight);
+    
+    // Para muchos elementos (más de 20), aumentar aún más el espacio por fila
+    if (itemCount > 20) {
+      const extraHeightPerRow = 5; // Espacio adicional para gráficos muy largos
+      calculatedHeight += (itemCount - 20) * extraHeightPerRow;
     }
-
-    // Sin límite máximo para permitir que crezca lo necesario
 
     // Aplicamos la altura calculada al canvas y a su contenedor padre
     const canvas = this.chartCanvas.nativeElement;
@@ -449,6 +455,8 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
       container.style.height = `${calculatedHeight}px`;
       container.style.minHeight = `${calculatedHeight}px`;
     }
+    
+    // console.log(`Altura ajustada para ${itemCount} elementos: ${calculatedHeight}px (${minHeightPerRow}px por fila)`);
   }
 
   /**
@@ -478,8 +486,6 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
         },
         datalabels: {
           color: 'white',
-          anchor: 'start',
-          align: 'right',
           font: {
             size: 10,
             weight: 'bold'
@@ -487,10 +493,100 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
           display: function(context: any) {
             const value = context.dataset.data[context.dataIndex];
             // Solo mostrar si el valor es mayor a 0 y es un número válido
-            return typeof value === 'number' && value > 60;
+            if (typeof value !== 'number' || value <= 0) {
+              return false;
+            }
+            
+            const chart = context.chart;
+            const allDatasets = chart.data.datasets;
+            const datasetIndex = context.datasetIndex;
+            const dataIndex = context.dataIndex;
+            
+            // Detectar si es un gráfico apilado con múltiples datasets
+            const isStackedMultiDataset = allDatasets.length > 1;
+            
+            if (isStackedMultiDataset) {
+              // En gráficos apilados con múltiples datasets, aplicar lógica especial
+              
+              // Calcular el total apilado para esta barra
+              let stackedTotal = 0;
+              allDatasets.forEach((dataset: any) => {
+                if (dataset.data && dataset.data[dataIndex]) {
+                  stackedTotal += dataset.data[dataIndex] || 0;
+                }
+              });
+              
+              // Calcular el porcentaje que representa este valor del total apilado
+              const percentageOfStack = stackedTotal > 0 ? (value / stackedTotal) * 100 : 0;
+              
+              // Encontrar el valor máximo global para calcular el espacio visual
+              let globalMaxValue = 0;
+              allDatasets.forEach((dataset: any) => {
+                if (dataset.data && Array.isArray(dataset.data)) {
+                  const datasetMax = Math.max(...dataset.data.filter((v: any) => typeof v === 'number' && v > 0));
+                  if (datasetMax > globalMaxValue) {
+                    globalMaxValue = datasetMax;
+                  }
+                }
+              });
+              
+              // Calcular el "espacio visual" que ocupa este segmento
+              const visualSpacePercentage = globalMaxValue > 0 ? (value / globalMaxValue) * 100 : 0;
+              
+              // Lógica mejorada para gráficos apilados:
+              // 1. Debe tener suficiente espacio visual (al menos 8% del máximo global)
+              // 2. Y debe representar al menos 20% del stack O tener un valor mínimo de 30
+              const hasVisualSpace = visualSpacePercentage >= 8;
+              const isSignificantInStack = percentageOfStack >= 20 || value >= 30;
+              
+              return hasVisualSpace && isSignificantInStack;
+            } else {
+              // Lógica original para gráficos de un solo dataset
+              let globalMaxValue = 0;
+              allDatasets.forEach((dataset: any) => {
+                if (dataset.data && Array.isArray(dataset.data)) {
+                  const datasetMax = Math.max(...dataset.data.filter((v: any) => typeof v === 'number' && v > 0));
+                  if (datasetMax > globalMaxValue) {
+                    globalMaxValue = datasetMax;
+                  }
+                }
+              });
+              
+              if (value >= 5) {
+                return true;
+              }
+              
+              if (globalMaxValue > 0) {
+                const percentageOfMax = (value / globalMaxValue) * 100;
+                return percentageOfMax >= 8;
+              }
+              
+              return value > 1;
+            }
+          },
+          anchor: function(context: any) {
+            const chart = context.chart;
+            const allDatasets = chart.data.datasets;
+            const isStackedMultiDataset = allDatasets.length > 1;
+            
+            if (isStackedMultiDataset) {
+              // En gráficos apilados, posicionar en el centro de cada segmento
+              return 'center';
+            }
+            return 'start';
+          },
+          align: function(context: any) {
+            const chart = context.chart;
+            const allDatasets = chart.data.datasets;
+            const isStackedMultiDataset = allDatasets.length > 1;
+            
+            if (isStackedMultiDataset) {
+              // En gráficos apilados, centrar el texto
+              return 'center';
+            }
+            return 'right';
           },
           formatter: function(value: any) {
-            // Usar Math.round como en el ejemplo para asegurar enteros
             return Math.round(value);
           }
         }

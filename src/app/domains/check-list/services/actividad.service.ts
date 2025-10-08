@@ -31,7 +31,7 @@ export class ActividadService {
   getcontrolPlanificacion(idControl: number, period: string): Observable<any> {
     let apiUrl = '/ws/PlanificacionSvcImpl.php';
     const request: ControlPlanification = {
-      caso: 'ControlPlanificacion',
+      caso: 'ControlPlanificacionSimple',
       idControl: idControl,
       periodo: parseInt(period)
     };
