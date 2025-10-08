@@ -23,6 +23,9 @@ export class HistoryTableComponent implements OnChanges {
   // Input para recibir la configuración del reporte
   @Input() reportConfig?: ReportConfig;
   
+  // Data procesada localmente (copia inmutable para la tabla)
+  processedData: any[] = [];
+  
   // Constantes para manejo de fechas
   private readonly CHILE_TIMEZONE = 'America/Santiago';
   private readonly DATE_FORMAT = 'dd/MM/yyyy';
@@ -54,13 +57,13 @@ export class HistoryTableComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] && changes['data'].currentValue) {
-      let data = changes['data'].currentValue;
+      const incoming = changes['data'].currentValue as any[];
       
-      // Procesamos los datos antes de configurar la tabla
-      data = this.processDateFields(data);
+      // Procesamos una COPIA de los datos antes de configurar la tabla
+      this.processedData = this.processDateFields(incoming);
       
-      // Configurar la tabla dinámica
-      this.setupDynamicTable(data);
+      // Configurar la tabla dinámica usando la copia procesada
+      this.setupDynamicTable(this.processedData);
     }
   }
   
@@ -77,39 +80,43 @@ export class HistoryTableComponent implements OnChanges {
       key.toLowerCase().includes('fecha') || key.toLowerCase().includes('date')
     );
     
-    // Si hay campos de fecha, procesarlos
-    if (dateFieldNames.length > 0) {
-      // Para cada registro, formatear las fechas
-      data.forEach(item => {
-        dateFieldNames.forEach(fieldName => {
-          const dateValue = item[fieldName];
-          if (dateValue) {
-            try {
-              const dateObj = new Date(dateValue);
-              // Verificar si la fecha incluye hora (horas o minutos distintos de cero)
-              const hasTime = dateObj.getHours() !== 0 || dateObj.getMinutes() !== 0;
-              const format = hasTime ? this.DATETIME_FORMAT : this.DATE_FORMAT;
-              
-              // Formatear la fecha según el formato correspondiente
-              item[`_original_${fieldName}`] = dateValue; // Guardar fecha original para ordenamiento
-              item[fieldName] = formatDate(dateObj, format, 'es-CL', this.CHILE_TIMEZONE);
-            } catch (e) {
-              console.error(`Error formatting date field ${fieldName}:`, e);
-            }
-          }
-        });
-      });
-      
-      // Ordenar por el primer campo de fecha encontrado (descendente)
-      const primaryDateField = dateFieldNames[0];
-      data.sort((a, b) => {
-        const dateA = new Date(a[`_original_${primaryDateField}`] || a[primaryDateField]);
-        const dateB = new Date(b[`_original_${primaryDateField}`] || b[primaryDateField]);
-        return dateB.getTime() - dateA.getTime(); // Orden descendente
-      });
+    if (dateFieldNames.length === 0) {
+      // Devolver una copia superficial del array para no exponer el original
+      return [...data];
     }
     
-    return data;
+    // Crear una copia nueva de los elementos y formatear fechas sobre la copia
+    const processed = data.map(origItem => {
+      const item = { ...origItem };
+      for (const fieldName of dateFieldNames) {
+        const dateValue = item[fieldName];
+        if (!dateValue) continue;
+        try {
+          const dateObj = new Date(dateValue);
+          // Verificar si la fecha incluye hora (horas o minutos distintos de cero)
+          const hasTime = dateObj.getHours() !== 0 || dateObj.getMinutes() !== 0;
+          const format = hasTime ? this.DATETIME_FORMAT : this.DATE_FORMAT;
+          
+          // Guardar fecha original para ordenamiento SOLO en la copia
+          (item as any)[`_original_${fieldName}`] = dateValue;
+          // Formatear la fecha según el formato correspondiente
+          (item as any)[fieldName] = formatDate(dateObj, format, 'es-CL', this.CHILE_TIMEZONE);
+        } catch (e) {
+          console.error(`Error formatting date field ${fieldName}:`, e);
+        }
+      }
+      return item;
+    });
+    
+    // Ordenar por el primer campo de fecha encontrado (descendente) sobre la copia
+    const primaryDateField = dateFieldNames[0];
+    processed.sort((a, b) => {
+      const dateA = new Date((a as any)[`_original_${primaryDateField}`] || (a as any)[primaryDateField]);
+      const dateB = new Date((b as any)[`_original_${primaryDateField}`] || (b as any)[primaryDateField]);
+      return dateB.getTime() - dateA.getTime(); // Orden descendente
+    });
+    
+    return processed;
   }
   
   /**

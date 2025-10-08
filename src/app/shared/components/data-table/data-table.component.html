@@ -51,14 +51,27 @@
         mat-cell 
         *matCellDef="let element; let i = index"
         [ngClass]="{'striped-row': isStripedRow(i)}">
-        <ng-container *ngFor="let button of actionButtons">
-          <button 
-            mat-icon-button 
-            [color]="button.color" 
-            [matTooltip]="button.tooltip"
-            (click)="onAction(button.action, element, i)">
-            <mat-icon>{{ button.icon }}</mat-icon>
-          </button>
+        <ng-container *ngFor="let button of actionButtons; trackBy: trackByIndex">
+          <!-- Toggle button -->
+          <ng-container *ngIf="button.isToggle">
+            <button 
+              mat-icon-button 
+              [color]="button.getToggleState && button.getToggleState(element) ? 'primary' : 'warn'" 
+              [matTooltip]="button.getToggleState && button.getToggleState(element) ? 'Desactivar usuario' : 'Activar usuario'"
+              (click)="onAction(button.action, element, i)">
+              <mat-icon>{{ button.getToggleState && button.getToggleState(element) ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+            </button>
+          </ng-container>
+          <!-- Regular button -->
+          <ng-container *ngIf="!button.isToggle">
+            <button 
+              mat-icon-button 
+              [color]="button.color" 
+              [matTooltip]="button.tooltip"
+              (click)="onAction(button.action, element, i)">
+              <mat-icon>{{ button.icon }}</mat-icon>
+            </button>
+          </ng-container>
         </ng-container>
       </td>
     </ng-container>

@@ -124,4 +124,27 @@ export class UsuarioService {
     // Usar proxyService para aplicar la configuración de proxy de Angular
     return this.proxyService.post<any>(environment.apiBaseUrl + this.apiEndpoint, request);
   }
+
+  /**
+   * Toggle user active status (activate/deactivate)
+   * @param userId ID del usuario
+   * @param isActive Estado actual (será invertido)
+   * @returns Observable con la respuesta del API
+   */
+  toggleUserStatus(userId: number, isActive: string): Observable<any> {
+    // Determinar el caso según el estado actual
+    // Si está activo (1), lo desactivamos con "Elimina"
+    // Si está inactivo (0), lo activamos con "Activa"
+    const caso = isActive === '1' ? 'Elimina' : 'Activa';
+    
+    const request = {
+      "caso": caso,
+      "idUsuario": userId
+    };
+    
+    console.log(`[UsuarioService] ${caso === 'Elimina' ? 'Desactivando' : 'Activando'} usuario...`); 
+    console.log('[UsuarioService] Request body:', JSON.stringify(request));
+    
+    return this.proxyService.post<any>(environment.apiBaseUrl + this.apiEndpoint, request);
+  }
 }

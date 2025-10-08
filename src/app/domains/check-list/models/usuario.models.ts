@@ -27,4 +27,5 @@ export interface UsuarioItem {
   celular?: string;
   Clave?: string;
   Nueva?: string;
+  is_active?: string; // "1" = active, "0" = inactive
 }

@@ -38,7 +38,7 @@ export class ActivitiesService {
   createActivity(activity: any): Observable<ApiActivityResponse> {
     // Mapear los campos del formulario a los campos esperados por la API
     const mappedActivity = {
-      caso: 'NuevaActividad',
+      caso: 'CreaActividad',
       idAmbito: activity.idAmbito,
       nombre: activity.name,
       codigo: activity.code,
