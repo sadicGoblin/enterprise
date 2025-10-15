@@ -1,0 +1,332 @@
+.item-cadena-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.2s ease;
+  width: 240px;
+  min-width: 240px;
+  flex-shrink: 0;
+  
+  &:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: #d1d5db;
+  }
+
+  .card-header {
+    background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+    padding: 8px 12px;
+    border-bottom: 1px solid #e5e7eb;
+    position: relative;
+    text-align: center;
+
+    .delete-btn {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background: rgba(239, 68, 68, 0.8);
+      color: white;
+      border: none;
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      line-height: 1;
+      
+      &:hover {
+        background: #ef4444;
+        transform: scale(1.1);
+        box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+      }
+      
+      &:active {
+        transform: scale(0.95);
+      }
+    }
+
+    .cargo-input {
+      background: transparent;
+      border: none;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      width: 100%;
+      outline: none;
+      text-align: center;
+      padding-right: 32px; // Espacio para el botón X
+      
+      &::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+      }
+    }
+  }
+
+  .card-content {
+    padding: 12px;
+
+    .field-row {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+      gap: 6px;
+
+      .field-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: #6b7280;
+        min-width: 50px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .field-input {
+        flex: 1;
+        padding: 6px 8px;
+        border: 1px solid #d1d5db;
+        border-radius: 4px;
+        font-size: 13px;
+        background: #f9fafb;
+        transition: all 0.2s ease;
+        
+        &:focus {
+          outline: none;
+          border-color: #374151;
+          background: white;
+        }
+        
+        &::placeholder {
+          color: #9ca3af;
+        }
+      }
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding: 8px 12px;
+      background: #f8fafc;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+
+      .status-info {
+        .status-label {
+          font-size: 12px;
+          font-weight: 600;
+          color: #ef4444;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          
+          &.enabled {
+            color: #10b981;
+          }
+        }
+      }
+
+      mat-slide-toggle {
+        ::ng-deep {
+          .mdc-switch {
+            width: 36px;
+            height: 24px;
+          }
+          
+          .mdc-switch__track {
+            height: 14px;
+            border-radius: 7px;
+          }
+          
+          .mdc-switch__handle {
+            width: 18px;
+            height: 18px;
+          }
+          
+          .mdc-switch--selected .mdc-switch__track {
+            background-color: #10b981;
+          }
+          
+          .mdc-switch--unselected .mdc-switch__track {
+            background-color: #d1d5db;
+          }
+        }
+      }
+    }
+
+    .montos-container {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 8px;
+      padding: 8px;
+      background: #f8fafc;
+      border-radius: 6px;
+      border: 1px solid #e5e7eb;
+
+      .monto-field {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+
+        .monto-label {
+          font-size: 11px;
+          font-weight: 600;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+
+        .monto-input-wrapper {
+          display: flex;
+          align-items: center;
+          background: white;
+          border: 1px solid #d1d5db;
+          border-radius: 4px;
+          padding: 6px 8px;
+          transition: all 0.2s ease;
+
+          &:focus-within {
+            border-color: #374151;
+            box-shadow: 0 0 0 1px rgba(55, 65, 81, 0.1);
+          }
+
+          .currency-symbol {
+            font-size: 12px;
+            color: #6b7280;
+            font-weight: 500;
+            margin-right: 4px;
+          }
+
+          .monto-input {
+            border: none;
+            outline: none;
+            font-size: 13px;
+            text-align: right;
+            width: 100%;
+            background: transparent;
+            font-weight: 500;
+            
+            &::placeholder {
+              color: #9ca3af;
+            }
+          }
+        }
+      }
+    }
+
+    .montos-display {
+      text-align: center;
+      padding: 8px;
+      background: #f1f5f9;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+
+      .range-text {
+        font-size: 11px;
+        color: #475569;
+        font-weight: 500;
+      }
+    }
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .item-cadena-card {
+    width: 220px;
+    min-width: 220px;
+    
+    .card-header {
+      padding: 8px 10px;
+      
+      .delete-btn {
+        width: 20px;
+        height: 20px;
+        font-size: 14px;
+        top: 5px;
+        right: 6px;
+      }
+      
+      .cargo-input {
+        font-size: 13px;
+        padding-right: 28px;
+      }
+    }
+
+    .card-content {
+      padding: 10px;
+      
+      .field-row {
+        margin-bottom: 6px;
+        
+        .field-label {
+          font-size: 11px;
+          min-width: 45px;
+        }
+        
+        .field-input {
+          font-size: 12px;
+          padding: 5px 6px;
+        }
+      }
+      
+      .status-row {
+        padding: 6px 8px;
+        margin-bottom: 8px;
+        
+        .status-info {
+          .status-label {
+            font-size: 11px;
+          }
+        }
+        
+        mat-slide-toggle {
+          ::ng-deep {
+            .mdc-switch {
+              width: 32px;
+              height: 20px;
+            }
+            
+            .mdc-switch__handle {
+              width: 16px;
+              height: 16px;
+            }
+          }
+        }
+      }
+      
+      .montos-container {
+        padding: 6px;
+        gap: 6px;
+        
+        .monto-field {
+          .monto-label {
+            font-size: 10px;
+          }
+          
+          .monto-input-wrapper {
+            padding: 5px 6px;
+            
+            .monto-input {
+              font-size: 12px;
+            }
+          }
+        }
+      }
+      
+      .montos-display {
+        padding: 6px;
+        
+        .range-text {
+          font-size: 10px;
+        }
+      }
+    }
+  }
+}
