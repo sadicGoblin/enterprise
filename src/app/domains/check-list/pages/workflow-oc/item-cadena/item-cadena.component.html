@@ -1,0 +1,78 @@
+<div class="item-cadena-card">
+  <!-- Header compacto -->
+  <div class="card-header">
+    <button 
+      class="delete-btn"
+      (click)="onDelete()"
+      type="button"
+      title="Eliminar elemento">
+      ×
+    </button>
+    <input 
+      class="cargo-input"
+      [value]="data.cargo"
+      (input)="onCargoChange($any($event.target).value)"
+      placeholder="Cargo">
+  </div>
+
+  <!-- Contenido principal compacto -->
+  <div class="card-content">
+    <!-- Nombre -->
+    <div class="field-row">
+      <label class="field-label">Nombre:</label>
+      <input 
+        class="field-input"
+        [value]="data.nombre"
+        (input)="onNombreChange($any($event.target).value)"
+        placeholder="Ingrese nombre">
+    </div>
+
+    <!-- Estado -->
+    <div class="status-row">
+      <div class="status-info">
+        <span class="status-label" [class.enabled]="data.habilitado">
+          {{ data.habilitado ? 'Activo' : 'Inactivo' }}
+        </span>
+      </div>
+      <mat-slide-toggle
+        [checked]="data.habilitado"
+        (change)="onHabilitadoChange($event.checked)"
+        color="primary">
+      </mat-slide-toggle>
+    </div>
+
+    <!-- Montos verticales -->
+    <div class="montos-container">
+      <div class="monto-field">
+        <label class="monto-label">Monto Mínimo:</label>
+        <div class="monto-input-wrapper">
+          <span class="currency-symbol">$</span>
+          <input 
+            class="monto-input"
+            type="number"
+            [value]="data.montoMinimo"
+            (input)="onMontoMinimoChange($any($event.target).value)"
+            placeholder="0">
+        </div>
+      </div>
+      
+      <div class="monto-field">
+        <label class="monto-label">Monto Máximo:</label>
+        <div class="monto-input-wrapper">
+          <span class="currency-symbol">$</span>
+          <input 
+            class="monto-input"
+            type="number"
+            [value]="data.montoMaximo"
+            (input)="onMontoMaximoChange($any($event.target).value)"
+            placeholder="0">
+        </div>
+      </div>
+    </div>
+
+    <!-- Visualización de montos formateados -->
+    <div class="montos-display">
+      <span class="range-text">Rango: {{ formatCurrency(data.montoMinimo) }} - {{ formatCurrency(data.montoMaximo) }}</span>
+    </div>
+  </div>
+</div>

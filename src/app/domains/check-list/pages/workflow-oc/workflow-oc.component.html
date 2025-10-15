@@ -1,0 +1,92 @@
+<!-- Workflow OC Page -->
+<div class="workflow-oc-container">
+  <div class="header">
+    <h1>Workflow OC - Cadena de Aprobación</h1>
+    <button 
+      class="btn-agregar"
+      (click)="agregarNuevoItem()"
+      type="button">
+      + Agregar Nuevo Item
+    </button>
+  </div>
+  
+  <div class="items-grid">
+    <app-item-cadena
+      *ngFor="let item of itemsEjemplo; let i = index"
+      [data]="item"
+      (dataChange)="onItemChange(i, $event)"
+      (deleteRequested)="onItemDelete(i)">
+    </app-item-cadena>
+  </div>
+
+  <!-- Simulador de OC -->
+  <div class="simulator-card">
+    <div class="simulator-header">
+      <h3>Simular OC</h3>
+    </div>
+    
+    <div class="simulator-content">
+      <div class="input-section">
+        <label class="input-label">Monto de la OC:</label>
+        <div class="input-wrapper">
+          <span class="currency-prefix">$</span>
+          <input 
+            type="number"
+            class="amount-input"
+            [(ngModel)]="montoSimulacion"
+            (input)="onMontoChange()"
+            placeholder="Ingrese el monto"
+            min="0">
+        </div>
+        <button 
+          class="simulate-btn"
+          (click)="simularOC()"
+          [disabled]="!montoSimulacion || montoSimulacion <= 0"
+          type="button">
+          Simular
+        </button>
+      </div>
+
+      <!-- Resultado de la simulación -->
+      <div class="result-section" *ngIf="resultadoSimulacion">
+        <div class="result-header">
+          <h4>Resultado de la Simulación</h4>
+        </div>
+        
+        <div class="result-content">
+          <div class="amount-display">
+            <span class="amount-label">Monto:</span>
+            <span class="amount-value">{{ formatCurrency(montoSimulacion || 0) }}</span>
+          </div>
+          
+          <div class="approver-info" [class.approved]="resultadoSimulacion.aprobado" [class.rejected]="!resultadoSimulacion.aprobado">
+            <div class="approver-details">
+              <span class="approver-cargo">{{ resultadoSimulacion.cargo }}</span>
+              <span class="approver-nombre">{{ resultadoSimulacion.nombre }}</span>
+            </div>
+            <div class="approval-status">
+              <span class="status-text">{{ resultadoSimulacion.aprobado ? 'APROBADO' : 'RECHAZADO' }}</span>
+              <span class="status-reason" *ngIf="!resultadoSimulacion.aprobado">{{ resultadoSimulacion.razon }}</span>
+            </div>
+          </div>
+          
+          <!-- Ruta de aprobación -->
+          <div class="approval-path" *ngIf="resultadoSimulacion.rutaAprobacion.length > 0">
+            <h5>Ruta de Aprobación:</h5>
+            <div class="path-steps">
+              <div 
+                class="path-step" 
+                *ngFor="let paso of resultadoSimulacion.rutaAprobacion; let i = index"
+                [class.active]="i === resultadoSimulacion.rutaAprobacion.length - 1">
+                <span class="step-number">{{ i + 1 }}</span>
+                <span class="step-cargo">{{ paso.cargo }}</span>
+                <span class="step-nombre">{{ paso.nombre }}</span>
+                <span class="step-status" [class.skipped]="paso.saltado">{{ paso.saltado ? 'Saltado' : 'Procesado' }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
