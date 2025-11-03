@@ -602,6 +602,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   // Mock data for now - would come from an API in real app
   activities: Activity[] = [];
   exportingPdf = false;
+  viewingPdf = false;
 
   /**
    * Track expanded activities
@@ -895,6 +896,23 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   /**
    * Exporta el cronograma completo a PDF
    */
+  viewCronogramaPdf(): void {
+    if (this.viewingPdf) {
+      return;
+    }
+
+    this.viewingPdf = true;
+    this.snackBar.open('Generando vista previa del cronograma...', '', { duration: 2000 });
+
+    // Cargar el logo de Inarco primero
+    this.loadInarcoLogo().then(logoBase64 => {
+      this.generatePdfWithLogo(logoBase64, true); // true = inline mode
+    }).catch(error => {
+      console.warn('No se pudo cargar el logo, generando PDF sin logo:', error);
+      this.generatePdfWithLogo(null, true); // true = inline mode
+    });
+  }
+
   exportCronogramaToPdf(): void {
     if (this.exportingPdf) {
       return;
@@ -905,10 +923,10 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
 
     // Cargar el logo de Inarco primero
     this.loadInarcoLogo().then(logoBase64 => {
-      this.generatePdfWithLogo(logoBase64);
+      this.generatePdfWithLogo(logoBase64, false); // false = download mode
     }).catch(error => {
       console.warn('No se pudo cargar el logo, generando PDF sin logo:', error);
-      this.generatePdfWithLogo(null);
+      this.generatePdfWithLogo(null, false); // false = download mode
     });
   }
 
@@ -947,8 +965,10 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
 
   /**
    * Genera el PDF con o sin logo
+   * @param logoBase64 Logo en formato base64 o null
+   * @param inlineMode Si es true, añade ?inline=true a la URL para visualización
    */
-  private generatePdfWithLogo(logoBase64: string | null): void {
+  private generatePdfWithLogo(logoBase64: string | null, inlineMode: boolean = false): void {
     // Obtener el contenido HTML del cronograma
     const cronogramaContent = document.querySelector('#cronograma-content');
     if (!cronogramaContent) {
@@ -1224,10 +1244,16 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
       .subscribe({
         next: (response: any) => {
           this.exportingPdf = false;
+          this.viewingPdf = false;
           if (response && response.url) {
             console.log('PDF del cronograma generado correctamente', response);
-            window.open(response.url, '_blank');
-            this.snackBar.open('PDF del cronograma generado correctamente', '', {
+            // Si es modo inline, añadir ?inline=true a la URL
+            const finalUrl = inlineMode ? `${response.url}?inline=true` : response.url;
+            window.open(finalUrl, '_blank');
+            const message = inlineMode 
+              ? 'Vista previa del cronograma generada correctamente'
+              : 'PDF del cronograma generado correctamente';
+            this.snackBar.open(message, '', {
               duration: 3000,
             });
           } else {
@@ -1243,6 +1269,7 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
             duration: 3000,
           });
           this.exportingPdf = false;
+          this.viewingPdf = false;
         }
       });
   }
