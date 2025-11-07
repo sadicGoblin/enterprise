@@ -1,11 +1,16 @@
 import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login/login.component';
+import { RecoverPasswordComponent } from './pages/recover-password/recover-password.component';
 import { authGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   {
     path: '',
     component: LoginComponent,
+  },
+  {
+    path: 'password-recovery',
+    component: RecoverPasswordComponent,
   },
   {
     path: 'check-list',

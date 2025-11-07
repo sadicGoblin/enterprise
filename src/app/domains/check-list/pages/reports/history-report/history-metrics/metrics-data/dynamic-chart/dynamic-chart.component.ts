@@ -1055,8 +1055,26 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
       
       // Sumar valores válidos de cada mes
       this.monthlyTableData.forEach(row => {
-        if (row[month] !== null && row[month] !== undefined && !isNaN(row[month])) {
-          monthSum += row[month];
+        const cellValue = row[month];
+        
+        // Skip null/undefined values
+        if (cellValue === null || cellValue === undefined) {
+          return;
+        }
+        
+        // Extract numeric value from object or use direct value
+        let numericValue: number;
+        if (typeof cellValue === 'object' && cellValue !== null && 'displayValue' in cellValue) {
+          // En modo porcentaje, el valor es un objeto con displayValue
+          numericValue = cellValue.displayValue;
+        } else {
+          // En modo cantidad, el valor es un número directo
+          numericValue = Number(cellValue);
+        }
+        
+        // Only add valid numeric values
+        if (!isNaN(numericValue)) {
+          monthSum += numericValue;
           monthCount++;
         }
       });
