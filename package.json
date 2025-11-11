@@ -15,8 +15,11 @@
     "docker:dev": "docker-compose up --build",
     "docker:prod": "docker-compose -f docker-compose.prod.yml up --build",
     "docker:stop": "docker-compose down",
-    "deploy:staging": "echo 'Deployment handled by GitHub Actions'",
-    "deploy:prod": "echo 'Deployment handled by GitHub Actions'"
+    "deploy:staging": "./scripts/deploy.sh staging",
+    "deploy:prod": "./scripts/deploy.sh production",
+    "deploy:build": "./scripts/deploy.sh --build",
+    "deploy:staging-quick": "./scripts/deploy.sh staging --skip-build",
+    "deploy:prod-quick": "./scripts/deploy.sh production --skip-build"
   },
   "private": true,
   "dependencies": {

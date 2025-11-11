@@ -38,7 +38,7 @@ export class PlanificationService {
    */
   getControlPlanificacion(periodo: string, usuarioId: string, pendiente:string): Observable<any> {
     const request: PlanificationRequest = {
-      caso: 'ControlPlanificacion',
+      caso: 'ControlPlanificacionSimple',
       periodo: parseInt(periodo, 10),  // Convertir a número
       usuarioId: usuarioId,
       pendiente: pendiente

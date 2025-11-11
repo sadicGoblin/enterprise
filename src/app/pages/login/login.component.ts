@@ -5,7 +5,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { Router, ActivatedRoute } from '@angular/router';
+import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { HttpClientModule } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
@@ -23,7 +23,8 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
     MatInputModule,
     MatButtonModule,
     HttpClientModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    RouterLink
   ],
   templateUrl: './login.component.html',
   styleUrls: ['./login.component.scss']
@@ -83,6 +84,19 @@ export class LoginComponent implements AfterViewInit {
           if (isSuccess) {
             console.log('[LoginComponent] Login successful');
             
+            // Validar TipoAcceso - solo SUPER USUARIO puede acceder
+            const tipoAcceso = response.data?.TipoAcceso || localStorage.getItem('userAccessType');
+            console.log('[LoginComponent] TipoAcceso:', tipoAcceso);
+            
+            if (tipoAcceso !== 'SUPER USUARIO') {
+              // Acceso denegado - limpiar datos y mostrar mensaje
+              this.authService.logout();
+              this.showErrorMessage('Acceso denegado para el usuario.');
+              return;
+            }
+            
+            console.log('[LoginComponent] Access type validated successfully');
+            
             // Check if there's a redirect URL stored (from AuthGuard)
             const redirectUrl = sessionStorage.getItem('redirectUrl');
             
@@ -103,7 +117,20 @@ export class LoginComponent implements AfterViewInit {
         },
         error: (error) => {
           console.error('[LoginComponent] Login error:', error);
-          this.showErrorMessage('Error al conectar con el servidor');
+          
+          // Manejar específicamente el error 401 (credenciales incorrectas)
+          if (error.status === 401) {
+            this.showErrorMessage('Usuario o contraseña incorrectos');
+          } else if (error.status === 0) {
+            // Error de red o CORS
+            this.showErrorMessage('Error de conexión. Verifica tu conexión a internet.');
+          } else if (error.status >= 500) {
+            // Error del servidor
+            this.showErrorMessage('Error del servidor. Intenta nuevamente más tarde.');
+          } else {
+            // Otros errores
+            this.showErrorMessage('Error al conectar con el servidor');
+          }
         }
       });
   }

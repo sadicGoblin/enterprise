@@ -5,10 +5,14 @@ import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AfterViewInit, Component, ElementRef, Input, OnChanges, OnDestroy, SimpleChanges, ViewChild } from '@angular/core';
 import { Chart, ChartConfiguration } from 'chart.js/auto';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { ReportConfig } from '../../../models/report-config.model';
 import { NgChartsModule } from 'ng2-charts';
 import { ExportService } from '../../../../../../../../shared/services/export.service';
 import { getFieldIcon, getValueIcon, getGeneralIcon } from '../../../../../../../../shared/configs/icons.config';
+
+// Register ChartDataLabels plugin globally
+Chart.register(ChartDataLabels);
 
 @Component({
   selector: 'app-summary-kpi',
@@ -239,6 +243,15 @@ export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy 
           display: false // Ocultamos completamente la leyenda
         },
         tooltip: {
+          position: 'nearest',
+          xAlign: 'left',
+          yAlign: 'center',
+          titleFont: {
+            size: 10
+          },
+          bodyFont: {
+            size: 10
+          },
           callbacks: {
             label: (context: any) => {
               const label = context.label || '';
@@ -250,6 +263,39 @@ export class SummaryKpiComponent implements AfterViewInit, OnChanges, OnDestroy 
               return `${label}: ${value} (${percentage}%)`;
             }
           }
+        },
+        // Configure datalabels plugin
+        datalabels: {
+          color: '#fff',
+          font: {
+            weight: 'bolder',
+            size: 10
+          },
+          formatter: (value: number, context: any) => {
+            // Get the total sum of all values
+            const total = context.chart.data.datasets[0].data.reduce(
+              (sum: number, val: number) => sum + val, 0
+            );
+            
+            // Calculate the percentage
+            const percentage = Math.round((value / total) * 100);
+            
+            // Only show percentage for segments that are significant enough
+            return percentage >= 5 ? `${percentage}%` : '';
+          },
+          // Control visibility based on the segment size
+          display: (context: any) => {
+            // Get data for the current segment
+            const value = context.dataset.data[context.dataIndex];
+            const total = context.chart.data.datasets[0].data.reduce(
+              (sum: number, val: number) => sum + val, 0
+            );
+            
+            // Only show label if the segment is at least 8% of the total
+            return (value / total) >= 0.08;
+          },
+          anchor: 'center',
+          align: 'center'
         }
       },
       layout: {

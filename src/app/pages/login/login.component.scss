@@ -92,6 +92,23 @@
   }
 }
 
+.recover-link {
+  text-align: center;
+  margin-top: 1rem;
+
+  a {
+    color: #1e2b50;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+
+    &:hover {
+      color: #fecd0d;
+      text-decoration: underline;
+    }
+  }
+}
+
 #particles-js {
   position: fixed;
   top: 0;

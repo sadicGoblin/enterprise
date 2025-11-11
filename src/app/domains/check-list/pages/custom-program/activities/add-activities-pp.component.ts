@@ -610,6 +610,7 @@ export class AddActivitiesPpComponent implements OnInit {
       )
       .subscribe((response: any) => {
         this.loadingUsers = false;
+        console.log('Respuesta completa de colaboradores:', response);
 
         if (response && response.success && response.data) {
           this.users = response.data as User[];

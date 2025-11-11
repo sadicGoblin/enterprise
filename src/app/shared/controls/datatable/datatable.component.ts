@@ -40,6 +40,8 @@ import { saveAs } from 'file-saver';
 export class DataTableComponent implements OnChanges, OnDestroy {
   @Input() data: any[] = [];
   @Input() columns: DataTableColumn[] = [];
+  // Nueva propiedad para columnas de exportación (pueden ser diferentes a las mostradas)
+  @Input() exportColumns: string[] = [];
   @Input() config: DataTableConfig = {
     showRowNumber: true,
     selectable: false,
@@ -819,12 +821,29 @@ export class DataTableComponent implements OnChanges, OnDestroy {
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(this.config.exportFileName || 'Data');
 
-    // Define columns based on column configuration
-    const columns = this.columns.map(column => {
-      return { header: column.header, key: column.field, width: 20 };
-    });
+    // Determinar qué columnas exportar
+    let columnsToExport: { header: string; key: string; width: number }[] = [];
+    
+    // Si hay columnas de exportación especificadas, usarlas
+    if (this.exportColumns && this.exportColumns.length > 0) {
+      console.log('Usando columnas de exportación personalizadas:', this.exportColumns);
+      
+      // Mapear columnas de exportación a configuración de columnas de Excel
+      columnsToExport = this.exportColumns.map(fieldName => {
+        // Buscar si existe la columna en la configuración actual para obtener el header
+        const existingColumn = this.columns.find(col => col.field === fieldName);
+        const header = existingColumn ? existingColumn.header : this.formatFieldName(fieldName);
+        
+        return { header, key: fieldName, width: 20 };
+      });
+    } else {
+      // Usar las columnas visibles actuales
+      columnsToExport = this.columns.map(column => {
+        return { header: column.header, key: column.field, width: 20 };
+      });
+    }
 
-    worksheet.columns = columns;
+    worksheet.columns = columnsToExport;
 
     // Style for header
     const headerRow = worksheet.getRow(1);
@@ -839,9 +858,12 @@ export class DataTableComponent implements OnChanges, OnDestroy {
     // Add all data to Excel (not filtered data)
     this.data.forEach(item => {
       const row: Record<string, any> = {};
-      this.columns.forEach(column => {
-        row[column.field] = this.getPropertyValue(item, column.field);
+      
+      // Usar las columnas de exportación en lugar de las columnas visibles
+      columnsToExport.forEach(column => {
+        row[column.key] = this.getPropertyValue(item, column.key);
       });
+      
       worksheet.addRow(row);
     });
 
@@ -864,6 +886,18 @@ export class DataTableComponent implements OnChanges, OnDestroy {
       const fileName = this.config.exportFileName || 'Data';
       saveAs(blob, `${fileName}_${date}.xlsx`);
     });
+  }
+
+  /**
+   * Formatea el nombre de un campo para hacerlo más legible (para casos donde no hay header definido)
+   * @param fieldName Nombre del campo a formatear
+   * @returns Nombre formateado con espacios y primera letra en mayúscula
+   */
+  private formatFieldName(fieldName: string): string {
+    if (!fieldName) return '';
+    // Insertar espacio antes de cada mayúscula y capitalizar primera letra
+    return fieldName.charAt(0).toUpperCase() + 
+           fieldName.slice(1).replace(/([A-Z])/g, ' $1');
   }
 
   /**

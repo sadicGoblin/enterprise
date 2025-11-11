@@ -20,6 +20,7 @@ import { InspectionTrackingComponent } from './pages/reports/inspection-tracking
 import { ActivityPlanningComponent } from './pages/activity-planning/activity-planning.component';
 import { ReplicatePpComponent } from './pages/replicate-pp/replicate-pp.component';
 import { HistoryReportComponent } from './pages/reports/history-report/history-report.component';
+import { WorkflowOcComponent } from './pages/workflow-oc/workflow-oc.component';
 
 export const checkListRoutes: Routes = [
   {
@@ -45,6 +46,7 @@ export const checkListRoutes: Routes = [
           { path: 'work', component: WorkMaintenanceComponent },
           { path: 'params', component: CreateParamsComponent },
           { path: 'custom-params', component: AddCustomParamsComponent },
+          { path: 'workflow-oc', component: WorkflowOcComponent },
         ],
       },
       // Custom Program routes grouped logically

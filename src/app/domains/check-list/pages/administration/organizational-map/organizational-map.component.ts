@@ -1,4 +1,4 @@
-import { Component, ViewChild, OnInit, isDevMode } from '@angular/core';
+import { Component, ViewChild, OnInit, isDevMode, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -59,6 +59,9 @@ export class OrganizationalMapComponent implements OnInit {
   // Flag to control form visibility (collapsed by default)
   isFormVisible: boolean = false;
   
+  // Estado de toggles por userId
+  private userActiveStates: { [userId: number]: boolean } = {};
+  
   // Options for the custom-select components
   cargosOptions: SelectOption[] = [];
   accesosOptions: SelectOption[] = [];
@@ -82,7 +85,21 @@ export class OrganizationalMapComponent implements OnInit {
 
   tableActionButtons = [
     { icon: 'edit', color: 'accent', tooltip: 'Editar', action: 'edit' },
-    { icon: 'close', color: 'warn', tooltip: 'Eliminar', action: 'delete' }
+    { 
+      icon: 'toggle_on', 
+      color: 'primary', 
+      tooltip: 'Activar/Desactivar', 
+      action: 'toggle', 
+      isToggle: true,
+      getToggleState: (item: any) => {
+        // Usar el estado del diccionario si existe, sino usar el del item
+        const userId = item?.userId;
+        if (userId && this.userActiveStates.hasOwnProperty(userId)) {
+          return this.userActiveStates[userId];
+        }
+        return item?.isActive === '1';
+      }
+    }
   ];
   
   // Initial mock data that will be replaced with API data when loaded
@@ -94,7 +111,8 @@ export class OrganizationalMapComponent implements OnInit {
       tipoAcceso: 'cargando...',
       empresa: 'cargando...',
       email: 'cargando...',
-      celular: 'cargando...'
+      celular: 'cargando...',
+      isActive: '1'
     }
   ];
 
@@ -103,7 +121,8 @@ export class OrganizationalMapComponent implements OnInit {
     private dialog: MatDialog,
     private subParametroService: SubParametroService,
     private usuarioService: UsuarioService,
-    private snackBar: MatSnackBar
+    private snackBar: MatSnackBar,
+    private cdr: ChangeDetectorRef
   ) {
     this.editForm = this.fb.group({
       usuario: ['', [Validators.required]],
@@ -273,31 +292,47 @@ export class OrganizationalMapComponent implements OnInit {
             console.log('Successfully loaded users from API');
             
             // Map data using the same structure
-            this.tableData = response.data.map((user: any) => ({
-              userId: Number(user.IdUsuario), // Store user ID for API calls
-              usuario: user.Usuario,
-              nombre: user.Nombre,
-              cargo: user.Cargo,
-              tipoAcceso: user.TipoAcceso,
-              empresa: user.EmpresaContratista,
-              email: user.EMail,
-              celular: user.celular
-            }));
+            this.tableData = response.data.map((user: any) => {
+              const userId = Number(user.IdUsuario);
+              const isActive = user.is_active === '1';
+              // Inicializar el estado en el diccionario
+              this.userActiveStates[userId] = isActive;
+              
+              return {
+                userId: userId, // Store user ID for API calls
+                usuario: user.Usuario,
+                nombre: user.Nombre,
+                cargo: user.Cargo,
+                tipoAcceso: user.TipoAcceso,
+                empresa: user.EmpresaContratista,
+                email: user.EMail,
+                celular: user.celular,
+                isActive: user.is_active || '1' // Store is_active status
+              };
+            });
           } else if (response.glosa === 'Ok' && response.data && response.data.length > 0) {
             // Legacy API response format as fallback
             console.log('Using legacy API response format');
             
             // Map using the same structure
-            this.tableData = response.data.map((user: any) => ({
-              userId: Number(user.IdUsuario),
-              usuario: user.Usuario,
-              nombre: user.Nombre,
-              cargo: user.Cargo,
-              tipoAcceso: user.TipoAcceso,
-              empresa: user.EmpresaContratista,
-              email: user.EMail,
-              celular: user.celular
-            }));
+            this.tableData = response.data.map((user: any) => {
+              const userId = Number(user.IdUsuario);
+              const isActive = user.is_active === '1';
+              // Inicializar el estado en el diccionario
+              this.userActiveStates[userId] = isActive;
+              
+              return {
+                userId: userId,
+                usuario: user.Usuario,
+                nombre: user.Nombre,
+                cargo: user.Cargo,
+                tipoAcceso: user.TipoAcceso,
+                empresa: user.EmpresaContratista,
+                email: user.EMail,
+                celular: user.celular,
+                isActive: user.is_active || '1' // Store is_active status
+              };
+            });
           } else {
             console.warn('API response did not contain valid user data, using fallback data');
           }
@@ -374,6 +409,91 @@ export class OrganizationalMapComponent implements OnInit {
       eMail: element.email,  // Mantener consistente con la API (eMail)
       celular: element.celular,
       // No incluimos clave ya que no queremos modificarla automáticamente
+    });
+  }
+
+  /**
+   * Toggle user active status
+   * @param item El usuario a activar/desactivar
+   * @param index La posición en el array tableData
+   */
+  toggleUserStatus(item: any, index: number): void {
+    const userId = item?.userId;
+    const currentStatus = item?.isActive || '1';
+    const userName = item?.nombre || 'este usuario';
+    
+    if (!userId) {
+      this.snackBar.open('No se puede cambiar estado: ID de usuario no válido', 'Cerrar', {
+        duration: 5000,
+        panelClass: ['error-snackbar']
+      });
+      return;
+    }
+    
+    // Determinar el texto según la acción a realizar
+    const actionText = currentStatus === '1' ? 'desactivar' : 'activar';
+    const actionTextCapitalized = currentStatus === '1' ? 'Desactivar' : 'Activar';
+    
+    // Mostrar diálogo de confirmación
+    const dialogRef = this.dialog.open(ConfirmDialogComponent, {
+      width: '400px',
+      data: {
+        title: `Confirmar ${actionTextCapitalized}`,
+        message: `¿Está seguro que desea ${actionText} a ${userName}?`,
+        confirmText: actionTextCapitalized,
+        cancelText: 'Cancelar'
+      }
+    });
+    
+    dialogRef.afterClosed().subscribe(confirmed => {
+      if (confirmed) {
+        console.log(`${actionTextCapitalized} usuario...`, item);
+        this.isLoading = true;
+        
+        this.usuarioService.toggleUserStatus(userId, currentStatus)
+          .pipe(finalize(() => this.isLoading = false))
+          .subscribe({
+            next: (response) => {
+              if (response && response.success) {
+                // Actualizar el estado en el diccionario
+                const newStatusBoolean = currentStatus === '0'; // Si era '0' ahora es true (activo)
+                this.userActiveStates[userId] = newStatusBoolean;
+                
+                // Actualizar también en tableData
+                const newStatus = currentStatus === '1' ? '0' : '1';
+                this.tableData = this.tableData.map((user, i) => {
+                  if (i === index) {
+                    return { ...user, isActive: newStatus };
+                  }
+                  return user;
+                });
+                
+                // Forzar detección de cambios
+                this.cdr.detectChanges();
+                
+                const statusText = newStatusBoolean ? 'activado' : 'desactivado';
+                console.log(`Usuario ${userId} ${statusText}. Estado en diccionario:`, this.userActiveStates[userId]);
+                
+                this.snackBar.open(`Usuario ${statusText} correctamente`, 'Cerrar', {
+                  duration: 3000,
+                  panelClass: ['success-snackbar']
+                });
+              } else {
+                this.snackBar.open('Error al cambiar estado: ' + (response.message || 'Error desconocido'), 'Cerrar', {
+                  duration: 5000,
+                  panelClass: ['error-snackbar']
+                });
+              }
+            },
+            error: (error) => {
+              console.error('Error al cambiar estado de usuario:', error);
+              this.snackBar.open('Error en la comunicación con el servidor', 'Cerrar', {
+                duration: 5000,
+                panelClass: ['error-snackbar']
+              });
+            }
+          });
+      }
     });
   }
 
@@ -580,6 +700,10 @@ export class OrganizationalMapComponent implements OnInit {
     switch(event.action) {
       case 'edit':
         this.updateUser(event.item, event.index);
+        break;
+      case 'toggle':
+        // Toggle user active status
+        this.toggleUserStatus(event.item, event.index);
         break;
       case 'delete':
         // Mostrar diálogo de confirmación antes de eliminar

@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { HistoricalReportItem } from '../../../../../../core/services/report.service';
 import { DataTableComponent } from '../../../../../../shared/controls/datatable/datatable.component';
 import { DataTableColumn, DataTableConfig } from '../../../../../../shared/controls/datatable/datatable.models';
-import { REPORTS_CONFIG } from '../configs/reports.config';
+import { ReportConfig } from '../models/report-config.model';
+import { formatDate } from '@angular/common';
 
 @Component({
   selector: 'app-history-table',
@@ -19,6 +20,16 @@ import { REPORTS_CONFIG } from '../configs/reports.config';
 export class HistoryTableComponent implements OnChanges {  
   // Input para recibir los datos de la tabla
   @Input() data: HistoricalReportItem[] = [];
+  // Input para recibir la configuración del reporte
+  @Input() reportConfig?: ReportConfig;
+  
+  // Data procesada localmente (copia inmutable para la tabla)
+  processedData: any[] = [];
+  
+  // Constantes para manejo de fechas
+  private readonly CHILE_TIMEZONE = 'America/Santiago';
+  private readonly DATE_FORMAT = 'dd/MM/yyyy';
+  private readonly DATETIME_FORMAT = 'dd/MM/yyyy HH:mm';
   
   // Variables para la tabla dinámica
   dynamicTableConfig: DataTableConfig = {
@@ -39,14 +50,73 @@ export class HistoryTableComponent implements OnChanges {
     exportFileName: 'Reporte_Historico'
   };
   
+  // Columnas para exportación (pueden ser diferentes a las mostradas en la tabla)
+  exportColumns: string[] = [];
+  
   dynamicTableColumns: DataTableColumn[] = [];
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] && changes['data'].currentValue) {
-      const data = changes['data'].currentValue;
-      // Configurar la tabla dinámica
-      this.setupDynamicTable(data);
+      const incoming = changes['data'].currentValue as any[];
+      
+      // Procesamos una COPIA de los datos antes de configurar la tabla
+      this.processedData = this.processDateFields(incoming);
+      
+      // Configurar la tabla dinámica usando la copia procesada
+      this.setupDynamicTable(this.processedData);
     }
+  }
+  
+  /**
+   * Procesa los campos de fecha, los formatea y ordena los datos
+   * @param data Array de datos a procesar
+   * @returns Array de datos procesados
+   */
+  private processDateFields(data: any[]): any[] {
+    if (!data || data.length === 0) return data;
+    
+    // Buscar campos de fecha (cualquiera que contenga 'fecha' o 'date' en cualquier capitalización)
+    const dateFieldNames = Object.keys(data[0]).filter(key => 
+      key.toLowerCase().includes('fecha') || key.toLowerCase().includes('date')
+    );
+    
+    if (dateFieldNames.length === 0) {
+      // Devolver una copia superficial del array para no exponer el original
+      return [...data];
+    }
+    
+    // Crear una copia nueva de los elementos y formatear fechas sobre la copia
+    const processed = data.map(origItem => {
+      const item = { ...origItem };
+      for (const fieldName of dateFieldNames) {
+        const dateValue = item[fieldName];
+        if (!dateValue) continue;
+        try {
+          const dateObj = new Date(dateValue);
+          // Verificar si la fecha incluye hora (horas o minutos distintos de cero)
+          const hasTime = dateObj.getHours() !== 0 || dateObj.getMinutes() !== 0;
+          const format = hasTime ? this.DATETIME_FORMAT : this.DATE_FORMAT;
+          
+          // Guardar fecha original para ordenamiento SOLO en la copia
+          (item as any)[`_original_${fieldName}`] = dateValue;
+          // Formatear la fecha según el formato correspondiente
+          (item as any)[fieldName] = formatDate(dateObj, format, 'es-CL', this.CHILE_TIMEZONE);
+        } catch (e) {
+          console.error(`Error formatting date field ${fieldName}:`, e);
+        }
+      }
+      return item;
+    });
+    
+    // Ordenar por el primer campo de fecha encontrado (descendente) sobre la copia
+    const primaryDateField = dateFieldNames[0];
+    processed.sort((a, b) => {
+      const dateA = new Date((a as any)[`_original_${primaryDateField}`] || (a as any)[primaryDateField]);
+      const dateB = new Date((b as any)[`_original_${primaryDateField}`] || (b as any)[primaryDateField]);
+      return dateB.getTime() - dateA.getTime(); // Orden descendente
+    });
+    
+    return processed;
   }
   
   /**
@@ -69,12 +139,17 @@ export class HistoryTableComponent implements OnChanges {
       return;
     }
     
-    // Obtener configuración del reporte desde el archivo de configuración global
-    const reportConfig = REPORTS_CONFIG.reports.find(report => report.indexName === 'history-report');
+    // Configurar columnas para la tabla
+    // (La ordenación descendente por fecha se realiza en processDateFields)
     
+    // Usar la configuración del reporte recibida por Input
     // Definir columnas y filtros con valores por defecto si no se encuentra la configuración
-    const columnsTableConfig = reportConfig?.columnsExport || [];
-    const columnsFilterConfig = reportConfig?.columnsFilter || [];
+    const columnsTableConfig = this.reportConfig?.columnsTable || [];
+    const columnsExportConfig = this.reportConfig?.columnsExport || [];
+    const columnsFilterConfig = this.reportConfig?.columnsFilter || [];
+    
+    // Guardar las columnas para exportación
+    this.exportColumns = columnsExportConfig;
     
     // Sample data para verificar tipos y propiedades
     const sample = data[0];

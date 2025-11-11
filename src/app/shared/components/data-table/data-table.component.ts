@@ -31,7 +31,7 @@ import { MatInputModule } from '@angular/material/input';
 export class DataTableComponent implements OnChanges {
   @Input() columns: { name: string; label: string; }[] = [];
   @Input() data: any[] = [];
-  @Input() actionButtons: { icon: string; color: string; tooltip: string; action: string; }[] = [];
+  @Input() actionButtons: { icon: string; color: string; tooltip: string; action: string; isToggle?: boolean; getToggleState?: (item: any) => boolean; }[] = [];
   @Input() pageSizeOptions: number[] = [10, 25, 50, 100];
   @Input() pageSize: number = 25;
   @Input() striped: boolean = true;
@@ -48,7 +48,8 @@ export class DataTableComponent implements OnChanges {
   
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      this.dataSource.data = this.data;
+      // Crear una nueva referencia para forzar la detección de cambios
+      this.dataSource.data = [...this.data];
       
       // Apply paginator if available
       if (this.paginator) {
@@ -94,5 +95,10 @@ export class DataTableComponent implements OnChanges {
   // Method to determine if a row should have a striped background
   isStripedRow(index: number): boolean {
     return this.striped && index % 2 !== 0;
+  }
+
+  // TrackBy function for better performance
+  trackByIndex(index: number): number {
+    return index;
   }
 }
