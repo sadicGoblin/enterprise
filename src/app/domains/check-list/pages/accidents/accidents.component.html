@@ -1,0 +1,502 @@
+<div class="accidents-container">
+  <mat-card class="accidents-card">
+    <mat-card-header>
+      <div class="header-content">
+        <div class="header-left">
+          <mat-card-title>
+            <mat-icon>warning</mat-icon>
+            Registro de Accidentes Laborales
+          </mat-card-title>
+          <mat-card-subtitle>Complete todos los campos requeridos (*)</mat-card-subtitle>
+        </div>
+        <div class="header-actions">
+          <button mat-raised-button color="accent" (click)="goToList()" type="button">
+            <mat-icon>list</mat-icon>
+            Ver Listado
+          </button>
+          <button mat-raised-button (click)="goToStatistics()" type="button">
+            <mat-icon>bar_chart</mat-icon>
+            Estadísticas
+          </button>
+        </div>
+      </div>
+    </mat-card-header>
+
+    <mat-card-content>
+      <form [formGroup]="accidentForm" (ngSubmit)="onSubmit()" class="accident-form">
+        
+        <!-- Basic Information Section -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>info</mat-icon>
+            Información Básica
+          </h3>
+          <mat-divider></mat-divider>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-small">
+              <mat-label>N° Accidente *</mat-label>
+              <input matInput formControlName="accidentNumber" placeholder="Ej: ACC-2024-001">
+              <mat-error>{{getErrorMessage('accidentNumber')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-small">
+              <mat-label>Fecha de Reporte *</mat-label>
+              <input matInput [matDatepicker]="reportPicker" formControlName="reportDate">
+              <mat-datepicker-toggle matSuffix [for]="reportPicker"></mat-datepicker-toggle>
+              <mat-datepicker #reportPicker></mat-datepicker>
+              <mat-error>{{getErrorMessage('reportDate')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-small">
+              <mat-label>Fecha del Accidente *</mat-label>
+              <input matInput [matDatepicker]="accidentPicker" formControlName="accidentDate">
+              <mat-datepicker-toggle matSuffix [for]="accidentPicker"></mat-datepicker-toggle>
+              <mat-datepicker #accidentPicker></mat-datepicker>
+              <mat-error>{{getErrorMessage('accidentDate')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-small">
+              <mat-label>Hora del Accidente *</mat-label>
+              <input matInput type="time" formControlName="accidentTime">
+              <mat-error>{{getErrorMessage('accidentTime')}}</mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Location Information Section -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>location_on</mat-icon>
+            Ubicación del Accidente
+          </h3>
+          <mat-divider></mat-divider>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Proyecto / Obra *</mat-label>
+              <mat-select formControlName="project">
+                <mat-option *ngFor="let project of projectOptions" [value]="project">
+                  {{project}}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{getErrorMessage('project')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Área *</mat-label>
+              <mat-select formControlName="area">
+                <mat-option *ngFor="let area of areaOptions" [value]="area">
+                  {{area}}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{getErrorMessage('area')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Ubicación Específica *</mat-label>
+              <input matInput formControlName="specificLocation" placeholder="Ej: Sector B, Piso 3">
+              <mat-error>{{getErrorMessage('specificLocation')}}</mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Person Information Section -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>person</mat-icon>
+            Información del Trabajador
+          </h3>
+          <mat-divider></mat-divider>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-large">
+              <mat-label>Nombre Completo *</mat-label>
+              <input matInput formControlName="workerName" placeholder="Nombre y apellidos">
+              <mat-error>{{getErrorMessage('workerName')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-small">
+              <mat-label>RUT *</mat-label>
+              <input matInput formControlName="workerRut" placeholder="12.345.678-9">
+              <mat-error>{{getErrorMessage('workerRut')}}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Cargo *</mat-label>
+              <input matInput formControlName="workerPosition" placeholder="Ej: Operario">
+              <mat-error>{{getErrorMessage('workerPosition')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Empresa *</mat-label>
+              <input matInput formControlName="workerCompany" placeholder="Nombre de la empresa">
+              <mat-error>{{getErrorMessage('workerCompany')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-small">
+              <mat-label>Edad *</mat-label>
+              <input matInput type="number" formControlName="workerAge" min="18" max="100">
+              <mat-error>{{getErrorMessage('workerAge')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-small">
+              <mat-label>Experiencia (años) *</mat-label>
+              <input matInput type="number" formControlName="workerExperience" min="0">
+              <mat-error>{{getErrorMessage('workerExperience')}}</mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Accident Details Section -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>medical_services</mat-icon>
+            Detalles del Accidente
+          </h3>
+          <mat-divider></mat-divider>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Tipo de Accidente *</mat-label>
+              <mat-select formControlName="accidentType">
+                <mat-option *ngFor="let type of accidentTypeOptions" [value]="type">
+                  {{type}}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{getErrorMessage('accidentType')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Parte del Cuerpo Afectada *</mat-label>
+              <mat-select formControlName="bodyPart">
+                <mat-option *ngFor="let part of bodyPartOptions" [value]="part">
+                  {{part}}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{getErrorMessage('bodyPart')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Severidad *</mat-label>
+              <mat-select formControlName="severity">
+                <mat-option *ngFor="let sev of severityOptions" [value]="sev">
+                  {{sev}}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{getErrorMessage('severity')}}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Descripción del Accidente *</mat-label>
+              <textarea matInput formControlName="accidentDescription" rows="4" 
+                        placeholder="Describa detalladamente cómo ocurrió el accidente..."></textarea>
+              <mat-hint>Mínimo 20 caracteres</mat-hint>
+              <mat-error>{{getErrorMessage('accidentDescription')}}</mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Causes and Analysis Section -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>search</mat-icon>
+            Causas y Análisis
+          </h3>
+          <mat-divider></mat-divider>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Causa Inmediata *</mat-label>
+              <textarea matInput formControlName="immediateCause" rows="3" 
+                        placeholder="¿Qué causó directamente el accidente?"></textarea>
+              <mat-error>{{getErrorMessage('immediateCause')}}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Causa Raíz *</mat-label>
+              <textarea matInput formControlName="rootCause" rows="3" 
+                        placeholder="¿Cuál es la causa fundamental del accidente?"></textarea>
+              <mat-error>{{getErrorMessage('rootCause')}}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Factores Contribuyentes</mat-label>
+              <textarea matInput formControlName="contributingFactors" rows="3" 
+                        placeholder="Otros factores que contribuyeron al accidente..."></textarea>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Witnesses Section -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>visibility</mat-icon>
+            Testigos
+          </h3>
+          <mat-divider></mat-divider>
+          
+          <div class="form-row">
+            <mat-checkbox formControlName="hasWitnesses" class="checkbox-field">
+              ¿Hubo testigos del accidente?
+            </mat-checkbox>
+          </div>
+
+          <div class="form-row" *ngIf="accidentForm.get('hasWitnesses')?.value">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Nombres de Testigos</mat-label>
+              <input matInput formControlName="witnessNames" 
+                     placeholder="Nombres completos de los testigos separados por coma">
+            </mat-form-field>
+          </div>
+
+          <div class="form-row" *ngIf="accidentForm.get('hasWitnesses')?.value">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Declaraciones de Testigos</mat-label>
+              <textarea matInput formControlName="witnessStatements" rows="4" 
+                        placeholder="Resumen de las declaraciones..."></textarea>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Medical Attention Section -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>local_hospital</mat-icon>
+            Atención Médica
+          </h3>
+          <mat-divider></mat-divider>
+          
+          <div class="form-row">
+            <mat-checkbox formControlName="medicalAttentionRequired" class="checkbox-field">
+              ¿Requirió atención médica?
+            </mat-checkbox>
+          </div>
+
+          <div *ngIf="accidentForm.get('medicalAttentionRequired')?.value">
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="form-field-medium">
+                <mat-label>Centro Médico</mat-label>
+                <input matInput formControlName="medicalCenter" 
+                       placeholder="Nombre del centro médico">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field-small">
+                <mat-label>Días de Reposo</mat-label>
+                <input matInput type="number" formControlName="daysOff" min="0">
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="form-field-medium">
+                <mat-label>Fecha Inicio Licencia Médica</mat-label>
+                <input matInput [matDatepicker]="medicalStartPicker" formControlName="medicalLeaveStartDate">
+                <mat-datepicker-toggle matSuffix [for]="medicalStartPicker"></mat-datepicker-toggle>
+                <mat-datepicker #medicalStartPicker></mat-datepicker>
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="form-field-medium">
+                <mat-label>Fecha Fin Licencia Médica</mat-label>
+                <input matInput [matDatepicker]="medicalEndPicker" formControlName="medicalLeaveEndDate">
+                <mat-datepicker-toggle matSuffix [for]="medicalEndPicker"></mat-datepicker-toggle>
+                <mat-datepicker #medicalEndPicker></mat-datepicker>
+              </mat-form-field>
+            </div>
+
+            <div class="form-row">
+              <mat-form-field appearance="outline" class="form-field-full">
+                <mat-label>Diagnóstico Médico</mat-label>
+                <textarea matInput formControlName="diagnosis" rows="3" 
+                          placeholder="Diagnóstico del médico tratante..."></textarea>
+              </mat-form-field>
+            </div>
+          </div>
+        </div>
+
+        <!-- Corrective Actions Section -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>build</mat-icon>
+            Acciones Correctivas y Preventivas
+          </h3>
+          <mat-divider></mat-divider>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Acciones Inmediatas *</mat-label>
+              <textarea matInput formControlName="immediateActions" rows="3" 
+                        placeholder="Acciones tomadas inmediatamente después del accidente..."></textarea>
+              <mat-error>{{getErrorMessage('immediateActions')}}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Acciones Correctivas *</mat-label>
+              <textarea matInput formControlName="correctiveActions" rows="3" 
+                        placeholder="Acciones para corregir las causas del accidente..."></textarea>
+              <mat-error>{{getErrorMessage('correctiveActions')}}</mat-error>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Acciones Preventivas</mat-label>
+              <textarea matInput formControlName="preventiveActions" rows="3" 
+                        placeholder="Acciones para prevenir futuros accidentes similares..."></textarea>
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Responsable de Acciones *</mat-label>
+              <input matInput formControlName="responsiblePerson" 
+                     placeholder="Nombre del responsable">
+              <mat-error>{{getErrorMessage('responsiblePerson')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Fecha Límite</mat-label>
+              <input matInput [matDatepicker]="deadlinePicker" formControlName="actionDeadline">
+              <mat-datepicker-toggle matSuffix [for]="deadlinePicker"></mat-datepicker-toggle>
+              <mat-datepicker #deadlinePicker></mat-datepicker>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Investigation Section -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>assignment</mat-icon>
+            Investigación
+          </h3>
+          <mat-divider></mat-divider>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Investigado Por *</mat-label>
+              <input matInput formControlName="investigatedBy" 
+                     placeholder="Nombre del investigador">
+              <mat-error>{{getErrorMessage('investigatedBy')}}</mat-error>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Fecha de Investigación</mat-label>
+              <input matInput [matDatepicker]="investigationPicker" formControlName="investigationDate">
+              <mat-datepicker-toggle matSuffix [for]="investigationPicker"></mat-datepicker-toggle>
+              <mat-datepicker #investigationPicker></mat-datepicker>
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Estado *</mat-label>
+              <mat-select formControlName="status">
+                <mat-option *ngFor="let status of statusOptions" [value]="status">
+                  {{status}}
+                </mat-option>
+              </mat-select>
+              <mat-error>{{getErrorMessage('status')}}</mat-error>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Additional Information Section -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>more_horiz</mat-icon>
+            Información Adicional
+          </h3>
+          <mat-divider></mat-divider>
+          
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Equipos Involucrados</mat-label>
+              <input matInput formControlName="equipmentInvolved" 
+                     placeholder="Maquinaria, herramientas, etc.">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Condiciones Climáticas</mat-label>
+              <input matInput formControlName="weatherConditions" 
+                     placeholder="Ej: Soleado, lluvioso, etc.">
+            </mat-form-field>
+
+            <mat-form-field appearance="outline" class="form-field-medium">
+              <mat-label>Condiciones de Iluminación</mat-label>
+              <input matInput formControlName="lightingConditions" 
+                     placeholder="Ej: Buena, deficiente, etc.">
+            </mat-form-field>
+          </div>
+
+          <div class="form-row">
+            <mat-checkbox formControlName="wasUsingPPE" class="checkbox-field">
+              ¿Estaba usando EPP (Equipo de Protección Personal)?
+            </mat-checkbox>
+          </div>
+
+          <div class="form-row" *ngIf="accidentForm.get('wasUsingPPE')?.value">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Detalles del EPP</mat-label>
+              <textarea matInput formControlName="ppeDetails" rows="2" 
+                        placeholder="Especifique qué EPP estaba usando..."></textarea>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Photos and Documents Section -->
+        <div class="form-section">
+          <h3 class="section-title">
+            <mat-icon>attach_file</mat-icon>
+            Fotos y Documentos
+          </h3>
+          <mat-divider></mat-divider>
+          
+          <div class="form-row">
+            <mat-checkbox formControlName="hasPhotos" class="checkbox-field">
+              ¿Se adjuntan fotografías?
+            </mat-checkbox>
+
+            <mat-checkbox formControlName="hasDocuments" class="checkbox-field">
+              ¿Se adjuntan documentos adicionales?
+            </mat-checkbox>
+          </div>
+
+          <div class="form-row">
+            <mat-form-field appearance="outline" class="form-field-full">
+              <mat-label>Observaciones Generales</mat-label>
+              <textarea matInput formControlName="observations" rows="4" 
+                        placeholder="Cualquier información adicional relevante..."></textarea>
+            </mat-form-field>
+          </div>
+        </div>
+
+        <!-- Form Actions -->
+        <div class="form-actions">
+          <button mat-raised-button color="primary" type="submit">
+            <mat-icon>save</mat-icon>
+            Guardar Registro
+          </button>
+          <button mat-raised-button type="button" (click)="onReset()">
+            <mat-icon>refresh</mat-icon>
+            Limpiar Formulario
+          </button>
+          <button mat-stroked-button type="button">
+            <mat-icon>cancel</mat-icon>
+            Cancelar
+          </button>
+        </div>
+      </form>
+
+      <div *ngIf="isLoading" class="loading-overlay">
+        <mat-spinner></mat-spinner>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

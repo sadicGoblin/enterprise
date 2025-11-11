@@ -1,0 +1,170 @@
+<div class="statistics-container">
+  <mat-card class="statistics-card">
+    <mat-card-header>
+      <mat-card-title>
+        <mat-icon>bar_chart</mat-icon>
+        Estadísticas de Accidentes
+      </mat-card-title>
+      <mat-card-subtitle>Análisis y tendencias de accidentes laborales</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <!-- Toolbar -->
+      <div class="toolbar">
+        <div class="toolbar-left">
+          <mat-form-field appearance="outline" class="year-filter">
+            <mat-label>Año</mat-label>
+            <mat-select [(ngModel)]="selectedYear" (ngModelChange)="onYearChange()">
+              <mat-option *ngFor="let year of years" [value]="year">
+                {{year}}
+              </mat-option>
+            </mat-select>
+          </mat-form-field>
+        </div>
+
+        <div class="toolbar-right">
+          <button mat-raised-button (click)="exportReport()">
+            <mat-icon>download</mat-icon>
+            Exportar Reporte
+          </button>
+          <button mat-raised-button color="primary" (click)="goToList()">
+            <mat-icon>list</mat-icon>
+            Ver Listado
+          </button>
+        </div>
+      </div>
+
+      <!-- Summary Cards -->
+      <div class="summary-cards">
+        <div class="stat-card">
+          <div class="stat-icon total">
+            <mat-icon>warning</mat-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{totalAccidents}}</div>
+            <div class="stat-label">Total Accidentes</div>
+            <div class="stat-trend positive">
+              <mat-icon>trending_down</mat-icon>
+              <span>-12% vs año anterior</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon critical">
+            <mat-icon>priority_high</mat-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{criticalAccidents}}</div>
+            <div class="stat-label">Accidentes Críticos</div>
+            <div class="stat-trend negative">
+              <mat-icon>trending_up</mat-icon>
+              <span>+1 vs mes anterior</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon active">
+            <mat-icon>medical_services</mat-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{activeMedicalLeaves}}</div>
+            <div class="stat-label">Licencias Activas</div>
+            <div class="stat-trend neutral">
+              <mat-icon>remove</mat-icon>
+              <span>Sin cambios</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-icon recovery">
+            <mat-icon>schedule</mat-icon>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{averageRecoveryDays}}</div>
+            <div class="stat-label">Días Promedio Recuperación</div>
+            <div class="stat-trend positive">
+              <mat-icon>trending_down</mat-icon>
+              <span>-3 días vs promedio</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Grid -->
+      <div class="charts-grid">
+        <!-- Severity Chart -->
+        <div class="chart-card">
+          <div class="chart-wrapper">
+            <canvas #severityChart></canvas>
+          </div>
+        </div>
+
+        <!-- Type Chart -->
+        <div class="chart-card">
+          <div class="chart-wrapper">
+            <canvas #typeChart></canvas>
+          </div>
+        </div>
+
+        <!-- Monthly Trend Chart -->
+        <div class="chart-card full-width">
+          <div class="chart-wrapper">
+            <canvas #monthlyChart></canvas>
+          </div>
+        </div>
+
+        <!-- Body Part Chart -->
+        <div class="chart-card full-width">
+          <div class="chart-wrapper">
+            <canvas #bodyPartChart></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Additional Insights -->
+      <div class="insights-section">
+        <h3 class="insights-title">
+          <mat-icon>lightbulb</mat-icon>
+          Insights y Recomendaciones
+        </h3>
+
+        <div class="insights-grid">
+          <div class="insight-card warning">
+            <mat-icon>warning</mat-icon>
+            <div class="insight-content">
+              <h4>Tendencia al Alza</h4>
+              <p>Se observa un incremento de accidentes en el último trimestre. Revisar protocolos de seguridad.</p>
+            </div>
+          </div>
+
+          <div class="insight-card info">
+            <mat-icon>info</mat-icon>
+            <div class="insight-content">
+              <h4>Área Crítica</h4>
+              <p>La mayoría de accidentes ocurren en el área de producción. Considerar capacitación adicional.</p>
+            </div>
+          </div>
+
+          <div class="insight-card success">
+            <mat-icon>check_circle</mat-icon>
+            <div class="insight-content">
+              <h4>Mejora en Recuperación</h4>
+              <p>El tiempo promedio de recuperación ha disminuido gracias a la atención médica oportuna.</p>
+            </div>
+          </div>
+
+          <div class="insight-card tip">
+            <mat-icon>tips_and_updates</mat-icon>
+            <div class="insight-content">
+              <h4>Recomendación</h4>
+              <p>Implementar programa de prevención enfocado en lesiones de manos y extremidades.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </mat-card-content>
+  </mat-card>
+</div>

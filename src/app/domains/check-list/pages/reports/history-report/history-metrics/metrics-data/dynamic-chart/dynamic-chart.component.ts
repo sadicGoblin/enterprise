@@ -138,7 +138,8 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
 
 
   processFilterHierarchical(rawData: any[] = []) {
-      //// console.log('dynamicChartComponent - processFilterHierarchical', this.filterType, this.hierarchicalFilters);
+      console.log('dynamicChartComponent - processFilterHierarchical FILTER:', this.filterType, this.hierarchicalFilters);
+      console.log('dynamicChartComponent - processFilterHierarchical DATA:', this.filterType, rawData);
       let rawDataFiltered: any[] = []; 
       rawDataFiltered = [...rawData];
       this.filteredData = []; // Reset filtered data array
@@ -199,9 +200,18 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
               }
               
               // Check if any filter value matches (case insensitive)
+              //const $ = this;
               return filters.some(filterValue => {
                 const normalizedFilterValue = String(filterValue).toLowerCase();
-                return normalizedFilterValue === normalizedItemValue;
+                let result = normalizedFilterValue.trim() === normalizedItemValue.trim()
+                // Here is filter
+                // if(this.filterType === 'Usuario'){
+                //   console.log('is user');
+                //   console.log('normalizedFilterValue|'+ normalizedFilterValue+ '|');
+                //   console.log('normalizedItemValue|'+ normalizedItemValue+ '|');
+                //   console.log('result:', result);
+                // }
+                return result;
               });
             });
             

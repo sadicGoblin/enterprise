@@ -21,6 +21,9 @@ import { ActivityPlanningComponent } from './pages/activity-planning/activity-pl
 import { ReplicatePpComponent } from './pages/replicate-pp/replicate-pp.component';
 import { HistoryReportComponent } from './pages/reports/history-report/history-report.component';
 import { WorkflowOcComponent } from './pages/workflow-oc/workflow-oc.component';
+import { AccidentsComponent } from './pages/accidents/accidents.component';
+import { AccidentsListComponent } from './pages/accidents/accidents-list/accidents-list.component';
+import { AccidentsStatisticsComponent } from './pages/accidents/accidents-statistics/accidents-statistics.component';
 
 export const checkListRoutes: Routes = [
   {
@@ -72,6 +75,16 @@ export const checkListRoutes: Routes = [
       },
       // Planning route
       { path: 'planning', component: ActivityPlanningComponent },
+      // Accidents routes grouped logically
+      {
+        path: 'accidents',
+        children: [
+          { path: '', redirectTo: 'register', pathMatch: 'full' },
+          { path: 'register', component: AccidentsComponent },
+          { path: 'list', component: AccidentsListComponent },
+          { path: 'statistics', component: AccidentsStatisticsComponent },
+        ],
+      },
     ],
   },
 ];
