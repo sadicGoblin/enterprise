@@ -5,9 +5,15 @@
       <mat-icon class="header-icon">data_array</mat-icon>
       <h2>{{ title }}</h2>
     </div>
-    <button mat-icon-button class="close-button" (click)="closeDialog()">
-      <mat-icon>close</mat-icon>
-    </button>
+    <div class="header-actions">
+      <button mat-icon-button class="export-button" (click)="exportToExcel()" 
+              matTooltip="Exportar a Excel" [disabled]="dataSource.data.length === 0">
+        <mat-icon>file_download</mat-icon>
+      </button>
+      <button mat-icon-button class="close-button" (click)="closeDialog()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
   </div>
 
   <div class="table-container">

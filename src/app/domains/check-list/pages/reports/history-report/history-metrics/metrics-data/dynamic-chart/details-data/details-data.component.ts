@@ -10,8 +10,10 @@ import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatTableDataSource } from '@angular/material/table';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { FormsModule } from '@angular/forms';
 import moment from 'moment';
+import { ExportService, ExportColumn } from '../../../../../../../../../shared/services/export.service';
 
 @Component({
   selector: 'app-details-data',
@@ -27,6 +29,7 @@ import moment from 'moment';
     MatSortModule,
     MatFormFieldModule,
     MatInputModule,
+    MatTooltipModule,
     FormsModule
   ],
   templateUrl: './details-data.component.html',
@@ -55,7 +58,8 @@ export class DetailsDataComponent implements OnInit, AfterViewInit {
       title: string, 
       draggable?: boolean,
       columns?: string[] // Columnas específicas a mostrar desde reportConfig
-    }
+    },
+    private exportService: ExportService
   ) {
     // Inicializar con los datos recibidos del dialog
     if (dialogData) {
@@ -284,6 +288,40 @@ export class DetailsDataComponent implements OnInit, AfterViewInit {
     }
   }
   
+  /**
+   * Exports the current data to Excel format
+   * Exports ALL columns from the original data, not just displayed columns
+   */
+  exportToExcel(): void {
+    if (!this.data || this.data.length === 0) {
+      console.warn('No hay datos para exportar');
+      return;
+    }
+
+    // Get ALL columns from the first data item
+    const firstItem = this.data[0];
+    const allColumnNames = Object.keys(firstItem);
+
+    // Create columns for ALL properties in the data
+    const columns: ExportColumn[] = allColumnNames.map(column => ({
+      field: column,
+      header: column.charAt(0).toUpperCase() + column.slice(1), // Capitalize first letter
+      width: 20
+    }));
+
+    // Configure export options
+    const fileName = this.title.replace(/\s+/g, '_') || 'Datos_Exportados';
+    
+    // Export using the service with ALL data columns
+    this.exportService.exportToExcel(this.data, columns, {
+      fileName: fileName,
+      sheetName: 'Datos',
+      styleHeader: true,
+      autoSizeColumns: true,
+      maxColumnWidth: 50
+    });
+  }
+
   /**
    * Closes the dialog
    */

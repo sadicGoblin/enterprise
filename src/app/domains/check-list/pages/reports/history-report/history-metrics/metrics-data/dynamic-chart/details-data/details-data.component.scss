@@ -120,26 +120,44 @@
       }
     }
     
-    .close-button {
-      margin-right: -4px;
-      color: white;
-      height: 24px;
-      width: 24px;
-      line-height: 24px;
-      padding: 0;
+    .header-actions {
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 4px;
       
-      .mat-icon {
-        font-size: 14px;
-        height: 14px;
-        width: 14px;
-        line-height: 14px;
+      .export-button,
+      .close-button {
+        margin-right: 0;
+        color: white;
+        height: 24px;
+        width: 24px;
+        line-height: 24px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        
+        .mat-icon {
+          font-size: 14px;
+          height: 14px;
+          width: 14px;
+          line-height: 14px;
+        }
+        
+        &:hover:not(:disabled) {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        &:disabled {
+          opacity: 0.5;
+          cursor: not-allowed;
+        }
       }
       
-      &:hover {
-        background-color: rgba(255, 255, 255, 0.1);
+      .export-button {
+        &:hover:not(:disabled) {
+          background-color: rgba(76, 175, 80, 0.2);
+        }
       }
     }
   }
