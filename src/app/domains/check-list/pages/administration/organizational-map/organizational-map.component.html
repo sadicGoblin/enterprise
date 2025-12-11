@@ -16,7 +16,7 @@
       </button>
     </div>
 
-    <div class="map-card-content" [class.form-collapsed]="!isFormVisible">
+    <div #formContainer class="map-card-content" [class.form-collapsed]="!isFormVisible">
       <div class="form-container" *ngIf="isFormVisible">
         <div class="form-header">
           <h3>Datos de usuario</h3>
@@ -45,8 +45,11 @@
             <mat-label>Contraseña</mat-label>
             <input matInput formControlName="clave" type="password" placeholder="Ingrese contraseña" [required]="!isEditMode" />
             <mat-icon matSuffix>lock</mat-icon>
-            <mat-error *ngIf="!isEditMode && editForm.get('clave')?.hasError('required')">Contraseña es requerida</mat-error>
+            <mat-error *ngIf="editForm.get('clave')?.hasError('required')">Contraseña es requerida</mat-error>
+            <mat-error *ngIf="editForm.get('clave')?.hasError('minLetters')">Mínimo 2 letras requeridas</mat-error>
+            <mat-error *ngIf="editForm.get('clave')?.hasError('minNumbers')">Mínimo 2 números requeridos</mat-error>
             <mat-hint *ngIf="isEditMode">Deje en blanco para mantener actual</mat-hint>
+            <mat-hint *ngIf="!isEditMode">Mínimo 2 letras y 2 números</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="compact-field">

@@ -1195,6 +1195,9 @@ export class AddActivitiesPpComponent implements OnInit {
           });
 
           console.log('Tabla actualizada con controles existentes:', this.tableData);
+          
+          // Precargar datos de planificación para cada control (para detectar días cumplidos)
+          this.preloadPlanificationData();
         } else {
           console.warn('No se encontraron controles o la respuesta no tiene el formato esperado');
         }
@@ -1202,6 +1205,26 @@ export class AddActivitiesPpComponent implements OnInit {
       error: (error: any) => {
         this.loadingExistingControls = false;
         console.error('Error al cargar controles existentes:', error);
+      }
+    });
+  }
+
+  /**
+   * Precarga los datos de planificación para todos los controles de la tabla
+   * Esto permite detectar días cumplidos antes de abrir el calendario
+   */
+  private preloadPlanificationData(): void {
+    if (!this.tableData || this.tableData.length === 0) return;
+    
+    console.log('Precargando datos de planificación para', this.tableData.length, 'controles...');
+    
+    this.tableData.forEach((element: any) => {
+      const controlId = element.id;
+      const period = element.period;
+      
+      // Solo cargar si no existe ya
+      if (!this.planificationData[controlId] && period) {
+        this.loadPlanificationData(controlId, period.toString());
       }
     });
   }
@@ -1453,6 +1476,30 @@ export class AddActivitiesPpComponent implements OnInit {
    */
   getPlanificationData(controlId: number): any[] {
     return this.planificationData[controlId] || [];
+  }
+
+  /**
+   * Obtener los días completados (cumplidos) para un control específico
+   * Estos días no pueden ser deseleccionados del calendario
+   */
+  getCompletedDays(controlId: number): number[] {
+    const planData = this.planificationData[controlId] || [];
+    return planData
+      .filter((item: any) => item.estado === 'cumplida')
+      .map((item: any) => parseInt(item.dia, 10));
+  }
+
+  /**
+   * Verifica si los datos de planificación están listos para un control
+   * Retorna true si los datos ya fueron cargados (o si están vacíos pero no están cargando)
+   */
+  isPlanificationDataReady(controlId: number): boolean {
+    // Si está cargando, no está listo
+    if (this.loadingPlanification[controlId]) {
+      return false;
+    }
+    // Si ya tiene datos o ya se intentó cargar, está listo
+    return this.planificationData[controlId] !== undefined;
   }
 
   /**

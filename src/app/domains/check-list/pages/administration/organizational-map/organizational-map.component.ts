@@ -1,6 +1,6 @@
-import { Component, ViewChild, OnInit, isDevMode, ChangeDetectorRef } from '@angular/core';
+import { Component, ViewChild, OnInit, isDevMode, ChangeDetectorRef, ElementRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
@@ -46,6 +46,9 @@ import { forkJoin } from 'rxjs';
   styleUrl: './organizational-map.component.scss',
 })
 export class OrganizationalMapComponent implements OnInit {
+  // Reference to the form container for scroll functionality
+  @ViewChild('formContainer') formContainer!: ElementRef;
+  
   // Expose ParameterType enum to the template
   parameterTypes = ParameterType;
   editForm: FormGroup;
@@ -132,9 +135,56 @@ export class OrganizationalMapComponent implements OnInit {
       idTipoAcceso: ['', [Validators.required]],
       idEmpresaContratista: ['', [Validators.required]],
       eMail: [''],
-      clave: [''],
+      clave: ['', [Validators.required, this.passwordValidator]],
       celular: [''],
     });
+  }
+  
+  /**
+   * Validador personalizado para contraseña
+   * Requiere mínimo 2 letras y 2 números
+   */
+  passwordValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    
+    // Si el campo está vacío, no aplicar esta validación (Validators.required se encarga de eso)
+    if (!value) {
+      return null;
+    }
+    
+    // Contar letras y números
+    const letters = (value.match(/[a-zA-Z]/g) || []).length;
+    const numbers = (value.match(/[0-9]/g) || []).length;
+    
+    if (letters < 2) {
+      return { minLetters: { required: 2, actual: letters } };
+    }
+    
+    if (numbers < 2) {
+      return { minNumbers: { required: 2, actual: numbers } };
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Actualiza los validadores del campo contraseña según el modo
+   * - Crear: obligatorio + validación de formato
+   * - Editar: opcional, pero si tiene valor debe cumplir el formato
+   */
+  updatePasswordValidators(): void {
+    const claveControl = this.editForm.get('clave');
+    if (!claveControl) return;
+    
+    if (this.isEditMode) {
+      // En modo edición: solo validar formato si hay valor
+      claveControl.setValidators([this.passwordValidator]);
+    } else {
+      // En modo creación: obligatorio + validación de formato
+      claveControl.setValidators([Validators.required, this.passwordValidator]);
+    }
+    
+    claveControl.updateValueAndValidity();
   }
 
   ngOnInit() {
@@ -222,6 +272,8 @@ export class OrganizationalMapComponent implements OnInit {
       if (this.editForm.get('usuario')) {
         this.editForm.get('usuario')!.updateValueAndValidity();
       }
+      // Actualizar validadores de contraseña según el modo (crear)
+      this.updatePasswordValidators();
     }, 100);
   }
   
@@ -358,6 +410,9 @@ export class OrganizationalMapComponent implements OnInit {
     this.currentEditIndex = index;
     this.currentUserId = element.userId;
     
+    // Actualizar validadores de contraseña para modo edición (opcional)
+    this.updatePasswordValidators();
+    
     // Wait for select options to be loaded before patching values
     if (this.selectOptionsLoaded) {
       this.patchUserFormValues(element);
@@ -380,7 +435,25 @@ export class OrganizationalMapComponent implements OnInit {
       }, 5000);
     }
     
+    // Scroll automático hacia el formulario después de un breve delay
+    // para permitir que el DOM se actualice
+    setTimeout(() => {
+      this.scrollToForm();
+    }, 100);
+    
     console.log('Editing user:', element);
+  }
+  
+  /**
+   * Scroll suave hacia el formulario de edición
+   */
+  private scrollToForm(): void {
+    if (this.formContainer?.nativeElement) {
+      this.formContainer.nativeElement.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'start' 
+      });
+    }
   }
   
   /**
@@ -563,8 +636,8 @@ export class OrganizationalMapComponent implements OnInit {
       // Obtener valores del formulario
       const formValue = this.editForm.value;
       
-      // Codificar la contraseña en base64
-      const passwordBase64 = formValue.clave ? btoa(formValue.clave) : '';
+      // Obtener la contraseña sin codificar (la encriptación se hace en la BD)
+      const password = formValue.clave || '';
       
       // Construir el objeto para enviar
       const userData: any = {
@@ -585,8 +658,8 @@ export class OrganizationalMapComponent implements OnInit {
       }
       
       // Agregar contraseña (solo para creación o si se cambió en edición)
-      if (passwordBase64) {
-        userData.clave = passwordBase64;
+      if (password) {
+        userData.clave = password;
       }
 
       console.log('Creating/updating user with data:', userData);

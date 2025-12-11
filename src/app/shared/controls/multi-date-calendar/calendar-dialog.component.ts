@@ -10,6 +10,7 @@ export interface CalendarDialogData {
   rowData: any; // Datos de la fila seleccionada
   controlId: number; // ID del control para actualizar
   selectedPeriod?: Date | null; // Período seleccionado para mostrar en el calendario
+  lockedDays?: number[]; // Días que no pueden ser deseleccionados (ej: actividades cumplidas)
 }
 
 /**
@@ -27,6 +28,7 @@ export interface CalendarDialogData {
           [selectedDates]="selectedDates"
           [defaultDates]="data.defaultDays || []"
           [initialPeriod]="data.selectedPeriod || null"
+          [lockedDays]="data.lockedDays || []"
           (datesChange)="onDateSelectionChanged($event)">
         </app-multi-date-calendar>
       </div>

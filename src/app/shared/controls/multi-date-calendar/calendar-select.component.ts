@@ -12,11 +12,14 @@ import { CalendarDialogComponent, CalendarDialogData } from './calendar-dialog.c
     <div class="calendar-select-container">
       <button mat-icon-button 
               (click)="openCalendarDialog()" 
-              [matTooltip]="tooltip"
-              class="calendar-select-button">
-        <mat-icon>{{ icon }}</mat-icon>
+              [matTooltip]="loading ? 'Cargando datos...' : tooltip"
+              [disabled]="disabled || loading"
+              class="calendar-select-button"
+              [class.loading]="loading">
+        <mat-icon *ngIf="!loading">{{ icon }}</mat-icon>
+        <mat-icon *ngIf="loading" class="spinning">sync</mat-icon>
       </button>
-      <span class="calendar-badge" *ngIf="selectedDates.length">{{ selectedDates.length }}</span>
+      <span class="calendar-badge" *ngIf="selectedDates.length && !loading">{{ selectedDates.length }}</span>
     </div>
   `,
   styles: [`
@@ -27,6 +30,23 @@ import { CalendarDialogComponent, CalendarDialogData } from './calendar-dialog.c
     
     .calendar-select-button {
       color: #3f51b5;
+    }
+    
+    .calendar-select-button.loading {
+      color: #999;
+    }
+    
+    .calendar-select-button:disabled {
+      opacity: 0.6;
+    }
+    
+    .spinning {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
     
     .calendar-badge {
@@ -64,6 +84,9 @@ export class CalendarSelectComponent {
   @Input() icon: string = 'calendar_month';
   @Input() tooltip: string = 'Seleccionar fechas';
   @Input() selectedPeriod: Date | null = null;
+  @Input() lockedDays: number[] = []; // Días que no pueden ser deseleccionados (ej: actividades cumplidas)
+  @Input() loading: boolean = false; // Indica si se están cargando los datos de planificación
+  @Input() disabled: boolean = false; // Deshabilita el botón del calendario
 
   @Output() datesSelected = new EventEmitter<Date[]>();
 
@@ -78,7 +101,8 @@ export class CalendarSelectComponent {
       defaultDays: this.defaultDays,
       rowData: this.rowData,
       controlId: this.controlId,
-      selectedPeriod: this.selectedPeriod
+      selectedPeriod: this.selectedPeriod,
+      lockedDays: this.lockedDays
     };
 
     const dialogRef = this.dialog.open(CalendarDialogComponent, {

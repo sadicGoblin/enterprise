@@ -45,6 +45,7 @@ export class MultiDateCalendarComponent implements OnInit {
   @Input() maxDate?: Date;
   @Input() defaultDates: number[] = []; // Días predeterminados (1-31)
   @Input() initialPeriod: Date | null = null; // Período inicial para mostrar en el calendario
+  @Input() lockedDays: number[] = []; // Días que no pueden ser deseleccionados (ej: actividades cumplidas)
   @Output() datesChange = new EventEmitter<Date[]>();
 
   currentDate = new Date();
@@ -78,6 +79,12 @@ export class MultiDateCalendarComponent implements OnInit {
   ngOnInit(): void {
     // Inicializar nombres de los días de la semana
     this.weekDays = ['Do', 'Lu', 'Ma', 'Mi', 'Ju', 'Vi', 'Sa'];
+    
+    // Log del estado de la regla de días hábiles
+    const today = new Date();
+    const businessDays = this.countBusinessDays(today);
+    const canEditPrev = this.canEditPreviousMonth();
+    console.log(`[Calendario] Días hábiles transcurridos en ${this.monthNames[today.getMonth()]}: ${businessDays}. Mes anterior editable: ${canEditPrev ? 'SÍ' : 'NO'}`);
     
     // Si se proporciona un período inicial, usarlo para establecer el mes y año del calendario
     if (this.initialPeriod) {
@@ -232,11 +239,116 @@ export class MultiDateCalendarComponent implements OnInit {
   }
 
   /**
+   * Verifica si un día está bloqueado (no puede ser deseleccionado)
+   * Por ejemplo, días con actividades ya cumplidas
+   * Solo aplica al mes del período seleccionado (initialPeriod)
+   */
+  isDateLocked(date: Date): boolean {
+    // Solo bloquear días en el mes del período seleccionado
+    if (!this.initialPeriod) return false;
+    
+    const isSameMonth = date.getMonth() === this.initialPeriod.getMonth() &&
+                        date.getFullYear() === this.initialPeriod.getFullYear();
+    
+    if (!isSameMonth) return false;
+    
+    const day = date.getDate();
+    return this.lockedDays.includes(day);
+  }
+
+  /**
+   * Cuenta los días hábiles transcurridos desde el inicio del mes hasta una fecha específica
+   * Días hábiles = lunes a viernes (excluye sábados y domingos)
+   * @param untilDate La fecha hasta la cual contar (inclusive)
+   * @returns Número de días hábiles transcurridos
+   */
+  countBusinessDays(untilDate: Date): number {
+    const year = untilDate.getFullYear();
+    const month = untilDate.getMonth();
+    const day = untilDate.getDate();
+    
+    let businessDays = 0;
+    
+    // Contar desde el día 1 del mes hasta el día actual
+    for (let d = 1; d <= day; d++) {
+      const currentDate = new Date(year, month, d);
+      const dayOfWeek = currentDate.getDay();
+      
+      // 0 = domingo, 6 = sábado - excluir fines de semana
+      if (dayOfWeek !== 0 && dayOfWeek !== 6) {
+        businessDays++;
+      }
+    }
+    
+    return businessDays;
+  }
+
+  /**
+   * Verifica si el período del mes anterior aún puede ser editado
+   * La regla es: se puede editar hasta el 5to día hábil del mes actual
+   * A partir del 6to día hábil, el mes anterior se bloquea
+   * @returns true si el mes anterior aún puede ser editado
+   */
+  canEditPreviousMonth(): boolean {
+    const today = new Date();
+    const businessDaysElapsed = this.countBusinessDays(today);
+    
+    // Se puede editar hasta el 5to día hábil (inclusive)
+    // El 6to día hábil ya no se puede editar
+    return businessDaysElapsed <= 5;
+  }
+
+  /**
+   * Verifica si una fecha está bloqueada para edición según las reglas de negocio:
+   * 1. Actividades ya realizadas (lockedDays) → siempre bloqueadas
+   * 2. Mes actual → siempre editable (solo actividades no realizadas)
+   * 3. Mes anterior → editable solo hasta el 5to día hábil del mes actual
+   * 4. Meses más antiguos → siempre bloqueados
+   */
+  isPastDate(date: Date): boolean {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const checkDate = new Date(date);
+    checkDate.setHours(0, 0, 0, 0);
+    
+    const todayMonth = today.getMonth();
+    const todayYear = today.getFullYear();
+    const dateMonth = checkDate.getMonth();
+    const dateYear = checkDate.getFullYear();
+    
+    // Caso 1: Es el mes actual → siempre editable
+    if (dateMonth === todayMonth && dateYear === todayYear) {
+      return false;
+    }
+    
+    // Calcular el mes anterior al actual
+    let prevMonth = todayMonth - 1;
+    let prevYear = todayYear;
+    if (prevMonth < 0) {
+      prevMonth = 11;
+      prevYear = todayYear - 1;
+    }
+    
+    // Caso 2: Es el mes anterior → verificar regla de 5 días hábiles
+    if (dateMonth === prevMonth && dateYear === prevYear) {
+      // Si estamos dentro de los primeros 5 días hábiles del mes actual,
+      // el mes anterior es editable
+      return !this.canEditPreviousMonth();
+    }
+    
+    // Caso 3: Es un mes más antiguo → siempre bloqueado
+    return true;
+  }
+
+  /**
    * Maneja el click en un día
    */
   onDayClick(day: CalendarDay, event: MouseEvent): void {
     // Ignorar días deshabilitados o fuera del mes actual
     if (day.disabled || !day.isCurrentMonth) return;
+    
+    // Ignorar fechas pasadas (no se pueden editar)
+    if (this.isPastDate(day.date)) return;
     
     // Seleccionar rango con Shift+Click
     if (event.shiftKey && this.lastClickedDate) {
@@ -261,6 +373,16 @@ export class MultiDateCalendarComponent implements OnInit {
     const index = this.selectedDates.findIndex(d => this.isSameDay(d, date));
     
     if (index > -1) {
+      // Si el día está bloqueado, no permitir deselección
+      if (this.isDateLocked(date)) {
+        console.log('No se puede deseleccionar el día', date.getDate(), '- actividad cumplida');
+        return;
+      }
+      // Si es período cerrado, no permitir deselección
+      if (this.isPastDate(date)) {
+        console.log('No se puede deseleccionar el día', date.getDate(), '- período cerrado');
+        return;
+      }
       this.selectedDates.splice(index, 1);
     } else {
       this.selectedDates.push(new Date(date));
@@ -329,10 +451,13 @@ export class MultiDateCalendarComponent implements OnInit {
   }
 
   /**
-   * Limpia la selección de fechas
+   * Limpia la selección de fechas (excepto días bloqueados y fechas pasadas)
    */
   clearSelection(): void {
-    this.selectedDates = [];
+    // Mantener los días bloqueados y las fechas pasadas
+    this.selectedDates = this.selectedDates.filter(date => 
+      this.isDateLocked(date) || this.isPastDate(date)
+    );
     this.generateCalendar();
     this.emitChanges();
   }
@@ -341,6 +466,18 @@ export class MultiDateCalendarComponent implements OnInit {
    * Elimina una fecha específica de la selección
    */
   removeDate(date: Date): void {
+    // Si el día está bloqueado, no permitir eliminación
+    if (this.isDateLocked(date)) {
+      console.log('No se puede eliminar el día', date.getDate(), '- actividad cumplida');
+      return;
+    }
+    
+    // Si es período cerrado, no permitir eliminación
+    if (this.isPastDate(date)) {
+      console.log('No se puede eliminar el día', date.getDate(), '- período cerrado');
+      return;
+    }
+    
     const index = this.selectedDates.findIndex(d => this.isSameDay(d, date));
     if (index > -1) {
       this.selectedDates.splice(index, 1);

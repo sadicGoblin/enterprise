@@ -1,0 +1,128 @@
+<div class="form-entrance-container">
+  <!-- Barras superiores de diseño -->
+  <div class="top-stripes">
+    <div class="stripe stripe-blue"></div>
+    <div class="stripe stripe-yellow"></div>
+  </div>
+  
+  <div class="content-wrapper">
+    <!-- Estado de carga -->
+    <div *ngIf="isLoading" class="loading-container">
+      <mat-card class="loading-card">
+        <mat-card-content>
+          <!-- <div class="logo">
+            <img src="assets/images/logo-inarco.png" alt="INARCO Logo" onerror="this.style.display='none'">
+          </div> -->
+          <mat-spinner diameter="50"></mat-spinner>
+          <p class="loading-text">Cargando formulario...</p>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Estado de error -->
+    <div *ngIf="hasError && !isLoading" class="error-container">
+      <mat-card class="error-card">
+        <mat-card-content>
+          <!-- <div class="logo">
+            <img src="assets/images/logo-inarco.png" alt="INARCO Logo" onerror="this.style.display='none'">
+          </div> -->
+          <mat-icon class="error-icon">error_outline</mat-icon>
+          <h2>Error al cargar el formulario</h2>
+          <p>{{ errorMessage }}</p>
+          <button mat-raised-button color="primary" (click)="loadForm()">
+            <mat-icon>refresh</mat-icon>
+            Reintentar
+          </button>
+        </mat-card-content>
+      </mat-card>
+    </div>
+
+    <!-- Formulario dinámico -->
+    <div *ngIf="!isLoading && !hasError && formData" class="form-container">
+      <mat-card class="form-card">
+        <mat-card-header>
+          <div class="header-content">
+            <div class="logo">
+              <img src="assets/images/logo-inarco.png" alt="INARCO Logo" onerror="this.style.display='none'">
+            </div>
+            <h1 class="form-title">{{ formData.name }}</h1>
+            <p class="form-instructions" *ngIf="formData.instructions">{{ formData.instructions }}</p>
+          </div>
+        </mat-card-header>
+        
+        <mat-card-content>
+          <form class="dynamic-form">
+            <!-- Iterar sobre las preguntas ordenadas -->
+            <ng-container *ngFor="let question of sortedQuestions; trackBy: trackByQuestionId">
+              
+              <!-- Campo oculto (hidden) - no se muestra pero se guarda -->
+              <ng-container *ngIf="question.type === 'hidden'">
+                <!-- No se muestra nada visualmente -->
+              </ng-container>
+
+              <!-- Select con dependencias (select_parent) -->
+              <ng-container *ngIf="question.type === 'select_parent'">
+                <app-select-parent-field
+                  [question]="question"
+                  (valueChange)="onFieldValueChange($event)"
+                  (subParamsChange)="onSubParamsChange(question.id, $event)"
+                  (childValueChange)="onChildValueChange($event)"
+                ></app-select-parent-field>
+              </ng-container>
+
+              <!-- Select simple -->
+              <ng-container *ngIf="question.type === 'select'">
+                <app-select-field
+                  [question]="question"
+                  [dynamicOptions]="question.query_values ? dynamicSubParams[question.query_values.id] : null"
+                  [disabled]="!!(question.query_values && !hasParentValue(question.query_values.id))"
+                  (valueChange)="onFieldValueChange($event)"
+                ></app-select-field>
+              </ng-container>
+
+              <!-- Campo de texto -->
+              <ng-container *ngIf="question.type === 'text'">
+                <app-text-field
+                  [question]="question"
+                  (valueChange)="onFieldValueChange($event)"
+                ></app-text-field>
+              </ng-container>
+
+              <!-- Selección múltiple -->
+              <ng-container *ngIf="question.type === 'multiple_choice'">
+                <app-multiple-choice-field
+                  [question]="question"
+                  [options]="question.query_values ? (dynamicSubParams[question.query_values.id] || []) : question.values"
+                  [disabled]="!!(question.query_values && !hasParentValue(question.query_values.id))"
+                  (valueChange)="onMultipleChoiceChange($event)"
+                ></app-multiple-choice-field>
+              </ng-container>
+
+              <!-- Campo de imagen/foto -->
+              <ng-container *ngIf="question.type === 'picture'">
+                <app-picture-field
+                  [question]="question"
+                  (valueChange)="onPictureChange($event)"
+                ></app-picture-field>
+              </ng-container>
+
+            </ng-container>
+          </form>
+        </mat-card-content>
+
+        <mat-card-actions>
+          <button 
+            mat-raised-button 
+            color="primary" 
+            class="submit-button"
+            [disabled]="isSubmitting || !isFormValid()"
+            (click)="submitForm()"
+          >
+            <mat-spinner *ngIf="isSubmitting" diameter="20"></mat-spinner>
+            <span *ngIf="!isSubmitting">{{ formData.button_action }}</span>
+          </button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+</div>

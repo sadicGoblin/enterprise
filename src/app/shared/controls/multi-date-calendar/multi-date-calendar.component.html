@@ -28,9 +28,13 @@
           [class.selected]="day.selected"
           [class.today]="day.today"
           [class.outside-month]="!day.isCurrentMonth"
+          [class.locked]="isDateLocked(day.date) && day.isCurrentMonth"
+          [class.past-date]="isPastDate(day.date) && day.isCurrentMonth"
           (click)="onDayClick(day, $event)"
+          [matTooltip]="isDateLocked(day.date) && day.isCurrentMonth ? 'Día bloqueado - actividad cumplida' : (isPastDate(day.date) && day.isCurrentMonth ? 'Período cerrado - no editable' : '')"
         >
           {{ day.date | date:'d' }}
+          <mat-icon *ngIf="isDateLocked(day.date) && day.isCurrentMonth" class="lock-icon">lock</mat-icon>
         </div>
       </div>
     </div>
@@ -46,11 +50,20 @@
       </button>
     </div>
     <div class="selected-dates-list">
-      <div class="selected-date-item" *ngFor="let date of sortedDates">
+      <div class="selected-date-item" *ngFor="let date of sortedDates" 
+           [class.locked]="isDateLocked(date)"
+           [class.past-date]="isPastDate(date) && !isDateLocked(date)">
         {{ date | date:'d/M' }}
-        <button mat-icon-button class="remove-date-btn" (click)="removeDate(date)">
+        <button 
+          mat-icon-button 
+          class="remove-date-btn" 
+          (click)="removeDate(date)"
+          *ngIf="!isDateLocked(date) && !isPastDate(date)"
+        >
           <mat-icon>close</mat-icon>
         </button>
+        <mat-icon *ngIf="isDateLocked(date)" class="locked-icon" matTooltip="Actividad cumplida - no se puede eliminar">lock</mat-icon>
+        <mat-icon *ngIf="isPastDate(date) && !isDateLocked(date)" class="past-icon" matTooltip="Período cerrado - no editable">history</mat-icon>
       </div>
     </div>
     <!-- Instrucciones de uso del calendario -->

@@ -313,6 +313,8 @@
               [controlId]="element.id"
               [tooltip]="getDaysTooltip(element.selectedDays)"
               [selectedPeriod]="selectedDate"
+              [lockedDays]="getCompletedDays(element.id)"
+              [loading]="!isPlanificationDataReady(element.id)"
               (datesSelected)="onCalendarDatesSelected($event, element)"
             >
             </app-calendar-select>

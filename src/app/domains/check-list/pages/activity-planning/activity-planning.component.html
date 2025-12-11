@@ -75,7 +75,6 @@
       <p>Cargando actividades...</p>
     </div>
 
-
     <div class="no-activities" *ngIf="noActivities">
       <p>No se encontraron actividades para este proyecto y/o colaborador.</p>
     </div>
@@ -84,16 +83,31 @@
       <div class="cronograma-header">
         <h3>DETALLE CRONOGRAMA MENSUAL</h3>
         <div class="header-actions">
-          <button mat-icon-button (click)="viewCronogramaPdf()" class="view-button" aria-label="Visualizar cronograma PDF" [disabled]="viewingPdf" title="Visualizar PDF">
+          <button
+            mat-icon-button
+            (click)="viewCronogramaPdf()"
+            class="view-button"
+            aria-label="Visualizar cronograma PDF"
+            [disabled]="viewingPdf"
+            title="Visualizar PDF"
+          >
             <mat-icon>visibility</mat-icon>
           </button>
-          <button mat-icon-button (click)="exportCronogramaToPdf()" class="export-button" aria-label="Exportar cronograma a PDF" [disabled]="exportingPdf" title="Descargar PDF">
+          <button
+            mat-icon-button
+            (click)="exportCronogramaToPdf()"
+            class="export-button"
+            aria-label="Exportar cronograma a PDF"
+            [disabled]="exportingPdf"
+            title="Descargar PDF"
+          >
             <mat-icon>picture_as_pdf</mat-icon>
           </button>
         </div>
       </div>
 
       <div class="cronograma-content" id="cronograma-content">
+        <!-- Comentado temporalmente - usando planification-grid en su lugar
         <app-planification-table
           [activities]="activities"
           [days]="days"
@@ -104,6 +118,16 @@
           (activityStatusChanged)="handleActivityStatusChanged($event)"
           (saveChanges)="saveAllChanges()"
         ></app-planification-table>
+        -->
+
+        <app-planification-grid
+          [periodo]="numericPeriod"
+          [idUsuario]="selectedCollaboratorId ? +selectedCollaboratorId : null"
+          [projectId]="selectedProjectId"
+          [selectedCollaboratorName]="selectedCollaboratorName"
+          [selectedCollaboratorId]="selectedCollaboratorId"
+          (activityClicked)="handleGridActivityClicked($event)"
+        ></app-planification-grid>
       </div>
     </div>
   </mat-card>

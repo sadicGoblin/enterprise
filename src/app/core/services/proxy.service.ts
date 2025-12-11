@@ -53,4 +53,40 @@ export class ProxyService {
       })
     );
   }
+
+  /**
+   * Makes a POST request with custom Authorization token
+   * Bypasses the interceptor by including the token directly
+   * Useful for public pages that need a hardcoded token
+   */
+  postWithToken<T>(endpoint: string, body: any, token: string): Observable<T> {
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      'Authorization': `Token ${token}`
+    });
+    
+    let url: string;
+    
+    if (environment.production) {
+      if (endpoint.startsWith('http://') || endpoint.startsWith('https://')) {
+        url = endpoint;
+      } else if (endpoint.startsWith('/ws/')) {
+        url = `https://inarco-ssoma.favric.cl${endpoint}`;
+      } else {
+        url = `https://inarco-ssoma.favric.cl/ws/${endpoint}`;
+      }
+    } else {
+      url = endpoint;
+    }
+    
+    console.log('%c [ProxyService] POST with token:', 'color: purple; font-weight: bold', url);
+    
+    return this.http.post<T>(url, body, { headers }).pipe(
+      catchError(error => {
+        console.error('API Error:', error);
+        return throwError(() => error);
+      })
+    );
+  }
 }

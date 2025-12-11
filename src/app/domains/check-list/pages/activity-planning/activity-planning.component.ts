@@ -27,6 +27,7 @@ import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { ProxyService } from '../../../../core/services/proxy.service';
+import { PlanificationGridComponent, GridActivity } from '../../components/planification-grid/planification-grid.component';
 
 // Activity interface definition - extended from the one used in PlanificationTableComponent
 export interface Activity extends PlanificationActivity {
@@ -67,6 +68,7 @@ export interface Activity extends PlanificationActivity {
     HttpClientModule,
     CustomSelectComponent,
     PlanificationTableComponent,
+    PlanificationGridComponent,
   ],
   templateUrl: './activity-planning.component.html',
   styleUrls: ['./activity-planning.component.scss'],
@@ -542,6 +544,16 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   selectedUserName: string = '';
   selectedPeriod: Date | null = null;
   
+  /**
+   * Get period as numeric value (YYYYMM format) for planification-grid
+   */
+  get numericPeriod(): number | null {
+    if (!this.selectedPeriod) return null;
+    const year = this.selectedPeriod.getFullYear();
+    const month = this.selectedPeriod.getMonth() + 1;
+    return parseInt(`${year}${month.toString().padStart(2, '0')}`);
+  }
+  
   // Spanish month names for formatting
   spanishMonths = [
     'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
@@ -746,6 +758,15 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   handleActivityStatusChanged(event: {activity: Activity, day: number}): void {
     // Call the cycle activity status method to update the activity
     this.cycleActivityStatus(event.activity, event.day);
+  }
+  
+  /**
+   * Handle activity click from the planification grid component
+   */
+  handleGridActivityClicked(event: {activity: GridActivity, day: number}): void {
+    console.log('Grid activity clicked:', event.activity.activityName, 'day:', event.day);
+    // The modal opening is handled internally by the grid component
+    // This handler is for any additional actions needed in the parent component
   }
   
   openInspectionModal(activityId?: number): void {  
@@ -1334,13 +1355,34 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
         for (let j = 0; j < rules.length; j++) {
           const rule = rules[j];
           if (rule.cssText && (
+              // Estilos de planification-table (legacy)
               rule.cssText.includes('.planification-table') ||
               rule.cssText.includes('.activity-row') ||
               rule.cssText.includes('.activity-name') ||
               rule.cssText.includes('.day-cell') ||
+              // Estilos de planification-grid
+              rule.cssText.includes('.horizontal-calendar') ||
+              rule.cssText.includes('.calendar-header-row') ||
+              rule.cssText.includes('.calendar-row') ||
+              rule.cssText.includes('.activity-column') ||
+              rule.cssText.includes('.periodicity-column') ||
+              rule.cssText.includes('.status-cell') ||
+              rule.cssText.includes('.status-icon') ||
+              rule.cssText.includes('.subprocess-line') ||
+              rule.cssText.includes('.activity-line') ||
+              rule.cssText.includes('.summary-row') ||
+              rule.cssText.includes('.total-column') ||
+              rule.cssText.includes('.compliance-cell') ||
+              rule.cssText.includes('.fixed-first-column') ||
+              rule.cssText.includes('.fixed-second-column') ||
+              rule.cssText.includes('.numeric-cell') ||
+              // Estilos comunes
               rule.cssText.includes('.weekend') ||
               rule.cssText.includes('.completed') ||
               rule.cssText.includes('.pending') ||
+              rule.cssText.includes('.ambito') ||
+              rule.cssText.includes('.day-column') ||
+              rule.cssText.includes('.sticky-end-column') ||
               rule.cssText.includes('mat-icon') ||
               rule.cssText.includes('table') ||
               rule.cssText.includes('th') ||

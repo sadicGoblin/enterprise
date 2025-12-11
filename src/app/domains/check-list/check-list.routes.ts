@@ -20,6 +20,7 @@ import { InspectionTrackingComponent } from './pages/reports/inspection-tracking
 import { ActivityPlanningComponent } from './pages/activity-planning/activity-planning.component';
 import { ReplicatePpComponent } from './pages/replicate-pp/replicate-pp.component';
 import { HistoryReportComponent } from './pages/reports/history-report/history-report.component';
+import { SstmaObraReportComponent } from './pages/reports/sstma-obra-report/sstma-obra-report.component';
 import { WorkflowOcComponent } from './pages/workflow-oc/workflow-oc.component';
 import { AccidentsComponent } from './pages/accidents/accidents.component';
 import { AccidentsListComponent } from './pages/accidents/accidents-list/accidents-list.component';
@@ -71,6 +72,7 @@ export const checkListRoutes: Routes = [
           { path: 'dashboard', component: CreateDashboardPpComponent },
           { path: 'tracking', component: InspectionTrackingComponent },
           { path: 'history', component: HistoryReportComponent },
+          { path: 'sstma-obra', component: SstmaObraReportComponent },
         ],
       },
       // Planning route
