@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
@@ -22,8 +22,8 @@ import localeEs from '@angular/common/locales/es';
 registerLocaleData(localeEs, 'es');
 
 import { ReportService, HistoricalReportItem } from '../../../../../core/services/report.service';
-import { finalize, catchError } from 'rxjs/operators';
-import { of } from 'rxjs';
+import { finalize, catchError, takeUntil } from 'rxjs/operators';
+import { of, Subject } from 'rxjs';
 
 // Importamos la configuración y su servicio
 import { ReportConfigService } from './services/report-config.service';
@@ -81,9 +81,11 @@ import { ExportSelectorComponent, ExportableItem } from '../../../../../shared/c
   templateUrl: './history-report.component.html',
   styleUrls: ['./history-report.component.scss']
 })
-export class HistoryReportComponent implements OnInit {
+export class HistoryReportComponent implements OnInit, OnDestroy {
   historyForm!: FormGroup;
   isLoading: boolean = false;
+  isRetrying: boolean = false;
+  private destroy$ = new Subject<void>();
   
   // Pestaña actualmente seleccionada
   selectedTab = 0;
@@ -131,12 +133,24 @@ export class HistoryReportComponent implements OnInit {
     this.dateAdapter.setLocale('es-ES');
     this.initForm();
     
+    // Suscribirse al estado de reintento del servicio
+    this.reportService.isRetrying$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(isRetrying => {
+        this.isRetrying = isRetrying;
+      });
+    
     // Cargar la configuración del reporte
     // this.reportConfig = this.reportConfigService.getReportConfig(this.reportIndexName);
     
     if (!this.reportConfig) {
       console.warn(`No se encontró configuración para el reporte: ${this.reportIndexName}`);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
   }
 
   initForm(): void {

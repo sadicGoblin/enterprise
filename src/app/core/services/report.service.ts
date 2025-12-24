@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, BehaviorSubject } from 'rxjs';
 import { of } from 'rxjs';
 import { throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { timeout } from 'rxjs/operators';
 import { retry } from 'rxjs/operators';
 import { delay } from 'rxjs/operators';
@@ -44,6 +44,10 @@ export interface HistoricalReportResponse {
 })
 export class ReportService {
   private apiUrl = `${environment.apiBaseUrl}/ws/ReporteSvcImpl.php`;
+  
+  // BehaviorSubject para notificar cuando se está reintentando
+  private _isRetrying$ = new BehaviorSubject<boolean>(false);
+  public isRetrying$ = this._isRetrying$.asObservable();
 
   constructor(private http: HttpClient) { }
 
@@ -66,12 +70,29 @@ export class ReportService {
     console.log(this.apiUrl, payload);
 
 
+    // Resetear el estado de reintento al iniciar
+    this._isRetrying$.next(false);
+    let attemptCount = 0;
+
     return this.http.post<HistoricalReportResponse>(this.apiUrl, payload)
       .pipe(
-        // Intentar la petición hasta 2 veces
-        retry(1),
-        // Establecer un timeout de 10 segundos
-        timeout(20000),
+        // Establecer un timeout de 5 minutos
+        timeout(300000),
+        // Intentar la petición hasta 2 veces con notificación de reintento
+        retry({
+          count: 1,
+          delay: (error, retryCount) => {
+            attemptCount = retryCount;
+            console.log(`Reintentando llamada al servicio (intento ${retryCount})...`);
+            this._isRetrying$.next(true);
+            return of(error).pipe(delay(1000)); // Esperar 1 segundo antes de reintentar
+          }
+        }),
+        // Resetear el estado de reintento cuando la petición finaliza (éxito o error final)
+        tap({
+          next: () => this._isRetrying$.next(false),
+          error: () => this._isRetrying$.next(false)
+        }),
         // Capturar y manejar errores
         catchError(this.handleError)
       );

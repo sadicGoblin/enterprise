@@ -3,7 +3,7 @@
     <div *ngIf="isLoading" class="spinner-overlay">
       <div class="loading-container">
         <mat-spinner></mat-spinner>
-        <p class="loading-text">Procesando la información...</p>
+        <p class="loading-text">{{ isRetrying ? 'Reintentando llamada al servicio...' : 'Procesando la información...' }}</p>
       </div>
     </div>
     
