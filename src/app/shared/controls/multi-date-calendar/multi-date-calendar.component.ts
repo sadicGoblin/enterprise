@@ -46,6 +46,7 @@ export class MultiDateCalendarComponent implements OnInit {
   @Input() defaultDates: number[] = []; // Días predeterminados (1-31)
   @Input() initialPeriod: Date | null = null; // Período inicial para mostrar en el calendario
   @Input() lockedDays: number[] = []; // Días que no pueden ser deseleccionados (ej: actividades cumplidas)
+  @Input() businessDaysGrace: number = 6; // Días hábiles de gracia para editar el mes anterior
   @Output() datesChange = new EventEmitter<Date[]>();
 
   currentDate = new Date();
@@ -285,40 +286,68 @@ export class MultiDateCalendarComponent implements OnInit {
 
   /**
    * Verifica si el período del mes anterior aún puede ser editado
-   * La regla es: se puede editar hasta el 5to día hábil del mes actual
-   * A partir del 6to día hábil, el mes anterior se bloquea
+   * La regla es: se puede editar hasta el X día hábil del mes actual (configurable via businessDaysGrace)
+   * A partir del día hábil siguiente, el mes anterior se bloquea
    * @returns true si el mes anterior aún puede ser editado
    */
   canEditPreviousMonth(): boolean {
     const today = new Date();
     const businessDaysElapsed = this.countBusinessDays(today);
     
-    // Se puede editar hasta el 5to día hábil (inclusive)
-    // El 6to día hábil ya no se puede editar
-    return businessDaysElapsed <= 5;
+    // Se puede editar hasta el día hábil configurado (inclusive)
+    return businessDaysElapsed <= this.businessDaysGrace;
   }
 
   /**
-   * Verifica si una fecha está bloqueada para edición según las reglas de negocio:
-   * 1. Actividades ya realizadas (lockedDays) → siempre bloqueadas
-   * 2. Mes actual → siempre editable (solo actividades no realizadas)
-   * 3. Mes anterior → editable solo hasta el 5to día hábil del mes actual
-   * 4. Meses más antiguos → siempre bloqueados
+   * Verifica si una fecha está fuera del período seleccionado.
+   * Regla simple: SOLO se puede editar el mes del período seleccionado.
+   * No se puede navegar a otros meses para editar.
+   * @returns true si la fecha NO pertenece al período seleccionado
    */
-  isPastDate(date: Date): boolean {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const checkDate = new Date(date);
-    checkDate.setHours(0, 0, 0, 0);
+  isOutsideSelectedPeriod(date: Date): boolean {
+    // Si no hay período seleccionado, no bloquear por esta regla
+    if (!this.initialPeriod) {
+      return false;
+    }
     
-    const todayMonth = today.getMonth();
-    const todayYear = today.getFullYear();
+    const checkDate = new Date(date);
     const dateMonth = checkDate.getMonth();
     const dateYear = checkDate.getFullYear();
     
-    // Caso 1: Es el mes actual → siempre editable
-    if (dateMonth === todayMonth && dateYear === todayYear) {
-      return false;
+    const periodMonth = this.initialPeriod.getMonth();
+    const periodYear = this.initialPeriod.getFullYear();
+    
+    // Solo permitir el mes del período seleccionado
+    return dateMonth !== periodMonth || dateYear !== periodYear;
+  }
+
+  /**
+   * Verifica si el período seleccionado es editable según las reglas de negocio:
+   * - Meses futuros → siempre editables (sin restricción)
+   * - Mes actual → siempre editable
+   * - Mes anterior → editable solo hasta el día hábil configurado (businessDaysGrace)
+   * - Meses más antiguos → NO editable (solo visualización)
+   * @returns true si el período seleccionado puede ser editado
+   */
+  isSelectedPeriodEditable(): boolean {
+    if (!this.initialPeriod) {
+      return true; // Sin período, permitir edición
+    }
+    
+    const today = new Date();
+    const todayMonth = today.getMonth();
+    const todayYear = today.getFullYear();
+    const periodMonth = this.initialPeriod.getMonth();
+    const periodYear = this.initialPeriod.getFullYear();
+    
+    // Caso 1: Es un mes futuro → siempre editable
+    if (periodYear > todayYear || (periodYear === todayYear && periodMonth > todayMonth)) {
+      return true;
+    }
+    
+    // Caso 2: Es el mes actual → editable
+    if (periodMonth === todayMonth && periodYear === todayYear) {
+      return true;
     }
     
     // Calcular el mes anterior al actual
@@ -329,15 +358,34 @@ export class MultiDateCalendarComponent implements OnInit {
       prevYear = todayYear - 1;
     }
     
-    // Caso 2: Es el mes anterior → verificar regla de 5 días hábiles
-    if (dateMonth === prevMonth && dateYear === prevYear) {
-      // Si estamos dentro de los primeros 5 días hábiles del mes actual,
-      // el mes anterior es editable
-      return !this.canEditPreviousMonth();
+    // Caso 3: Es el mes anterior → verificar regla de días hábiles de gracia
+    if (periodMonth === prevMonth && periodYear === prevYear) {
+      return this.canEditPreviousMonth();
     }
     
-    // Caso 3: Es un mes más antiguo → siempre bloqueado
-    return true;
+    // Caso 4: Meses más antiguos → NO editable
+    return false;
+  }
+
+  /**
+   * Verifica si una fecha está bloqueada para edición.
+   * Una fecha está bloqueada si:
+   * 1. Está fuera del período seleccionado (initialPeriod)
+   * 2. El período seleccionado no es editable (según reglas de negocio)
+   * @returns true si la fecha no puede ser editada
+   */
+  isPastDate(date: Date): boolean {
+    // Si la fecha está fuera del período seleccionado, bloquear
+    if (this.isOutsideSelectedPeriod(date)) {
+      return true;
+    }
+    
+    // Si el período seleccionado no es editable, bloquear
+    if (!this.isSelectedPeriodEditable()) {
+      return true;
+    }
+    
+    return false;
   }
 
   /**
@@ -347,7 +395,7 @@ export class MultiDateCalendarComponent implements OnInit {
     // Ignorar días deshabilitados o fuera del mes actual
     if (day.disabled || !day.isCurrentMonth) return;
     
-    // Ignorar fechas pasadas (no se pueden editar)
+    // Ignorar fechas bloqueadas (fuera del período o período no editable)
     if (this.isPastDate(day.date)) return;
     
     // Seleccionar rango con Shift+Click

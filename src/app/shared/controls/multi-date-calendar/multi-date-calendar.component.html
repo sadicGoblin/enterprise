@@ -2,13 +2,17 @@
   <div class="calendar-side">
     <!-- Header del calendario con controles de navegación -->
     <div class="calendar-header">
-      <button mat-icon-button (click)="prevMonth()" matTooltip="Mes anterior">
-        <mat-icon>chevron_left</mat-icon>
-      </button>
+      <span matTooltip="Navegación deshabilitada">
+        <button mat-icon-button (click)="prevMonth()" disabled="true">
+          <mat-icon>chevron_left</mat-icon>
+        </button>
+      </span>
       <span class="month-year-display">{{ currentMonthName }}</span>
-      <button mat-icon-button (click)="nextMonth()" matTooltip="Mes siguiente">
-        <mat-icon>chevron_right</mat-icon>
-      </button>
+      <span matTooltip="Si deseas gestionar tareas en otros meses, selecciona el período correspondiente">
+        <button mat-icon-button (click)="nextMonth()" disabled="true">
+          <mat-icon>chevron_right</mat-icon>
+        </button>
+      </span>
     </div>
 
     <!-- Cabecera con nombres de días -->
@@ -31,7 +35,7 @@
           [class.locked]="isDateLocked(day.date) && day.isCurrentMonth"
           [class.past-date]="isPastDate(day.date) && day.isCurrentMonth"
           (click)="onDayClick(day, $event)"
-          [matTooltip]="isDateLocked(day.date) && day.isCurrentMonth ? 'Día bloqueado - actividad cumplida' : (isPastDate(day.date) && day.isCurrentMonth ? 'Período cerrado - no editable' : '')"
+          [matTooltip]="isDateLocked(day.date) && day.isCurrentMonth ? 'Día bloqueado - actividad cumplida' : (isPastDate(day.date) && day.isCurrentMonth ? 'Fuera del período editable' : '')"
         >
           {{ day.date | date:'d' }}
           <mat-icon *ngIf="isDateLocked(day.date) && day.isCurrentMonth" class="lock-icon">lock</mat-icon>

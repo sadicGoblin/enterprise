@@ -1176,7 +1176,7 @@ export class AddActivitiesPpComponent implements OnInit {
               activityId: control.IdActividad,
               // Campo para días seleccionados
               days: control.dias || '',  
-              selectedDays: control.dias ? this.parseDaysString(control.dias) : [],
+              selectedDays: control.dias ? this.parseDaysString(control.dias, control.Periodo) : [],
               periodicity: control.Periocidad,
               periodicityId: control.IdPeriocidad,
               category: control.idCategoria,
@@ -1327,19 +1327,31 @@ export class AddActivitiesPpComponent implements OnInit {
 
   /**
    * Convierte un string de días '1-5-10' a objetos Date
+   * @param daysString String con los días separados por guiones (ej: '1-5-10')
+   * @param period Período en formato YYYYMM (ej: '202512' para Diciembre 2025)
    */
-  parseDaysString(daysString: string): Date[] {
+  parseDaysString(daysString: string, period?: string): Date[] {
     if (!daysString) return [];
 
-    const currentDate = new Date();
-    const currentMonth = currentDate.getMonth();
-    const currentYear = currentDate.getFullYear();
+    let year: number;
+    let month: number;
+
+    if (period && period.length === 6) {
+      // Parsear período en formato YYYYMM
+      year = parseInt(period.substring(0, 4), 10);
+      month = parseInt(period.substring(4, 6), 10) - 1; // Restar 1 porque JavaScript usa meses 0-indexed
+    } else {
+      // Fallback a fecha actual si no hay período
+      const currentDate = new Date();
+      year = currentDate.getFullYear();
+      month = currentDate.getMonth();
+    }
 
     return daysString.split('-').map(day => {
       const dayNumber = parseInt(day.trim(), 10);
       if (isNaN(dayNumber)) return null;
 
-      return new Date(currentYear, currentMonth, dayNumber);
+      return new Date(year, month, dayNumber);
     }).filter(date => date !== null) as Date[];
   }
 
