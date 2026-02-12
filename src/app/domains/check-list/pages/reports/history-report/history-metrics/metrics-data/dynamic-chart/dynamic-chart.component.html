@@ -23,6 +23,10 @@
           <button mat-icon-button (click)="exportToPNG()" class="export-button" matTooltip="Exportar como PNG" matTooltipPosition="above">
             <mat-icon style="font-size: 20px; vertical-align: middle; color: white;">download</mat-icon>
           </button>
+          <button mat-icon-button (click)="toggleSortOrder()" class="sort-button" [class.active]="isSortedDescending" 
+                  [matTooltip]="isSortedDescending ? 'Volver al orden original' : 'Ordenar de mayor a menor'" matTooltipPosition="above">
+            <mat-icon style="font-size: 20px; vertical-align: middle; color: white;">{{ isSortedDescending ? 'sort' : 'swap_vert' }}</mat-icon>
+          </button>
           <button mat-icon-button (click)="openDetailsPopup()" class="details-button" matTooltip="Ver datos filtrados" matTooltipPosition="above">
             <mat-icon style="font-size: 20px; vertical-align: middle; color: white;">grid_on</mat-icon>
           </button>

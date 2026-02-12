@@ -52,6 +52,7 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   // Propiedades para la tabla mensual
   monthsInRange: string[] = [];
   monthlyTableData: any[] = [];
+  monthlyTableDataOriginal: any[] = []; // Orden original para restaurar
   yAxisLabel: string = ''; // Etiqueta para el eje vertical en la tabla
 
   @ViewChild('chartCanvas') chartCanvas!: ElementRef<HTMLCanvasElement>;
@@ -91,7 +92,11 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
   // Estados únicos encontrados (usado para barras, leyendas y estadísticas)
   estados: string[] = [];
   valoresFiltro: string[] = [];
+  valoresFiltroOriginal: string[] = []; // Orden original para restaurar
   estadosPorValor: Record<string, Record<string, number>> = {};
+  
+  // Estado de ordenamiento
+  isSortedDescending: boolean = false;
   
   // Constructor para inyectar servicios necesarios
   constructor(
@@ -360,6 +365,55 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     });
     // // console.log('Estadísticas por valor:', this.estadosPorValor);
     
+    // Guardar el orden original para poder restaurarlo
+    this.valoresFiltroOriginal = [...this.valoresFiltro];
+    
+    // Aplicar ordenamiento si estaba activo
+    if (this.isSortedDescending) {
+      this.applySortDescending();
+    }
+  }
+
+  /**
+   * Alterna el ordenamiento entre mayor a menor y orden original
+   */
+  toggleSortOrder(): void {
+    this.isSortedDescending = !this.isSortedDescending;
+    
+    if (this.isSortedDescending) {
+      this.applySortDescending();
+    } else {
+      // Restaurar orden original del gráfico
+      this.valoresFiltro = [...this.valoresFiltroOriginal];
+      // Restaurar orden original de la tabla
+      this.monthlyTableData = [...this.monthlyTableDataOriginal];
+    }
+    
+    // Actualizar el gráfico con el nuevo orden
+    this.initChart();
+  }
+
+  /**
+   * Aplica ordenamiento descendente por total de valores
+   */
+  private applySortDescending(): void {
+    // Calcular el total para cada valor del filtro (gráfico)
+    const totalesPorValor = this.valoresFiltro.map(valor => {
+      let total = 0;
+      this.estados.forEach(estado => {
+        total += this.estadosPorValor[valor]?.[estado] || 0;
+      });
+      return { valor, total };
+    });
+    
+    // Ordenar de mayor a menor
+    totalesPorValor.sort((a, b) => b.total - a.total);
+    
+    // Actualizar el array de valores filtro con el nuevo orden
+    this.valoresFiltro = totalesPorValor.map(item => item.valor);
+    
+    // También ordenar la tabla mensual
+    this.applySortDescendingTable();
   }
 
   /**
@@ -1102,7 +1156,30 @@ export class DynamicChartComponent implements OnChanges, AfterViewInit, OnDestro
     // Agregar la fila de totalizador a la tabla
     this.monthlyTableData.push(totalsRow);
     
+    // Guardar el orden original de la tabla para poder restaurarlo
+    this.monthlyTableDataOriginal = [...this.monthlyTableData];
+    
+    // Aplicar ordenamiento si estaba activo
+    if (this.isSortedDescending) {
+      this.applySortDescendingTable();
+    }
+    
     // // console.log('Generated monthly table with totals:', this.monthlyTableData);
+  }
+  
+  /**
+   * Aplica ordenamiento descendente solo a la tabla mensual
+   */
+  private applySortDescendingTable(): void {
+    // Separar la fila de totales del resto
+    const totalsRow = this.monthlyTableData.find(row => row.isTotal);
+    const dataRows = this.monthlyTableData.filter(row => !row.isTotal);
+    
+    // Ordenar filas de datos por el valor de 'average' de mayor a menor
+    dataRows.sort((a, b) => (b.average || 0) - (a.average || 0));
+    
+    // Reconstruir la tabla con la fila de totales al final
+    this.monthlyTableData = totalsRow ? [...dataRows, totalsRow] : dataRows;
   }
 
   /**

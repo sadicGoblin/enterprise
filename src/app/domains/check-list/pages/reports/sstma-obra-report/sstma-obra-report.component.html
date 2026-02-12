@@ -6,9 +6,63 @@
 
     <div class="map-card-header">
       <h2 class="title">Reporte SSTMA Obra</h2>
-      <button mat-icon-button (click)="loadReports()" matTooltip="Refrescar">
-        <mat-icon>refresh</mat-icon>
-      </button>
+      <div class="header-actions">
+        <span class="record-count" *ngIf="dataSource.filteredData.length > 0">
+          {{ dataSource.filteredData.length }} registro(s)
+        </span>
+        <button 
+          mat-icon-button 
+          (click)="exportToExcel()" 
+          matTooltip="Exportar a Excel"
+          [disabled]="dataSource.filteredData.length === 0"
+          class="export-btn">
+          <mat-icon>download</mat-icon>
+        </button>
+        <button mat-icon-button (click)="loadReports()" matTooltip="Refrescar">
+          <mat-icon>refresh</mat-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="filters-container" *ngIf="!hasError && dataSource.data.length > 0">
+      <div class="filters-row">
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Obra</mat-label>
+          <mat-select [(ngModel)]="filterObra" (selectionChange)="applyFilters()">
+            <mat-option value="">Todas</mat-option>
+            <mat-option *ngFor="let obra of obrasUnicas" [value]="obra">{{ obra }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Empresa</mat-label>
+          <mat-select [(ngModel)]="filterEmpresa" (selectionChange)="applyFilters()">
+            <mat-option value="">Todas</mat-option>
+            <mat-option *ngFor="let empresa of empresasUnicas" [value]="empresa">{{ empresa }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Ámbito</mat-label>
+          <mat-select [(ngModel)]="filterAmbito" (selectionChange)="applyFilters()">
+            <mat-option value="">Todos</mat-option>
+            <mat-option *ngFor="let ambito of ambitosUnicos" [value]="ambito">{{ ambito }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Riesgo</mat-label>
+          <mat-select [(ngModel)]="filterRiesgo" (selectionChange)="applyFilters()">
+            <mat-option value="">Todos</mat-option>
+            <mat-option *ngFor="let riesgo of riesgosUnicos" [value]="riesgo">{{ riesgo }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+
+        <button mat-stroked-button color="warn" (click)="clearFilters()" *ngIf="hasActiveFilters()" class="clear-filters-btn">
+          <mat-icon>clear</mat-icon> Limpiar
+        </button>
+      </div>
     </div>
 
     <!-- Error state -->
@@ -22,41 +76,41 @@
 
     <!-- Table -->
     <div class="table-container" *ngIf="!hasError">
-      <table mat-table [dataSource]="dataSource" class="reports-table">
+      <table mat-table [dataSource]="dataSource" matSort class="reports-table">
 
         <!-- ID Column -->
         <ng-container matColumnDef="id">
-          <th mat-header-cell *matHeaderCellDef>ID</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>ID</th>
           <td mat-cell *matCellDef="let element">{{ element.id }}</td>
         </ng-container>
 
         <!-- Obra Column -->
         <ng-container matColumnDef="obra">
-          <th mat-header-cell *matHeaderCellDef>Obra</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Obra</th>
           <td mat-cell *matCellDef="let element">{{ element.reportData?.obra_text || '-' }}</td>
         </ng-container>
 
         <!-- Empresa Column -->
         <ng-container matColumnDef="empresa">
-          <th mat-header-cell *matHeaderCellDef>Empresa</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Empresa</th>
           <td mat-cell *matCellDef="let element">{{ element.reportData?.empresa_text || '-' }}</td>
         </ng-container>
 
         <!-- Ámbito Column -->
         <ng-container matColumnDef="ambito">
-          <th mat-header-cell *matHeaderCellDef>Ámbito</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Ámbito</th>
           <td mat-cell *matCellDef="let element">{{ element.reportData?.ambito_text || '-' }}</td>
         </ng-container>
 
         <!-- Riesgo Column -->
         <ng-container matColumnDef="riesgo">
-          <th mat-header-cell *matHeaderCellDef>Riesgo</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Riesgo</th>
           <td mat-cell *matCellDef="let element">{{ element.reportData?.riesgo_text || '-' }}</td>
         </ng-container>
 
         <!-- Fecha Column -->
         <ng-container matColumnDef="fecha">
-          <th mat-header-cell *matHeaderCellDef>Fecha</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha</th>
           <td mat-cell *matCellDef="let element">{{ formatDate(element.reportData?.fecha_reporte) }}</td>
         </ng-container>
 
@@ -83,11 +137,19 @@
           <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
             <div class="no-data-message">
               <mat-icon>info</mat-icon>
-              <span>No hay reportes disponibles</span>
+              <span>{{ hasActiveFilters() ? 'No hay resultados con los filtros aplicados' : 'No hay reportes disponibles' }}</span>
             </div>
           </td>
         </tr>
       </table>
+
+      <!-- Paginador -->
+      <mat-paginator 
+        [pageSizeOptions]="[10, 25, 50, 100]" 
+        [pageSize]="25"
+        showFirstLastButtons
+        aria-label="Seleccionar página">
+      </mat-paginator>
     </div>
   </mat-card>
 </div>
