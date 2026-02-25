@@ -14,7 +14,15 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatTabsModule } from '@angular/material/tabs';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { Router } from '@angular/router';
+import { 
+  TIPO_ACCIDENTE_OPTIONS, 
+  CALIFICACION_PS_OPTIONS, 
+  DIA_SEMANA_OPTIONS,
+  ESTADO_ACCIDENTE_OPTIONS 
+} from './models/accident.model';
 
 @Component({
   selector: 'app-accidents',
@@ -34,76 +42,47 @@ import { Router } from '@angular/router';
     MatCheckboxModule,
     MatRadioModule,
     MatDividerModule,
-    MatSnackBarModule
+    MatSnackBarModule,
+    MatTabsModule,
+    MatTooltipModule
   ],
   templateUrl: './accidents.component.html',
   styleUrl: './accidents.component.scss'
 })
 export class AccidentsComponent implements OnInit {
-  // Loading state
   isLoading = false;
-  
-  // Form
   accidentForm!: FormGroup;
+  currentStep = 0;
 
-  // Dropdown options
-  projectOptions = [
-    'Proyecto A',
-    'Proyecto B',
-    'Proyecto C'
+  // Opciones basadas en el Excel
+  tipoAccidenteOptions = TIPO_ACCIDENTE_OPTIONS;
+  calificacionPSOptions = CALIFICACION_PS_OPTIONS;
+  diaSemanaOptions = DIA_SEMANA_OPTIONS;
+  estadoOptions = ESTADO_ACCIDENTE_OPTIONS;
+
+  // Opciones de obras (mock - se cargarían de API)
+  obraOptions = [
+    { id: 1, nombre: 'CD PROCENTRO III' },
+    { id: 2, nombre: 'CC Linares' },
+    { id: 3, nombre: 'Outlet La Calera' },
+    { id: 4, nombre: 'TEGA' },
+    { id: 5, nombre: 'NOVOLUCERO' }
   ];
 
-  areaOptions = [
-    'Producción',
-    'Mantenimiento',
-    'Administración',
-    'Logística',
-    'Seguridad'
+  // Opciones de empresas (mock - se cargarían de API)
+  empresaOptions = [
+    { id: 1, nombre: 'INARCO' },
+    { id: 2, nombre: 'SC B&J' },
+    { id: 3, nombre: 'SC AR Montajes' },
+    { id: 4, nombre: 'SC M.Acuña' },
+    { id: 5, nombre: 'SC ELYON' }
   ];
 
-  accidentTypeOptions = [
-    'Leve',
-    'Grave',
-    'Fatal',
-    'Incapacitante',
-    'Sin lesión'
-  ];
-
-  bodyPartOptions = [
-    'Cabeza',
-    'Ojos',
-    'Manos',
-    'Brazos',
-    'Piernas',
-    'Pies',
-    'Espalda',
-    'Tórax',
-    'Abdomen',
-    'Múltiples'
-  ];
-
-  accidentCauseOptions = [
-    'Acto inseguro',
-    'Condición insegura',
-    'Falta de EPP',
-    'Falta de capacitación',
-    'Falla de equipo',
-    'Factores ambientales',
-    'Otro'
-  ];
-
-  severityOptions = [
-    'Baja',
-    'Media',
-    'Alta',
-    'Crítica'
-  ];
-
-  statusOptions = [
-    'Reportado',
-    'En investigación',
-    'Cerrado',
-    'Pendiente'
+  // Opciones de cargos
+  cargoOptions = [
+    'Hojalatero', 'Maestro Montajista', 'Rigger', 'Carpintero', 
+    'Pañolero', 'Jornal', 'Maestro Moldajero', 'Enfierrador',
+    'Operador', 'Soldador', 'Electricista', 'Gasfiter'
   ];
 
   constructor(
@@ -116,162 +95,141 @@ export class AccidentsComponent implements OnInit {
     this.initializeForm();
   }
 
-  /**
-   * Initialize the accident form with all fields
-   */
   initializeForm(): void {
     this.accidentForm = this.fb.group({
-      // Basic Information
-      accidentNumber: ['', Validators.required],
-      reportDate: [new Date(), Validators.required],
-      accidentDate: ['', Validators.required],
-      accidentTime: ['', Validators.required],
+      // ========== DATOS PRINCIPALES ==========
+      obra: ['', Validators.required],
+      numAccidente: [1, [Validators.required, Validators.min(1)]],
+      numEnfermedadProfesional: [null],
+      diasPerdidosEstimados: [null, Validators.min(0)],
+      fechaAccidente: ['', Validators.required],
+      horaAccidente: ['', Validators.required],
+      fechaControl: [''],
+      diasPerdidosFinal: [null, Validators.min(0)],
+      tipoAccidente: ['Trabajo', Validators.required],
+      empresa: ['', Validators.required],
+      descripcion: ['', [Validators.required, Validators.minLength(10)]],
       
-      // Location Information
-      project: ['', Validators.required],
-      area: ['', Validators.required],
-      specificLocation: ['', Validators.required],
+      // ========== DATOS DEL TRABAJADOR ==========
+      trabajadorRut: ['', Validators.required],
+      trabajadorNombre: ['', Validators.required],
+      trabajadorEdad: ['', [Validators.required, Validators.min(18), Validators.max(80)]],
+      trabajadorHorario: [''],
+      trabajadorDia: ['', Validators.required],
+      trabajadorCargo: ['', Validators.required],
       
-      // Person Information
-      workerName: ['', Validators.required],
-      workerRut: ['', Validators.required],
-      workerPosition: ['', Validators.required],
-      workerCompany: ['', Validators.required],
-      workerAge: ['', [Validators.required, Validators.min(18), Validators.max(100)]],
-      workerExperience: ['', Validators.required],
+      // ========== LÍNEA DE MANDO ==========
+      supervisor: ['', Validators.required],
+      pTerreno: [''],
+      apr: [''],
+      ado: [''],
       
-      // Accident Details
-      accidentType: ['', Validators.required],
-      bodyPart: ['', Validators.required],
-      severity: ['', Validators.required],
-      accidentDescription: ['', [Validators.required, Validators.minLength(20)]],
+      // ========== ANÁLISIS / TIPOLOGÍA ==========
+      calificacionPS: ['', Validators.required],
+      fuente: [''],
+      accion: [''],
+      condicion: [''],
+      maquina: [''],
+      equipo: [''],
       
-      // Causes and Analysis
-      immediateCause: ['', Validators.required],
-      rootCause: ['', Validators.required],
-      contributingFactors: [''],
+      // ========== GESTIÓN DEL CAMBIO ==========
+      causaRaiz: [''],
+      ctrlEliminacion: [false],
+      ctrlSustitucion: [false],
+      ctrlIngenieria: [false],
+      ctrlAdministracion: [false],
+      ctrlEPP: [false],
+      observaciones: [''],
       
-      // Witnesses
-      hasWitnesses: [false],
-      witnessNames: [''],
-      witnessStatements: [''],
-      
-      // Medical Attention
-      medicalAttentionRequired: [false],
-      medicalCenter: [''],
-      diagnosis: [''],
-      daysOff: [0, [Validators.min(0)]],
-      medicalLeaveStartDate: [''],
-      medicalLeaveEndDate: [''],
-      
-      // Corrective Actions
-      immediateActions: ['', Validators.required],
-      correctiveActions: ['', Validators.required],
-      preventiveActions: [''],
-      responsiblePerson: ['', Validators.required],
-      actionDeadline: [''],
-      
-      // Investigation
-      investigatedBy: ['', Validators.required],
-      investigationDate: [''],
-      status: ['Reportado', Validators.required],
-      
-      // Additional Information
-      equipmentInvolved: [''],
-      weatherConditions: [''],
-      lightingConditions: [''],
-      wasUsingPPE: [false],
-      ppeDetails: [''],
-      
-      // Photos and Documents
-      hasPhotos: [false],
-      hasDocuments: [false],
-      observations: ['']
+      // ========== METADATOS ==========
+      estado: ['Reportado', Validators.required]
     });
   }
 
-  /**
-   * Handle form submission
-   */
   onSubmit(): void {
     if (this.accidentForm.valid) {
-      console.log('Form Data:', this.accidentForm.value);
-      this.showMessage('Formulario válido. Datos listos para enviar.');
+      this.isLoading = true;
+      
+      // Simular guardado
+      setTimeout(() => {
+        this.isLoading = false;
+        console.log('Form Data:', this.accidentForm.value);
+        this.showMessage('Accidente registrado correctamente', 'success');
+        this.router.navigate(['/check-list/accidents/list']);
+      }, 1000);
     } else {
-      this.showMessage('Por favor complete todos los campos requeridos.');
+      this.showMessage('Complete todos los campos requeridos', 'error');
       this.markFormGroupTouched(this.accidentForm);
     }
   }
 
-  /**
-   * Reset the form
-   */
   onReset(): void {
     this.accidentForm.reset({
-      reportDate: new Date(),
-      status: 'Reportado',
-      hasWitnesses: false,
-      medicalAttentionRequired: false,
-      daysOff: 0,
-      wasUsingPPE: false,
-      hasPhotos: false,
-      hasDocuments: false
+      numAccidente: 1,
+      tipoAccidente: 'Trabajo',
+      estado: 'Reportado',
+      ctrlEliminacion: false,
+      ctrlSustitucion: false,
+      ctrlIngenieria: false,
+      ctrlAdministracion: false,
+      ctrlEPP: false
     });
-    this.showMessage('Formulario reiniciado.');
+    this.currentStep = 0;
+    this.showMessage('Formulario reiniciado', 'info');
   }
 
-  /**
-   * Mark all fields as touched to show validation errors
-   */
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
-      const control = formGroup.get(key);
-      control?.markAsTouched();
+      formGroup.get(key)?.markAsTouched();
     });
   }
 
-  /**
-   * Show a snackbar message
-   */
-  private showMessage(message: string): void {
+  private showMessage(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
     this.snackBar.open(message, 'Cerrar', {
       duration: 3000,
       horizontalPosition: 'center',
-      verticalPosition: 'bottom'
+      verticalPosition: 'bottom',
+      panelClass: type === 'error' ? 'snack-error' : type === 'success' ? 'snack-success' : ''
     });
   }
 
-  /**
-   * Get error message for a field
-   */
   getErrorMessage(fieldName: string): string {
     const control = this.accidentForm.get(fieldName);
-    if (control?.hasError('required')) {
-      return 'Este campo es requerido';
-    }
-    if (control?.hasError('minlength')) {
-      return `Mínimo ${control.errors?.['minlength'].requiredLength} caracteres`;
-    }
-    if (control?.hasError('min')) {
-      return `Valor mínimo: ${control.errors?.['min'].min}`;
-    }
-    if (control?.hasError('max')) {
-      return `Valor máximo: ${control.errors?.['max'].max}`;
-    }
+    if (control?.hasError('required')) return 'Campo requerido';
+    if (control?.hasError('minlength')) return `Mínimo ${control.errors?.['minlength'].requiredLength} caracteres`;
+    if (control?.hasError('min')) return `Valor mínimo: ${control.errors?.['min'].min}`;
+    if (control?.hasError('max')) return `Valor máximo: ${control.errors?.['max'].max}`;
     return '';
   }
 
-  /**
-   * Navigate to accidents list
-   */
   goToList(): void {
     this.router.navigate(['/check-list/accidents/list']);
   }
 
-  /**
-   * Navigate to statistics
-   */
   goToStatistics(): void {
     this.router.navigate(['/check-list/accidents/statistics']);
+  }
+
+  nextStep(): void {
+    if (this.currentStep < 4) this.currentStep++;
+  }
+
+  prevStep(): void {
+    if (this.currentStep > 0) this.currentStep--;
+  }
+
+  isStepValid(step: number): boolean {
+    const fieldsPerStep: Record<number, string[]> = {
+      0: ['obra', 'fechaAccidente', 'tipoAccidente', 'empresa', 'descripcion'],
+      1: ['trabajadorRut', 'trabajadorNombre', 'trabajadorEdad', 'trabajadorDia', 'trabajadorCargo'],
+      2: ['supervisor'],
+      3: ['calificacionPS'],
+      4: []
+    };
+    
+    return fieldsPerStep[step]?.every(field => {
+      const control = this.accidentForm.get(field);
+      return control?.valid;
+    }) ?? true;
   }
 }

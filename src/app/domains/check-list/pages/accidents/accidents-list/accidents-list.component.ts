@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatCardModule } from '@angular/material/card';
-import { MatTableModule } from '@angular/material/table';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
@@ -10,23 +10,17 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatSort, MatSortModule } from '@angular/material/sort';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { Router } from '@angular/router';
-
-interface Accident {
-  id: string;
-  accidentNumber: string;
-  accidentDate: Date;
-  workerName: string;
-  workerCompany: string;
-  accidentType: string;
-  severity: string;
-  bodyPart: string;
-  status: string;
-  medicalLeaveStartDate: Date | null;
-  medicalLeaveEndDate: Date | null;
-  daysRemaining: number | null;
-  isExpired: boolean;
-}
+import { 
+  AccidentRecord, 
+  MOCK_ACCIDENTS, 
+  MOCK_ESTADISTICAS,
+  CalificacionPotencialSeveridad,
+  EstadoAccidente
+} from '../models/accident.model';
+import { ExportService, ExportColumn } from '../../../../../shared/services/export.service';
 
 @Component({
   selector: 'app-accidents-list',
@@ -42,326 +36,188 @@ interface Accident {
     MatTooltipModule,
     MatFormFieldModule,
     MatInputModule,
-    MatSelectModule
+    MatSelectModule,
+    MatSortModule,
+    MatPaginatorModule
   ],
   templateUrl: './accidents-list.component.html',
   styleUrl: './accidents-list.component.scss'
 })
-export class AccidentsListComponent implements OnInit {
-  // Table columns
+export class AccidentsListComponent implements OnInit, AfterViewInit {
+  @ViewChild(MatSort) sort!: MatSort;
+  @ViewChild(MatPaginator) paginator!: MatPaginator;
+
   displayedColumns: string[] = [
-    'accidentNumber',
-    'accidentDate',
-    'workerName',
-    'workerCompany',
-    'accidentType',
-    'severity',
-    'bodyPart',
-    'medicalLeave',
-    'status',
+    'obra',
+    'fechaAccidente',
+    'trabajador',
+    'empresa',
+    'tipoAccidente',
+    'calificacionPS',
+    'diasPerdidos',
+    'estado',
     'actions'
   ];
 
-  // Data source
-  accidents: Accident[] = [];
-  filteredAccidents: Accident[] = [];
+  dataSource = new MatTableDataSource<AccidentRecord>([]);
+  accidents: AccidentRecord[] = [];
+  estadisticas = MOCK_ESTADISTICAS;
 
-  // Filters
-  filterStatus: string = 'all';
-  filterSeverity: string = 'all';
+  // Filtros
+  filterEstado: string = 'all';
+  filterGravedad: string = 'all';
+  filterObra: string = 'all';
   searchText: string = '';
 
-  constructor(private router: Router) {}
+  // Opciones únicas para filtros
+  obrasUnicas: string[] = [];
+
+  constructor(
+    private router: Router,
+    private exportService: ExportService
+  ) {}
 
   ngOnInit(): void {
-    this.loadMockData();
-    this.applyFilters();
+    this.loadData();
   }
 
-  /**
-   * Load mock accident data
-   */
-  loadMockData(): void {
-    const today = new Date();
-    
-    this.accidents = [
-      {
-        id: '1',
-        accidentNumber: 'ACC-2024-001',
-        accidentDate: new Date(2024, 9, 15),
-        workerName: 'Juan Pérez González',
-        workerCompany: 'Constructora ABC',
-        accidentType: 'Leve',
-        severity: 'Baja',
-        bodyPart: 'Mano derecha',
-        status: 'Cerrado',
-        medicalLeaveStartDate: new Date(2024, 9, 16),
-        medicalLeaveEndDate: new Date(2024, 9, 25),
-        daysRemaining: null,
-        isExpired: true
-      },
-      {
-        id: '2',
-        accidentNumber: 'ACC-2024-002',
-        accidentDate: new Date(2024, 10, 1),
-        workerName: 'María Silva Rojas',
-        workerCompany: 'Minera XYZ',
-        accidentType: 'Grave',
-        severity: 'Alta',
-        bodyPart: 'Pierna izquierda',
-        status: 'En investigación',
-        medicalLeaveStartDate: new Date(2024, 10, 2),
-        medicalLeaveEndDate: new Date(2024, 11, 15),
-        daysRemaining: this.calculateDaysRemaining(new Date(2024, 11, 15)),
-        isExpired: false
-      },
-      {
-        id: '3',
-        accidentNumber: 'ACC-2024-003',
-        accidentDate: new Date(2024, 10, 10),
-        workerName: 'Carlos Muñoz Torres',
-        workerCompany: 'Constructora ABC',
-        accidentType: 'Incapacitante',
-        severity: 'Crítica',
-        bodyPart: 'Espalda',
-        status: 'En investigación',
-        medicalLeaveStartDate: new Date(2024, 10, 11),
-        medicalLeaveEndDate: new Date(2024, 11, 30),
-        daysRemaining: this.calculateDaysRemaining(new Date(2024, 11, 30)),
-        isExpired: false
-      },
-      {
-        id: '4',
-        accidentNumber: 'ACC-2024-004',
-        accidentDate: new Date(2024, 10, 20),
-        workerName: 'Ana Martínez López',
-        workerCompany: 'Servicios Industriales',
-        accidentType: 'Leve',
-        severity: 'Media',
-        bodyPart: 'Brazo derecho',
-        status: 'Reportado',
-        medicalLeaveStartDate: new Date(2024, 10, 21),
-        medicalLeaveEndDate: new Date(2024, 11, 5),
-        daysRemaining: this.calculateDaysRemaining(new Date(2024, 11, 5)),
-        isExpired: false
-      },
-      {
-        id: '5',
-        accidentNumber: 'ACC-2024-005',
-        accidentDate: new Date(2024, 10, 25),
-        workerName: 'Pedro Ramírez Castro',
-        workerCompany: 'Minera XYZ',
-        accidentType: 'Sin lesión',
-        severity: 'Baja',
-        bodyPart: 'N/A',
-        status: 'Cerrado',
-        medicalLeaveStartDate: null,
-        medicalLeaveEndDate: null,
-        daysRemaining: null,
-        isExpired: false
-      },
-      {
-        id: '6',
-        accidentNumber: 'ACC-2024-006',
-        accidentDate: new Date(2024, 10, 28),
-        workerName: 'Luis Fernández Díaz',
-        workerCompany: 'Constructora ABC',
-        accidentType: 'Grave',
-        severity: 'Alta',
-        bodyPart: 'Cabeza',
-        status: 'En investigación',
-        medicalLeaveStartDate: new Date(2024, 10, 29),
-        medicalLeaveEndDate: new Date(2024, 11, 20),
-        daysRemaining: this.calculateDaysRemaining(new Date(2024, 11, 20)),
-        isExpired: false
-      },
-      {
-        id: '7',
-        accidentNumber: 'ACC-2024-007',
-        accidentDate: new Date(2024, 11, 1),
-        workerName: 'Carmen Vega Soto',
-        workerCompany: 'Servicios Industriales',
-        accidentType: 'Leve',
-        severity: 'Baja',
-        bodyPart: 'Pie izquierdo',
-        status: 'Reportado',
-        medicalLeaveStartDate: new Date(2024, 11, 2),
-        medicalLeaveEndDate: new Date(2024, 11, 10),
-        daysRemaining: this.calculateDaysRemaining(new Date(2024, 11, 10)),
-        isExpired: false
-      }
-    ];
+  ngAfterViewInit(): void {
+    this.dataSource.sort = this.sort;
+    this.dataSource.paginator = this.paginator;
+    this.setupSorting();
   }
 
-  /**
-   * Calculate days remaining for medical leave
-   */
-  calculateDaysRemaining(endDate: Date): number {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    endDate.setHours(0, 0, 0, 0);
-    
-    const diffTime = endDate.getTime() - today.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    return diffDays;
+  loadData(): void {
+    this.accidents = MOCK_ACCIDENTS;
+    this.dataSource.data = this.accidents;
+    this.obrasUnicas = [...new Set(this.accidents.map(a => a.obra))];
+    this.setupFilter();
   }
 
-  /**
-   * Apply filters to the accidents list
-   */
-  applyFilters(): void {
-    this.filteredAccidents = this.accidents.filter(accident => {
-      // Status filter
-      if (this.filterStatus !== 'all' && accident.status !== this.filterStatus) {
-        return false;
+  setupSorting(): void {
+    this.dataSource.sortingDataAccessor = (item: AccidentRecord, property: string) => {
+      switch (property) {
+        case 'fechaAccidente': return new Date(item.fechaAccidente).getTime();
+        case 'trabajador': return item.trabajador.nombre.toLowerCase();
+        case 'diasPerdidos': return item.diasPerdidosFinal || item.diasPerdidosEstimados || 0;
+        default: return (item as any)[property];
       }
+    };
+  }
 
-      // Severity filter
-      if (this.filterSeverity !== 'all' && accident.severity !== this.filterSeverity) {
-        return false;
-      }
-
-      // Search text filter
-      if (this.searchText) {
-        const searchLower = this.searchText.toLowerCase();
+  setupFilter(): void {
+    this.dataSource.filterPredicate = (data: AccidentRecord, filter: string) => {
+      const filters = JSON.parse(filter);
+      
+      if (filters.estado !== 'all' && data.estado !== filters.estado) return false;
+      if (filters.gravedad !== 'all' && data.analisis.calificacionPS !== filters.gravedad) return false;
+      if (filters.obra !== 'all' && data.obra !== filters.obra) return false;
+      
+      if (filters.search) {
+        const searchLower = filters.search.toLowerCase();
         return (
-          accident.accidentNumber.toLowerCase().includes(searchLower) ||
-          accident.workerName.toLowerCase().includes(searchLower) ||
-          accident.workerCompany.toLowerCase().includes(searchLower)
+          data.obra.toLowerCase().includes(searchLower) ||
+          data.trabajador.nombre.toLowerCase().includes(searchLower) ||
+          data.empresa.toLowerCase().includes(searchLower) ||
+          data.descripcion.toLowerCase().includes(searchLower)
         );
       }
-
       return true;
+    };
+  }
+
+  applyFilters(): void {
+    const filterValue = JSON.stringify({
+      estado: this.filterEstado,
+      gravedad: this.filterGravedad,
+      obra: this.filterObra,
+      search: this.searchText
     });
-  }
-
-  /**
-   * Get severity color
-   */
-  getSeverityColor(severity: string): string {
-    switch (severity) {
-      case 'Baja': return 'primary';
-      case 'Media': return 'accent';
-      case 'Alta': return 'warn';
-      case 'Crítica': return 'warn';
-      default: return 'primary';
+    this.dataSource.filter = filterValue;
+    
+    if (this.dataSource.paginator) {
+      this.dataSource.paginator.firstPage();
     }
   }
 
-  /**
-   * Get status color
-   */
-  getStatusColor(status: string): string {
-    switch (status) {
-      case 'Reportado': return 'accent';
-      case 'En investigación': return 'warn';
-      case 'Cerrado': return 'primary';
-      case 'Pendiente': return 'warn';
-      default: return 'primary';
-    }
+  getGravedadClass(gravedad: CalificacionPotencialSeveridad): string {
+    const classes: Record<string, string> = {
+      'Leve': 'severity-leve',
+      'Menor': 'severity-menor',
+      'Importante': 'severity-importante',
+      'Grave': 'severity-grave',
+      'Fatal': 'severity-fatal'
+    };
+    return classes[gravedad] || '';
   }
 
-  /**
-   * Get medical leave status text
-   */
-  getMedicalLeaveStatus(accident: Accident): string {
-    if (!accident.medicalLeaveStartDate || !accident.medicalLeaveEndDate) {
-      return 'Sin licencia';
-    }
-
-    if (accident.daysRemaining === null || accident.daysRemaining < 0) {
-      return 'Vencida';
-    }
-
-    if (accident.daysRemaining === 0) {
-      return 'Vence hoy';
-    }
-
-    return `${accident.daysRemaining} días restantes`;
+  getEstadoClass(estado: EstadoAccidente): string {
+    const classes: Record<string, string> = {
+      'Reportado': 'estado-reportado',
+      'En Investigación': 'estado-investigacion',
+      'Cerrado': 'estado-cerrado',
+      'Pendiente': 'estado-pendiente'
+    };
+    return classes[estado] || '';
   }
 
-  /**
-   * Get medical leave status color
-   */
-  getMedicalLeaveColor(accident: Accident): string {
-    if (!accident.medicalLeaveStartDate || !accident.medicalLeaveEndDate) {
-      return '';
-    }
-
-    if (accident.daysRemaining === null || accident.daysRemaining < 0) {
-      return 'expired';
-    }
-
-    if (accident.daysRemaining <= 3) {
-      return 'warning';
-    }
-
-    return 'active';
-  }
-
-  /**
-   * Navigate to accident details
-   */
-  viewDetails(accident: Accident): void {
+  viewDetails(accident: AccidentRecord): void {
     console.log('View details:', accident);
-    // Navigate to details page when implemented
   }
 
-  /**
-   * Navigate to edit accident
-   */
-  editAccident(accident: Accident): void {
+  editAccident(accident: AccidentRecord): void {
     console.log('Edit accident:', accident);
-    // Navigate to edit page when implemented
   }
 
-  /**
-   * Navigate to new accident form
-   */
   createNewAccident(): void {
     this.router.navigate(['/check-list/accidents']);
   }
 
-  /**
-   * Navigate to statistics
-   */
   viewStatistics(): void {
     this.router.navigate(['/check-list/accidents/statistics']);
   }
 
-  /**
-   * Export accidents list
-   */
-  exportList(): void {
-    console.log('Exporting accidents list...');
-    // Implement export functionality
+  exportToExcel(): void {
+    const data = this.dataSource.filteredData;
+    if (data.length === 0) return;
+
+    const columns: ExportColumn[] = [
+      { field: 'obra', header: 'Obra', width: 25 },
+      { field: 'fechaAccidente', header: 'Fecha Accidente', width: 15, format: (v) => this.formatDate(v) },
+      { field: 'trabajador.nombre', header: 'Trabajador', width: 30 },
+      { field: 'trabajador.rut', header: 'RUT', width: 15 },
+      { field: 'empresa', header: 'Empresa', width: 20 },
+      { field: 'tipoAccidente', header: 'Tipo', width: 12 },
+      { field: 'analisis.calificacionPS', header: 'Gravedad', width: 15 },
+      { field: 'diasPerdidosEstimados', header: 'Días Est.', width: 10 },
+      { field: 'diasPerdidosFinal', header: 'Días Final', width: 10 },
+      { field: 'estado', header: 'Estado', width: 15 },
+      { field: 'descripcion', header: 'Descripción', width: 50 }
+    ];
+
+    this.exportService.exportToExcel(data, columns, {
+      fileName: 'Listado_Accidentes',
+      sheetName: 'Accidentes'
+    });
   }
 
-  /**
-   * Get count of accidents with active medical leave
-   */
-  get activeMedicalLeaveCount(): number {
+  private formatDate(date: Date | string): string {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('es-CL');
+  }
+
+  get totalDiasPerdidos(): number {
+    return this.accidents.reduce((sum, a) => sum + (a.diasPerdidosFinal || a.diasPerdidosEstimados || 0), 0);
+  }
+
+  get investigacionCount(): number {
+    return this.accidents.filter(a => a.estado === 'En Investigación').length;
+  }
+
+  get gravedadAltaCount(): number {
     return this.accidents.filter(a => 
-      a.medicalLeaveStartDate && 
-      a.daysRemaining !== null && 
-      a.daysRemaining >= 0
-    ).length;
-  }
-
-  /**
-   * Get count of accidents under investigation
-   */
-  get investigationCount(): number {
-    return this.accidents.filter(a => a.status === 'En investigación').length;
-  }
-
-  /**
-   * Get count of high severity accidents
-   */
-  get highSeverityCount(): number {
-    return this.accidents.filter(a => 
-      a.severity === 'Crítica' || a.severity === 'Alta'
+      a.analisis.calificacionPS === 'Grave' || a.analisis.calificacionPS === 'Fatal'
     ).length;
   }
 }
