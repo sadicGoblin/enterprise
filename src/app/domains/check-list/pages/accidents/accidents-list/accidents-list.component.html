@@ -1,220 +1,201 @@
 <div class="accidents-list-container">
-  <mat-card class="accidents-list-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>list_alt</mat-icon>
-        Listado de Accidentes
-      </mat-card-title>
-      <mat-card-subtitle>Seguimiento y gestión de accidentes laborales</mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content>
-      <!-- Toolbar -->
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <mat-form-field appearance="outline" class="search-field">
-            <mat-label>Buscar</mat-label>
-            <input matInput [(ngModel)]="searchText" (ngModelChange)="applyFilters()" 
-                   placeholder="N° accidente, trabajador, empresa...">
-            <mat-icon matPrefix>search</mat-icon>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Estado</mat-label>
-            <mat-select [(ngModel)]="filterStatus" (ngModelChange)="applyFilters()">
-              <mat-option value="all">Todos</mat-option>
-              <mat-option value="Reportado">Reportado</mat-option>
-              <mat-option value="En investigación">En investigación</mat-option>
-              <mat-option value="Cerrado">Cerrado</mat-option>
-              <mat-option value="Pendiente">Pendiente</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="filter-field">
-            <mat-label>Severidad</mat-label>
-            <mat-select [(ngModel)]="filterSeverity" (ngModelChange)="applyFilters()">
-              <mat-option value="all">Todas</mat-option>
-              <mat-option value="Baja">Baja</mat-option>
-              <mat-option value="Media">Media</mat-option>
-              <mat-option value="Alta">Alta</mat-option>
-              <mat-option value="Crítica">Crítica</mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-
-        <div class="toolbar-right">
-          <button mat-raised-button color="accent" (click)="viewStatistics()">
-            <mat-icon>bar_chart</mat-icon>
-            Estadísticas
-          </button>
-          <button mat-raised-button (click)="exportList()">
-            <mat-icon>download</mat-icon>
-            Exportar
-          </button>
-          <button mat-raised-button color="primary" (click)="createNewAccident()">
-            <mat-icon>add</mat-icon>
-            Nuevo Accidente
-          </button>
-        </div>
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <mat-icon class="header-icon">list_alt</mat-icon>
+      <div class="header-text">
+        <h1>Listado de Accidentes</h1>
+        <p>Gestión y seguimiento de accidentes laborales</p>
       </div>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="viewStatistics()">
+        <mat-icon>analytics</mat-icon>
+        Estadísticas
+      </button>
+      <button mat-stroked-button (click)="exportToExcel()" [disabled]="dataSource.filteredData.length === 0">
+        <mat-icon>download</mat-icon>
+        Exportar Excel
+      </button>
+      <button mat-flat-button color="primary" (click)="createNewAccident()">
+        <mat-icon>add</mat-icon>
+        Nuevo Accidente
+      </button>
+    </div>
+  </div>
 
-      <!-- Summary Cards -->
-      <div class="summary-cards">
-        <div class="summary-card">
-          <div class="summary-icon total">
-            <mat-icon>warning</mat-icon>
-          </div>
-          <div class="summary-content">
-            <div class="summary-value">{{accidents.length}}</div>
-            <div class="summary-label">Total Accidentes</div>
-          </div>
-        </div>
-
-        <div class="summary-card">
-          <div class="summary-icon active">
-            <mat-icon>medical_services</mat-icon>
-          </div>
-          <div class="summary-content">
-            <div class="summary-value">
-              {{activeMedicalLeaveCount}}
-            </div>
-            <div class="summary-label">Con Licencia Activa</div>
-          </div>
-        </div>
-
-        <div class="summary-card">
-          <div class="summary-icon investigation">
-            <mat-icon>search</mat-icon>
-          </div>
-          <div class="summary-content">
-            <div class="summary-value">
-              {{investigationCount}}
-            </div>
-            <div class="summary-label">En Investigación</div>
-          </div>
-        </div>
-
-        <div class="summary-card">
-          <div class="summary-icon critical">
-            <mat-icon>priority_high</mat-icon>
-          </div>
-          <div class="summary-content">
-            <div class="summary-value">
-              {{highSeverityCount}}
-            </div>
-            <div class="summary-label">Alta Severidad</div>
-          </div>
-        </div>
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <div class="summary-card total">
+      <mat-icon>report_problem</mat-icon>
+      <div class="card-content">
+        <span class="value">{{ accidents.length }}</span>
+        <span class="label">Total Accidentes</span>
       </div>
-
-      <!-- Table -->
-      <div class="table-container">
-        <table mat-table [dataSource]="filteredAccidents" class="accidents-table">
-          <!-- Accident Number Column -->
-          <ng-container matColumnDef="accidentNumber">
-            <th mat-header-cell *matHeaderCellDef>N° Accidente</th>
-            <td mat-cell *matCellDef="let accident">
-              <strong>{{accident.accidentNumber}}</strong>
-            </td>
-          </ng-container>
-
-          <!-- Accident Date Column -->
-          <ng-container matColumnDef="accidentDate">
-            <th mat-header-cell *matHeaderCellDef>Fecha</th>
-            <td mat-cell *matCellDef="let accident">
-              {{accident.accidentDate | date:'dd/MM/yyyy'}}
-            </td>
-          </ng-container>
-
-          <!-- Worker Name Column -->
-          <ng-container matColumnDef="workerName">
-            <th mat-header-cell *matHeaderCellDef>Trabajador</th>
-            <td mat-cell *matCellDef="let accident">
-              {{accident.workerName}}
-            </td>
-          </ng-container>
-
-          <!-- Worker Company Column -->
-          <ng-container matColumnDef="workerCompany">
-            <th mat-header-cell *matHeaderCellDef>Empresa</th>
-            <td mat-cell *matCellDef="let accident">
-              {{accident.workerCompany}}
-            </td>
-          </ng-container>
-
-          <!-- Accident Type Column -->
-          <ng-container matColumnDef="accidentType">
-            <th mat-header-cell *matHeaderCellDef>Tipo</th>
-            <td mat-cell *matCellDef="let accident">
-              {{accident.accidentType}}
-            </td>
-          </ng-container>
-
-          <!-- Severity Column -->
-          <ng-container matColumnDef="severity">
-            <th mat-header-cell *matHeaderCellDef>Severidad</th>
-            <td mat-cell *matCellDef="let accident">
-              <mat-chip [color]="getSeverityColor(accident.severity)" selected>
-                {{accident.severity}}
-              </mat-chip>
-            </td>
-          </ng-container>
-
-          <!-- Body Part Column -->
-          <ng-container matColumnDef="bodyPart">
-            <th mat-header-cell *matHeaderCellDef>Parte Afectada</th>
-            <td mat-cell *matCellDef="let accident">
-              {{accident.bodyPart}}
-            </td>
-          </ng-container>
-
-          <!-- Medical Leave Column -->
-          <ng-container matColumnDef="medicalLeave">
-            <th mat-header-cell *matHeaderCellDef>Licencia Médica</th>
-            <td mat-cell *matCellDef="let accident">
-              <div class="medical-leave-status" [ngClass]="getMedicalLeaveColor(accident)">
-                <mat-icon *ngIf="accident.medicalLeaveStartDate">
-                  {{accident.daysRemaining !== null && accident.daysRemaining >= 0 ? 'schedule' : 'event_busy'}}
-                </mat-icon>
-                <span>{{getMedicalLeaveStatus(accident)}}</span>
-              </div>
-            </td>
-          </ng-container>
-
-          <!-- Status Column -->
-          <ng-container matColumnDef="status">
-            <th mat-header-cell *matHeaderCellDef>Estado</th>
-            <td mat-cell *matCellDef="let accident">
-              <mat-chip [color]="getStatusColor(accident.status)" selected>
-                {{accident.status}}
-              </mat-chip>
-            </td>
-          </ng-container>
-
-          <!-- Actions Column -->
-          <ng-container matColumnDef="actions">
-            <th mat-header-cell *matHeaderCellDef>Acciones</th>
-            <td mat-cell *matCellDef="let accident">
-              <button mat-icon-button color="primary" (click)="viewDetails(accident)" 
-                      matTooltip="Ver detalles">
-                <mat-icon>visibility</mat-icon>
-              </button>
-              <button mat-icon-button color="accent" (click)="editAccident(accident)" 
-                      matTooltip="Editar">
-                <mat-icon>edit</mat-icon>
-              </button>
-            </td>
-          </ng-container>
-
-          <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-          <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="accident-row"></tr>
-        </table>
-
-        <div *ngIf="filteredAccidents.length === 0" class="no-data">
-          <mat-icon>info</mat-icon>
-          <p>No se encontraron accidentes con los filtros aplicados</p>
-        </div>
+    </div>
+    <div class="summary-card dias">
+      <mat-icon>event_busy</mat-icon>
+      <div class="card-content">
+        <span class="value">{{ totalDiasPerdidos }}</span>
+        <span class="label">Días Perdidos</span>
       </div>
-    </mat-card-content>
+    </div>
+    <div class="summary-card investigacion">
+      <mat-icon>search</mat-icon>
+      <div class="card-content">
+        <span class="value">{{ investigacionCount }}</span>
+        <span class="label">En Investigación</span>
+      </div>
+    </div>
+    <div class="summary-card grave">
+      <mat-icon>priority_high</mat-icon>
+      <div class="card-content">
+        <span class="value">{{ gravedadAltaCount }}</span>
+        <span class="label">Alta Gravedad</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <mat-card class="filters-card">
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [(ngModel)]="searchText" (ngModelChange)="applyFilters()" 
+               placeholder="Obra, trabajador, empresa...">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Obra</mat-label>
+        <mat-select [(ngModel)]="filterObra" (ngModelChange)="applyFilters()">
+          <mat-option value="all">Todas</mat-option>
+          <mat-option *ngFor="let obra of obrasUnicas" [value]="obra">{{ obra }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Estado</mat-label>
+        <mat-select [(ngModel)]="filterEstado" (ngModelChange)="applyFilters()">
+          <mat-option value="all">Todos</mat-option>
+          <mat-option value="Reportado">Reportado</mat-option>
+          <mat-option value="En Investigación">En Investigación</mat-option>
+          <mat-option value="Cerrado">Cerrado</mat-option>
+          <mat-option value="Pendiente">Pendiente</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Gravedad</mat-label>
+        <mat-select [(ngModel)]="filterGravedad" (ngModelChange)="applyFilters()">
+          <mat-option value="all">Todas</mat-option>
+          <mat-option value="Leve">Leve</mat-option>
+          <mat-option value="Menor">Menor</mat-option>
+          <mat-option value="Importante">Importante</mat-option>
+          <mat-option value="Grave">Grave</mat-option>
+          <mat-option value="Fatal">Fatal</mat-option>
+        </mat-select>
+      </mat-form-field>
+    </div>
+  </mat-card>
+
+  <!-- Table -->
+  <mat-card class="table-card">
+    <div class="table-container">
+      <table mat-table [dataSource]="dataSource" matSort class="accidents-table">
+        
+        <!-- Obra Column -->
+        <ng-container matColumnDef="obra">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Obra</th>
+          <td mat-cell *matCellDef="let row">
+            <strong>{{ row.obra }}</strong>
+          </td>
+        </ng-container>
+
+        <!-- Fecha Column -->
+        <ng-container matColumnDef="fechaAccidente">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Fecha</th>
+          <td mat-cell *matCellDef="let row">
+            {{ row.fechaAccidente | date:'dd/MM/yyyy' }}
+          </td>
+        </ng-container>
+
+        <!-- Trabajador Column -->
+        <ng-container matColumnDef="trabajador">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Trabajador</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="worker-info">
+              <span class="worker-name">{{ row.trabajador.nombre }}</span>
+              <span class="worker-cargo">{{ row.trabajador.cargo }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <!-- Empresa Column -->
+        <ng-container matColumnDef="empresa">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Empresa</th>
+          <td mat-cell *matCellDef="let row">{{ row.empresa }}</td>
+        </ng-container>
+
+        <!-- Tipo Column -->
+        <ng-container matColumnDef="tipoAccidente">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="tipo-badge">{{ row.tipoAccidente }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Gravedad Column -->
+        <ng-container matColumnDef="calificacionPS">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Gravedad</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="severity-badge" [ngClass]="getGravedadClass(row.analisis.calificacionPS)">
+              {{ row.analisis.calificacionPS }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Días Perdidos Column -->
+        <ng-container matColumnDef="diasPerdidos">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Días Perd.</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="dias-value">{{ row.diasPerdidosFinal || row.diasPerdidosEstimados || 0 }}</span>
+          </td>
+        </ng-container>
+
+        <!-- Estado Column -->
+        <ng-container matColumnDef="estado">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="estado-badge" [ngClass]="getEstadoClass(row.estado)">
+              {{ row.estado }}
+            </span>
+          </td>
+        </ng-container>
+
+        <!-- Actions Column -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let row">
+            <button mat-icon-button color="primary" (click)="viewDetails(row)" matTooltip="Ver detalles">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <button mat-icon-button (click)="editAccident(row)" matTooltip="Editar">
+              <mat-icon>edit</mat-icon>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+      </table>
+
+      <div *ngIf="dataSource.filteredData.length === 0" class="no-data">
+        <mat-icon>search_off</mat-icon>
+        <p>No se encontraron accidentes con los filtros aplicados</p>
+      </div>
+    </div>
+
+    <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
   </mat-card>
 </div>

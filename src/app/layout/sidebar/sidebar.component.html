@@ -41,22 +41,29 @@
               ><mat-icon>business</mat-icon>
               <span>Reporte SSTMA Obra</span></mat-list-item
             >
-            <!-- <mat-list-item class="nav-item" [routerLink]="'reports/sstma'"
-              ><mat-icon>check_circle</mat-icon>
-              <span>Inspección SSTMA</span></mat-list-item
+          </div>
+        </mat-expansion-panel>
+
+        <mat-expansion-panel class="submenu-panel" [expanded]="isExpanded">
+          <mat-expansion-panel-header>
+            <mat-panel-title>
+              <mat-icon>report_problem</mat-icon>
+              <span *ngIf="!isCollapsed" class="ml-2">Accidentes</span>
+            </mat-panel-title>
+          </mat-expansion-panel-header>
+          <div class="mat-expansion-panel-body">
+            <mat-list-item class="nav-item" [routerLink]="'accidents/register'"
+              ><mat-icon>add_circle</mat-icon>
+              <span>Ingreso Accidente</span></mat-list-item
             >
-            <mat-list-item class="nav-item" [routerLink]="'reports/incidents'"
-              ><mat-icon>report_problem</mat-icon>
-              <span>Reporte Incidentes</span></mat-list-item
+            <mat-list-item class="nav-item" [routerLink]="'accidents/list'"
+              ><mat-icon>list_alt</mat-icon>
+              <span>Listado</span></mat-list-item
             >
-            <mat-list-item class="nav-item" 
-              ><mat-icon>insert_chart</mat-icon>
-              <span>Consolidado</span></mat-list-item
+            <mat-list-item class="nav-item" [routerLink]="'accidents/statistics'"
+              ><mat-icon>analytics</mat-icon>
+              <span>Estadísticas</span></mat-list-item
             >
-            <mat-list-item class="nav-item" [routerLink]="'reports/tracking'"
-              ><mat-icon>shield</mat-icon>
-              <span>Seg. Inspección SSTMA</span></mat-list-item
-            > -->
           </div>
         </mat-expansion-panel>
 

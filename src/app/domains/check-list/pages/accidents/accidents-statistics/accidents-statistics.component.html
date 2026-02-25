@@ -1,170 +1,142 @@
 <div class="statistics-container">
-  <mat-card class="statistics-card">
-    <mat-card-header>
-      <mat-card-title>
-        <mat-icon>bar_chart</mat-icon>
-        Estadísticas de Accidentes
-      </mat-card-title>
-      <mat-card-subtitle>Análisis y tendencias de accidentes laborales</mat-card-subtitle>
-    </mat-card-header>
-
-    <mat-card-content>
-      <!-- Toolbar -->
-      <div class="toolbar">
-        <div class="toolbar-left">
-          <mat-form-field appearance="outline" class="year-filter">
-            <mat-label>Año</mat-label>
-            <mat-select [(ngModel)]="selectedYear" (ngModelChange)="onYearChange()">
-              <mat-option *ngFor="let year of years" [value]="year">
-                {{year}}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-
-        <div class="toolbar-right">
-          <button mat-raised-button (click)="exportReport()">
-            <mat-icon>download</mat-icon>
-            Exportar Reporte
-          </button>
-          <button mat-raised-button color="primary" (click)="goToList()">
-            <mat-icon>list</mat-icon>
-            Ver Listado
-          </button>
-        </div>
+  <!-- Header -->
+  <div class="page-header">
+    <div class="header-left">
+      <mat-icon class="header-icon">analytics</mat-icon>
+      <div class="header-text">
+        <h1>Estadísticas de Accidentes</h1>
+        <p>Dashboard de análisis y métricas de seguridad</p>
       </div>
+    </div>
+    <div class="header-actions">
+      <mat-form-field appearance="outline" class="year-select">
+        <mat-label>Año</mat-label>
+        <mat-select [(ngModel)]="selectedYear" (ngModelChange)="onYearChange()">
+          <mat-option *ngFor="let year of years" [value]="year">{{ year }}</mat-option>
+        </mat-select>
+      </mat-form-field>
+      <button mat-stroked-button (click)="goToList()">
+        <mat-icon>list</mat-icon>
+        Ver Listado
+      </button>
+      <button mat-flat-button color="primary" (click)="goToForm()">
+        <mat-icon>add</mat-icon>
+        Nuevo Registro
+      </button>
+    </div>
+  </div>
 
-      <!-- Summary Cards -->
-      <div class="summary-cards">
-        <div class="stat-card">
-          <div class="stat-icon total">
-            <mat-icon>warning</mat-icon>
-          </div>
-          <div class="stat-content">
-            <div class="stat-value">{{totalAccidents}}</div>
-            <div class="stat-label">Total Accidentes</div>
-            <div class="stat-trend positive">
-              <mat-icon>trending_down</mat-icon>
-              <span>-12% vs año anterior</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon critical">
-            <mat-icon>priority_high</mat-icon>
-          </div>
-          <div class="stat-content">
-            <div class="stat-value">{{criticalAccidents}}</div>
-            <div class="stat-label">Accidentes Críticos</div>
-            <div class="stat-trend negative">
-              <mat-icon>trending_up</mat-icon>
-              <span>+1 vs mes anterior</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon active">
-            <mat-icon>medical_services</mat-icon>
-          </div>
-          <div class="stat-content">
-            <div class="stat-value">{{activeMedicalLeaves}}</div>
-            <div class="stat-label">Licencias Activas</div>
-            <div class="stat-trend neutral">
-              <mat-icon>remove</mat-icon>
-              <span>Sin cambios</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon recovery">
-            <mat-icon>schedule</mat-icon>
-          </div>
-          <div class="stat-content">
-            <div class="stat-value">{{averageRecoveryDays}}</div>
-            <div class="stat-label">Días Promedio Recuperación</div>
-            <div class="stat-trend positive">
-              <mat-icon>trending_down</mat-icon>
-              <span>-3 días vs promedio</span>
-            </div>
-          </div>
-        </div>
+  <!-- KPI Cards -->
+  <div class="kpi-grid">
+    <div class="kpi-card total">
+      <div class="kpi-header">
+        <mat-icon>report_problem</mat-icon>
+        <span class="kpi-title">Total Accidentes</span>
       </div>
-
-      <!-- Charts Grid -->
-      <div class="charts-grid">
-        <!-- Severity Chart -->
-        <div class="chart-card">
-          <div class="chart-wrapper">
-            <canvas #severityChart></canvas>
-          </div>
-        </div>
-
-        <!-- Type Chart -->
-        <div class="chart-card">
-          <div class="chart-wrapper">
-            <canvas #typeChart></canvas>
-          </div>
-        </div>
-
-        <!-- Monthly Trend Chart -->
-        <div class="chart-card full-width">
-          <div class="chart-wrapper">
-            <canvas #monthlyChart></canvas>
-          </div>
-        </div>
-
-        <!-- Body Part Chart -->
-        <div class="chart-card full-width">
-          <div class="chart-wrapper">
-            <canvas #bodyPartChart></canvas>
-          </div>
-        </div>
+      <div class="kpi-value">{{ stats.numeroAccidentes }}</div>
+      <div class="kpi-detail">
+        <span>INARCO: {{ stats.porOrganismo.inarco }}</span>
+        <span>SC: {{ stats.porOrganismo.sc }}</span>
       </div>
+    </div>
 
-      <!-- Additional Insights -->
-      <div class="insights-section">
-        <h3 class="insights-title">
-          <mat-icon>lightbulb</mat-icon>
-          Insights y Recomendaciones
-        </h3>
-
-        <div class="insights-grid">
-          <div class="insight-card warning">
-            <mat-icon>warning</mat-icon>
-            <div class="insight-content">
-              <h4>Tendencia al Alza</h4>
-              <p>Se observa un incremento de accidentes en el último trimestre. Revisar protocolos de seguridad.</p>
-            </div>
-          </div>
-
-          <div class="insight-card info">
-            <mat-icon>info</mat-icon>
-            <div class="insight-content">
-              <h4>Área Crítica</h4>
-              <p>La mayoría de accidentes ocurren en el área de producción. Considerar capacitación adicional.</p>
-            </div>
-          </div>
-
-          <div class="insight-card success">
-            <mat-icon>check_circle</mat-icon>
-            <div class="insight-content">
-              <h4>Mejora en Recuperación</h4>
-              <p>El tiempo promedio de recuperación ha disminuido gracias a la atención médica oportuna.</p>
-            </div>
-          </div>
-
-          <div class="insight-card tip">
-            <mat-icon>tips_and_updates</mat-icon>
-            <div class="insight-content">
-              <h4>Recomendación</h4>
-              <p>Implementar programa de prevención enfocado en lesiones de manos y extremidades.</p>
-            </div>
-          </div>
-        </div>
+    <div class="kpi-card dias">
+      <div class="kpi-header">
+        <mat-icon>event_busy</mat-icon>
+        <span class="kpi-title">Días Perdidos</span>
       </div>
-    </mat-card-content>
+      <div class="kpi-value">{{ totalDiasPerdidos }}</div>
+      <div class="kpi-detail">
+        <span>STP: {{ stats.porDiasPerdidos.stp }}</span>
+        <span>CTP: {{ stats.porDiasPerdidos.ctp }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card gravedad">
+      <div class="kpi-header">
+        <mat-icon>priority_high</mat-icon>
+        <span class="kpi-title">Alta Gravedad</span>
+      </div>
+      <div class="kpi-value">{{ stats.porGravedad.grave + stats.porGravedad.fatal }}</div>
+      <div class="kpi-detail">
+        <span>Grave: {{ stats.porGravedad.grave }}</span>
+        <span>Fatal: {{ stats.porGravedad.fatal }}</span>
+      </div>
+    </div>
+
+    <div class="kpi-card indices">
+      <div class="kpi-header">
+        <mat-icon>speed</mat-icon>
+        <span class="kpi-title">Índice de Frecuencia</span>
+      </div>
+      <div class="kpi-value">{{ stats.porDiasPerdidos.total }}</div>
+      <div class="kpi-detail">
+        <span>Total días perdidos</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-grid">
+    <mat-card class="chart-card">
+      <div class="chart-container">
+        <canvas #gravedadChart></canvas>
+      </div>
+    </mat-card>
+
+    <mat-card class="chart-card">
+      <div class="chart-container">
+        <canvas #tipoChart></canvas>
+      </div>
+    </mat-card>
+
+    <mat-card class="chart-card">
+      <div class="chart-container">
+        <canvas #organismoChart></canvas>
+      </div>
+    </mat-card>
+
+    <mat-card class="chart-card wide">
+      <div class="chart-container tall">
+        <canvas #tendenciaChart></canvas>
+      </div>
+    </mat-card>
+  </div>
+
+  <!-- Indicators Table -->
+  <mat-card class="indicators-card">
+    <h3><mat-icon>assessment</mat-icon> Indicadores de Seguridad</h3>
+    <div class="indicators-grid">
+      <div class="indicator-item">
+        <span class="indicator-label">Total Accidentes</span>
+        <span class="indicator-value">{{ stats.numeroAccidentes }}</span>
+        <span class="indicator-formula">Período: {{ stats.periodo }}</span>
+      </div>
+      <div class="indicator-item">
+        <span class="indicator-label">Días Perdidos</span>
+        <span class="indicator-value">{{ stats.numeroDiasPerdidos }}</span>
+        <span class="indicator-formula">Días totales de licencia</span>
+      </div>
+      <div class="indicator-item">
+        <span class="indicator-label">INARCO</span>
+        <span class="indicator-value">{{ stats.porOrganismo.inarco }}</span>
+        <span class="indicator-formula">Accidentes personal propio</span>
+      </div>
+      <div class="indicator-item">
+        <span class="indicator-label">STP (Sin Tiempo Perdido)</span>
+        <span class="indicator-value">{{ stats.porDiasPerdidos.stp }}</span>
+        <span class="indicator-formula">Accidentes sin días perdidos</span>
+      </div>
+      <div class="indicator-item">
+        <span class="indicator-label">CTP (Con Tiempo Perdido)</span>
+        <span class="indicator-value">{{ stats.porDiasPerdidos.ctp }}</span>
+        <span class="indicator-formula">Accidentes con días perdidos</span>
+      </div>
+      <div class="indicator-item">
+        <span class="indicator-label">Sub Contratistas</span>
+        <span class="indicator-value">{{ stats.porOrganismo.sc }}</span>
+        <span class="indicator-formula">Accidentes personal SC</span>
+      </div>
+    </div>
   </mat-card>
 </div>
