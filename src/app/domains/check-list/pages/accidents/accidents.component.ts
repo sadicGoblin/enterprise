@@ -100,7 +100,7 @@ export class AccidentsComponent implements OnInit {
       // ========== DATOS PRINCIPALES ==========
       obra: ['', Validators.required],
       numAccidente: [1, [Validators.required, Validators.min(1)]],
-      numEnfermedadProfesional: [null],
+      numEP: [null],
       diasPerdidosEstimados: [null, Validators.min(0)],
       fechaAccidente: ['', Validators.required],
       horaAccidente: ['', Validators.required],

@@ -9,9 +9,10 @@ import { MatTableModule } from '@angular/material/table';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { MOCK_ESTADISTICAS, MOCK_ACCIDENTS } from '../models/accident.model';
 
-Chart.register(...registerables);
+Chart.register(...registerables, ChartDataLabels);
 
 @Component({
   selector: 'app-accidents-statistics',
@@ -113,6 +114,15 @@ export class AccidentsStatisticsComponent implements OnInit, AfterViewInit, OnDe
             callbacks: {
               label: (context: any) => ` ${context.label}: ${context.raw} accidentes`
             }
+          },
+          datalabels: {
+            color: '#ffffff',
+            font: { weight: 'bold', size: 14 },
+            formatter: (value: number) => value > 0 ? value : '',
+            anchor: 'center',
+            align: 'center',
+            textShadowBlur: 4,
+            textShadowColor: 'rgba(0, 0, 0, 0.5)'
           }
         }
       }
@@ -157,6 +167,15 @@ export class AccidentsStatisticsComponent implements OnInit, AfterViewInit, OnDe
             callbacks: {
               label: (context: any) => ` ${context.label}: ${context.raw} accidentes`
             }
+          },
+          datalabels: {
+            color: '#ffffff',
+            font: { weight: 'bold', size: 14 },
+            formatter: (value: number) => value > 0 ? value : '',
+            anchor: 'center',
+            align: 'center',
+            textShadowBlur: 4,
+            textShadowColor: 'rgba(0, 0, 0, 0.5)'
           }
         }
       }
@@ -190,7 +209,8 @@ export class AccidentsStatisticsComponent implements OnInit, AfterViewInit, OnDe
             callbacks: {
               label: (context: any) => ` ${context.raw} accidentes`
             }
-          }
+          },
+          datalabels: { display: false }
         },
         scales: {
           x: { 
@@ -230,7 +250,8 @@ export class AccidentsStatisticsComponent implements OnInit, AfterViewInit, OnDe
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          title: { display: true, text: `Tendencia Mensual ${this.selectedYear}`, font: { size: 14, weight: 'bold' } }
+          title: { display: true, text: `Tendencia Mensual ${this.selectedYear}`, font: { size: 14, weight: 'bold' } },
+          datalabels: { display: false }
         },
         scales: {
           y: { beginAtZero: true, ticks: { stepSize: 1 } },

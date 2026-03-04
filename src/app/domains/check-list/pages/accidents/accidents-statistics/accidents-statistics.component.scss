@@ -24,6 +24,11 @@ $bg-light: #f5f7fa;
   margin-bottom: 24px;
   flex-wrap: wrap;
   gap: 16px;
+  background: linear-gradient(135deg, #ffffff 0%, #f8f9ff 100%);
+  padding: 20px 24px;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba($primary-color, 0.08);
 
   .header-left {
     display: flex;
@@ -31,15 +36,32 @@ $bg-light: #f5f7fa;
     gap: 16px;
 
     .header-icon {
-      font-size: 40px;
-      width: 40px;
-      height: 40px;
-      color: $accent-color;
+      font-size: 32px;
+      width: 52px;
+      height: 52px;
+      color: white;
+      background: linear-gradient(135deg, $accent-color 0%, darken($accent-color, 10%) 100%);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba($accent-color, 0.3);
     }
 
     .header-text {
-      h1 { margin: 0; font-size: 1.5rem; font-weight: 600; color: $text-primary; }
-      p { margin: 4px 0 0; font-size: 0.85rem; color: $text-secondary; }
+      h1 { 
+        margin: 0; 
+        font-size: 1.4rem; 
+        font-weight: 700; 
+        color: $text-primary;
+        letter-spacing: -0.02em;
+      }
+      p { 
+        margin: 4px 0 0; 
+        font-size: 0.85rem; 
+        color: $text-secondary;
+        font-weight: 400;
+      }
     }
   }
 
@@ -59,6 +81,8 @@ $bg-light: #f5f7fa;
         .mat-mdc-text-field-wrapper {
           padding: 0 12px;
           height: 40px;
+          background: white;
+          border-radius: 8px;
         }
         .mat-mdc-form-field-infix {
           padding: 8px 0;
@@ -72,6 +96,28 @@ $bg-light: #f5f7fa;
 
     button {
       height: 40px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: 8px;
+      padding: 8px 16px;
+      transition: all 0.2s ease;
+
+      &[mat-stroked-button] {
+        border: 1.5px solid #e0e0e0;
+
+        &:hover {
+          border-color: $primary-color;
+          background: rgba($primary-color, 0.04);
+          color: $primary-color;
+        }
+      }
+
+      mat-icon {
+        font-size: 18px;
+        width: 18px;
+        height: 18px;
+        margin-right: 6px;
+      }
     }
   }
 }
