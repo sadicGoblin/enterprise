@@ -17,14 +17,14 @@ export const REPORTS_CONFIG: GlobalReportsConfig = {
       principalValue: 'cantidad',
       principalValuePositive: '1',
       unit: 'quantity',
-      summaryValues: ['ambitoInvolucrado', 'empresa'],
+      summaryValues: ['estado', 'empresa'],
       chartColors: [
         { indexItem: '1', color: '#2ecc71' },    // Verde más moderno
         { indexItem: '0', color: '#e74c3c' }, // Rojo más moderno
       ],
-      columnsExport: ['idInspeccionSSTMA', 'fecha', 'areaTrabajo', 'accion', 'trabajoAsociado', 'medidaControl', 'comunicadoA', 'Obra', 'periodo', 'empresa', 'profesionalResponsable','usuario', 'cargo', 'ambitoInvolucrado', 'riesgoAsociado'],
-      columnsTable: ['Obra','fecha', 'empresa', 'periodo', 'usuario', 'cargo', 'areaTrabajo', 'profesionalResponsable'],
-      columnsFilter: ['Obra','usuario', 'cargo', 'areaTrabajo', 'accion', 'riesgoAsociado', 'trabajoAsociado', 'medidaControl', 'periodo', 'empresa', 'profesionalResponsable', 'ambitoInvolucrado', 'fecha'],
+      columnsExport: ['idInspeccionSSTMA', 'fecha', 'areaTrabajo', 'accion', 'trabajoAsociado', 'medidaControl', 'comunicadoA', 'Obra', 'periodo', 'empresa', 'profesionalResponsable','usuario', 'cargo', 'ambitoInvolucrado', 'riesgoAsociado', 'estado'],
+      columnsTable: ['Obra','fecha', 'empresa', 'periodo', 'usuario', 'cargo', 'areaTrabajo', 'profesionalResponsable','estado'],
+      columnsFilter: ['Obra','usuario', 'cargo', 'estado', 'areaTrabajo', 'accion', 'riesgoAsociado', 'trabajoAsociado', 'medidaControl', 'periodo', 'empresa', 'profesionalResponsable', 'ambitoInvolucrado', 'fecha'],
       title: 'Inspeccion STTMA'
     },
     // Additional reports can be added here
