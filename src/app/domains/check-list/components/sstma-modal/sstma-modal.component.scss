@@ -215,6 +215,96 @@ $scale-factor: 0.9;
     }
   }
 
+  // Sección de Cierre de Inspección
+  .closure-section {
+    margin-top: 1.5rem;
+    padding: 0 1rem;
+
+    .closure-card {
+      background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+      border: 2px solid #4caf50;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(76, 175, 80, 0.25);
+
+      .closure-header {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 1rem 1.25rem;
+        background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%);
+        color: white;
+
+        mat-icon {
+          font-size: 1.75rem;
+          width: 1.75rem;
+          height: 1.75rem;
+        }
+
+        h3 {
+          margin: 0;
+          font-size: calc(1.1rem * #{$scale-factor});
+          font-weight: 600;
+          flex: 1;
+        }
+
+        .closure-date {
+          font-size: calc(0.85rem * #{$scale-factor});
+          opacity: 0.9;
+          background: rgba(255, 255, 255, 0.2);
+          padding: 0.25rem 0.75rem;
+          border-radius: 20px;
+        }
+      }
+
+      .closure-content {
+        padding: 1.25rem;
+
+        .closure-description {
+          margin-bottom: 1rem;
+
+          .label {
+            font-weight: 600;
+            color: #2e7d32;
+            font-size: calc(0.9rem * #{$scale-factor});
+            display: block;
+            margin-bottom: 0.5rem;
+          }
+
+          p {
+            margin: 0;
+            color: #333;
+            font-size: calc(0.95rem * #{$scale-factor});
+            line-height: 1.5;
+            background: white;
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+          }
+        }
+
+        .closure-evidence {
+          margin-top: 1rem;
+
+          .label {
+            font-weight: 600;
+            color: #2e7d32;
+            font-size: calc(0.9rem * #{$scale-factor});
+            display: block;
+            margin-bottom: 0.75rem;
+          }
+
+          ::ng-deep app-img-viewer {
+            display: block;
+            background: white;
+            border-radius: 8px;
+            padding: 0.5rem;
+          }
+        }
+      }
+    }
+  }
+
   // Botones de acción
   .modal-actions {
     margin-top: 1.5rem;

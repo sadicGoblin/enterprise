@@ -81,6 +81,33 @@
             [showThumbnails]="false"
           ></app-img-viewer>
         </div>
+
+        <!-- Sección de Cierre de Inspección (solo si existe fechaCierre) -->
+        <div *ngIf="sstmaData.fechaCierre" class="closure-section">
+          <div class="closure-card">
+            <div class="closure-header">
+              <mat-icon>check_circle</mat-icon>
+              <h3>Cierre de Inspección</h3>
+              <span class="closure-date">{{ sstmaData.fechaCierre }}</span>
+            </div>
+            
+            <div class="closure-content">
+              <div class="closure-description">
+                <span class="label">Descripción:</span>
+                <p>{{ sstmaData.datosCierre?.descripcion }}</p>
+              </div>
+              
+              <!-- Evidencia del cierre -->
+              <div *ngIf="sstmaData.datosCierre?.evidencia?.length" class="closure-evidence">
+                <span class="label">Evidencia de Cierre:</span>
+                <app-img-viewer
+                  [images]="sstmaData.datosCierre?.evidencia || []"
+                  [showThumbnails]="false"
+                ></app-img-viewer>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </div>

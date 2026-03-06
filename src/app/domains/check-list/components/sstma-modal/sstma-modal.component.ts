@@ -36,6 +36,12 @@ interface ApiResponse {
   url?: string;
 }
 
+// Interfaz para los datos de cierre
+interface ClosureData {
+  descripcion: string;
+  evidencia: string[];
+}
+
 // Interfaz para los datos de inspección SSTMA
 interface SstmaInspection {
   reportDate: string;
@@ -54,6 +60,9 @@ interface SstmaInspection {
   actividad: string;
   communicatedTo: string[];
   photos: string[];
+  // Datos de cierre
+  fechaCierre: string | null;
+  datosCierre: ClosureData | null;
 }
 
 @Component({
@@ -94,6 +103,8 @@ export class SstmaModalComponent implements OnInit {
     actividad: '',
     communicatedTo: [],
     photos: [],
+    fechaCierre: null,
+    datosCierre: null,
   };
 
   loading = false;
@@ -215,7 +226,12 @@ export class SstmaModalComponent implements OnInit {
             : responseData.comunicadoA.split(',')
           : this.sstmaData.communicatedTo,
         photos: photos, // Usar las imágenes procesadas
+        // Datos de cierre
+        fechaCierre: responseData.fechaCierre || null,
+        datosCierre: responseData.datosCierre || null,
       };
+      
+      console.log('Datos de cierre:', this.sstmaData.fechaCierre, this.sstmaData.datosCierre);
     } catch (error) {
       console.error('Error al mapear los datos:', error);
       this.error = 'Error al procesar los datos recibidos';
