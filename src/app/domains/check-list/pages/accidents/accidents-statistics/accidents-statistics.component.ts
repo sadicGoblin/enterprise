@@ -6,11 +6,13 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatSelectModule } from '@angular/material/select';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatTableModule } from '@angular/material/table';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
-import { MOCK_ESTADISTICAS, MOCK_ACCIDENTS } from '../models/accident.model';
+import { EstadisticasApiResponse } from '../models/accident.model';
+import { AccidenteService } from '../../../services/accidente.service';
 
 Chart.register(...registerables, ChartDataLabels);
 
@@ -25,7 +27,8 @@ Chart.register(...registerables, ChartDataLabels);
     MatIconModule,
     MatSelectModule,
     MatFormFieldModule,
-    MatTableModule
+    MatTableModule,
+    MatProgressSpinnerModule
   ],
   templateUrl: './accidents-statistics.component.html',
   styleUrl: './accidents-statistics.component.scss'
@@ -41,21 +44,26 @@ export class AccidentsStatisticsComponent implements OnInit, AfterViewInit, OnDe
   organismoChart: Chart | null = null;
   tendenciaChart: Chart | null = null;
 
-  selectedYear: number = 2025;
-  years: number[] = [2023, 2024, 2025];
+  selectedYear: number = new Date().getFullYear();
+  years: number[] = [2024, 2025, 2026];
 
-  // Estadísticas del modelo
-  stats = MOCK_ESTADISTICAS;
-  accidents = MOCK_ACCIDENTS;
+  isLoading = true;
+  totalAccidentes = 0;
+  porGravedad: { Gravedad: string; Total: string }[] = [];
+  porMes: { Mes: string; Total: string }[] = [];
+  porRiesgo: { Riesgo: string; Total: string; NivelPeligro: string }[] = [];
 
-  constructor(private router: Router) {}
+  constructor(
+    private router: Router,
+    private accidenteService: AccidenteService
+  ) {}
 
   ngOnInit(): void {
-    // Charts will be initialized in ngAfterViewInit
+    this.loadStats();
   }
 
   ngAfterViewInit(): void {
-    this.initializeCharts();
+    // Charts initialized after data loads
   }
 
   ngOnDestroy(): void {
@@ -65,32 +73,50 @@ export class AccidentsStatisticsComponent implements OnInit, AfterViewInit, OnDe
     this.tendenciaChart?.destroy();
   }
 
+  loadStats(): void {
+    this.isLoading = true;
+    this.accidenteService.getEstadisticas().subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          const d = response.data;
+          this.totalAccidentes = parseInt(d.total_accidentes || '0', 10);
+          this.porGravedad = d.por_gravedad || [];
+          this.porMes = d.por_mes || [];
+          this.porRiesgo = d.por_riesgo || [];
+          setTimeout(() => this.initializeCharts(), 100);
+        }
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('[AccidentsStatisticsComponent] Error loading stats:', err);
+        this.isLoading = false;
+      }
+    });
+  }
+
   initializeCharts(): void {
-    setTimeout(() => {
-      this.createGravedadChart();
-      this.createTipoChart();
-      this.createOrganismoChart();
-      this.createTendenciaChart();
-    }, 100);
+    this.createGravedadChart();
+    this.createTendenciaChart();
   }
 
   createGravedadChart(): void {
     const ctx = this.gravedadChartRef?.nativeElement?.getContext('2d');
     if (!ctx) return;
 
+    const labels = this.porGravedad.map(g => g.Gravedad);
+    const data = this.porGravedad.map(g => parseInt(g.Total, 10));
+    const colorMap: Record<string, string> = {
+      'Leve': '#4caf50', 'Menor': '#8bc34a', 'Importante': '#ff9800', 'Grave': '#f44336', 'Fatal': '#9c27b0'
+    };
+    const colors = labels.map(l => colorMap[l] || '#607d8b');
+
     this.gravedadChart = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['Leve', 'Menor', 'Importante', 'Grave', 'Fatal'],
+        labels,
         datasets: [{
-          data: [
-            this.stats.porGravedad.leve,
-            this.stats.porGravedad.menor,
-            this.stats.porGravedad.importante,
-            this.stats.porGravedad.grave,
-            this.stats.porGravedad.fatal
-          ],
-          backgroundColor: ['#4caf50', '#8bc34a', '#ff9800', '#f44336', '#9c27b0'],
+          data,
+          backgroundColor: colors,
           borderWidth: 3,
           borderColor: '#fff'
         }]
@@ -100,14 +126,14 @@ export class AccidentsStatisticsComponent implements OnInit, AfterViewInit, OnDe
         maintainAspectRatio: false,
         cutout: '55%',
         plugins: {
-          legend: { 
-            position: 'bottom', 
-            labels: { 
-              padding: 15, 
+          legend: {
+            position: 'bottom',
+            labels: {
+              padding: 15,
               font: { size: 11 },
               usePointStyle: true,
               pointStyle: 'rectRounded'
-            } 
+            }
           },
           title: { display: true, text: 'Distribución por Gravedad', font: { size: 14, weight: 'bold' }, padding: { bottom: 15 } },
           tooltip: {
@@ -129,114 +155,30 @@ export class AccidentsStatisticsComponent implements OnInit, AfterViewInit, OnDe
     });
   }
 
-  createTipoChart(): void {
-    const ctx = this.tipoChartRef?.nativeElement?.getContext('2d');
-    if (!ctx) return;
-
-    this.tipoChart = new Chart(ctx, {
-      type: 'doughnut',
-      data: {
-        labels: ['Trabajo', 'Común', 'Fatal'],
-        datasets: [{
-          data: [
-            this.stats.porTipo.trabajo,
-            this.stats.porTipo.comun,
-            this.stats.porTipo.fatal
-          ],
-          backgroundColor: ['#2196f3', '#ff9800', '#f44336'],
-          borderWidth: 3,
-          borderColor: '#fff'
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: '55%',
-        plugins: {
-          legend: { 
-            position: 'bottom', 
-            labels: { 
-              padding: 15, 
-              font: { size: 11 },
-              usePointStyle: true,
-              pointStyle: 'rectRounded'
-            } 
-          },
-          title: { display: true, text: 'Distribución por Tipo', font: { size: 14, weight: 'bold' }, padding: { bottom: 15 } },
-          tooltip: {
-            callbacks: {
-              label: (context: any) => ` ${context.label}: ${context.raw} accidentes`
-            }
-          },
-          datalabels: {
-            color: '#ffffff',
-            font: { weight: 'bold', size: 14 },
-            formatter: (value: number) => value > 0 ? value : '',
-            anchor: 'center',
-            align: 'center',
-            textShadowBlur: 4,
-            textShadowColor: 'rgba(0, 0, 0, 0.5)'
-          }
-        }
-      }
-    });
-  }
-
-  createOrganismoChart(): void {
-    const ctx = this.organismoChartRef?.nativeElement?.getContext('2d');
-    if (!ctx) return;
-
-    this.organismoChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ['INARCO', 'Sub Contratistas'],
-        datasets: [{
-          label: 'Accidentes',
-          data: [this.stats.porOrganismo.inarco, this.stats.porOrganismo.sc],
-          backgroundColor: ['#1a237e', '#3f51b5'],
-          borderRadius: 8,
-          barThickness: 35
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        indexAxis: 'y',
-        plugins: {
-          legend: { display: false },
-          title: { display: true, text: 'Por Organismo', font: { size: 14, weight: 'bold' }, padding: { bottom: 15 } },
-          tooltip: {
-            callbacks: {
-              label: (context: any) => ` ${context.raw} accidentes`
-            }
-          },
-          datalabels: { display: false }
-        },
-        scales: {
-          x: { 
-            beginAtZero: true, 
-            ticks: { stepSize: 1 },
-            grid: { color: 'rgba(0,0,0,0.05)' }
-          },
-          y: {
-            grid: { display: false }
-          }
-        }
-      }
-    });
-  }
-
   createTendenciaChart(): void {
     const ctx = this.tendenciaChartRef?.nativeElement?.getContext('2d');
     if (!ctx) return;
 
+    const monthLabels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    const monthData = new Array(12).fill(0);
+
+    this.porMes.forEach(m => {
+      const parts = m.Mes.split('-');
+      if (parts.length === 2) {
+        const monthIndex = parseInt(parts[1], 10) - 1;
+        if (monthIndex >= 0 && monthIndex < 12) {
+          monthData[monthIndex] = parseInt(m.Total, 10);
+        }
+      }
+    });
+
     this.tendenciaChart = new Chart(ctx, {
       type: 'line',
       data: {
-        labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+        labels: monthLabels,
         datasets: [{
           label: 'Accidentes',
-          data: [0, 0, 0, 1, 0, 0, 0, 0, 1, 1, 2, 3],
+          data: monthData,
           borderColor: '#f57c00',
           backgroundColor: 'rgba(245, 124, 0, 0.1)',
           tension: 0.4,
@@ -250,7 +192,7 @@ export class AccidentsStatisticsComponent implements OnInit, AfterViewInit, OnDe
         maintainAspectRatio: false,
         plugins: {
           legend: { display: false },
-          title: { display: true, text: `Tendencia Mensual ${this.selectedYear}`, font: { size: 14, weight: 'bold' } },
+          title: { display: true, text: 'Tendencia Mensual', font: { size: 14, weight: 'bold' } },
           datalabels: { display: false }
         },
         scales: {
@@ -263,7 +205,7 @@ export class AccidentsStatisticsComponent implements OnInit, AfterViewInit, OnDe
 
   onYearChange(): void {
     this.tendenciaChart?.destroy();
-    this.createTendenciaChart();
+    this.loadStats();
   }
 
   goToList(): void {
@@ -271,10 +213,11 @@ export class AccidentsStatisticsComponent implements OnInit, AfterViewInit, OnDe
   }
 
   goToForm(): void {
-    this.router.navigate(['/check-list/accidents']);
+    this.router.navigate(['/check-list/accidents/register']);
   }
 
-  get totalDiasPerdidos(): number {
-    return this.accidents.reduce((sum, a) => sum + (a.diasPerdidosFinal || a.diasPerdidosEstimados || 0), 0);
+  getGravedadTotal(gravedad: string): number {
+    const found = this.porGravedad.find(g => g.Gravedad === gravedad);
+    return found ? parseInt(found.Total, 10) : 0;
   }
 }

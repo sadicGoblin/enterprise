@@ -83,6 +83,7 @@ export const checkListRoutes: Routes = [
         children: [
           { path: '', redirectTo: 'register', pathMatch: 'full' },
           { path: 'register', component: AccidentsComponent },
+          { path: 'edit/:id', component: AccidentsComponent },
           { path: 'list', component: AccidentsListComponent },
           { path: 'statistics', component: AccidentsStatisticsComponent },
         ],

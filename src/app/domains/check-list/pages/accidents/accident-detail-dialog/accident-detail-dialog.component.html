@@ -1,0 +1,228 @@
+<div class="detail-dialog">
+  <!-- Header con acciones -->
+  <div class="dialog-header">
+    <div class="header-title">
+      <mat-icon class="title-icon">description</mat-icon>
+      <div>
+        <h2>Detalle del Accidente</h2>
+        <span class="numero-badge" *ngIf="data.NumeroAccidente">{{ data.NumeroAccidente }}</span>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button (click)="exportToPdf()" [disabled]="isExporting" matTooltip="Exportar a PDF">
+        <mat-icon>picture_as_pdf</mat-icon>
+        {{ isExporting ? 'Exportando...' : 'Exportar PDF' }}
+      </button>
+      <button mat-icon-button mat-dialog-close matTooltip="Cerrar">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- Spinner de exportación -->
+  <div class="export-overlay" *ngIf="isExporting">
+    <mat-spinner diameter="32"></mat-spinner>
+    <span>Generando PDF...</span>
+  </div>
+
+  <!-- Contenido para PDF -->
+  <mat-dialog-content>
+    <div #pdfContent class="pdf-content">
+
+      <!-- Encabezado del reporte -->
+      <div class="report-header">
+        <div class="report-title">
+          <h3>REPORTE DE ACCIDENTE LABORAL</h3>
+          <span class="report-numero" *ngIf="data.NumeroAccidente">N° {{ data.NumeroAccidente }}</span>
+        </div>
+        <div class="report-badges">
+          <span class="badge-estado" [ngClass]="estadoClass">{{ estadoLabel }}</span>
+          <span class="badge-gravedad" [ngClass]="gravedadClass" *ngIf="data.CalificacionPS">
+            {{ data.CalificacionPS }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Sección 1: Datos del Accidente -->
+      <div class="detail-section">
+        <div class="section-title">
+          <mat-icon>event</mat-icon>
+          <h4>Datos del Accidente</h4>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="item-label">Obra / Proyecto</span>
+            <span class="item-value">{{ data.NombreObra }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Empresa</span>
+            <span class="item-value">{{ data.NombreEmpresa || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Fecha del Accidente</span>
+            <span class="item-value">{{ formatDate(data.FechaAccidente) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Hora</span>
+            <span class="item-value">{{ formatTime(data.HoraAccidente) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Día de la Semana</span>
+            <span class="item-value">{{ data.DiaSemana || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Tipo de Accidente</span>
+            <span class="item-value">{{ data.TipoAccidente || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Días Perdidos Estimados</span>
+            <span class="item-value">{{ data.DiasPerdidosEstimados || '0' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Días Perdidos Final</span>
+            <span class="item-value">{{ data.DiasPerdidosFinal || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Fecha Control / Alta</span>
+            <span class="item-value">{{ formatDate(data.FechaControl) }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Fecha Reporte</span>
+            <span class="item-value">{{ formatDate(data.FechaReporte) }}</span>
+          </div>
+        </div>
+        <div class="detail-full" *ngIf="data.Descripcion">
+          <span class="item-label">Descripción</span>
+          <p class="item-value description-text">{{ data.Descripcion }}</p>
+        </div>
+      </div>
+
+      <!-- Sección 2: Trabajador -->
+      <div class="detail-section">
+        <div class="section-title">
+          <mat-icon>person</mat-icon>
+          <h4>Antecedentes del Trabajador</h4>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="item-label">Nombre</span>
+            <span class="item-value highlight">{{ data.NombreTrabajador }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">RUT</span>
+            <span class="item-value">{{ data.RUTTrabajador || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Cargo</span>
+            <span class="item-value">{{ data.Cargo || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Edad al Accidente</span>
+            <span class="item-value">{{ data.EdadAlAccidente ? data.EdadAlAccidente + ' años' : '-' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección 3: Línea de Mando -->
+      <div class="detail-section">
+        <div class="section-title">
+          <mat-icon>supervisor_account</mat-icon>
+          <h4>Línea de Mando</h4>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="item-label">Supervisor</span>
+            <span class="item-value">{{ data.Supervisor || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Profesional Terreno</span>
+            <span class="item-value">{{ data.PTerreno || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">APR</span>
+            <span class="item-value">{{ data.APR || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">ADO</span>
+            <span class="item-value">{{ data.ADO || '-' }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sección 4: Análisis -->
+      <div class="detail-section">
+        <div class="section-title">
+          <mat-icon>analytics</mat-icon>
+          <h4>Análisis / Tipología</h4>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="item-label">Riesgo Asociado</span>
+            <span class="item-value">{{ data.RiesgoAsociado || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Lesión</span>
+            <span class="item-value">{{ data.TipoLesion || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Parte del Cuerpo</span>
+            <span class="item-value">{{ data.ParteCuerpo || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Calificación P/S</span>
+            <span class="item-value" [ngClass]="gravedadClass">
+              {{ data.CalificacionPS || '-' }}
+            </span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Fuente / Agente</span>
+            <span class="item-value">{{ data.FuenteAgente || '-' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="item-label">Máquina / Equipo</span>
+            <span class="item-value">{{ data.MaquinaEquipo || '-' }}</span>
+          </div>
+        </div>
+        <div class="detail-full" *ngIf="data.Accion">
+          <span class="item-label">Acción</span>
+          <p class="item-value">{{ data.Accion }}</p>
+        </div>
+        <div class="detail-full" *ngIf="data.Condicion">
+          <span class="item-label">Condición</span>
+          <p class="item-value">{{ data.Condicion }}</p>
+        </div>
+      </div>
+
+      <!-- Sección 5: Gestión del Cambio -->
+      <div class="detail-section">
+        <div class="section-title">
+          <mat-icon>security</mat-icon>
+          <h4>Gestión del Cambio / Jerarquía de Controles</h4>
+        </div>
+        <div class="detail-grid">
+          <div class="detail-item">
+            <span class="item-label">Causa Raíz</span>
+            <span class="item-value">{{ data.CausaRaiz || '-' }}</span>
+          </div>
+        </div>
+
+        <div class="controles-row" *ngIf="controlesAplicados.length > 0">
+          <span class="item-label">Controles Aplicados</span>
+          <div class="controles-badges">
+            <span class="control-badge" *ngFor="let ctrl of controlesAplicados">{{ ctrl }}</span>
+          </div>
+        </div>
+        <div class="controles-row" *ngIf="controlesAplicados.length === 0">
+          <span class="item-label">Controles Aplicados</span>
+          <span class="item-value">Ninguno registrado</span>
+        </div>
+
+        <div class="detail-full" *ngIf="data.Observaciones">
+          <span class="item-label">Observaciones</span>
+          <p class="item-value description-text">{{ data.Observaciones }}</p>
+        </div>
+      </div>
+
+    </div>
+  </mat-dialog-content>
+</div>
