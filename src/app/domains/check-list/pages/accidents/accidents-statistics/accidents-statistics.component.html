@@ -9,12 +9,6 @@
       </div>
     </div>
     <div class="header-actions">
-      <mat-form-field appearance="outline" class="year-select">
-        <mat-label>Año</mat-label>
-        <mat-select [(ngModel)]="selectedYear" (ngModelChange)="onYearChange()">
-          <mat-option *ngFor="let year of years" [value]="year">{{ year }}</mat-option>
-        </mat-select>
-      </mat-form-field>
       <button mat-stroked-button (click)="goToList()">
         <mat-icon>list</mat-icon>
         Ver Listado
@@ -26,6 +20,13 @@
     </div>
   </div>
 
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="loading-overlay" style="position:relative;min-height:200px">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Cargando estadísticas...</p>
+  </div>
+
+  <ng-container *ngIf="!isLoading">
   <!-- KPI Cards -->
   <div class="kpi-grid">
     <div class="kpi-card total">
@@ -33,23 +34,7 @@
         <mat-icon>report_problem</mat-icon>
         <span class="kpi-title">Total Accidentes</span>
       </div>
-      <div class="kpi-value">{{ stats.numeroAccidentes }}</div>
-      <div class="kpi-detail">
-        <span>INARCO: {{ stats.porOrganismo.inarco }}</span>
-        <span>SC: {{ stats.porOrganismo.sc }}</span>
-      </div>
-    </div>
-
-    <div class="kpi-card dias">
-      <div class="kpi-header">
-        <mat-icon>event_busy</mat-icon>
-        <span class="kpi-title">Días Perdidos</span>
-      </div>
-      <div class="kpi-value">{{ totalDiasPerdidos }}</div>
-      <div class="kpi-detail">
-        <span>STP: {{ stats.porDiasPerdidos.stp }}</span>
-        <span>CTP: {{ stats.porDiasPerdidos.ctp }}</span>
-      </div>
+      <div class="kpi-value">{{ totalAccidentes }}</div>
     </div>
 
     <div class="kpi-card gravedad">
@@ -57,21 +42,30 @@
         <mat-icon>priority_high</mat-icon>
         <span class="kpi-title">Alta Gravedad</span>
       </div>
-      <div class="kpi-value">{{ stats.porGravedad.grave + stats.porGravedad.fatal }}</div>
+      <div class="kpi-value">{{ getGravedadTotal('Grave') + getGravedadTotal('Fatal') }}</div>
       <div class="kpi-detail">
-        <span>Grave: {{ stats.porGravedad.grave }}</span>
-        <span>Fatal: {{ stats.porGravedad.fatal }}</span>
+        <span>Grave: {{ getGravedadTotal('Grave') }}</span>
+        <span>Fatal: {{ getGravedadTotal('Fatal') }}</span>
       </div>
     </div>
 
     <div class="kpi-card indices">
       <div class="kpi-header">
-        <mat-icon>speed</mat-icon>
-        <span class="kpi-title">Índice de Frecuencia</span>
+        <mat-icon>warning</mat-icon>
+        <span class="kpi-title">Importante</span>
       </div>
-      <div class="kpi-value">{{ stats.porDiasPerdidos.total }}</div>
+      <div class="kpi-value">{{ getGravedadTotal('Importante') }}</div>
+    </div>
+
+    <div class="kpi-card dias">
+      <div class="kpi-header">
+        <mat-icon>check_circle</mat-icon>
+        <span class="kpi-title">Leve / Menor</span>
+      </div>
+      <div class="kpi-value">{{ getGravedadTotal('Leve') + getGravedadTotal('Menor') }}</div>
       <div class="kpi-detail">
-        <span>Total días perdidos</span>
+        <span>Leve: {{ getGravedadTotal('Leve') }}</span>
+        <span>Menor: {{ getGravedadTotal('Menor') }}</span>
       </div>
     </div>
   </div>
@@ -84,18 +78,6 @@
       </div>
     </mat-card>
 
-    <mat-card class="chart-card">
-      <div class="chart-container">
-        <canvas #tipoChart></canvas>
-      </div>
-    </mat-card>
-
-    <mat-card class="chart-card">
-      <div class="chart-container">
-        <canvas #organismoChart></canvas>
-      </div>
-    </mat-card>
-
     <mat-card class="chart-card wide">
       <div class="chart-container tall">
         <canvas #tendenciaChart></canvas>
@@ -103,40 +85,16 @@
     </mat-card>
   </div>
 
-  <!-- Indicators Table -->
-  <mat-card class="indicators-card">
-    <h3><mat-icon>assessment</mat-icon> Indicadores de Seguridad</h3>
+  <!-- Risk Table -->
+  <mat-card class="indicators-card" *ngIf="porRiesgo.length > 0">
+    <h3><mat-icon>assessment</mat-icon> Top Riesgos Asociados</h3>
     <div class="indicators-grid">
-      <div class="indicator-item">
-        <span class="indicator-label">Total Accidentes</span>
-        <span class="indicator-value">{{ stats.numeroAccidentes }}</span>
-        <span class="indicator-formula">Período: {{ stats.periodo }}</span>
-      </div>
-      <div class="indicator-item">
-        <span class="indicator-label">Días Perdidos</span>
-        <span class="indicator-value">{{ stats.numeroDiasPerdidos }}</span>
-        <span class="indicator-formula">Días totales de licencia</span>
-      </div>
-      <div class="indicator-item">
-        <span class="indicator-label">INARCO</span>
-        <span class="indicator-value">{{ stats.porOrganismo.inarco }}</span>
-        <span class="indicator-formula">Accidentes personal propio</span>
-      </div>
-      <div class="indicator-item">
-        <span class="indicator-label">STP (Sin Tiempo Perdido)</span>
-        <span class="indicator-value">{{ stats.porDiasPerdidos.stp }}</span>
-        <span class="indicator-formula">Accidentes sin días perdidos</span>
-      </div>
-      <div class="indicator-item">
-        <span class="indicator-label">CTP (Con Tiempo Perdido)</span>
-        <span class="indicator-value">{{ stats.porDiasPerdidos.ctp }}</span>
-        <span class="indicator-formula">Accidentes con días perdidos</span>
-      </div>
-      <div class="indicator-item">
-        <span class="indicator-label">Sub Contratistas</span>
-        <span class="indicator-value">{{ stats.porOrganismo.sc }}</span>
-        <span class="indicator-formula">Accidentes personal SC</span>
+      <div class="indicator-item" *ngFor="let r of porRiesgo">
+        <span class="indicator-label">{{ r.Riesgo }}</span>
+        <span class="indicator-value">{{ r.Total }}</span>
+        <span class="indicator-formula">Nivel: {{ r.NivelPeligro }}</span>
       </div>
     </div>
   </mat-card>
+  </ng-container>
 </div>

@@ -12,15 +12,18 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { Router } from '@angular/router';
-import { 
-  AccidentRecord, 
-  MOCK_ACCIDENTS, 
-  MOCK_ESTADISTICAS,
+import {
+  AccidenteApiResponse,
   CalificacionPotencialSeveridad,
-  EstadoAccidente
+  EstadoAccidente,
+  ESTADO_LABELS
 } from '../models/accident.model';
+import { AccidenteService } from '../../../services/accidente.service';
 import { ExportService, ExportColumn } from '../../../../../shared/services/export.service';
+import { AccidentDetailDialogComponent } from '../accident-detail-dialog/accident-detail-dialog.component';
 
 @Component({
   selector: 'app-accidents-list',
@@ -38,7 +41,9 @@ import { ExportService, ExportColumn } from '../../../../../shared/services/expo
     MatInputModule,
     MatSelectModule,
     MatSortModule,
-    MatPaginatorModule
+    MatPaginatorModule,
+    MatProgressSpinnerModule,
+    MatDialogModule
   ],
   templateUrl: './accidents-list.component.html',
   styleUrl: './accidents-list.component.scss'
@@ -48,20 +53,21 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
   @ViewChild(MatPaginator) paginator!: MatPaginator;
 
   displayedColumns: string[] = [
-    'obra',
-    'fechaAccidente',
-    'trabajador',
-    'empresa',
-    'tipoAccidente',
-    'calificacionPS',
-    'diasPerdidos',
-    'estado',
+    'NombreObra',
+    'FechaAccidente',
+    'NombreTrabajador',
+    'NombreEmpresa',
+    'TipoAccidente',
+    'CalificacionPS',
+    'DiasPerdidos',
+    'Estado',
     'actions'
   ];
 
-  dataSource = new MatTableDataSource<AccidentRecord>([]);
-  accidents: AccidentRecord[] = [];
-  estadisticas = MOCK_ESTADISTICAS;
+  dataSource = new MatTableDataSource<AccidenteApiResponse>([]);
+  accidents: AccidenteApiResponse[] = [];
+  isLoading = true;
+  estadoLabels = ESTADO_LABELS;
 
   // Filtros
   filterEstado: string = 'all';
@@ -74,6 +80,8 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
 
   constructor(
     private router: Router,
+    private dialog: MatDialog,
+    private accidenteService: AccidenteService,
     private exportService: ExportService
   ) {}
 
@@ -88,38 +96,50 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
   }
 
   loadData(): void {
-    this.accidents = MOCK_ACCIDENTS;
-    this.dataSource.data = this.accidents;
-    this.obrasUnicas = [...new Set(this.accidents.map(a => a.obra))];
-    this.setupFilter();
+    this.isLoading = true;
+    this.accidenteService.listarAccidentes({ limit: 500 }).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.accidents = response.data;
+          this.dataSource.data = this.accidents;
+          this.obrasUnicas = [...new Set(this.accidents.map(a => a.NombreObra))];
+          this.setupFilter();
+        }
+        this.isLoading = false;
+      },
+      error: (err) => {
+        console.error('[AccidentsListComponent] Error loading accidents:', err);
+        this.isLoading = false;
+      }
+    });
   }
 
   setupSorting(): void {
-    this.dataSource.sortingDataAccessor = (item: AccidentRecord, property: string) => {
+    this.dataSource.sortingDataAccessor = (item: AccidenteApiResponse, property: string) => {
       switch (property) {
-        case 'fechaAccidente': return new Date(item.fechaAccidente).getTime();
-        case 'trabajador': return item.trabajador.nombre.toLowerCase();
-        case 'diasPerdidos': return item.diasPerdidosFinal || item.diasPerdidosEstimados || 0;
-        default: return (item as any)[property];
+        case 'FechaAccidente': return item.FechaAccidente ? new Date(item.FechaAccidente).getTime() : 0;
+        case 'NombreTrabajador': return (item.NombreTrabajador || '').toLowerCase();
+        case 'DiasPerdidos': return parseInt(item.DiasPerdidosFinal || item.DiasPerdidosEstimados || '0', 10);
+        default: return (item as any)[property] || '';
       }
     };
   }
 
   setupFilter(): void {
-    this.dataSource.filterPredicate = (data: AccidentRecord, filter: string) => {
+    this.dataSource.filterPredicate = (data: AccidenteApiResponse, filter: string) => {
       const filters = JSON.parse(filter);
-      
-      if (filters.estado !== 'all' && data.estado !== filters.estado) return false;
-      if (filters.gravedad !== 'all' && data.analisis.calificacionPS !== filters.gravedad) return false;
-      if (filters.obra !== 'all' && data.obra !== filters.obra) return false;
-      
+
+      if (filters.estado !== 'all' && data.Estado !== filters.estado) return false;
+      if (filters.gravedad !== 'all' && data.CalificacionPS !== filters.gravedad) return false;
+      if (filters.obra !== 'all' && data.NombreObra !== filters.obra) return false;
+
       if (filters.search) {
         const searchLower = filters.search.toLowerCase();
         return (
-          data.obra.toLowerCase().includes(searchLower) ||
-          data.trabajador.nombre.toLowerCase().includes(searchLower) ||
-          data.empresa.toLowerCase().includes(searchLower) ||
-          data.descripcion.toLowerCase().includes(searchLower)
+          (data.NombreObra || '').toLowerCase().includes(searchLower) ||
+          (data.NombreTrabajador || '').toLowerCase().includes(searchLower) ||
+          (data.NombreEmpresa || '').toLowerCase().includes(searchLower) ||
+          (data.Descripcion || '').toLowerCase().includes(searchLower)
         );
       }
       return true;
@@ -134,13 +154,14 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
       search: this.searchText
     });
     this.dataSource.filter = filterValue;
-    
+
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
   }
 
-  getGravedadClass(gravedad: CalificacionPotencialSeveridad): string {
+  getGravedadClass(gravedad: string | null): string {
+    if (!gravedad) return '';
     const classes: Record<string, string> = {
       'Leve': 'severity-leve',
       'Menor': 'severity-menor',
@@ -151,26 +172,35 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
     return classes[gravedad] || '';
   }
 
-  getEstadoClass(estado: EstadoAccidente): string {
+  getEstadoClass(estado: string): string {
     const classes: Record<string, string> = {
       'Reportado': 'estado-reportado',
-      'En Investigación': 'estado-investigacion',
+      'En_Investigacion': 'estado-investigacion',
       'Cerrado': 'estado-cerrado',
-      'Pendiente': 'estado-pendiente'
+      'Anulado': 'estado-anulado'
     };
     return classes[estado] || '';
   }
 
-  viewDetails(accident: AccidentRecord): void {
-    console.log('View details:', accident);
+  getEstadoLabel(estado: string): string {
+    return (this.estadoLabels as any)[estado] || estado;
   }
 
-  editAccident(accident: AccidentRecord): void {
-    console.log('Edit accident:', accident);
+  viewDetails(accident: AccidenteApiResponse): void {
+    this.dialog.open(AccidentDetailDialogComponent, {
+      data: accident,
+      width: '800px',
+      maxHeight: '90vh',
+      panelClass: 'accident-detail-panel'
+    });
+  }
+
+  editAccident(accident: AccidenteApiResponse): void {
+    this.router.navigate(['/check-list/accidents/edit', accident.IdAccidente]);
   }
 
   createNewAccident(): void {
-    this.router.navigate(['/check-list/accidents']);
+    this.router.navigate(['/check-list/accidents/register']);
   }
 
   viewStatistics(): void {
@@ -182,17 +212,17 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
     if (data.length === 0) return;
 
     const columns: ExportColumn[] = [
-      { field: 'obra', header: 'Obra', width: 25 },
-      { field: 'fechaAccidente', header: 'Fecha Accidente', width: 15, format: (v) => this.formatDate(v) },
-      { field: 'trabajador.nombre', header: 'Trabajador', width: 30 },
-      { field: 'trabajador.rut', header: 'RUT', width: 15 },
-      { field: 'empresa', header: 'Empresa', width: 20 },
-      { field: 'tipoAccidente', header: 'Tipo', width: 12 },
-      { field: 'analisis.calificacionPS', header: 'Gravedad', width: 15 },
-      { field: 'diasPerdidosEstimados', header: 'Días Est.', width: 10 },
-      { field: 'diasPerdidosFinal', header: 'Días Final', width: 10 },
-      { field: 'estado', header: 'Estado', width: 15 },
-      { field: 'descripcion', header: 'Descripción', width: 50 }
+      { field: 'NombreObra', header: 'Obra', width: 25 },
+      { field: 'FechaAccidente', header: 'Fecha Accidente', width: 15, format: (v) => this.formatDate(v) },
+      { field: 'NombreTrabajador', header: 'Trabajador', width: 30 },
+      { field: 'RUTTrabajador', header: 'RUT', width: 15 },
+      { field: 'NombreEmpresa', header: 'Empresa', width: 20 },
+      { field: 'TipoAccidente', header: 'Tipo', width: 12 },
+      { field: 'CalificacionPS', header: 'Gravedad', width: 15 },
+      { field: 'DiasPerdidosEstimados', header: 'Días Est.', width: 10 },
+      { field: 'DiasPerdidosFinal', header: 'Días Final', width: 10 },
+      { field: 'Estado', header: 'Estado', width: 15 },
+      { field: 'Descripcion', header: 'Descripción', width: 50 }
     ];
 
     this.exportService.exportToExcel(data, columns, {
@@ -201,23 +231,25 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  private formatDate(date: Date | string): string {
+  formatDate(date: string | null): string {
     if (!date) return '';
-    const d = new Date(date);
-    return d.toLocaleDateString('es-CL');
+    const d = new Date(date + 'T00:00:00');
+    return isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-CL');
   }
 
   get totalDiasPerdidos(): number {
-    return this.accidents.reduce((sum, a) => sum + (a.diasPerdidosFinal || a.diasPerdidosEstimados || 0), 0);
+    return this.accidents.reduce((sum, a) => {
+      return sum + parseInt(a.DiasPerdidosFinal || a.DiasPerdidosEstimados || '0', 10);
+    }, 0);
   }
 
   get investigacionCount(): number {
-    return this.accidents.filter(a => a.estado === 'En Investigación').length;
+    return this.accidents.filter(a => a.Estado === 'En_Investigacion').length;
   }
 
   get gravedadAltaCount(): number {
-    return this.accidents.filter(a => 
-      a.analisis.calificacionPS === 'Grave' || a.analisis.calificacionPS === 'Fatal'
+    return this.accidents.filter(a =>
+      a.CalificacionPS === 'Grave' || a.CalificacionPS === 'Fatal'
     ).length;
   }
 }

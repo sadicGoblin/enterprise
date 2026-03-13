@@ -2,10 +2,13 @@
   <!-- Header con navegación -->
   <div class="page-header">
     <div class="header-left">
-      <mat-icon class="header-icon">report_problem</mat-icon>
+      <mat-icon class="header-icon">{{ isEditMode ? 'edit_note' : 'report_problem' }}</mat-icon>
       <div class="header-text">
-        <h1>Registro de Accidente</h1>
-        <p>Complete la información del accidente laboral</p>
+        <h1>{{ isEditMode ? 'Editar Accidente' : 'Registro de Accidente' }}</h1>
+        <p *ngIf="!isEditMode">Complete la información del accidente laboral</p>
+        <p *ngIf="isEditMode && numeroAccidente">
+          Editando accidente <strong>{{ numeroAccidente }}</strong>
+        </p>
       </div>
     </div>
     <div class="header-actions">
@@ -20,6 +23,13 @@
     </div>
   </div>
 
+  <!-- Loading Dropdowns -->
+  <div *ngIf="isLoadingDropdowns" class="loading-overlay" style="position:relative;min-height:200px">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Cargando datos del formulario...</p>
+  </div>
+
+  <ng-container *ngIf="!isLoadingDropdowns">
   <!-- Progress Steps -->
   <div class="steps-container">
     <div class="step" [class.active]="currentStep === 0" [class.completed]="currentStep > 0" (click)="currentStep = 0">
@@ -50,291 +60,276 @@
 
   <mat-card class="form-card">
     <form [formGroup]="accidentForm" (ngSubmit)="onSubmit()">
-      
+
       <!-- PASO 1: Datos del Accidente -->
-      <div class="step-content" *ngIf="currentStep === 0">
+      <div class="step-content" [hidden]="currentStep !== 0">
         <div class="section-header">
           <mat-icon>description</mat-icon>
           <h2>Datos Principales del Accidente</h2>
         </div>
 
         <div class="form-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>Obra / Proyecto *</mat-label>
-            <mat-select formControlName="obra">
-              <mat-option *ngFor="let obra of obraOptions" [value]="obra.id">
-                {{ obra.nombre }}
-              </mat-option>
-            </mat-select>
-            <mat-error>{{ getErrorMessage('obra') }}</mat-error>
-          </mat-form-field>
+          <app-smart-selector
+            label="Obra / Proyecto *"
+            [options]="obraOpts"
+            [required]="true"
+            formControlName="IdObra"
+            placeholder="Seleccione obra"
+            [errorMessage]="getErrorMessage('IdObra')"
+            (addClick)="onAddCatalog('IdObra')">
+          </app-smart-selector>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Empresa *</mat-label>
-            <mat-select formControlName="empresa">
-              <mat-option *ngFor="let emp of empresaOptions" [value]="emp.id">
-                {{ emp.nombre }}
-              </mat-option>
-            </mat-select>
-            <mat-error>{{ getErrorMessage('empresa') }}</mat-error>
-          </mat-form-field>
+          <app-smart-selector
+            label="Empresa"
+            [options]="empresaOpts"
+            formControlName="IdEmpresa"
+            placeholder="Seleccione empresa"
+            (addClick)="onAddCatalog('IdEmpresa')">
+          </app-smart-selector>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Tipo de Accidente *</mat-label>
-            <mat-select formControlName="tipoAccidente">
-              <mat-option *ngFor="let tipo of tipoAccidenteOptions" [value]="tipo">
-                {{ tipo }}
-              </mat-option>
-            </mat-select>
-            <mat-error>{{ getErrorMessage('tipoAccidente') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>N° Accidente *</mat-label>
-            <input matInput type="number" formControlName="numAccidente" min="1">
-            <mat-error>{{ getErrorMessage('numAccidente') }}</mat-error>
-          </mat-form-field>
+          <app-smart-selector
+            label="Tipo de Accidente"
+            [options]="tipoAccidenteOpts"
+            formControlName="IdTipoAccidente"
+            placeholder="Seleccione tipo"
+            (addClick)="onAddCatalog('IdTipoAccidente')">
+          </app-smart-selector>
 
           <mat-form-field appearance="outline">
             <mat-label>Fecha del Accidente *</mat-label>
-            <input matInput [matDatepicker]="fechaAccPicker" formControlName="fechaAccidente">
+            <input matInput [matDatepicker]="fechaAccPicker" formControlName="FechaAccidente">
             <mat-datepicker-toggle matSuffix [for]="fechaAccPicker"></mat-datepicker-toggle>
             <mat-datepicker #fechaAccPicker></mat-datepicker>
-            <mat-error>{{ getErrorMessage('fechaAccidente') }}</mat-error>
+            <mat-error>{{ getErrorMessage('FechaAccidente') }}</mat-error>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Hora del Accidente *</mat-label>
-            <input matInput type="time" formControlName="horaAccidente">
-            <mat-error>{{ getErrorMessage('horaAccidente') }}</mat-error>
+            <mat-label>Hora del Accidente</mat-label>
+            <input matInput type="time" formControlName="HoraAccidente">
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Días Perdidos Estimados</mat-label>
-            <input matInput type="number" formControlName="diasPerdidosEstimados" min="0">
+            <input matInput type="number" formControlName="DiasPerdidosEstimados" min="0">
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Fecha Control/Alta</mat-label>
-            <input matInput [matDatepicker]="fechaCtrlPicker" formControlName="fechaControl">
+            <input matInput [matDatepicker]="fechaCtrlPicker" formControlName="FechaControl">
             <mat-datepicker-toggle matSuffix [for]="fechaCtrlPicker"></mat-datepicker-toggle>
             <mat-datepicker #fechaCtrlPicker></mat-datepicker>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
             <mat-label>Días Perdidos Final</mat-label>
-            <input matInput type="number" formControlName="diasPerdidosFinal" min="0">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>N° EP</mat-label>
-            <input matInput type="number" formControlName="numEP" placeholder="Número de EP">
+            <input matInput type="number" formControlName="DiasPerdidosFinal" min="0">
           </mat-form-field>
         </div>
 
         <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Descripción del Accidente *</mat-label>
-          <textarea matInput formControlName="descripcion" rows="4" 
+          <mat-label>Descripción del Accidente</mat-label>
+          <textarea matInput formControlName="Descripcion" rows="4"
                     placeholder="Describa detalladamente cómo ocurrió el accidente..."></textarea>
           <mat-hint>Mínimo 10 caracteres</mat-hint>
-          <mat-error>{{ getErrorMessage('descripcion') }}</mat-error>
+          <mat-error>{{ getErrorMessage('Descripcion') }}</mat-error>
         </mat-form-field>
       </div>
 
       <!-- PASO 2: Datos del Trabajador -->
-      <div class="step-content" *ngIf="currentStep === 1">
+      <div class="step-content" [hidden]="currentStep !== 1">
         <div class="section-header">
           <mat-icon>person</mat-icon>
           <h2>Antecedentes del Trabajador</h2>
         </div>
 
         <div class="form-grid">
-          <mat-form-field appearance="outline">
-            <mat-label>RUT *</mat-label>
-            <input matInput formControlName="trabajadorRut" placeholder="12.345.678-9">
-            <mat-error>{{ getErrorMessage('trabajadorRut') }}</mat-error>
-          </mat-form-field>
+          <div class="span-2">
+            <app-smart-selector
+              label="Trabajador *"
+              [options]="trabajadorOpts"
+              [required]="true"
+              formControlName="IdTrabajador"
+              placeholder="Buscar trabajador..."
+              [errorMessage]="getErrorMessage('IdTrabajador')"
+              (addClick)="onAddCatalog('IdTrabajador')">
+            </app-smart-selector>
+          </div>
 
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Nombre Completo *</mat-label>
-            <input matInput formControlName="trabajadorNombre" placeholder="Nombre y apellidos">
-            <mat-error>{{ getErrorMessage('trabajadorNombre') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Edad *</mat-label>
-            <input matInput type="number" formControlName="trabajadorEdad" min="18" max="80">
-            <span matSuffix>años</span>
-            <mat-error>{{ getErrorMessage('trabajadorEdad') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Cargo *</mat-label>
-            <mat-select formControlName="trabajadorCargo">
-              <mat-option *ngFor="let cargo of cargoOptions" [value]="cargo">
-                {{ cargo }}
-              </mat-option>
-            </mat-select>
-            <mat-error>{{ getErrorMessage('trabajadorCargo') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Día de la Semana *</mat-label>
-            <mat-select formControlName="trabajadorDia">
-              <mat-option *ngFor="let dia of diaSemanaOptions" [value]="dia">
-                {{ dia }}
-              </mat-option>
-            </mat-select>
-            <mat-error>{{ getErrorMessage('trabajadorDia') }}</mat-error>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Horario</mat-label>
-            <input matInput formControlName="trabajadorHorario" placeholder="Ej: 18:30hrs">
-          </mat-form-field>
+          <app-smart-selector
+            label="Cargo"
+            [options]="cargoOpts"
+            formControlName="IdCargo"
+            placeholder="Seleccione cargo"
+            (addClick)="onAddCatalog('IdCargo')">
+          </app-smart-selector>
         </div>
+
       </div>
 
       <!-- PASO 3: Línea de Mando -->
-      <div class="step-content" *ngIf="currentStep === 2">
+      <div class="step-content" [hidden]="currentStep !== 2">
         <div class="section-header">
           <mat-icon>supervisor_account</mat-icon>
           <h2>Línea de Mando</h2>
         </div>
 
         <div class="form-grid cols-2">
-          <mat-form-field appearance="outline">
-            <mat-label>Supervisor *</mat-label>
-            <input matInput formControlName="supervisor" placeholder="Nombre del supervisor">
-            <mat-error>{{ getErrorMessage('supervisor') }}</mat-error>
-          </mat-form-field>
+          <app-smart-selector
+            label="Supervisor"
+            [options]="trabajadorOpts"
+            formControlName="IdSupervisor"
+            placeholder="Buscar supervisor..."
+            (addClick)="onAddCatalog('IdSupervisor')">
+          </app-smart-selector>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Profesional Terreno</mat-label>
-            <input matInput formControlName="pTerreno" placeholder="P. Terreno">
-          </mat-form-field>
+          <app-smart-selector
+            label="Profesional Terreno"
+            [options]="trabajadorOpts"
+            formControlName="IdPTerreno"
+            placeholder="Buscar profesional..."
+            (addClick)="onAddCatalog('IdPTerreno')">
+          </app-smart-selector>
 
-          <mat-form-field appearance="outline">
-            <mat-label>APR</mat-label>
-            <input matInput formControlName="apr" placeholder="Nombre APR">
-          </mat-form-field>
+          <app-smart-selector
+            label="APR"
+            [options]="trabajadorOpts"
+            formControlName="IdAPR"
+            placeholder="Buscar APR..."
+            (addClick)="onAddCatalog('IdAPR')">
+          </app-smart-selector>
 
-          <mat-form-field appearance="outline">
-            <mat-label>ADO</mat-label>
-            <input matInput formControlName="ado" placeholder="Nombre ADO">
-          </mat-form-field>
+          <app-smart-selector
+            label="ADO"
+            [options]="trabajadorOpts"
+            formControlName="IdADO"
+            placeholder="Buscar ADO..."
+            (addClick)="onAddCatalog('IdADO')">
+          </app-smart-selector>
         </div>
 
         <div class="info-card">
           <mat-icon>info</mat-icon>
-          <p>Ingrese los nombres de las personas responsables en la línea de mando al momento del accidente.</p>
+          <p>Seleccione las personas responsables en la línea de mando al momento del accidente.</p>
         </div>
       </div>
 
       <!-- PASO 4: Análisis / Tipología -->
-      <div class="step-content" *ngIf="currentStep === 3">
+      <div class="step-content" [hidden]="currentStep !== 3">
         <div class="section-header">
           <mat-icon>analytics</mat-icon>
           <h2>Análisis / Tipología</h2>
         </div>
 
         <div class="form-grid cols-2">
+          <app-smart-selector
+            label="Riesgo Asociado"
+            [options]="riesgoOpts"
+            formControlName="IdRiesgoAsociado"
+            placeholder="Buscar riesgo..."
+            (addClick)="onAddCatalog('IdRiesgoAsociado')">
+          </app-smart-selector>
+
+          <app-smart-selector
+            label="Lesión"
+            [options]="lesionOpts"
+            formControlName="IdLesion"
+            placeholder="Buscar lesión..."
+            (addClick)="onAddCatalog('IdLesion')">
+          </app-smart-selector>
+
+          <app-smart-selector
+            label="Parte del Cuerpo Afectada"
+            [options]="parteCuerpoOpts"
+            formControlName="IdParteCuerpo"
+            placeholder="Buscar parte del cuerpo..."
+            (addClick)="onAddCatalog('IdParteCuerpo')">
+          </app-smart-selector>
+
+          <app-smart-selector
+            label="Calificación Potencial/Severidad"
+            [options]="calificacionPSOpts"
+            formControlName="CalificacionPS"
+            placeholder="Seleccione calificación"
+            [showAdd]="false">
+          </app-smart-selector>
+
           <mat-form-field appearance="outline">
-            <mat-label>Calificación Potencial/Severidad *</mat-label>
-            <mat-select formControlName="calificacionPS">
-              <mat-option *ngFor="let calif of calificacionPSOptions" [value]="calif">
-                {{ calif }}
-              </mat-option>
-            </mat-select>
-            <mat-error>{{ getErrorMessage('calificacionPS') }}</mat-error>
+            <mat-label>Fuente (Agente)</mat-label>
+            <input matInput formControlName="FuenteAgente" placeholder="Ej: Línea de media tensión">
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Fuente</mat-label>
-            <input matInput formControlName="fuente" placeholder="Ej: Línea de media tensión">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="span-2">
             <mat-label>Acción</mat-label>
-            <input matInput formControlName="accion" placeholder="Ej: posicionarse con herramienta manual bajo cables">
+            <input matInput formControlName="Accion" placeholder="Ej: posicionarse con herramienta manual">
           </mat-form-field>
 
           <mat-form-field appearance="outline" class="span-2">
             <mat-label>Condición</mat-label>
-            <input matInput formControlName="condicion" placeholder="Ej: Falta de limitación física sobre cables">
+            <input matInput formControlName="Condicion" placeholder="Ej: Falta de limitación física sobre cables">
           </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Máquina</mat-label>
-            <input matInput formControlName="maquina" placeholder="N/A si no aplica">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Equipo</mat-label>
-            <input matInput formControlName="equipo" placeholder="N/A si no aplica">
-          </mat-form-field>
+          <app-smart-selector
+            label="Máquina / Equipo"
+            [options]="maquinaEquipoOpts"
+            formControlName="IdMaquinaEquipo"
+            placeholder="Buscar máquina/equipo..."
+            (addClick)="onAddCatalog('IdMaquinaEquipo')">
+          </app-smart-selector>
         </div>
       </div>
 
       <!-- PASO 5: Gestión del Cambio / Jerarquía de Controles -->
-      <div class="step-content" *ngIf="currentStep === 4">
+      <div class="step-content" [hidden]="currentStep !== 4">
         <div class="section-header">
           <mat-icon>security</mat-icon>
           <h2>Gestión del Cambio / Jerarquía de Controles</h2>
         </div>
 
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Causa Raíz</mat-label>
-          <textarea matInput formControlName="causaRaiz" rows="3" 
-                    placeholder="Describa la causa raíz del accidente..."></textarea>
-        </mat-form-field>
+        <div class="full-width">
+          <app-smart-selector
+            label="Causa Raíz"
+            [options]="causaRaizOpts"
+            formControlName="IdCausaRaiz"
+            placeholder="Buscar causa raíz..."
+            (addClick)="onAddCatalog('IdCausaRaiz')">
+          </app-smart-selector>
+        </div>
 
         <div class="controls-grid">
-          <label class="control-card" [class.selected]="accidentForm.get('ctrlEliminacion')?.value">
-            <mat-checkbox formControlName="ctrlEliminacion" color="primary"></mat-checkbox>
+          <label class="control-card" [class.selected]="accidentForm.get('CtrlE')?.value">
+            <mat-checkbox formControlName="CtrlE" color="primary"></mat-checkbox>
             <span class="control-letter">E</span>
             <span class="control-name">Eliminación</span>
           </label>
 
-          <label class="control-card" [class.selected]="accidentForm.get('ctrlSustitucion')?.value">
-            <mat-checkbox formControlName="ctrlSustitucion" color="primary"></mat-checkbox>
+          <label class="control-card" [class.selected]="accidentForm.get('CtrlS')?.value">
+            <mat-checkbox formControlName="CtrlS" color="primary"></mat-checkbox>
             <span class="control-letter">S</span>
             <span class="control-name">Sustitución</span>
           </label>
 
-          <label class="control-card" [class.selected]="accidentForm.get('ctrlIngenieria')?.value">
-            <mat-checkbox formControlName="ctrlIngenieria" color="primary"></mat-checkbox>
+          <label class="control-card" [class.selected]="accidentForm.get('CtrlI')?.value">
+            <mat-checkbox formControlName="CtrlI" color="primary"></mat-checkbox>
             <span class="control-letter">I</span>
             <span class="control-name">Ingeniería de Control</span>
           </label>
 
-          <label class="control-card" [class.selected]="accidentForm.get('ctrlAdministracion')?.value">
-            <mat-checkbox formControlName="ctrlAdministracion" color="primary"></mat-checkbox>
+          <label class="control-card" [class.selected]="accidentForm.get('CtrlA')?.value">
+            <mat-checkbox formControlName="CtrlA" color="primary"></mat-checkbox>
             <span class="control-letter">A</span>
             <span class="control-name">Administración</span>
           </label>
 
-          <label class="control-card" [class.selected]="accidentForm.get('ctrlEPP')?.value">
-            <mat-checkbox formControlName="ctrlEPP" color="primary"></mat-checkbox>
+          <label class="control-card" [class.selected]="accidentForm.get('CtrlEPP')?.value">
+            <mat-checkbox formControlName="CtrlEPP" color="primary"></mat-checkbox>
             <span class="control-letter epp">EPP</span>
             <span class="control-name">Equipo de Protección Personal</span>
           </label>
         </div>
 
-        <div class="form-grid cols-2 mt-4">
-          <mat-form-field appearance="outline">
-            <mat-label>Estado *</mat-label>
-            <mat-select formControlName="estado">
-              <mat-option *ngFor="let est of estadoOptions" [value]="est">
-                {{ est }}
-              </mat-option>
-            </mat-select>
-          </mat-form-field>
-        </div>
-
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>Observaciones</mat-label>
-          <textarea matInput formControlName="observaciones" rows="3" 
+          <textarea matInput formControlName="Observaciones" rows="3"
                     placeholder="Observaciones adicionales..."></textarea>
         </mat-form-field>
       </div>
@@ -346,11 +341,11 @@
           Anterior
         </button>
         <span class="spacer"></span>
-        <button mat-stroked-button type="button" (click)="onReset()" *ngIf="currentStep === 0">
+        <button mat-stroked-button type="button" (click)="onReset()" *ngIf="currentStep === 0 && !isEditMode">
           <mat-icon>refresh</mat-icon>
           Limpiar
         </button>
-        <button mat-flat-button color="primary" type="button" (click)="nextStep()" 
+        <button mat-flat-button color="primary" type="button" (click)="nextStep()"
                 *ngIf="currentStep < 4" [disabled]="!isStepValid(currentStep)">
           Siguiente
           <mat-icon>arrow_forward</mat-icon>
@@ -358,7 +353,7 @@
         <button mat-flat-button color="primary" type="submit" *ngIf="currentStep === 4"
                 [disabled]="isLoading">
           <mat-icon>save</mat-icon>
-          Guardar Registro
+          {{ isEditMode ? 'Actualizar Accidente' : 'Guardar Registro' }}
         </button>
       </div>
     </form>
@@ -368,4 +363,5 @@
       <p>Guardando...</p>
     </div>
   </mat-card>
+  </ng-container>
 </div>
