@@ -460,18 +460,39 @@ export class AccidentsComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (!result) return;
+      
+      // LOG: Payload enviado a CreaCatalogo
+      const crearCatalogoPayload = {
+        caso: 'CreaCatalogo',
+        tabla: config.tabla,
+        Nombre: result.nombre,
+        Descripcion: result.descripcion
+      };
+      console.log('[DEBUG] CreaCatalogo REQUEST:', JSON.stringify(crearCatalogoPayload, null, 2));
+      
       this.accidenteService.crearCatalogo(config.tabla, result.nombre, result.descripcion).subscribe({
         next: (resp) => {
+          // LOG: Respuesta de CreaCatalogo
+          console.log('[DEBUG] CreaCatalogo RESPONSE:', JSON.stringify(resp, null, 2));
+          
           if (resp.success && resp.data) {
             const newId = resp.data.id;
+            console.log('[DEBUG] Nuevo ID creado/existente:', newId, 'exists:', resp.data.exists);
+            
             if (resp.data.exists) {
               this.showMessage(`"${result.nombre}" ya existe, se seleccionó automáticamente`, 'info');
             } else {
               this.showMessage(`"${result.nombre}" creado correctamente`, 'success');
             }
-            // Reload dropdowns and set the new value
-            this.loadDropdowns();
-            this.accidentForm.get(formControlName)?.setValue(newId);
+            // Guardar valores actuales del formulario antes de recargar dropdowns
+            const currentFormValues = this.accidentForm.getRawValue();
+            console.log('[DEBUG] Valores del formulario ANTES de recargar:', JSON.stringify(currentFormValues, null, 2));
+            
+            // Establecer el nuevo valor en el campo correspondiente
+            currentFormValues[formControlName] = newId;
+            
+            // Recargar dropdowns y restaurar valores después
+            this.reloadDropdownsAndRestoreValues(currentFormValues, formControlName);
           }
         },
         error: (err) => {
@@ -479,6 +500,63 @@ export class AccidentsComponent implements OnInit {
           this.showMessage('Error al crear elemento', 'error');
         }
       });
+    });
+  }
+
+  private reloadDropdownsAndRestoreValues(valuesToRestore: any, fieldChanged?: string): void {
+    this.isLoadingDropdowns = true;
+    
+    // LOG: Payload enviado a ConsultaDropdowns con noCache=true para forzar recarga
+    console.log('[DEBUG] ConsultaDropdowns REQUEST: { caso: "ConsultaDropdowns", _nocache: timestamp }');
+    
+    this.accidenteService.getDropdowns(true).subscribe({
+      next: (response) => {
+        // LOG: Respuesta completa de ConsultaDropdowns
+        console.log('[DEBUG] ConsultaDropdowns RESPONSE:', JSON.stringify(response, null, 2));
+        
+        if (response.success && response.data) {
+          const d = response.data;
+          
+          // LOG: Tipos de accidente recibidos
+          console.log('[DEBUG] tiposAccidente raw data:', JSON.stringify(d.tiposAccidente, null, 2));
+          
+          this.obraOpts = (d.obras || []).map((o: any) => ({ value: parseInt(o.IdObra, 10), label: o.Nombre || o.Obra, sublabel: o.Codigo || undefined }));
+          this.empresaOpts = (d.empresas || []).map((o: any) => ({ value: parseInt(o.IdEmpresa, 10), label: o.Nombre, sublabel: o.RUT || undefined }));
+          this.trabajadorOpts = (d.trabajadores || []).map((o: any) => ({ value: parseInt(o.IdTrabajador, 10), label: o.Nombre, sublabel: o.RUT || undefined }));
+          this.tipoAccidenteOpts = (d.tiposAccidente || []).map((o: any) => ({ value: parseInt(o.IdTipoAccidente, 10), label: o.Nombre }));
+          this.riesgoOpts = (d.riesgosAsociados || []).map((o: any) => ({ value: parseInt(o.IdRiesgoAsociado, 10), label: o.Nombre }));
+          this.lesionOpts = (d.lesiones || []).map((o: any) => ({ value: parseInt(o.IdLesion, 10), label: o.Nombre }));
+          this.parteCuerpoOpts = (d.partesCuerpo || []).map((o: any) => ({ value: parseInt(o.IdParteCuerpo, 10), label: o.Nombre }));
+          this.cargoOpts = (d.cargos || []).map((o: any) => ({ value: parseInt(o.IdCargo, 10), label: o.Nombre }));
+          this.maquinaEquipoOpts = (d.maquinasEquipos || []).map((o: any) => ({ value: parseInt(o.IdMaquinaEquipo, 10), label: o.Nombre }));
+          this.causaRaizOpts = (d.causasRaiz || []).map((o: any) => ({ value: parseInt(o.IdCausaRaiz, 10), label: o.Nombre }));
+          this.calificacionPSOpts = CALIFICACION_PS_OPTIONS.map(c => ({ value: c, label: c }));
+          
+          // LOG: Opciones mapeadas de tipos de accidente
+          console.log('[DEBUG] tipoAccidenteOpts después de mapear:', JSON.stringify(this.tipoAccidenteOpts, null, 2));
+          
+          // LOG: Verificar si el nuevo ID existe en las opciones
+          if (fieldChanged === 'IdTipoAccidente') {
+            const newId = valuesToRestore[fieldChanged];
+            const found = this.tipoAccidenteOpts.find(o => o.value === newId);
+            console.log('[DEBUG] Buscando ID', newId, 'en tipoAccidenteOpts:', found ? 'ENCONTRADO' : 'NO ENCONTRADO');
+          }
+        }
+        this.isLoadingDropdowns = false;
+        
+        // Restaurar valores del formulario después de que los dropdowns se actualicen
+        setTimeout(() => {
+          console.log('[DEBUG] Restaurando valores del formulario:', JSON.stringify(valuesToRestore, null, 2));
+          this.accidentForm.patchValue(valuesToRestore, { emitEvent: false });
+          console.log('[DEBUG] Valores del formulario DESPUÉS de restaurar:', JSON.stringify(this.accidentForm.getRawValue(), null, 2));
+        }, 0);
+      },
+      error: (err) => {
+        console.error('[AccidentsComponent] Error loading dropdowns:', err);
+        this.showMessage('Error al recargar datos del formulario', 'error');
+        this.isLoadingDropdowns = false;
+        this.accidentForm.patchValue(valuesToRestore, { emitEvent: false });
+      }
     });
   }
 

@@ -69,11 +69,19 @@ export class SmartSelectorComponent implements OnInit, OnChanges, ControlValueAc
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['options']) {
+      const previousValue = this.selectedValue;
       this.updateMode();
       this.setupAutocompleteFilter();
-      // If we have a value, update the display text for autocomplete
-      if (this.selectedValue !== null && this.isAutocomplete) {
-        this.updateDisplayText();
+      // Preservar el valor seleccionado cuando las opciones cambian
+      if (previousValue !== null && previousValue !== undefined) {
+        // Verificar si el valor aún existe en las nuevas opciones
+        const stillExists = this.options.some(o => o.value === previousValue);
+        if (stillExists) {
+          this.selectedValue = previousValue;
+          if (this.isAutocomplete) {
+            this.updateDisplayText();
+          }
+        }
       }
     }
   }

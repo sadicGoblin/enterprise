@@ -23,9 +23,14 @@ export class AccidenteService {
 
   /**
    * Obtener todos los dropdowns para el formulario de accidentes
+   * @param noCache Si es true, agrega timestamp para evitar cache del servidor
    */
-  getDropdowns(): Observable<ApiResponse<AccidenteDropdowns>> {
-    const request = { caso: 'ConsultaDropdowns' };
+  getDropdowns(noCache: boolean = false): Observable<ApiResponse<AccidenteDropdowns>> {
+    const request: any = { caso: 'ConsultaDropdowns' };
+    if (noCache) {
+      request._nocache = Date.now(); // Forzar bypass de cache
+    }
+    console.log('[AccidenteService] getDropdowns REQUEST:', JSON.stringify(request));
     return this.proxyService.post<ApiResponse<AccidenteDropdowns>>(
       environment.apiBaseUrl + this.apiEndpoint, request
     );
@@ -108,7 +113,14 @@ export class AccidenteService {
    * Crear un nuevo elemento en una tabla de catálogo (botón +)
    */
   crearCatalogo(tabla: string, nombre: string, descripcion?: string, extra?: Record<string, any>): Observable<ApiResponse<{ id: number; nombre: string; exists: boolean }>> {
-    const request = { caso: 'CreaCatalogo', tabla, Nombre: nombre, Descripcion: descripcion, extra };
+    const request: any = { caso: 'CreaCatalogo', tabla, Nombre: nombre };
+    if (descripcion) {
+      request.Descripcion = descripcion;
+    }
+    if (extra) {
+      request.extra = extra;
+    }
+    console.log('[AccidenteService] crearCatalogo REQUEST:', JSON.stringify(request));
     return this.proxyService.post<ApiResponse<{ id: number; nombre: string; exists: boolean }>>(
       environment.apiBaseUrl + this.apiEndpoint, request
     );
