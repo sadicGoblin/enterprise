@@ -78,6 +78,12 @@
       }
     }
     
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    
     .filter-toggle-btn {
       display: flex;
       align-items: center;
@@ -85,6 +91,22 @@
       padding: 0 16px;
       height: 36px;
       font-size: calc(14px * 0.9); // Apply scaling factor
+      
+      mat-icon {
+        font-size: 18px;
+        height: 18px;
+        width: 18px;
+        line-height: 18px;
+      }
+    }
+    
+    .export-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 16px;
+      height: 36px;
+      font-size: calc(14px * 0.9);
       
       mat-icon {
         font-size: 18px;
@@ -155,6 +177,34 @@
     tr:hover {
       background-color: #f9f9f9;
     }
+  }
+}
+
+// Estado badges
+.estado-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: calc(12px * 0.9);
+  font-weight: 500;
+  text-transform: uppercase;
+  
+  &.estado-abierta {
+    background-color: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ffb74d;
+  }
+  
+  &.estado-cerrada {
+    background-color: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #81c784;
+  }
+  
+  &.estado-na {
+    background-color: #f5f5f5;
+    color: #757575;
+    border: 1px solid #e0e0e0;
   }
 }
 
