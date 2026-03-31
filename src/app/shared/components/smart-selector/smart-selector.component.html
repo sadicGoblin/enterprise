@@ -56,10 +56,12 @@
     <button mat-icon-button
       *ngIf="showAdd"
       (click)="onAddClicked($event)"
-      matTooltip="Agregar nuevo"
+      [matTooltip]="loading ? 'Guardando...' : 'Agregar nuevo'"
+      [disabled]="loading"
       type="button"
       class="action-btn add-btn">
-      <mat-icon>add_circle_outline</mat-icon>
+      <mat-spinner *ngIf="loading" diameter="20"></mat-spinner>
+      <mat-icon *ngIf="!loading">add_circle_outline</mat-icon>
     </button>
     <button mat-icon-button
       *ngIf="showEdit && hasValue"

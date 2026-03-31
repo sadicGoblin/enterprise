@@ -102,7 +102,7 @@ export class AccidenteService {
   /**
    * Obtener estadísticas de accidentes
    */
-  getEstadisticas(filters?: { IdObra?: number; FechaDesde?: string; FechaHasta?: string }): Observable<ApiResponse<EstadisticasApiResponse>> {
+  getEstadisticas(filters?: { IdObra?: number; FechaDesde?: string; FechaHasta?: string; TipoFecha?: string }): Observable<ApiResponse<EstadisticasApiResponse>> {
     const request = { caso: 'ConsultaEstadisticas', ...filters };
     return this.proxyService.post<ApiResponse<EstadisticasApiResponse>>(
       environment.apiBaseUrl + this.apiEndpoint, request

@@ -64,6 +64,8 @@ export interface AccidenteApiResponse {
   CategoriaTipoAccidente: string | null;
   Estado: EstadoAccidente;
   FechaReporte: string;
+  created_at: string;
+  updated_at: string | null;
 }
 
 // =============================================
@@ -229,6 +231,8 @@ export interface EstadisticasApiResponse {
   por_riesgo: { Riesgo: string; Total: string; NivelPeligro: string }[];
   por_mes: { Mes: string; Total: string }[];
   por_gravedad: { Gravedad: string; Total: string }[];
+  por_tipo: { TipoAccidente: string; Total: string }[];
+  por_parte_cuerpo: { ParteCuerpo: string; Total: string }[];
   total_accidentes: string;
 }
 

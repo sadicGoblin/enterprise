@@ -76,12 +76,14 @@
             formControlName="IdObra"
             placeholder="Seleccione obra"
             [errorMessage]="getErrorMessage('IdObra')"
+            [loading]="isCreatingCatalogItem"
             (addClick)="onAddCatalog('IdObra')">
           </app-smart-selector>
 
           <app-smart-selector
             label="Empresa"
             [options]="empresaOpts"
+            [loading]="isCreatingCatalogItem"
             formControlName="IdEmpresa"
             placeholder="Seleccione empresa"
             (addClick)="onAddCatalog('IdEmpresa')">
@@ -92,6 +94,7 @@
             [options]="tipoAccidenteOpts"
             formControlName="IdTipoAccidente"
             placeholder="Seleccione tipo"
+            [loading]="isCreatingCatalogItem"
             (addClick)="onAddCatalog('IdTipoAccidente')">
           </app-smart-selector>
 
@@ -122,7 +125,14 @@
 
           <mat-form-field appearance="outline">
             <mat-label>Días Perdidos Final</mat-label>
-            <input matInput type="number" formControlName="DiasPerdidosFinal" min="0">
+            <input matInput type="number" [value]="diasPerdidosFinal ?? '-'" readonly>
+            <mat-hint>Calculado automáticamente (FechaControl - FechaAccidente)</mat-hint>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Días Consecutivos</mat-label>
+            <input matInput type="number" [value]="diasConsecutivos ?? '-'" readonly>
+            <mat-hint>Calculado automáticamente (Hoy - FechaAccidente)</mat-hint>
           </mat-form-field>
         </div>
 
@@ -151,6 +161,7 @@
               formControlName="IdTrabajador"
               placeholder="Buscar trabajador..."
               [errorMessage]="getErrorMessage('IdTrabajador')"
+              [loading]="isCreatingCatalogItem"
               (addClick)="onAddCatalog('IdTrabajador')">
             </app-smart-selector>
           </div>
@@ -160,6 +171,7 @@
             [options]="cargoOpts"
             formControlName="IdCargo"
             placeholder="Seleccione cargo"
+            [loading]="isCreatingCatalogItem"
             (addClick)="onAddCatalog('IdCargo')">
           </app-smart-selector>
         </div>
@@ -179,6 +191,7 @@
             [options]="trabajadorOpts"
             formControlName="IdSupervisor"
             placeholder="Buscar supervisor..."
+            [loading]="isCreatingCatalogItem"
             (addClick)="onAddCatalog('IdSupervisor')">
           </app-smart-selector>
 
@@ -187,6 +200,7 @@
             [options]="trabajadorOpts"
             formControlName="IdPTerreno"
             placeholder="Buscar profesional..."
+            [loading]="isCreatingCatalogItem"
             (addClick)="onAddCatalog('IdPTerreno')">
           </app-smart-selector>
 
@@ -195,6 +209,7 @@
             [options]="trabajadorOpts"
             formControlName="IdAPR"
             placeholder="Buscar APR..."
+            [loading]="isCreatingCatalogItem"
             (addClick)="onAddCatalog('IdAPR')">
           </app-smart-selector>
 
@@ -203,6 +218,7 @@
             [options]="trabajadorOpts"
             formControlName="IdADO"
             placeholder="Buscar ADO..."
+            [loading]="isCreatingCatalogItem"
             (addClick)="onAddCatalog('IdADO')">
           </app-smart-selector>
         </div>
@@ -226,6 +242,7 @@
             [options]="riesgoOpts"
             formControlName="IdRiesgoAsociado"
             placeholder="Buscar riesgo..."
+            [loading]="isCreatingCatalogItem"
             (addClick)="onAddCatalog('IdRiesgoAsociado')">
           </app-smart-selector>
 
@@ -234,6 +251,7 @@
             [options]="lesionOpts"
             formControlName="IdLesion"
             placeholder="Buscar lesión..."
+            [loading]="isCreatingCatalogItem"
             (addClick)="onAddCatalog('IdLesion')">
           </app-smart-selector>
 
@@ -242,6 +260,7 @@
             [options]="parteCuerpoOpts"
             formControlName="IdParteCuerpo"
             placeholder="Buscar parte del cuerpo..."
+            [loading]="isCreatingCatalogItem"
             (addClick)="onAddCatalog('IdParteCuerpo')">
           </app-smart-selector>
 
@@ -273,6 +292,7 @@
             [options]="maquinaEquipoOpts"
             formControlName="IdMaquinaEquipo"
             placeholder="Buscar máquina/equipo..."
+            [loading]="isCreatingCatalogItem"
             (addClick)="onAddCatalog('IdMaquinaEquipo')">
           </app-smart-selector>
         </div>
@@ -291,6 +311,7 @@
             [options]="causaRaizOpts"
             formControlName="IdCausaRaiz"
             placeholder="Buscar causa raíz..."
+            [loading]="isCreatingCatalogItem"
             (addClick)="onAddCatalog('IdCausaRaiz')">
           </app-smart-selector>
         </div>

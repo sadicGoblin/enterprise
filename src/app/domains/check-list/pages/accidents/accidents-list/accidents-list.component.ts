@@ -14,7 +14,10 @@ import { MatSort, MatSortModule } from '@angular/material/sort';
 import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatDatepickerModule } from '@angular/material/datepicker';
+import { MatNativeDateModule, DateAdapter, MAT_DATE_LOCALE, MAT_DATE_FORMATS } from '@angular/material/core';
 import { Router } from '@angular/router';
+import { CustomDateAdapter } from '../../../../../shared/adapters/custom-date-adapter';
 import {
   AccidenteApiResponse,
   CalificacionPotencialSeveridad,
@@ -24,6 +27,19 @@ import {
 import { AccidenteService } from '../../../services/accidente.service';
 import { ExportService, ExportColumn } from '../../../../../shared/services/export.service';
 import { AccidentDetailDialogComponent } from '../accident-detail-dialog/accident-detail-dialog.component';
+
+// Formato de fecha DD/MM/YYYY
+const MY_DATE_FORMATS = {
+  parse: {
+    dateInput: 'DD/MM/YYYY',
+  },
+  display: {
+    dateInput: 'DD/MM/YYYY',
+    monthYearLabel: 'MMM YYYY',
+    dateA11yLabel: 'LL',
+    monthYearA11yLabel: 'MMMM YYYY',
+  },
+};
 
 @Component({
   selector: 'app-accidents-list',
@@ -43,7 +59,14 @@ import { AccidentDetailDialogComponent } from '../accident-detail-dialog/acciden
     MatSortModule,
     MatPaginatorModule,
     MatProgressSpinnerModule,
-    MatDialogModule
+    MatDialogModule,
+    MatDatepickerModule,
+    MatNativeDateModule
+  ],
+  providers: [
+    { provide: DateAdapter, useClass: CustomDateAdapter },
+    { provide: MAT_DATE_LOCALE, useValue: 'es-CL' },
+    { provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS }
   ],
   templateUrl: './accidents-list.component.html',
   styleUrl: './accidents-list.component.scss'
@@ -54,6 +77,7 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
 
   displayedColumns: string[] = [
     'NombreObra',
+    'FechaCreacion',
     'FechaAccidente',
     'NombreTrabajador',
     'NombreEmpresa',
@@ -74,6 +98,22 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
   filterGravedad: string = 'all';
   filterObra: string = 'all';
   searchText: string = '';
+  showAdvancedFilters: boolean = false; // Control para mostrar/ocultar filtros adicionales
+  
+  // Filtros de fecha
+  tipoFecha: 'creacion' | 'accidente' = 'creacion';
+  fechaDesde: Date | null = null;
+  fechaHasta: Date | null = null;
+
+  private initializeDateFilters(): void {
+    const now = new Date();
+    
+    // Desde: Primer día del año a las 00:00:00
+    this.fechaDesde = new Date(now.getFullYear(), 0, 1, 0, 0, 0);
+    
+    // Hasta: Hoy a las 23:59:59
+    this.fechaHasta = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+  }
 
   // Opciones únicas para filtros
   obrasUnicas: string[] = [];
@@ -82,10 +122,14 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
     private router: Router,
     private dialog: MatDialog,
     private accidenteService: AccidenteService,
-    private exportService: ExportService
-  ) {}
+    private exportService: ExportService,
+    private dateAdapter: DateAdapter<Date>
+  ) {
+    this.dateAdapter.setLocale('es-CL');
+  }
 
   ngOnInit(): void {
+    this.initializeDateFilters();
     this.loadData();
   }
 
@@ -97,7 +141,34 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
 
   loadData(): void {
     this.isLoading = true;
-    this.accidenteService.listarAccidentes({ limit: 500 }).subscribe({
+    
+    const params: any = { limit: 500 };
+    
+    // Agregar filtros de fecha si están definidos (formato DATETIME: YYYY-MM-DD HH:MM:SS)
+    if (this.fechaDesde) {
+      const year = this.fechaDesde.getFullYear();
+      const month = String(this.fechaDesde.getMonth() + 1).padStart(2, '0');
+      const day = String(this.fechaDesde.getDate()).padStart(2, '0');
+      const hours = String(this.fechaDesde.getHours()).padStart(2, '0');
+      const minutes = String(this.fechaDesde.getMinutes()).padStart(2, '0');
+      const seconds = String(this.fechaDesde.getSeconds()).padStart(2, '0');
+      params.FechaDesde = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+    
+    if (this.fechaHasta) {
+      const year = this.fechaHasta.getFullYear();
+      const month = String(this.fechaHasta.getMonth() + 1).padStart(2, '0');
+      const day = String(this.fechaHasta.getDate()).padStart(2, '0');
+      const hours = String(this.fechaHasta.getHours()).padStart(2, '0');
+      const minutes = String(this.fechaHasta.getMinutes()).padStart(2, '0');
+      const seconds = String(this.fechaHasta.getSeconds()).padStart(2, '0');
+      params.FechaHasta = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+    }
+    
+    // Agregar tipo de fecha
+    params.TipoFecha = this.tipoFecha;
+    
+    this.accidenteService.listarAccidentes(params).subscribe({
       next: (response) => {
         if (response.success && response.data) {
           this.accidents = response.data;
@@ -117,6 +188,7 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
   setupSorting(): void {
     this.dataSource.sortingDataAccessor = (item: AccidenteApiResponse, property: string) => {
       switch (property) {
+        case 'FechaCreacion': return item.created_at ? new Date(item.created_at).getTime() : 0;
         case 'FechaAccidente': return item.FechaAccidente ? new Date(item.FechaAccidente).getTime() : 0;
         case 'NombreTrabajador': return (item.NombreTrabajador || '').toLowerCase();
         case 'DiasPerdidos': return parseInt(item.DiasPerdidosFinal || item.DiasPerdidosEstimados || '0', 10);
@@ -158,6 +230,17 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
     if (this.dataSource.paginator) {
       this.dataSource.paginator.firstPage();
     }
+  }
+
+  applyDateFilters(): void {
+    this.loadData();
+  }
+
+  clearDateFilters(): void {
+    this.fechaDesde = null;
+    this.fechaHasta = null;
+    this.tipoFecha = 'creacion';
+    this.loadData();
   }
 
   getGravedadClass(gravedad: string | null): string {
@@ -233,7 +316,13 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
 
   formatDate(date: string | null): string {
     if (!date) return '';
-    const d = new Date(date + 'T00:00:00');
+    
+    // Manejar tanto DATE (YYYY-MM-DD) como DATETIME (YYYY-MM-DD HH:MM:SS)
+    // Si ya tiene hora (espacio en el string), usarlo directamente
+    // Si no tiene hora, agregar T00:00:00 para formato ISO
+    const dateStr = date.includes(' ') ? date.replace(' ', 'T') : date + 'T00:00:00';
+    const d = new Date(dateStr);
+    
     return isNaN(d.getTime()) ? '' : d.toLocaleDateString('es-CL');
   }
 
