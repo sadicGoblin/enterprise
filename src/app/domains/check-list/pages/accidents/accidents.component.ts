@@ -1,23 +1,25 @@
-import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { MatButtonModule } from '@angular/material/button';
+import { MatStepperModule } from '@angular/material/stepper';
 import { MatDatepickerModule } from '@angular/material/datepicker';
-import { MatNativeDateModule } from '@angular/material/core';
+import { MatNativeDateModule, MAT_DATE_LOCALE, MAT_DATE_FORMATS, DateAdapter } from '@angular/material/core';
+import { CustomDateAdapter } from '../../../../shared/adapters/custom-date-adapter';
 import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatIconModule } from '@angular/material/icon';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Router, ActivatedRoute } from '@angular/router';
+import { MatDialog, MatDialogModule } from '@angular/material/dialog';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatDividerModule } from '@angular/material/divider';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatTabsModule } from '@angular/material/tabs';
-import { MatTooltipModule } from '@angular/material/tooltip';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { Router, ActivatedRoute } from '@angular/router';
 import { AccidenteService } from '../../services/accidente.service';
 import { SmartSelectorComponent, SmartSelectorOption } from '../../../../shared/components/smart-selector/smart-selector.component';
 import { AddItemDialogComponent, AddItemDialogData } from '../../../../shared/components/smart-selector/add-item-dialog.component';
@@ -29,6 +31,19 @@ import {
   ESTADO_ACCIDENTE_OPTIONS,
   ESTADO_LABELS
 } from './models/accident.model';
+
+// Formato de fecha DD/MM/YYYY
+const MY_DATE_FORMATS = {
+  parse: {
+    dateInput: 'DD/MM/YYYY',
+  },
+  display: {
+    dateInput: 'DD/MM/YYYY',
+    monthYearLabel: 'MMM YYYY',
+    dateA11yLabel: 'LL',
+    monthYearA11yLabel: 'MMMM YYYY',
+  },
+};
 
 @Component({
   selector: 'app-accidents',
@@ -54,19 +69,30 @@ import {
     MatDialogModule,
     SmartSelectorComponent
   ],
+  providers: [
+    { provide: DateAdapter, useClass: CustomDateAdapter },
+    { provide: MAT_DATE_LOCALE, useValue: 'es-CL' },
+    { provide: MAT_DATE_FORMATS, useValue: MY_DATE_FORMATS }
+  ],
   templateUrl: './accidents.component.html',
   styleUrl: './accidents.component.scss'
 })
 export class AccidentsComponent implements OnInit {
   isLoading = false;
   isLoadingDropdowns = true;
+  isCreatingCatalogItem = false;
   accidentForm!: FormGroup;
   currentStep = 0;
 
-  // Modo edición
   isEditMode = false;
+  accidentId: number | null = null;
   editId: number | null = null;
   numeroAccidente = '';
+  currentUserId: number | null = null;
+  
+  // Campos calculados
+  diasPerdidosFinal: number | null = null;
+  diasConsecutivos: number | null = null;
 
   // Opciones estáticas
   calificacionPSOptions = CALIFICACION_PS_OPTIONS;
@@ -110,12 +136,18 @@ export class AccidentsComponent implements OnInit {
     private router: Router,
     private route: ActivatedRoute,
     private dialog: MatDialog,
-    private accidenteService: AccidenteService
-  ) {}
+    private accidenteService: AccidenteService,
+    private cdr: ChangeDetectorRef,
+    private dateAdapter: DateAdapter<Date>
+  ) {
+    this.dateAdapter.setLocale('es-CL');
+  }
 
   ngOnInit(): void {
+    this.currentUserId = this.getUserId();
     this.initializeForm();
     this.loadDropdowns();
+    this.setupDateCalculations();
 
     // Detectar modo edición por ruta /edit/:id
     const idParam = this.route.snapshot.paramMap.get('id');
@@ -165,7 +197,6 @@ export class AccidentsComponent implements OnInit {
       FechaAccidente: toDate(acc.FechaAccidente),
       HoraAccidente: acc.HoraAccidente || '',
       FechaControl: toDate(acc.FechaControl),
-      DiasPerdidosFinal: toInt(acc.DiasPerdidosFinal),
       NumEnfermedadProfesional: acc.NumEnfermedadProfesional || '',
       Descripcion: acc.Descripcion || '',
       IdTrabajador: toInt(acc.IdTrabajador),
@@ -230,7 +261,6 @@ export class AccidentsComponent implements OnInit {
       FechaAccidente: [new Date(), Validators.required],
       HoraAccidente: [''],
       FechaControl: [null],
-      DiasPerdidosFinal: [null, Validators.min(0)],
       NumEnfermedadProfesional: [''],
       Descripcion: ['', Validators.minLength(10)],
 
@@ -263,6 +293,63 @@ export class AccidentsComponent implements OnInit {
       CtrlEPP: [false],
       Observaciones: ['']
     });
+  }
+
+  private setupDateCalculations(): void {
+    // Calcular DiasConsecutivos cuando cambie FechaAccidente
+    this.accidentForm.get('FechaAccidente')?.valueChanges.subscribe(fechaAccidente => {
+      this.calcularDiasConsecutivos(fechaAccidente);
+    });
+
+    // Calcular DiasPerdidosFinal cuando cambien FechaAccidente o FechaControl
+    this.accidentForm.get('FechaAccidente')?.valueChanges.subscribe(() => {
+      this.calcularDiasPerdidosFinal();
+    });
+
+    this.accidentForm.get('FechaControl')?.valueChanges.subscribe(() => {
+      this.calcularDiasPerdidosFinal();
+    });
+
+    // Calcular valores iniciales
+    this.calcularDiasConsecutivos(this.accidentForm.get('FechaAccidente')?.value);
+    this.calcularDiasPerdidosFinal();
+  }
+
+  private calcularDiasConsecutivos(fechaAccidente: Date | null): void {
+    if (!fechaAccidente) {
+      this.diasConsecutivos = null;
+      return;
+    }
+
+    const fecha = new Date(fechaAccidente);
+    const hoy = new Date();
+    
+    // Resetear horas para comparar solo fechas
+    fecha.setHours(0, 0, 0, 0);
+    hoy.setHours(0, 0, 0, 0);
+
+    const diffTime = hoy.getTime() - fecha.getTime();
+    this.diasConsecutivos = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  private calcularDiasPerdidosFinal(): void {
+    const fechaAccidente = this.accidentForm.get('FechaAccidente')?.value;
+    const fechaControl = this.accidentForm.get('FechaControl')?.value;
+
+    if (!fechaAccidente || !fechaControl) {
+      this.diasPerdidosFinal = null;
+      return;
+    }
+
+    const inicio = new Date(fechaAccidente);
+    const fin = new Date(fechaControl);
+
+    // Resetear horas para comparar solo fechas
+    inicio.setHours(0, 0, 0, 0);
+    fin.setHours(0, 0, 0, 0);
+
+    const diffTime = fin.getTime() - inicio.getTime();
+    this.diasPerdidosFinal = Math.floor(diffTime / (1000 * 60 * 60 * 24));
   }
 
   onSubmit(): void {
@@ -321,7 +408,8 @@ export class AccidentsComponent implements OnInit {
       CtrlI: formValue.CtrlI || false,
       CtrlA: formValue.CtrlA || false,
       CtrlEPP: formValue.CtrlEPP || false,
-      Observaciones: formValue.Observaciones || undefined
+      Observaciones: formValue.Observaciones || undefined,
+      created_by: this.currentUserId || undefined
     };
 
     this.accidenteService.crearAccidente(request).subscribe({
@@ -358,7 +446,7 @@ export class AccidentsComponent implements OnInit {
       Descripcion: formValue.Descripcion || undefined,
       NumEnfermedadProfesional: formValue.NumEnfermedadProfesional || undefined,
       DiasPerdidosEstimados: formValue.DiasPerdidosEstimados ?? undefined,
-      DiasPerdidosFinal: formValue.DiasPerdidosFinal ?? undefined,
+      // DiasPerdidosFinal se calcula automáticamente en el backend
       FechaControl: formatDate(formValue.FechaControl),
       IdCargo: formValue.IdCargo || undefined,
       IdSupervisor: formValue.IdSupervisor || undefined,
@@ -409,31 +497,17 @@ export class AccidentsComponent implements OnInit {
       CtrlEPP: false
     });
     this.currentStep = 0;
-    this.showMessage('Formulario reiniciado', 'info');
+    this.showMessage('Formulario reiniciado', 'success');
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.keys(formGroup.controls).forEach(key => {
-      formGroup.get(key)?.markAsTouched();
+      const control = formGroup.get(key);
+      control?.markAsTouched();
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
+      }
     });
-  }
-
-  private showMessage(message: string, type: 'success' | 'error' | 'info' = 'info'): void {
-    this.snackBar.open(message, 'Cerrar', {
-      duration: 3000,
-      horizontalPosition: 'center',
-      verticalPosition: 'bottom',
-      panelClass: type === 'error' ? 'snack-error' : type === 'success' ? 'snack-success' : ''
-    });
-  }
-
-  getErrorMessage(fieldName: string): string {
-    const control = this.accidentForm.get(fieldName);
-    if (control?.hasError('required')) return 'Campo requerido';
-    if (control?.hasError('minlength')) return `Mínimo ${control.errors?.['minlength'].requiredLength} caracteres`;
-    if (control?.hasError('min')) return `Valor mínimo: ${control.errors?.['min'].min}`;
-    if (control?.hasError('max')) return `Valor máximo: ${control.errors?.['max'].max}`;
-    return '';
   }
 
   goToList(): void {
@@ -460,25 +534,223 @@ export class AccidentsComponent implements OnInit {
 
     dialogRef.afterClosed().subscribe(result => {
       if (!result) return;
+      
+      const startTime = Date.now();
+      console.log(`[TIMING-${startTime}] ========== INICIO CREAR CATALOGO ==========`);
+      
+      // Activar loading
+      this.isCreatingCatalogItem = true;
+      console.log('[LOADING] isCreatingCatalogItem =', this.isCreatingCatalogItem);
+      
+      // LOG: Payload enviado a CreaCatalogo
+      const crearCatalogoPayload = {
+        caso: 'CreaCatalogo',
+        tabla: config.tabla,
+        Nombre: result.nombre,
+        Descripcion: result.descripcion
+      };
+      console.log(`[TIMING-${startTime}] Enviando CreaCatalogo...`);
+      
       this.accidenteService.crearCatalogo(config.tabla, result.nombre, result.descripcion).subscribe({
         next: (resp) => {
+          const crearTime = Date.now() - startTime;
+          console.log(`[TIMING-${startTime}] CreaCatalogo respondió en ${crearTime}ms`);
+          
           if (resp.success && resp.data) {
             const newId = resp.data.id;
+            console.log(`[TIMING-${startTime}] Nuevo ID: ${newId}, exists: ${resp.data.exists}`);
+            
             if (resp.data.exists) {
-              this.showMessage(`"${result.nombre}" ya existe, se seleccionó automáticamente`, 'info');
+              this.showMessage(`"${result.nombre}" ya existe, se seleccionó automáticamente`, 'success');
             } else {
               this.showMessage(`"${result.nombre}" creado correctamente`, 'success');
             }
-            // Reload dropdowns and set the new value
-            this.loadDropdowns();
-            this.accidentForm.get(formControlName)?.setValue(newId);
+            
+            // Agregar el elemento localmente sin recargar
+            console.log(`[TIMING-${startTime}] Agregando elemento localmente...`);
+            this.addItemToDropdown(formControlName, newId, result.nombre);
+            
+            // Setear el valor en el formulario
+            this.accidentForm.patchValue({ [formControlName]: newId }, { emitEvent: false });
+            
+            // Forzar detección de cambios
+            this.cdr.detectChanges();
+            
+            const totalTime = Date.now() - startTime;
+            console.log(`[TIMING-${startTime}] ========== PROCESO COMPLETO: ${totalTime}ms ==========`);
+            
+            // Desactivar loading
+            this.isCreatingCatalogItem = false;
           }
         },
         error: (err) => {
           console.error('[AccidentsComponent] Error creating catalog item:', err);
           this.showMessage('Error al crear elemento', 'error');
+          // Desactivar loading en caso de error
+          this.isCreatingCatalogItem = false;
         }
       });
+    });
+  }
+
+  private addItemToDropdown(fieldName: string, newId: number, nombre: string): void {
+    const newItem: SmartSelectorOption = {
+      value: newId,
+      label: nombre.toUpperCase(),
+      sublabel: undefined
+    };
+    
+    // Agregar al array correspondiente
+    switch(fieldName) {
+      case 'IdObra':
+        this.obraOpts.push(newItem);
+        this.obraOpts.sort((a, b) => a.label.localeCompare(b.label));
+        console.log(`[ADD] Obra agregada: ${nombre} (ID: ${newId}), total: ${this.obraOpts.length}`);
+        break;
+      case 'IdEmpresa':
+        this.empresaOpts.push(newItem);
+        this.empresaOpts.sort((a, b) => a.label.localeCompare(b.label));
+        console.log(`[ADD] Empresa agregada: ${nombre} (ID: ${newId}), total: ${this.empresaOpts.length}`);
+        break;
+      case 'IdTrabajador':
+      case 'IdSupervisor':
+      case 'IdPTerreno':
+      case 'IdAPR':
+      case 'IdADO':
+        this.trabajadorOpts.push(newItem);
+        this.trabajadorOpts.sort((a, b) => a.label.localeCompare(b.label));
+        console.log(`[ADD] Trabajador agregado: ${nombre} (ID: ${newId}), total: ${this.trabajadorOpts.length}`);
+        break;
+      case 'IdTipoAccidente':
+        this.tipoAccidenteOpts.push(newItem);
+        this.tipoAccidenteOpts.sort((a, b) => a.label.localeCompare(b.label));
+        console.log(`[ADD] Tipo Accidente agregado: ${nombre} (ID: ${newId}), total: ${this.tipoAccidenteOpts.length}`);
+        break;
+      case 'IdRiesgoAsociado':
+        this.riesgoOpts.push(newItem);
+        this.riesgoOpts.sort((a, b) => a.label.localeCompare(b.label));
+        console.log(`[ADD] Riesgo agregado: ${nombre} (ID: ${newId}), total: ${this.riesgoOpts.length}`);
+        break;
+      case 'IdLesion':
+        this.lesionOpts.push(newItem);
+        this.lesionOpts.sort((a, b) => a.label.localeCompare(b.label));
+        console.log(`[ADD] Lesión agregada: ${nombre} (ID: ${newId}), total: ${this.lesionOpts.length}`);
+        break;
+      case 'IdParteCuerpo':
+        this.parteCuerpoOpts.push(newItem);
+        this.parteCuerpoOpts.sort((a, b) => a.label.localeCompare(b.label));
+        console.log(`[ADD] Parte Cuerpo agregada: ${nombre} (ID: ${newId}), total: ${this.parteCuerpoOpts.length}`);
+        break;
+      case 'IdCargo':
+        this.cargoOpts.push(newItem);
+        this.cargoOpts.sort((a, b) => a.label.localeCompare(b.label));
+        console.log(`[ADD] Cargo agregado: ${nombre} (ID: ${newId}), total: ${this.cargoOpts.length}`);
+        break;
+      case 'IdMaquinaEquipo':
+        this.maquinaEquipoOpts.push(newItem);
+        this.maquinaEquipoOpts.sort((a, b) => a.label.localeCompare(b.label));
+        console.log(`[ADD] Máquina/Equipo agregado: ${nombre} (ID: ${newId}), total: ${this.maquinaEquipoOpts.length}`);
+        break;
+      case 'IdCausaRaiz':
+        this.causaRaizOpts.push(newItem);
+        this.causaRaizOpts.sort((a, b) => a.label.localeCompare(b.label));
+        console.log(`[ADD] Causa Raíz agregada: ${nombre} (ID: ${newId}), total: ${this.causaRaizOpts.length}`);
+        break;
+    }
+  }
+
+  private reloadSingleDropdown(fieldName: string, newId: number, startTime?: number): void {
+    const reloadStart = Date.now();
+    console.log(`[RELOAD] Recargando dropdown: ${fieldName}, ID: ${newId}`);
+    
+    this.accidenteService.getDropdowns(true).subscribe({
+      next: (response) => {
+        const apiTime = Date.now() - reloadStart;
+        console.log(`[RELOAD] API ConsultaDropdowns respondió en ${apiTime}ms`);
+        
+        if (response.success && response.data) {
+          const d = response.data;
+          const mapStart = Date.now();
+          
+          // Actualizar solo el array de opciones correspondiente
+          switch(fieldName) {
+            case 'IdObra':
+              this.obraOpts = (d.obras || []).map((o: any) => ({ value: parseInt(o.IdObra, 10), label: o.Nombre || o.Obra, sublabel: o.Codigo || undefined }));
+              console.log(`[RELOAD] obraOpts actualizado: ${this.obraOpts.length} items`);
+              break;
+            case 'IdEmpresa':
+              this.empresaOpts = (d.empresas || []).map((o: any) => ({ value: parseInt(o.IdEmpresa, 10), label: o.Nombre, sublabel: o.RUT || undefined }));
+              console.log(`[RELOAD] empresaOpts actualizado: ${this.empresaOpts.length} items`);
+              break;
+            case 'IdTrabajador':
+            case 'IdSupervisor':
+            case 'IdPTerreno':
+            case 'IdAPR':
+            case 'IdADO':
+              this.trabajadorOpts = (d.trabajadores || []).map((o: any) => ({ value: parseInt(o.IdTrabajador, 10), label: o.Nombre, sublabel: o.RUT || undefined }));
+              console.log(`[RELOAD] trabajadorOpts actualizado: ${this.trabajadorOpts.length} items`);
+              break;
+            case 'IdTipoAccidente':
+              this.tipoAccidenteOpts = (d.tiposAccidente || []).map((o: any) => ({ value: parseInt(o.IdTipoAccidente, 10), label: o.Nombre }));
+              console.log(`[RELOAD] tipoAccidenteOpts actualizado: ${this.tipoAccidenteOpts.length} items`);
+              break;
+            case 'IdRiesgoAsociado':
+              this.riesgoOpts = (d.riesgosAsociados || []).map((o: any) => ({ value: parseInt(o.IdRiesgoAsociado, 10), label: o.Nombre }));
+              console.log(`[RELOAD] riesgoOpts actualizado: ${this.riesgoOpts.length} items`);
+              break;
+            case 'IdLesion':
+              this.lesionOpts = (d.lesiones || []).map((o: any) => ({ value: parseInt(o.IdLesion, 10), label: o.Nombre }));
+              console.log(`[RELOAD] lesionOpts actualizado: ${this.lesionOpts.length} items`);
+              break;
+            case 'IdParteCuerpo':
+              this.parteCuerpoOpts = (d.partesCuerpo || []).map((o: any) => ({ value: parseInt(o.IdParteCuerpo, 10), label: o.Nombre }));
+              console.log(`[RELOAD] parteCuerpoOpts actualizado: ${this.parteCuerpoOpts.length} items`);
+              break;
+            case 'IdCargo':
+              this.cargoOpts = (d.cargos || []).map((o: any) => ({ value: parseInt(o.IdCargo, 10), label: o.Nombre }));
+              console.log(`[RELOAD] cargoOpts actualizado: ${this.cargoOpts.length} items`);
+              break;
+            case 'IdMaquinaEquipo':
+              this.maquinaEquipoOpts = (d.maquinasEquipos || []).map((o: any) => ({ value: parseInt(o.IdMaquinaEquipo, 10), label: o.Nombre }));
+              console.log(`[RELOAD] maquinaEquipoOpts actualizado: ${this.maquinaEquipoOpts.length} items`);
+              break;
+            case 'IdCausaRaiz':
+              this.causaRaizOpts = (d.causasRaiz || []).map((o: any) => ({ value: parseInt(o.IdCausaRaiz, 10), label: o.Nombre }));
+              console.log(`[RELOAD] causaRaizOpts actualizado: ${this.causaRaizOpts.length} items`);
+              break;
+          }
+          
+          const mapTime = Date.now() - mapStart;
+          console.log(`[RELOAD] Mapeo de opciones: ${mapTime}ms`);
+          
+          // Forzar detección de cambios para que las opciones se propaguen
+          const cdr1Start = Date.now();
+          this.cdr.detectChanges();
+          console.log(`[RELOAD] 1er detectChanges: ${Date.now() - cdr1Start}ms`);
+          
+          // AHORA sí, setear el valor en el formulario
+          const patchStart = Date.now();
+          this.accidentForm.patchValue({ [fieldName]: newId }, { emitEvent: false });
+          console.log(`[RELOAD] patchValue: ${Date.now() - patchStart}ms`);
+          
+          // Forzar otra detección de cambios para que el valor se propague al selector
+          const cdr2Start = Date.now();
+          this.cdr.detectChanges();
+          console.log(`[RELOAD] 2do detectChanges: ${Date.now() - cdr2Start}ms`);
+          
+          const totalReload = Date.now() - reloadStart;
+          console.log(`[RELOAD] Recarga completa: ${totalReload}ms`);
+          
+          if (startTime) {
+            const totalProcess = Date.now() - startTime;
+            console.log(`[TIMING-${startTime}] ========== PROCESO COMPLETO: ${totalProcess}ms ==========`);
+          }
+        }
+      },
+      error: (err) => {
+        console.error(`[RELOAD] Error recargando dropdown ${fieldName}:`, err.message || err);
+        this.showMessage('Error al recargar opciones', 'error');
+      }
     });
   }
 
@@ -503,5 +775,34 @@ export class AccidentsComponent implements OnInit {
       const control = this.accidentForm.get(field);
       return control?.valid;
     }) ?? true;
+  }
+
+  private getUserId(): number | null {
+    const userId = localStorage.getItem('userId');
+    return userId ? parseInt(userId, 10) : null;
+  }
+
+  getErrorMessage(fieldName: string): string {
+    const control = this.accidentForm.get(fieldName);
+    if (!control) return '';
+    
+    if (control.hasError('required')) return 'Este campo es requerido';
+    if (control.hasError('min')) return `Valor mínimo: ${control.errors?.['min'].min}`;
+    if (control.hasError('max')) return `Valor máximo: ${control.errors?.['max'].max}`;
+    if (control.hasError('minlength')) return `Mínimo ${control.errors?.['minlength'].requiredLength} caracteres`;
+    if (control.hasError('maxlength')) return `Máximo ${control.errors?.['maxlength'].requiredLength} caracteres`;
+    if (control.hasError('email')) return 'Email inválido';
+    if (control.hasError('pattern')) return 'Formato inválido';
+    
+    return '';
+  }
+
+  private showMessage(message: string, type: 'success' | 'error'): void {
+    this.snackBar.open(message, 'Cerrar', {
+      duration: type === 'success' ? 3000 : 5000,
+      horizontalPosition: 'end',
+      verticalPosition: 'top',
+      panelClass: type === 'success' ? 'snackbar-success' : 'snackbar-error'
+    });
   }
 }

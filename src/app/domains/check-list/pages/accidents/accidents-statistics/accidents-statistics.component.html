@@ -20,6 +20,43 @@
     </div>
   </div>
 
+  <!-- Filtros de Fecha -->
+  <mat-card class="filters-card">
+    <div class="filters-row date-filters">
+      <mat-form-field appearance="outline">
+        <mat-label>Filtrar por</mat-label>
+        <mat-select [(ngModel)]="tipoFecha">
+          <mat-option value="creacion">Fecha de Creación</mat-option>
+          <mat-option value="accidente">Fecha de Accidente</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Desde</mat-label>
+        <input matInput [matDatepicker]="pickerDesde" [(ngModel)]="fechaDesde">
+        <mat-datepicker-toggle matSuffix [for]="pickerDesde"></mat-datepicker-toggle>
+        <mat-datepicker #pickerDesde></mat-datepicker>
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Hasta</mat-label>
+        <input matInput [matDatepicker]="pickerHasta" [(ngModel)]="fechaHasta">
+        <mat-datepicker-toggle matSuffix [for]="pickerHasta"></mat-datepicker-toggle>
+        <mat-datepicker #pickerHasta></mat-datepicker>
+      </mat-form-field>
+
+      <button mat-raised-button color="primary" (click)="applyDateFilters()">
+        <mat-icon>filter_list</mat-icon>
+        Aplicar
+      </button>
+
+      <button mat-stroked-button (click)="clearDateFilters()">
+        <mat-icon>clear</mat-icon>
+        Limpiar
+      </button>
+    </div>
+  </mat-card>
+
   <!-- Loading -->
   <div *ngIf="isLoading" class="loading-overlay" style="position:relative;min-height:200px">
     <mat-spinner diameter="48"></mat-spinner>
@@ -27,7 +64,7 @@
   </div>
 
   <ng-container *ngIf="!isLoading">
-  <!-- KPI Cards -->
+  <!-- KPI Summary Cards -->
   <div class="kpi-grid">
     <div class="kpi-card total">
       <div class="kpi-header">
@@ -70,29 +107,72 @@
     </div>
   </div>
 
-  <!-- Charts Section -->
+  <!-- Charts Grid - Dark Theme -->
   <div class="charts-grid">
-    <mat-card class="chart-card">
+    <!-- Gravedad Chart -->
+    <mat-card class="chart-card dark-card">
+      <div class="chart-card-header">
+        <h3><mat-icon>pie_chart</mat-icon> Distribución por Gravedad</h3>
+        <span class="chart-badge">{{ porGravedad.length }} categorías</span>
+      </div>
       <div class="chart-container">
         <canvas #gravedadChart></canvas>
       </div>
     </mat-card>
 
-    <mat-card class="chart-card wide">
+    <!-- Tipo Accidente Chart -->
+    <mat-card class="chart-card dark-card">
+      <div class="chart-card-header">
+        <h3><mat-icon>category</mat-icon> Tipo de Accidente</h3>
+        <span class="chart-badge">{{ porTipo.length }} tipos</span>
+      </div>
+      <div class="chart-container">
+        <canvas #tipoChart></canvas>
+      </div>
+    </mat-card>
+
+    <!-- Riesgo Asociado Chart -->
+    <mat-card class="chart-card dark-card">
+      <div class="chart-card-header">
+        <h3><mat-icon>warning</mat-icon> Riesgos Asociados</h3>
+        <span class="chart-badge">{{ porRiesgo.length }} riesgos</span>
+      </div>
+      <div class="chart-container">
+        <canvas #riesgoChart></canvas>
+      </div>
+    </mat-card>
+
+    <!-- Tendencia Mensual Chart -->
+    <mat-card class="chart-card dark-card wide">
+      <div class="chart-card-header">
+        <h3><mat-icon>trending_up</mat-icon> Tendencia Mensual de Accidentes</h3>
+        <span class="chart-badge">{{ porMes.length }} meses</span>
+      </div>
       <div class="chart-container tall">
         <canvas #tendenciaChart></canvas>
       </div>
     </mat-card>
+
+    <!-- Tendencia por Tipo de Accidente Chart -->
+    <mat-card class="chart-card dark-card wide">
+      <div class="chart-card-header">
+        <h3><mat-icon>show_chart</mat-icon> Tendencia Mensual por Tipo de Accidente</h3>
+        <span class="chart-badge">{{ porTipo.length }} tipos</span>
+      </div>
+      <div class="chart-container tall">
+        <canvas #tendenciaTipoChart></canvas>
+      </div>
+    </mat-card>
   </div>
 
-  <!-- Risk Table -->
-  <mat-card class="indicators-card" *ngIf="porRiesgo.length > 0">
-    <h3><mat-icon>assessment</mat-icon> Top Riesgos Asociados</h3>
+  <!-- Parte del Cuerpo Afectada -->
+  <mat-card class="indicators-card dark-card" *ngIf="porParteCuerpo.length > 0">
+    <h3><mat-icon>accessibility</mat-icon> Partes del Cuerpo Afectadas</h3>
     <div class="indicators-grid">
-      <div class="indicator-item" *ngFor="let r of porRiesgo">
-        <span class="indicator-label">{{ r.Riesgo }}</span>
-        <span class="indicator-value">{{ r.Total }}</span>
-        <span class="indicator-formula">Nivel: {{ r.NivelPeligro }}</span>
+      <div class="indicator-item" *ngFor="let p of porParteCuerpo">
+        <span class="indicator-label">{{ p.ParteCuerpo }}</span>
+        <span class="indicator-value">{{ p.Total }}</span>
+        <span class="indicator-formula">{{ ((+p.Total / totalAccidentes) * 100).toFixed(1) }}% del total</span>
       </div>
     </div>
   </mat-card>

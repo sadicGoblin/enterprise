@@ -8,6 +8,7 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatIconModule } from '@angular/material/icon';
 import { MatButtonModule } from '@angular/material/button';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Observable, map, startWith } from 'rxjs';
 
 export interface SmartSelectorOption {
@@ -28,7 +29,8 @@ export interface SmartSelectorOption {
     MatAutocompleteModule,
     MatIconModule,
     MatButtonModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatProgressSpinnerModule
   ],
   providers: [
     {
@@ -50,11 +52,12 @@ export class SmartSelectorComponent implements OnInit, OnChanges, ControlValueAc
   @Input() threshold = 10;
   @Input() disabled = false;
   @Input() errorMessage = '';
+  @Input() loading = false;
 
   @Output() addClick = new EventEmitter<void>();
   @Output() editClick = new EventEmitter<any>();
 
-  searchControl = new FormControl('');
+  searchControl = new FormControl<string | SmartSelectorOption>('');
   filteredOptions$!: Observable<SmartSelectorOption[]>;
   isAutocomplete = false;
 
@@ -69,11 +72,25 @@ export class SmartSelectorComponent implements OnInit, OnChanges, ControlValueAc
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['options']) {
+      console.log(`[Selector-${this.label}] ngOnChanges: ${this.options.length} opciones, selectedValue=${this.selectedValue}`);
+      
+      const previousValue = this.selectedValue;
       this.updateMode();
       this.setupAutocompleteFilter();
-      // If we have a value, update the display text for autocomplete
-      if (this.selectedValue !== null && this.isAutocomplete) {
-        this.updateDisplayText();
+      
+      // Preservar el valor seleccionado cuando las opciones cambian
+      if (previousValue !== null && previousValue !== undefined) {
+        const stillExists = this.options.some(o => o.value === previousValue);
+        console.log(`[Selector-${this.label}] Valor ${previousValue} ${stillExists ? 'EXISTE' : 'NO EXISTE'} en nuevas opciones`);
+        
+        if (stillExists) {
+          this.selectedValue = previousValue;
+          // SIEMPRE actualizar display text si es autocomplete, sin importar cómo llegó el valor
+          if (this.isAutocomplete) {
+            this.updateDisplayText();
+            console.log(`[Selector-${this.label}] Display text actualizado para valor ${previousValue}`);
+          }
+        }
       }
     }
   }
@@ -86,7 +103,8 @@ export class SmartSelectorComponent implements OnInit, OnChanges, ControlValueAc
     this.filteredOptions$ = this.searchControl.valueChanges.pipe(
       startWith(''),
       map(value => {
-        const filterText = typeof value === 'string' ? value : '';
+        // Si es un objeto SmartSelectorOption, usar su label para filtrar
+        const filterText = typeof value === 'string' ? value : (value?.label || '');
         return this._filterOptions(filterText);
       })
     );
@@ -103,8 +121,11 @@ export class SmartSelectorComponent implements OnInit, OnChanges, ControlValueAc
 
   private updateDisplayText(): void {
     const found = this.options.find(o => o.value === this.selectedValue);
+    console.log(`[Selector-${this.label}] updateDisplayText: buscando value=${this.selectedValue}, found=${found ? found.label : 'NO'}`);
     if (found) {
-      this.searchControl.setValue(found.label, { emitEvent: false });
+      // Setear el objeto completo, no solo el label
+      this.searchControl.setValue(found, { emitEvent: false });
+      console.log(`[Selector-${this.label}] searchControl.setValue(objeto completo: "${found.label}")`);
     }
   }
 
@@ -122,13 +143,20 @@ export class SmartSelectorComponent implements OnInit, OnChanges, ControlValueAc
 
   onAutocompleteClosed(): void {
     // If user typed something but didn't select, revert to last valid value
-    const currentText = this.searchControl.value;
-    if (typeof currentText === 'string') {
-      const found = this.options.find(o => o.label.toLowerCase() === currentText.toLowerCase());
+    const currentValue = this.searchControl.value;
+    
+    // Si es un objeto, ya está seleccionado correctamente
+    if (typeof currentValue === 'object' && currentValue !== null) {
+      return;
+    }
+    
+    // Si es string, intentar encontrar coincidencia
+    if (typeof currentValue === 'string') {
+      const found = this.options.find(o => o.label.toLowerCase() === currentValue.toLowerCase());
       if (found) {
         this.selectedValue = found.value;
         this.onChange(this.selectedValue);
-      } else if (currentText === '') {
+      } else if (currentValue === '') {
         this.selectedValue = null;
         this.onChange(null);
       } else {
@@ -165,7 +193,11 @@ export class SmartSelectorComponent implements OnInit, OnChanges, ControlValueAc
 
   // ControlValueAccessor
   writeValue(value: any): void {
+    const found = value !== null && value !== undefined ? this.options.find(o => o.value === value) : null;
+    console.log(`[Selector-${this.label}] writeValue(${value}): ${this.options.length} opts, ${this.isAutocomplete ? 'autocomplete' : 'select'}, ${found ? `FOUND (${found.label})` : 'NOT FOUND'}`);
+    
     this.selectedValue = value;
+    
     if (this.isAutocomplete) {
       this.updateDisplayText();
     }

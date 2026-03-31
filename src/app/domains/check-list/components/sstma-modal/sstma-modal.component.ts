@@ -274,73 +274,94 @@ export class SstmaModalComponent implements OnInit {
       headerActions.parentNode.removeChild(headerActions);
     }
 
-    // Extraer las imágenes originales del componente app-img-viewer
-    const photoSection = contentClone.querySelector('.photo-evidence-section');
-    const imgViewerComponents = contentClone.querySelectorAll('app-img-viewer');
-    
-    // Reemplazar cada app-img-viewer con las imágenes originales directamente
-    imgViewerComponents.forEach((component: Element) => {
-      if (component.parentNode) {
-        // Obtener la lista de URLs de imágenes del componente SSTMA
-        const imageUrls = this.sstmaData.photos || [];
-        
-        if (imageUrls && imageUrls.length > 0) {
-          // Crear un nuevo contenedor para las imágenes con layout en cuadrícula
-          const imagesContainer = document.createElement('div');
-          imagesContainer.className = 'pdf-images-container';
-          imagesContainer.style.cssText = 'display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 10px; margin-top: 20px; padding: 10px;';
-          
-          // Para cada imagen, crear dos versiones - una horizontal y una vertical
-          // Procesar cada imagen con tamaño fijo 300x300 para mantener consistencia
-          imageUrls.forEach((imgUrl: string, index: number) => {
-            // Contenedor principal para la imagen que evita saltos de página
-            const imageWrapper = document.createElement('div');
-            imageWrapper.style.cssText = 'page-break-inside: avoid; margin-bottom: 30px; text-align: center; display: inline-block; width: 320px; margin-right: 20px;';
-            
-            // Contenedor con tamaño fijo para la imagen
-            const fixedContainer = document.createElement('div');
-            fixedContainer.style.cssText = 'width: 300px; height: 300px; margin: 0 auto; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; position: relative; background: #f5f5f5;';
-            
-            // Crear un enlace contenedor que envuelva la imagen
-            const imageLink = document.createElement('a');
-            imageLink.href = imgUrl;
-            imageLink.target = '_blank';
-            imageLink.style.cssText = 'display: block; width: 100%; height: 100%; text-decoration: none;';
-            
-            // Imagen con tamaño fijo y object-fit: cover para llenar el espacio
-            const img = document.createElement('img');
-            img.src = imgUrl;
-            img.alt = `Evidencia fotográfica ${index + 1}`;
-            img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;';
-            
-            // Agregar imagen al enlace y enlace al contenedor
-            imageLink.appendChild(img);
-            fixedContainer.appendChild(imageLink);
-            imageWrapper.appendChild(fixedContainer);
-            
-            // Agregar texto descriptivo debajo de la imagen
-            const imageLabel = document.createElement('div');
-            imageLabel.style.cssText = 'margin-top: 8px; font-size: 12px; color: #333; text-align: center; font-weight: bold;';
-            imageLabel.textContent = `Imagen ${index + 1}`;
-            imageWrapper.appendChild(imageLabel);
-            
-            // Agregar texto de enlace debajo
-            const linkText = document.createElement('a');
-            linkText.href = imgUrl;
-            linkText.target = '_blank';
-            linkText.style.cssText = 'display: block; margin: 5px auto 0; font-size: 11px; color: #0c4790; text-align: center; text-decoration: none;';
-            linkText.textContent = 'Ver imagen completa';
-            imageWrapper.appendChild(linkText);
-            
-            // Agregar al contenedor principal
-            imagesContainer.appendChild(imageWrapper);
-          });
-          
-          // Reemplazar el componente app-img-viewer con nuestro nuevo contenedor
-          component.parentNode.replaceChild(imagesContainer, component);
-        }
+    // Reemplazar íconos de Material con símbolos Unicode para el PDF
+    const matIcons = contentClone.querySelectorAll('mat-icon');
+    matIcons.forEach((icon) => {
+      const iconText = icon.textContent?.trim();
+      const iconSymbol = document.createElement('span');
+      
+      if (iconText === 'check_circle') {
+        iconSymbol.textContent = '✓';
+        iconSymbol.style.cssText = 'color: #4CAF50; font-weight: bold; font-size: 20px; margin-right: 8px;';
+      } else if (iconText === 'check') {
+        iconSymbol.textContent = '✓';
+        iconSymbol.style.cssText = 'color: #4CAF50; font-weight: bold; font-size: 16px;';
+      } else {
+        return; // No reemplazar otros iconos
+      }
+      
+      if (icon.parentNode) {
+        icon.parentNode.replaceChild(iconSymbol, icon);
       }
     });
+
+    // Extraer las imágenes originales del componente app-img-viewer
+    // Hay dos secciones: photo-evidence-section (fotos principales) y closure-evidence (fotos de cierre)
+    const photoSectionViewer = contentClone.querySelector('.photo-evidence-section app-img-viewer');
+    const closureSectionViewer = contentClone.querySelector('.closure-evidence app-img-viewer');
+    
+    // Función helper para crear el contenedor de imágenes para PDF
+    const createImageContainer = (imageUrls: string[], labelPrefix: string) => {
+      const imagesContainer = document.createElement('div');
+      imagesContainer.className = 'pdf-images-container';
+      imagesContainer.style.cssText = 'display: flex; flex-wrap: wrap; justify-content: flex-start; gap: 10px; margin-top: 20px; padding: 10px;';
+      
+      imageUrls.forEach((imgUrl: string, index: number) => {
+        const imageWrapper = document.createElement('div');
+        imageWrapper.style.cssText = 'page-break-inside: avoid; margin-bottom: 30px; text-align: center; display: inline-block; width: 320px; margin-right: 20px;';
+        
+        const fixedContainer = document.createElement('div');
+        fixedContainer.style.cssText = 'width: 300px; height: 300px; margin: 0 auto; border: 2px solid #ddd; border-radius: 8px; overflow: hidden; position: relative; background: #f5f5f5;';
+        
+        const imageLink = document.createElement('a');
+        imageLink.href = imgUrl;
+        imageLink.target = '_blank';
+        imageLink.style.cssText = 'display: block; width: 100%; height: 100%; text-decoration: none;';
+        
+        const img = document.createElement('img');
+        img.src = imgUrl;
+        img.alt = `${labelPrefix} ${index + 1}`;
+        img.style.cssText = 'width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;';
+        
+        imageLink.appendChild(img);
+        fixedContainer.appendChild(imageLink);
+        imageWrapper.appendChild(fixedContainer);
+        
+        const imageLabel = document.createElement('div');
+        imageLabel.style.cssText = 'margin-top: 8px; font-size: 12px; color: #333; text-align: center; font-weight: bold;';
+        imageLabel.textContent = `Imagen ${index + 1}`;
+        imageWrapper.appendChild(imageLabel);
+        
+        const linkText = document.createElement('a');
+        linkText.href = imgUrl;
+        linkText.target = '_blank';
+        linkText.style.cssText = 'display: block; margin: 5px auto 0; font-size: 11px; color: #0c4790; text-align: center; text-decoration: none;';
+        linkText.textContent = 'Ver imagen completa';
+        imageWrapper.appendChild(linkText);
+        
+        imagesContainer.appendChild(imageWrapper);
+      });
+      
+      return imagesContainer;
+    };
+    
+    // Reemplazar el viewer de evidencia fotográfica principal
+    if (photoSectionViewer && photoSectionViewer.parentNode) {
+      const photoUrls = this.sstmaData.photos || [];
+      if (photoUrls.length > 0) {
+        const container = createImageContainer(photoUrls, 'Evidencia fotográfica');
+        photoSectionViewer.parentNode.replaceChild(container, photoSectionViewer);
+      }
+    }
+    
+    // Reemplazar el viewer de evidencia de cierre (usa imágenes diferentes)
+    if (closureSectionViewer && closureSectionViewer.parentNode) {
+      const closureUrls = this.sstmaData.datosCierre?.evidencia || [];
+      if (closureUrls.length > 0) {
+        const container = createImageContainer(closureUrls, 'Evidencia de cierre');
+        closureSectionViewer.parentNode.replaceChild(container, closureSectionViewer);
+      }
+    }
 
     // Obtener los estilos
     const styles = this.getStyles();
@@ -437,6 +458,64 @@ export class SstmaModalComponent implements OnInit {
             object-position: center !important;
             display: block !important;
             transform-origin: center !important;
+          }
+          
+          /* Estilos para la sección de Cierre de Inspección */
+          .closure-section {
+            margin-top: 30px;
+            page-break-inside: avoid;
+          }
+          .closure-card {
+            background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+            border: 2px solid #4CAF50;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 10px;
+          }
+          .closure-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(76, 175, 80, 0.3);
+          }
+          .closure-header h3 {
+            margin: 0;
+            color: #2e7d32;
+            font-size: 18px;
+            font-weight: 600;
+            flex: 1;
+          }
+          .closure-date {
+            background: #4CAF50;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+          }
+          .closure-content {
+            padding: 10px 0;
+          }
+          .closure-description {
+            margin-bottom: 16px;
+          }
+          .closure-description .label,
+          .closure-evidence .label {
+            font-weight: 600;
+            color: #2e7d32;
+            display: block;
+            margin-bottom: 8px;
+          }
+          .closure-description p {
+            margin: 0;
+            padding: 12px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #4CAF50;
+          }
+          .closure-evidence {
+            margin-top: 16px;
           }
         </style>
       </head>
