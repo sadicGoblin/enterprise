@@ -25,6 +25,7 @@ import { WorkflowOcComponent } from './pages/workflow-oc/workflow-oc.component';
 import { AccidentsComponent } from './pages/accidents/accidents.component';
 import { AccidentsListComponent } from './pages/accidents/accidents-list/accidents-list.component';
 import { AccidentsStatisticsComponent } from './pages/accidents/accidents-statistics/accidents-statistics.component';
+import { MasaLaboralComponent } from './pages/accidents/masa-laboral/masa-laboral.component';
 
 export const checkListRoutes: Routes = [
   {
@@ -86,6 +87,7 @@ export const checkListRoutes: Routes = [
           { path: 'edit/:id', component: AccidentsComponent },
           { path: 'list', component: AccidentsListComponent },
           { path: 'statistics', component: AccidentsStatisticsComponent },
+          { path: 'masa-laboral', component: MasaLaboralComponent },
         ],
       },
     ],
