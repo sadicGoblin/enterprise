@@ -518,6 +518,10 @@ export class AccidentsComponent implements OnInit {
     this.router.navigate(['/check-list/accidents/statistics']);
   }
 
+  goToMasaLaboral(): void {
+    this.router.navigate(['/check-list/accidents/masa-laboral']);
+  }
+
   onAddCatalog(formControlName: string): void {
     const config = this.catalogMap[formControlName];
     if (!config) return;
