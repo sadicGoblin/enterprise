@@ -326,6 +326,32 @@
   img {
     max-width: 300px;
   }
+  
+  .image-card {
+    position: relative;
+  }
+  
+  .image-loading-spinner {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(245, 245, 245, 0.9);
+    z-index: 2;
+    
+    .spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid #e0e0e0;
+      border-top: 3px solid #1976d2;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+  }
 }
 
 /* Clickable Image Cursor */

@@ -23,6 +23,7 @@ import { SstmaModalComponent } from '../../../../../components/sstma-modal/sstma
 import { ReportModalComponent } from '../../../../../components/report-modal/report-modal.component';
 import { ARTReportModalComponent } from '../../../../../components/art-report-modal/art-report-modal.component';
 import { ChecklistReportModalComponent } from '../../../../../components/checklist-report-modal/checklist-report-modal.component';
+import { ExportService, ExportColumn } from '../../../../../../../shared/services/export.service';
 
 // Interface for the API response
 interface ReportResponse {
@@ -44,6 +45,7 @@ interface Report {
   idControl: string;
   profesionalResponsable: string;
   ambitoInvolucrado: string;
+  estado: string;
 }
 
 @Component({
@@ -101,11 +103,13 @@ export class ReportsTableComponent implements OnInit {
   tipoFilter = new FormControl('');
   obraFilter = new FormControl('');
   responsableFilter = new FormControl('');
+  estadoFilter = new FormControl('');
   
   // Unique values for dropdown filters
   tipoOptions: string[] = [];
   obraOptions: string[] = [];
   responsableOptions: string[] = [];
+  estadoOptions: string[] = [];
 
   reports: Report[] = [];
   isLoading = false;
@@ -119,14 +123,17 @@ export class ReportsTableComponent implements OnInit {
     'fecha',
     'creador',
     'profesionalResponsable',
+    'estado',
     'view'
   ];
 
   @ViewChild(MatPaginator) paginator!: MatPaginator;
   @ViewChild(MatSort) sort!: MatSort;
 
-  constructor(private proxyService: ProxyService,
-    private dialog: MatDialog
+  constructor(
+    private proxyService: ProxyService,
+    private dialog: MatDialog,
+    private exportService: ExportService
   ) {
   }
 
@@ -273,6 +280,7 @@ export class ReportsTableComponent implements OnInit {
     this.tipoOptions = [...new Set(this.reports.map(report => report.tipo).filter(Boolean))];
     this.obraOptions = [...new Set(this.reports.map(report => report.Obra).filter(Boolean))];
     this.responsableOptions = [...new Set(this.reports.map(report => report.profesionalResponsable).filter(Boolean))];
+    this.estadoOptions = [...new Set(this.reports.map(report => report.estado).filter(Boolean))];
   }
   
   /**
@@ -303,6 +311,7 @@ export class ReportsTableComponent implements OnInit {
     const tipoValue = this.tipoFilter.value;
     const obraValue = this.obraFilter.value;
     const responsableValue = this.responsableFilter.value;
+    const estadoValue = this.estadoFilter.value;
     
     // Apply filters
     this.filteredReports = this.reports.filter(report => {
@@ -314,6 +323,7 @@ export class ReportsTableComponent implements OnInit {
         report.creador,
         report.profesionalResponsable,
         report.ambitoInvolucrado,
+        report.estado,
         this.formatDate(report.fecha)
       ].some(fieldValue => 
         fieldValue && String(fieldValue).toLowerCase().includes(searchTerm)
@@ -323,9 +333,10 @@ export class ReportsTableComponent implements OnInit {
       const matchesTipo = !tipoValue || report.tipo === tipoValue;
       const matchesObra = !obraValue || report.Obra === obraValue;
       const matchesResponsable = !responsableValue || report.profesionalResponsable === responsableValue;
+      const matchesEstado = !estadoValue || report.estado === estadoValue;
       
       // All filters must match
-      return matchesSearch && matchesTipo && matchesObra && matchesResponsable;
+      return matchesSearch && matchesTipo && matchesObra && matchesResponsable && matchesEstado;
     });
   }
   
@@ -345,6 +356,7 @@ export class ReportsTableComponent implements OnInit {
     this.tipoFilter.setValue('');
     this.obraFilter.setValue('');
     this.responsableFilter.setValue('');
+    this.estadoFilter.setValue('');
     this.applyFilters();
   }
   
@@ -408,5 +420,30 @@ export class ReportsTableComponent implements OnInit {
       // After successful deletion, reload the reports list
       this.loadReports();
     }
+  }
+
+  /**
+   * Export filtered reports to Excel
+   */
+  exportToExcel(): void {
+    if (!this.filteredReports || this.filteredReports.length === 0) {
+      console.warn('No hay datos para exportar');
+      return;
+    }
+
+    const columns: ExportColumn[] = [
+      { field: 'tipo', header: 'Tipo', width: 20 },
+      { field: 'origen', header: 'Origen', width: 15 },
+      { field: 'Obra', header: 'Obra', width: 30 },
+      { field: 'fecha', header: 'Fecha', width: 15, format: (value) => this.formatDate(value) },
+      { field: 'creador', header: 'Creador', width: 25 },
+      { field: 'profesionalResponsable', header: 'Responsable', width: 25 },
+      { field: 'estado', header: 'Estado', width: 15 },
+    ];
+
+    this.exportService.exportToExcel(this.filteredReports, columns, {
+      fileName: `Reportes_${this.displayPeriod.replace(' ', '_')}`,
+      sheetName: 'Reportes',
+    });
   }
 }

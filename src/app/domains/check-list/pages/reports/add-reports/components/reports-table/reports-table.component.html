@@ -60,10 +60,18 @@
         <mat-icon matSuffix>search</mat-icon>
       </mat-form-field>
       
-      <button mat-stroked-button color="primary" (click)="toggleFilters()" class="filter-toggle-btn">
-        <mat-icon>{{ showFilters ? 'filter_list_off' : 'filter_list' }}</mat-icon>
-        {{ showFilters ? 'Ocultar filtros' : 'Mostrar filtros' }}
-      </button>
+      <div class="header-actions">
+        <button mat-stroked-button color="primary" (click)="toggleFilters()" class="filter-toggle-btn">
+          <mat-icon>{{ showFilters ? 'filter_list_off' : 'filter_list' }}</mat-icon>
+          {{ showFilters ? 'Ocultar filtros' : 'Mostrar filtros' }}
+        </button>
+        
+        <button mat-raised-button color="accent" (click)="exportToExcel()" class="export-btn" 
+                [disabled]="!filteredReports || filteredReports.length === 0">
+          <mat-icon>file_download</mat-icon>
+          Exportar
+        </button>
+      </div>
     </div>
     
     <!-- Dropdown filters section -->
@@ -104,6 +112,19 @@
           </mat-select>
           <button mat-icon-button matSuffix (click)="responsableFilter.setValue(''); applyFilters()" 
                   *ngIf="responsableFilter.value">
+            <mat-icon>close</mat-icon>
+          </button>
+        </mat-form-field>
+        
+        <!-- Estado filter -->
+        <mat-form-field appearance="outline" class="filter-field">
+          <mat-label>Filtrar por Estado</mat-label>
+          <mat-select [formControl]="estadoFilter" (selectionChange)="applyFilters()">
+            <mat-option value="">Todos</mat-option>
+            <mat-option *ngFor="let option of estadoOptions" [value]="option">{{ option }}</mat-option>
+          </mat-select>
+          <button mat-icon-button matSuffix (click)="estadoFilter.setValue(''); applyFilters()" 
+                  *ngIf="estadoFilter.value">
             <mat-icon>close</mat-icon>
           </button>
         </mat-form-field>
@@ -160,6 +181,20 @@
         <th mat-header-cell *matHeaderCellDef mat-sort-header>Responsable</th>
         <td mat-cell *matCellDef="let report">
           {{ report.profesionalResponsable }}
+        </td>
+      </ng-container>
+
+      <!-- Estado Column -->
+      <ng-container matColumnDef="estado">
+        <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
+        <td mat-cell *matCellDef="let report">
+          <span class="estado-badge" [ngClass]="{
+            'estado-abierta': report.estado?.toLowerCase() === 'abierta',
+            'estado-cerrada': report.estado?.toLowerCase() === 'cerrada',
+            'estado-na': !report.estado || report.estado === '-'
+          }">
+            {{ report.estado || '-' }}
+          </span>
         </td>
       </ng-container>
 

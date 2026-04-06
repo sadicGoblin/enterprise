@@ -25,6 +25,7 @@ export class ImgViewerComponent implements OnInit {
   currentIndex: number = 0;
   isLoading: boolean = false;
   imageError: boolean = false;
+  imageLoadingStates: boolean[] = []; // Track loading state for each image
   private autoPlayTimer?: any;
 
   // Modal properties
@@ -43,8 +44,22 @@ export class ImgViewerComponent implements OnInit {
   lastOffsetY: number = 0;
 
   ngOnInit(): void {
+    // Initialize loading states for all images as true (loading)
+    this.initializeLoadingStates();
+    
     if (this.autoPlay && this.images.length > 1) {
       this.startAutoPlay();
+    }
+  }
+  
+  ngOnChanges(): void {
+    // Reinitialize loading states when images change
+    this.initializeLoadingStates();
+  }
+  
+  private initializeLoadingStates(): void {
+    if (this.images && this.images.length > 0) {
+      this.imageLoadingStates = this.images.map(() => true);
     }
   }
 
@@ -102,6 +117,19 @@ export class ImgViewerComponent implements OnInit {
   onImageLoadStart(): void {
     this.isLoading = true;
     this.imageError = false;
+  }
+  
+  // Methods for individual image loading states in grid view
+  onSingleImageLoad(index: number): void {
+    if (this.imageLoadingStates[index] !== undefined) {
+      this.imageLoadingStates[index] = false;
+    }
+  }
+  
+  onSingleImageError(index: number): void {
+    if (this.imageLoadingStates[index] !== undefined) {
+      this.imageLoadingStates[index] = false;
+    }
   }
 
   private startAutoPlay(): void {
