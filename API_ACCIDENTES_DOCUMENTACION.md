@@ -36,6 +36,7 @@ Crea un accidente completo con todas sus tablas relacionadas.
 | `NumEnfermedadProfesional` | string | Número de enfermedad profesional |
 | `DiasPerdidosEstimados` | int | Días perdidos estimados |
 | `FechaControl` | string | Formato `YYYY-MM-DD` |
+| `FechaAlta` | string | Formato `YYYY-MM-DD` (opcional) |
 | `created_by` | int | ID del usuario creador |
 
 #### Datos del Trabajador (`TB_AccidentesTrabajadorData`)
@@ -216,6 +217,7 @@ Retorna un accidente completo con todos sus datos relacionados usando `vista_acc
     "FechaAccidente": "2025-01-01",
     "HoraAccidente": null,
     "FechaControl": "2025-01-17",
+    "FechaAlta": null,
     "Descripcion": "TRAZADOR AL TRANSITAR OBRA...",
     "DiaSemana": "Miércoles",
     "NombreTrabajador": "ANDRÉS FARIAS",
@@ -265,7 +267,8 @@ Retorna un accidente completo con todos sus datos relacionados usando `vista_acc
 | `NombreEmpresa` | `TB_Empresas.Nombre` | Nombre de la empresa |
 | `FechaAccidente` | `TB_Accidentes` | Fecha del accidente |
 | `HoraAccidente` | `TB_Accidentes` | Hora del accidente (formato `HH:MM`) |
-| `FechaControl` | `TB_Accidentes` | Fecha de control/alta |
+| `FechaControl` | `TB_Accidentes` | Fecha de control |
+| `FechaAlta` | `TB_Accidentes` | Fecha de alta |
 | `Descripcion` | `TB_Accidentes` | Descripción del accidente |
 | `DiaSemana` | Calculado | `DAYOFWEEK(FechaAccidente)` → Lunes, Martes, etc. |
 | `NombreTrabajador` | `TB_Trabajadores.Nombre` | Nombre del trabajador |

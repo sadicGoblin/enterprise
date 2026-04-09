@@ -29,7 +29,8 @@ import {
   ActualizarAccidenteRequest,
   CALIFICACION_PS_OPTIONS,
   ESTADO_ACCIDENTE_OPTIONS,
-  ESTADO_LABELS
+  ESTADO_LABELS,
+  isAccidenteAnulado
 } from './models/accident.model';
 
 // Formato de fecha DD/MM/YYYY
@@ -88,11 +89,15 @@ export class AccidentsComponent implements OnInit {
   accidentId: number | null = null;
   editId: number | null = null;
   numeroAccidente = '';
+  /** Estado tal como viene del backend (para anular y no duplicar lógica). */
+  currentEstadoBackend: string | null = null;
+  isAnnuling = false;
   currentUserId: number | null = null;
   
-  // Campos calculados
+  /** Días = FechaControl − FechaAccidente */
+  diasPerdidosEstimados: number | null = null;
+  /** Días = FechaAlta − FechaAccidente */
   diasPerdidosFinal: number | null = null;
-  diasConsecutivos: number | null = null;
 
   // Opciones estáticas
   calificacionPSOptions = CALIFICACION_PS_OPTIONS;
@@ -193,10 +198,10 @@ export class AccidentsComponent implements OnInit {
       IdObra: toInt(acc.IdObra),
       IdEmpresa: toInt(acc.IdEmpresa),
       IdTipoAccidente: toInt(acc.IdTipoAccidente),
-      DiasPerdidosEstimados: toInt(acc.DiasPerdidosEstimados),
       FechaAccidente: toDate(acc.FechaAccidente),
       HoraAccidente: acc.HoraAccidente || '',
       FechaControl: toDate(acc.FechaControl),
+      FechaAlta: toDate(acc.FechaAlta),
       NumEnfermedadProfesional: acc.NumEnfermedadProfesional || '',
       Descripcion: acc.Descripcion || '',
       IdTrabajador: toInt(acc.IdTrabajador),
@@ -220,6 +225,39 @@ export class AccidentsComponent implements OnInit {
       CtrlA: toBool(acc.CtrlA),
       CtrlEPP: toBool(acc.CtrlEPP),
       Observaciones: acc.Observaciones || ''
+    });
+    this.recalcularDiasPerdidos();
+    this.currentEstadoBackend = acc.Estado ?? null;
+  }
+
+  get mostrarBotonAnular(): boolean {
+    return this.isEditMode && this.editId != null && !isAccidenteAnulado(this.currentEstadoBackend);
+  }
+
+  anularAccidente(): void {
+    if (this.editId == null || isAccidenteAnulado(this.currentEstadoBackend)) {
+      return;
+    }
+    if (!confirm('¿Anular este accidente? Quedará marcado como anulado.')) {
+      return;
+    }
+    this.isAnnuling = true;
+    this.accidenteService.cambiarEstado(this.editId, 'Anulado').subscribe({
+      next: (response) => {
+        this.isAnnuling = false;
+        if (response.success) {
+          this.currentEstadoBackend = 'Anulado';
+          this.showMessage('Accidente anulado', 'success');
+          this.router.navigate(['/check-list/accidents/list']);
+        } else {
+          this.showMessage(response.message || 'No se pudo anular el accidente', 'error');
+        }
+      },
+      error: (err) => {
+        this.isAnnuling = false;
+        console.error('[AccidentsComponent] Error anular:', err);
+        this.showMessage('Error de conexión al anular', 'error');
+      }
     });
   }
 
@@ -257,10 +295,10 @@ export class AccidentsComponent implements OnInit {
       IdObra: [null, Validators.required],
       IdEmpresa: [null],
       IdTipoAccidente: [null],
-      DiasPerdidosEstimados: [null, Validators.min(0)],
       FechaAccidente: [new Date(), Validators.required],
       HoraAccidente: [''],
       FechaControl: [null],
+      FechaAlta: [null],
       NumEnfermedadProfesional: [''],
       Descripcion: ['', Validators.minLength(10)],
 
@@ -296,60 +334,41 @@ export class AccidentsComponent implements OnInit {
   }
 
   private setupDateCalculations(): void {
-    // Calcular DiasConsecutivos cuando cambie FechaAccidente
-    this.accidentForm.get('FechaAccidente')?.valueChanges.subscribe(fechaAccidente => {
-      this.calcularDiasConsecutivos(fechaAccidente);
+    ['FechaAccidente', 'FechaControl', 'FechaAlta'].forEach((name) => {
+      this.accidentForm.get(name)?.valueChanges.subscribe(() => this.recalcularDiasPerdidos());
     });
-
-    // Calcular DiasPerdidosFinal cuando cambien FechaAccidente o FechaControl
-    this.accidentForm.get('FechaAccidente')?.valueChanges.subscribe(() => {
-      this.calcularDiasPerdidosFinal();
-    });
-
-    this.accidentForm.get('FechaControl')?.valueChanges.subscribe(() => {
-      this.calcularDiasPerdidosFinal();
-    });
-
-    // Calcular valores iniciales
-    this.calcularDiasConsecutivos(this.accidentForm.get('FechaAccidente')?.value);
-    this.calcularDiasPerdidosFinal();
+    this.recalcularDiasPerdidos();
   }
 
-  private calcularDiasConsecutivos(fechaAccidente: Date | null): void {
-    if (!fechaAccidente) {
-      this.diasConsecutivos = null;
-      return;
-    }
-
-    const fecha = new Date(fechaAccidente);
-    const hoy = new Date();
-    
-    // Resetear horas para comparar solo fechas
-    fecha.setHours(0, 0, 0, 0);
-    hoy.setHours(0, 0, 0, 0);
-
-    const diffTime = hoy.getTime() - fecha.getTime();
-    this.diasConsecutivos = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  get diasPerdidosEstimadosDisplay(): string {
+    return this.diasPerdidosEstimados === null ? '—' : String(this.diasPerdidosEstimados);
   }
 
-  private calcularDiasPerdidosFinal(): void {
-    const fechaAccidente = this.accidentForm.get('FechaAccidente')?.value;
-    const fechaControl = this.accidentForm.get('FechaControl')?.value;
+  get diasPerdidosFinalDisplay(): string {
+    return this.diasPerdidosFinal === null ? '—' : String(this.diasPerdidosFinal);
+  }
 
-    if (!fechaAccidente || !fechaControl) {
-      this.diasPerdidosFinal = null;
-      return;
-    }
+  /** Días calendario entre dos fechas (fin − inicio). */
+  private diffDiasCalendario(inicio: Date | null, fin: Date | null): number | null {
+    if (!inicio || !fin) return null;
+    const a = new Date(inicio);
+    const b = new Date(fin);
+    a.setHours(0, 0, 0, 0);
+    b.setHours(0, 0, 0, 0);
+    const ms = b.getTime() - a.getTime();
+    return Math.floor(ms / (1000 * 60 * 60 * 24));
+  }
 
-    const inicio = new Date(fechaAccidente);
-    const fin = new Date(fechaControl);
+  private recalcularDiasPerdidos(): void {
+    const fechaAcc = this.accidentForm.get('FechaAccidente')?.value as Date | null;
+    const fechaCtrl = this.accidentForm.get('FechaControl')?.value as Date | null;
+    const fechaAlta = this.accidentForm.get('FechaAlta')?.value as Date | null;
+    this.diasPerdidosEstimados = this.diffDiasCalendario(fechaAcc, fechaCtrl);
+    this.diasPerdidosFinal = this.diffDiasCalendario(fechaAcc, fechaAlta);
+  }
 
-    // Resetear horas para comparar solo fechas
-    inicio.setHours(0, 0, 0, 0);
-    fin.setHours(0, 0, 0, 0);
-
-    const diffTime = fin.getTime() - inicio.getTime();
-    this.diasPerdidosFinal = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  clearOptionalDate(controlName: 'FechaControl' | 'FechaAlta'): void {
+    this.accidentForm.get(controlName)?.setValue(null);
   }
 
   onSubmit(): void {
@@ -387,8 +406,10 @@ export class AccidentsComponent implements OnInit {
       IdTipoAccidente: formValue.IdTipoAccidente || undefined,
       Descripcion: formValue.Descripcion || undefined,
       NumEnfermedadProfesional: formValue.NumEnfermedadProfesional || undefined,
-      DiasPerdidosEstimados: formValue.DiasPerdidosEstimados ?? undefined,
+      DiasPerdidosEstimados: this.diasPerdidosEstimados ?? undefined,
+      DiasPerdidosFinal: this.diasPerdidosFinal ?? undefined,
       FechaControl: formatDate(formValue.FechaControl),
+      FechaAlta: formatDate(formValue.FechaAlta),
       IdCargo: formValue.IdCargo || undefined,
       IdSupervisor: formValue.IdSupervisor || undefined,
       IdPTerreno: formValue.IdPTerreno || undefined,
@@ -445,9 +466,10 @@ export class AccidentsComponent implements OnInit {
       IdTipoAccidente: formValue.IdTipoAccidente || undefined,
       Descripcion: formValue.Descripcion || undefined,
       NumEnfermedadProfesional: formValue.NumEnfermedadProfesional || undefined,
-      DiasPerdidosEstimados: formValue.DiasPerdidosEstimados ?? undefined,
-      // DiasPerdidosFinal se calcula automáticamente en el backend
-      FechaControl: formatDate(formValue.FechaControl),
+      DiasPerdidosEstimados: this.diasPerdidosEstimados ?? undefined,
+      DiasPerdidosFinal: this.diasPerdidosFinal ?? undefined,
+      FechaControl: formatDate(formValue.FechaControl) ?? null,
+      FechaAlta: formatDate(formValue.FechaAlta) ?? null,
       IdCargo: formValue.IdCargo || undefined,
       IdSupervisor: formValue.IdSupervisor || undefined,
       IdPTerreno: formValue.IdPTerreno || undefined,
@@ -594,6 +616,156 @@ export class AccidentsComponent implements OnInit {
           this.isCreatingCatalogItem = false;
         }
       });
+    });
+  }
+
+  onAddTrabajador(): void {
+    const dialogData: AddItemDialogData = {
+      title: 'Agregar Trabajador',
+      fieldLabel: 'Nombre Trabajador*',
+      fieldPlaceholder: 'Ingrese nombre...',
+      extraFields: [
+        { name: 'RUT', label: 'RUT*', required: true, placeholder: 'Ej: 12.345.678-9' },
+        { name: 'FechaNacimiento', label: 'Fecha Nacimiento', type: 'date' },
+        { name: 'Telefono', label: 'Teléfono' },
+        { name: 'Email', label: 'Email', type: 'email' },
+      ]
+    };
+
+    const dialogRef = this.dialog.open(AddItemDialogComponent, {
+      width: '520px',
+      data: dialogData
+    });
+
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) return;
+
+      this.isCreatingCatalogItem = true;
+      const nombre = (result.nombre || '').trim();
+      const extra = {
+        RUT: (result.RUT || '').trim(),
+        FechaNacimiento: (result.FechaNacimiento || '').trim(),
+        Telefono: (result.Telefono || '').trim(),
+        Email: (result.Email || '').trim(),
+        is_active: 1
+      };
+
+      this.accidenteService.crearCatalogo('TB_Trabajadores', nombre, undefined, extra).subscribe({
+        next: (resp) => {
+          this.isCreatingCatalogItem = false;
+          if (resp.success && resp.data) {
+            const newId = resp.data.id;
+            const nombreLista = (resp.data.nombre || nombre).toString().trim();
+            const rutLabel = resp.data.rut || extra.RUT || undefined;
+            const newItem: SmartSelectorOption = {
+              value: newId,
+              label: nombreLista.toUpperCase(),
+              sublabel: rutLabel
+            };
+            const existingOpt = this.trabajadorOpts.find(o => Number(o.value) === Number(newId));
+            if (existingOpt) {
+              existingOpt.label = newItem.label;
+              existingOpt.sublabel = rutLabel;
+            } else {
+              this.trabajadorOpts.push(newItem);
+            }
+            this.trabajadorOpts.sort((a, b) => a.label.localeCompare(b.label));
+            // Seleccionar trabajador creado (reemplaza al seleccionado si había)
+            this.accidentForm.patchValue({ IdTrabajador: newId }, { emitEvent: false });
+            this.cdr.detectChanges();
+            if (resp.data.existsByRut) {
+              this.showMessage('Ya existe un trabajador con este RUT. Se seleccionó el registro existente.', 'success');
+            } else if (resp.data.exists) {
+              this.showMessage(`"${nombreLista}" ya existe en el catálogo, se seleccionó automáticamente`, 'success');
+            } else {
+              this.showMessage(`"${nombreLista}" creado correctamente`, 'success');
+            }
+          } else {
+            this.showMessage(resp.message || 'Error al crear trabajador', 'error');
+          }
+        },
+        error: (err) => {
+          this.isCreatingCatalogItem = false;
+          console.error('[AccidentsComponent] Error creating trabajador:', err);
+          this.showMessage('Error al crear trabajador', 'error');
+        }
+      });
+    });
+  }
+
+  onEditTrabajador(idTrabajador: any): void {
+    const id = typeof idTrabajador === 'string' ? parseInt(idTrabajador, 10) : Number(idTrabajador);
+    if (!id) return;
+
+    this.isCreatingCatalogItem = true;
+    this.accidenteService.getTrabajador(id).subscribe({
+      next: (resp) => {
+        this.isCreatingCatalogItem = false;
+        if (!resp.success || !resp.data) {
+          this.showMessage(resp.message || 'No se pudo cargar el trabajador', 'error');
+          return;
+        }
+
+        const t = resp.data;
+        const dialogData: AddItemDialogData = {
+          title: 'Editar Trabajador',
+          fieldLabel: 'Nombre Trabajador*',
+          fieldPlaceholder: 'Ingrese nombre...',
+          readonlyFieldNames: ['nombre', 'RUT'],
+          extraFields: [
+            { name: 'RUT', label: 'RUT*', required: true },
+            { name: 'FechaNacimiento', label: 'Fecha Nacimiento', type: 'date' },
+            { name: 'Telefono', label: 'Teléfono' },
+            { name: 'Email', label: 'Email', type: 'email' },
+          ],
+          initialValues: {
+            nombre: t.Nombre || '',
+            RUT: t.RUT || '',
+            FechaNacimiento: t.FechaNacimiento || '',
+            Telefono: t.Telefono || '',
+            Email: t.Email || '',
+          }
+        };
+
+        const dialogRef = this.dialog.open(AddItemDialogComponent, {
+          width: '520px',
+          data: dialogData
+        });
+
+        dialogRef.afterClosed().subscribe(result => {
+          if (!result) return;
+          this.isCreatingCatalogItem = true;
+
+          const payload = {
+            FechaNacimiento: (result.FechaNacimiento || '').trim() || null,
+            Telefono: (result.Telefono || '').trim() || null,
+            Email: (result.Email || '').trim() || null,
+            is_active: 1
+          };
+
+          this.accidenteService.actualizarTrabajador(id, payload).subscribe({
+            next: (uResp) => {
+              this.isCreatingCatalogItem = false;
+              if (uResp.success) {
+                this.cdr.detectChanges();
+                this.showMessage('Trabajador actualizado correctamente', 'success');
+              } else {
+                this.showMessage(uResp.message || 'Error al actualizar trabajador', 'error');
+              }
+            },
+            error: (err) => {
+              this.isCreatingCatalogItem = false;
+              console.error('[AccidentsComponent] Error updating trabajador:', err);
+              this.showMessage('Error al actualizar trabajador', 'error');
+            }
+          });
+        });
+      },
+      error: (err) => {
+        this.isCreatingCatalogItem = false;
+        console.error('[AccidentsComponent] Error loading trabajador:', err);
+        this.showMessage('Error al cargar trabajador', 'error');
+      }
     });
   }
 

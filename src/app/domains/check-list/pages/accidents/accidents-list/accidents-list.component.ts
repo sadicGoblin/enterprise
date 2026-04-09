@@ -21,7 +21,6 @@ import { CustomDateAdapter } from '../../../../../shared/adapters/custom-date-ad
 import {
   AccidenteApiResponse,
   CalificacionPotencialSeveridad,
-  EstadoAccidente,
   ESTADO_LABELS
 } from '../models/accident.model';
 import { AccidenteService } from '../../../services/accidente.service';
@@ -79,6 +78,8 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
     'NombreObra',
     'FechaCreacion',
     'FechaAccidente',
+    'FechaControl',
+    'FechaAlta',
     'NombreTrabajador',
     'NombreEmpresa',
     'TipoAccidente',
@@ -190,8 +191,10 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
       switch (property) {
         case 'FechaCreacion': return item.created_at ? new Date(item.created_at).getTime() : 0;
         case 'FechaAccidente': return item.FechaAccidente ? new Date(item.FechaAccidente).getTime() : 0;
+        case 'FechaControl': return item.FechaControl ? new Date(item.FechaControl).getTime() : 0;
+        case 'FechaAlta': return item.FechaAlta ? new Date(item.FechaAlta).getTime() : 0;
         case 'NombreTrabajador': return (item.NombreTrabajador || '').toLowerCase();
-        case 'DiasPerdidos': return parseInt(item.DiasPerdidosFinal || item.DiasPerdidosEstimados || '0', 10);
+        case 'DiasPerdidos': return parseInt(item.DiasPerdidosFinal || '0', 10);
         default: return (item as any)[property] || '';
       }
     };
@@ -260,6 +263,7 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
       'Reportado': 'estado-reportado',
       'En_Investigacion': 'estado-investigacion',
       'Cerrado': 'estado-cerrado',
+      'anulado': 'estado-anulado',
       'Anulado': 'estado-anulado'
     };
     return classes[estado] || '';
@@ -297,6 +301,8 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
     const columns: ExportColumn[] = [
       { field: 'NombreObra', header: 'Obra', width: 25 },
       { field: 'FechaAccidente', header: 'Fecha Accidente', width: 15, format: (v) => this.formatDate(v) },
+      { field: 'FechaControl', header: 'Fecha Control', width: 15, format: (v) => this.formatDate(v) },
+      { field: 'FechaAlta', header: 'Fecha Alta', width: 15, format: (v) => this.formatDate(v) },
       { field: 'NombreTrabajador', header: 'Trabajador', width: 30 },
       { field: 'RUTTrabajador', header: 'RUT', width: 15 },
       { field: 'NombreEmpresa', header: 'Empresa', width: 20 },
@@ -328,7 +334,7 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
 
   get totalDiasPerdidos(): number {
     return this.accidents.reduce((sum, a) => {
-      return sum + parseInt(a.DiasPerdidosFinal || a.DiasPerdidosEstimados || '0', 10);
+      return sum + parseInt(a.DiasPerdidosFinal || '0', 10);
     }, 0);
   }
 

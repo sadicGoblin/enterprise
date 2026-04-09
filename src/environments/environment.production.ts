@@ -4,7 +4,7 @@ import { EnvironmentConfig } from './environment.config';
  * Production environment configuration
  */
 export const environment = {
-  production: false,
+  production: true,
   apiBaseUrl: 'https://inarco-ssoma.favric.cl',
   firebaseConfig: {
     apiKey: "AIzaSyApcxpJIrf2fOEjoeyBbXiLr-5DCLPHgPo",

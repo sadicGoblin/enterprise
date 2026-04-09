@@ -180,6 +180,22 @@
           </td>
         </ng-container>
 
+        <!-- Fecha Control Column -->
+        <ng-container matColumnDef="FechaControl">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>F. Control</th>
+          <td mat-cell *matCellDef="let row">
+            {{ formatDate(row.FechaControl) }}
+          </td>
+        </ng-container>
+
+        <!-- Fecha Alta Column -->
+        <ng-container matColumnDef="FechaAlta">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>F. Alta</th>
+          <td mat-cell *matCellDef="let row">
+            {{ formatDate(row.FechaAlta) }}
+          </td>
+        </ng-container>
+
         <!-- Trabajador Column -->
         <ng-container matColumnDef="NombreTrabajador">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Trabajador</th>
@@ -219,7 +235,7 @@
         <ng-container matColumnDef="DiasPerdidos">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Días Perd.</th>
           <td mat-cell *matCellDef="let row">
-            <span class="dias-value">{{ row.DiasPerdidosFinal || row.DiasPerdidosEstimados || 0 }}</span>
+            <span class="dias-value">{{ row.DiasPerdidosFinal || 0 }}</span>
           </td>
         </ng-container>
 
@@ -236,13 +252,15 @@
         <!-- Actions Column -->
         <ng-container matColumnDef="actions">
           <th mat-header-cell *matHeaderCellDef>Acciones</th>
-          <td mat-cell *matCellDef="let row">
-            <button mat-icon-button color="primary" (click)="viewDetails(row)" matTooltip="Ver detalles">
-              <mat-icon>visibility</mat-icon>
-            </button>
-            <button mat-icon-button (click)="editAccident(row)" matTooltip="Editar">
-              <mat-icon>edit</mat-icon>
-            </button>
+          <td mat-cell *matCellDef="let row" class="cell-actions">
+            <div class="actions-row">
+              <button mat-icon-button color="primary" (click)="viewDetails(row)" matTooltip="Ver detalles">
+                <mat-icon>visibility</mat-icon>
+              </button>
+              <button mat-icon-button (click)="editAccident(row)" matTooltip="Editar">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
           </td>
         </ng-container>
 

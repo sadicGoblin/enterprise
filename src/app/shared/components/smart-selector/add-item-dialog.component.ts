@@ -11,7 +11,10 @@ export interface AddItemDialogData {
   title: string;
   fieldLabel: string;
   fieldPlaceholder?: string;
-  extraFields?: { name: string; label: string; required?: boolean }[];
+  extraFields?: { name: string; label: string; required?: boolean; type?: string; placeholder?: string }[];
+  initialValues?: Record<string, any>;
+  /** Nombres de controles en solo lectura: 'nombre' o nombres de extraFields (ej. 'RUT') */
+  readonlyFieldNames?: string[];
 }
 
 export interface AddItemDialogResult {
@@ -41,6 +44,7 @@ export interface AddItemDialogResult {
         <mat-form-field appearance="outline" class="full-width">
           <mat-label>{{ data.fieldLabel }}</mat-label>
           <input matInput formControlName="nombre"
+            [readonly]="isReadonly('nombre')"
             [placeholder]="data.fieldPlaceholder || 'Ingrese nombre...'"
             cdkFocusInitial>
           <mat-error *ngIf="form.get('nombre')?.hasError('required')">Campo requerido</mat-error>
@@ -50,7 +54,8 @@ export interface AddItemDialogResult {
         <mat-form-field appearance="outline" class="full-width"
           *ngFor="let field of data.extraFields">
           <mat-label>{{ field.label }}</mat-label>
-          <input matInput [formControlName]="field.name">
+          <input matInput [formControlName]="field.name" [type]="field.type || 'text'" [placeholder]="field.placeholder || ''"
+            [readonly]="isReadonly(field.name)">
         </mat-form-field>
       </form>
     </mat-dialog-content>
@@ -101,11 +106,19 @@ export class AddItemDialogComponent {
     }
 
     this.form = this.fb.group(controls);
+
+    if (data.initialValues) {
+      this.form.patchValue(data.initialValues, { emitEvent: false });
+    }
   }
 
   onSave(): void {
     if (this.form.valid) {
       this.dialogRef.close(this.form.value);
     }
+  }
+
+  isReadonly(controlName: string): boolean {
+    return (this.data.readonlyFieldNames || []).includes(controlName);
   }
 }
