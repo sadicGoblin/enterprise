@@ -1,226 +1,165 @@
 <div class="detail-dialog">
-  <!-- Header con acciones -->
   <div class="dialog-header">
     <div class="header-title">
-      <mat-icon class="title-icon">description</mat-icon>
-      <div>
-        <h2>Detalle del Accidente</h2>
-        <span class="numero-badge" *ngIf="data.NumeroAccidente">{{ data.NumeroAccidente }}</span>
+      <div class="header-icon-wrap" aria-hidden="true">
+        <mat-icon class="title-icon">assignment</mat-icon>
+      </div>
+      <div class="header-text">
+        <p class="header-eyebrow">Prevención de riesgos</p>
+        <h2>Ficha del accidente</h2>
+        <div class="header-meta" *ngIf="data.NumeroAccidente">
+          <span class="numero-pill">{{ data.NumeroAccidente }}</span>
+          <span class="meta-dot" *ngIf="data.NombreObra">·</span>
+          <span class="meta-obra" *ngIf="data.NombreObra">{{ data.NombreObra }}</span>
+        </div>
       </div>
     </div>
     <div class="header-actions">
-      <button mat-stroked-button (click)="exportToPdf()" [disabled]="isExporting" matTooltip="Exportar a PDF">
+      <button mat-flat-button class="btn-pdf" (click)="exportToPdf()" [disabled]="isExporting" matTooltip="Descargar PDF">
         <mat-icon>picture_as_pdf</mat-icon>
-        {{ isExporting ? 'Exportando...' : 'Exportar PDF' }}
+        {{ isExporting ? 'Generando…' : 'PDF' }}
       </button>
-      <button mat-icon-button mat-dialog-close matTooltip="Cerrar">
+      <button mat-icon-button mat-dialog-close class="btn-close" matTooltip="Cerrar" aria-label="Cerrar">
         <mat-icon>close</mat-icon>
       </button>
     </div>
   </div>
 
-  <!-- Spinner de exportación -->
-  <div class="export-overlay" *ngIf="isExporting">
-    <mat-spinner diameter="32"></mat-spinner>
-    <span>Generando PDF...</span>
+  <div class="export-banner" *ngIf="isExporting" role="status">
+    <mat-spinner diameter="28"></mat-spinner>
+    <span>Preparando documento PDF…</span>
   </div>
 
-  <!-- Contenido para PDF -->
-  <mat-dialog-content>
+  <mat-dialog-content class="dialog-body">
     <div #pdfContent class="pdf-content">
 
-      <!-- Encabezado del reporte -->
-      <div class="report-header">
-        <div class="report-title">
-          <h3>REPORTE DE ACCIDENTE LABORAL</h3>
-          <span class="report-numero" *ngIf="data.NumeroAccidente">N° {{ data.NumeroAccidente }}</span>
-        </div>
-        <div class="report-badges">
-          <span class="badge-estado" [ngClass]="estadoClass">{{ estadoLabel }}</span>
-          <span class="badge-gravedad" [ngClass]="gravedadClass" *ngIf="data.CalificacionPS">
-            {{ data.CalificacionPS }}
-          </span>
-        </div>
-      </div>
-
-      <!-- Sección 1: Datos del Accidente -->
-      <div class="detail-section">
-        <div class="section-title">
-          <mat-icon>event</mat-icon>
-          <h4>Datos del Accidente</h4>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="item-label">Obra / Proyecto</span>
-            <span class="item-value">{{ data.NombreObra }}</span>
+      <div class="pdf-block pdf-hero">
+        <div class="hero-inner">
+          <div class="hero-main">
+            <p class="hero-label">Reporte de accidente laboral</p>
+            <h3 class="hero-title">Registro formal SST</h3>
+            <p class="hero-sub" *ngIf="data.NumeroAccidente">Identificador <strong>N° {{ data.NumeroAccidente }}</strong></p>
           </div>
-          <div class="detail-item">
-            <span class="item-label">Empresa</span>
-            <span class="item-value">{{ data.NombreEmpresa || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Fecha del Accidente</span>
-            <span class="item-value">{{ formatDate(data.FechaAccidente) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Hora</span>
-            <span class="item-value">{{ formatTime(data.HoraAccidente) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Día de la Semana</span>
-            <span class="item-value">{{ data.DiaSemana || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Tipo de Accidente</span>
-            <span class="item-value">{{ data.TipoAccidente || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Días Perdidos Estimados</span>
-            <span class="item-value">{{ data.DiasPerdidosEstimados || '0' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Días Perdidos Final</span>
-            <span class="item-value">{{ data.DiasPerdidosFinal || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Fecha Control / Alta</span>
-            <span class="item-value">{{ formatDate(data.FechaControl) }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Fecha Reporte</span>
-            <span class="item-value">{{ formatDate(data.FechaReporte) }}</span>
-          </div>
-        </div>
-        <div class="detail-full" *ngIf="data.Descripcion">
-          <span class="item-label">Descripción</span>
-          <p class="item-value description-text">{{ data.Descripcion }}</p>
-        </div>
-      </div>
-
-      <!-- Sección 2: Trabajador -->
-      <div class="detail-section">
-        <div class="section-title">
-          <mat-icon>person</mat-icon>
-          <h4>Antecedentes del Trabajador</h4>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="item-label">Nombre</span>
-            <span class="item-value highlight">{{ data.NombreTrabajador }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">RUT</span>
-            <span class="item-value">{{ data.RUTTrabajador || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Cargo</span>
-            <span class="item-value">{{ data.Cargo || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Edad al Accidente</span>
-            <span class="item-value">{{ data.EdadAlAccidente ? data.EdadAlAccidente + ' años' : '-' }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sección 3: Línea de Mando -->
-      <div class="detail-section">
-        <div class="section-title">
-          <mat-icon>supervisor_account</mat-icon>
-          <h4>Línea de Mando</h4>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="item-label">Supervisor</span>
-            <span class="item-value">{{ data.Supervisor || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Profesional Terreno</span>
-            <span class="item-value">{{ data.PTerreno || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">APR</span>
-            <span class="item-value">{{ data.APR || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">ADO</span>
-            <span class="item-value">{{ data.ADO || '-' }}</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sección 4: Análisis -->
-      <div class="detail-section">
-        <div class="section-title">
-          <mat-icon>analytics</mat-icon>
-          <h4>Análisis / Tipología</h4>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="item-label">Riesgo Asociado</span>
-            <span class="item-value">{{ data.RiesgoAsociado || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Lesión</span>
-            <span class="item-value">{{ data.TipoLesion || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Parte del Cuerpo</span>
-            <span class="item-value">{{ data.ParteCuerpo || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Calificación P/S</span>
-            <span class="item-value" [ngClass]="gravedadClass">
-              {{ data.CalificacionPS || '-' }}
+          <div class="hero-tags">
+            <span class="tag tag-estado" [ngClass]="estadoClass">{{ estadoLabel }}</span>
+            <span class="tag tag-gravedad" [ngClass]="gravedadClass" *ngIf="data.CalificacionPS">
+              {{ data.CalificacionPS }}
             </span>
           </div>
-          <div class="detail-item">
-            <span class="item-label">Fuente / Agente</span>
-            <span class="item-value">{{ data.FuenteAgente || '-' }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="item-label">Máquina / Equipo</span>
-            <span class="item-value">{{ data.MaquinaEquipo || '-' }}</span>
-          </div>
-        </div>
-        <div class="detail-full" *ngIf="data.Accion">
-          <span class="item-label">Acción</span>
-          <p class="item-value">{{ data.Accion }}</p>
-        </div>
-        <div class="detail-full" *ngIf="data.Condicion">
-          <span class="item-label">Condición</span>
-          <p class="item-value">{{ data.Condicion }}</p>
         </div>
       </div>
 
-      <!-- Sección 5: Gestión del Cambio -->
-      <div class="detail-section">
-        <div class="section-title">
+      <div class="pdf-block pdf-section">
+        <header class="section-head">
+          <span class="section-index">01</span>
+          <mat-icon>event</mat-icon>
+          <h4>Datos del accidente</h4>
+        </header>
+        <div class="section-body">
+          <dl class="field-grid">
+            <div class="field"><dt>Obra / proyecto</dt><dd>{{ data.NombreObra }}</dd></div>
+            <div class="field"><dt>Empresa</dt><dd>{{ data.NombreEmpresa || '—' }}</dd></div>
+            <div class="field"><dt>Fecha del accidente</dt><dd>{{ formatDate(data.FechaAccidente) }}</dd></div>
+            <div class="field"><dt>Hora</dt><dd>{{ formatTime(data.HoraAccidente) }}</dd></div>
+            <div class="field"><dt>Día de la semana</dt><dd>{{ diaSemanaDisplay }}</dd></div>
+            <div class="field"><dt>Tipo de accidente</dt><dd>{{ data.TipoAccidente || '—' }}</dd></div>
+            <div class="field"><dt>Días perdidos (estim.)</dt><dd>{{ data.DiasPerdidosEstimados || '0' }}</dd></div>
+            <div class="field"><dt>Días perdidos (final)</dt><dd>{{ data.DiasPerdidosFinal || '—' }}</dd></div>
+            <div class="field"><dt>Fecha control</dt><dd>{{ formatDate(data.FechaControl) }}</dd></div>
+            <div class="field"><dt>Fecha alta</dt><dd>{{ formatDate(data.FechaAlta) }}</dd></div>
+            <div class="field"><dt>Fecha reporte</dt><dd>{{ formatDate(data.FechaReporte) }}</dd></div>
+          </dl>
+          <div class="prose-block" *ngIf="data.Descripcion">
+            <span class="prose-label">Descripción</span>
+            <p class="prose-text">{{ data.Descripcion }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pdf-block pdf-section">
+        <header class="section-head">
+          <span class="section-index">02</span>
+          <mat-icon>person</mat-icon>
+          <h4>Trabajador</h4>
+        </header>
+        <div class="section-body">
+          <dl class="field-grid">
+            <div class="field span-2"><dt>Nombre</dt><dd class="emphasis">{{ data.NombreTrabajador }}</dd></div>
+            <div class="field"><dt>RUT</dt><dd>{{ data.RUTTrabajador || '—' }}</dd></div>
+            <div class="field"><dt>Cargo</dt><dd>{{ data.Cargo || '—' }}</dd></div>
+            <div class="field"><dt>Edad al accidente</dt><dd>{{ data.EdadAlAccidente ? data.EdadAlAccidente + ' años' : '—' }}</dd></div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="pdf-block pdf-section">
+        <header class="section-head">
+          <span class="section-index">03</span>
+          <mat-icon>supervisor_account</mat-icon>
+          <h4>Línea de mando</h4>
+        </header>
+        <div class="section-body">
+          <dl class="field-grid">
+            <div class="field"><dt>Supervisor</dt><dd>{{ data.Supervisor || '—' }}</dd></div>
+            <div class="field"><dt>Profesional terreno</dt><dd>{{ data.PTerreno || '—' }}</dd></div>
+            <div class="field"><dt>APR</dt><dd>{{ data.APR || '—' }}</dd></div>
+            <div class="field"><dt>ADO</dt><dd>{{ data.ADO || '—' }}</dd></div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="pdf-block pdf-section">
+        <header class="section-head">
+          <span class="section-index">04</span>
+          <mat-icon>analytics</mat-icon>
+          <h4>Análisis y tipología</h4>
+        </header>
+        <div class="section-body">
+          <dl class="field-grid">
+            <div class="field"><dt>Riesgo asociado</dt><dd>{{ data.RiesgoAsociado || '—' }}</dd></div>
+            <div class="field"><dt>Lesión</dt><dd>{{ data.TipoLesion || '—' }}</dd></div>
+            <div class="field"><dt>Parte del cuerpo</dt><dd>{{ data.ParteCuerpo || '—' }}</dd></div>
+            <div class="field"><dt>Calificación P/S</dt><dd [ngClass]="gravedadClass">{{ data.CalificacionPS || '—' }}</dd></div>
+            <div class="field"><dt>Fuente / agente</dt><dd>{{ data.FuenteAgente || '—' }}</dd></div>
+            <div class="field"><dt>Máquina / equipo</dt><dd>{{ data.MaquinaEquipo || '—' }}</dd></div>
+          </dl>
+          <div class="prose-block" *ngIf="data.Accion">
+            <span class="prose-label">Acción</span>
+            <p class="prose-text">{{ data.Accion }}</p>
+          </div>
+          <div class="prose-block" *ngIf="data.Condicion">
+            <span class="prose-label">Condición</span>
+            <p class="prose-text">{{ data.Condicion }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="pdf-block pdf-section">
+        <header class="section-head">
+          <span class="section-index">05</span>
           <mat-icon>security</mat-icon>
-          <h4>Gestión del Cambio / Jerarquía de Controles</h4>
-        </div>
-        <div class="detail-grid">
-          <div class="detail-item">
-            <span class="item-label">Causa Raíz</span>
-            <span class="item-value">{{ data.CausaRaiz || '-' }}</span>
+          <h4>Gestión del cambio</h4>
+        </header>
+        <div class="section-body">
+          <dl class="field-grid">
+            <div class="field span-2"><dt>Causa raíz</dt><dd>{{ data.CausaRaiz || '—' }}</dd></div>
+          </dl>
+          <div class="controls-block">
+            <span class="controls-label">Controles aplicados (jerarquía)</span>
+            <div class="controls-chips" *ngIf="controlesAplicados.length > 0">
+              <span class="chip" *ngFor="let ctrl of controlesAplicados">{{ ctrl }}</span>
+            </div>
+            <p class="controls-empty" *ngIf="controlesAplicados.length === 0">Ninguno registrado</p>
+          </div>
+          <div class="prose-block" *ngIf="data.Observaciones">
+            <span class="prose-label">Observaciones</span>
+            <p class="prose-text">{{ data.Observaciones }}</p>
           </div>
         </div>
+      </div>
 
-        <div class="controles-row" *ngIf="controlesAplicados.length > 0">
-          <span class="item-label">Controles Aplicados</span>
-          <div class="controles-badges">
-            <span class="control-badge" *ngFor="let ctrl of controlesAplicados">{{ ctrl }}</span>
-          </div>
-        </div>
-        <div class="controles-row" *ngIf="controlesAplicados.length === 0">
-          <span class="item-label">Controles Aplicados</span>
-          <span class="item-value">Ninguno registrado</span>
-        </div>
-
-        <div class="detail-full" *ngIf="data.Observaciones">
-          <span class="item-label">Observaciones</span>
-          <p class="item-value description-text">{{ data.Observaciones }}</p>
-        </div>
+      <div class="pdf-block pdf-footer-strip">
+        <p>Generado el {{ generatedAtLabel }} · Uso interno — confidencial</p>
       </div>
 
     </div>

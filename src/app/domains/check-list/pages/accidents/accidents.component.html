@@ -116,27 +116,53 @@
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Días Perdidos Estimados</mat-label>
-            <input matInput type="number" formControlName="DiasPerdidosEstimados" min="0">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Fecha Control/Alta</mat-label>
+            <mat-label>Fecha Control</mat-label>
             <input matInput [matDatepicker]="fechaCtrlPicker" formControlName="FechaControl">
-            <mat-datepicker-toggle matSuffix [for]="fechaCtrlPicker"></mat-datepicker-toggle>
+            <span matSuffix class="date-suffix-actions">
+              <button
+                mat-icon-button
+                type="button"
+                class="date-clear-btn"
+                *ngIf="accidentForm.get('FechaControl')?.value"
+                (click)="clearOptionalDate('FechaControl')"
+                matTooltip="Quitar fecha"
+                aria-label="Quitar fecha de control">
+                <mat-icon>close</mat-icon>
+              </button>
+              <mat-datepicker-toggle [for]="fechaCtrlPicker"></mat-datepicker-toggle>
+            </span>
             <mat-datepicker #fechaCtrlPicker></mat-datepicker>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Días Perdidos Final</mat-label>
-            <input matInput type="number" [value]="diasPerdidosFinal ?? '-'" readonly>
-            <mat-hint>Calculado automáticamente (FechaControl - FechaAccidente)</mat-hint>
+            <mat-label>Días perdidos estimados</mat-label>
+            <input matInput type="text" [value]="diasPerdidosEstimadosDisplay" readonly>
+            <mat-hint>Fecha control − fecha accidente</mat-hint>
           </mat-form-field>
 
           <mat-form-field appearance="outline">
-            <mat-label>Días Consecutivos</mat-label>
-            <input matInput type="number" [value]="diasConsecutivos ?? '-'" readonly>
-            <mat-hint>Calculado automáticamente (Hoy - FechaAccidente)</mat-hint>
+            <mat-label>Fecha Alta</mat-label>
+            <input matInput [matDatepicker]="fechaAltaPicker" formControlName="FechaAlta">
+            <span matSuffix class="date-suffix-actions">
+              <button
+                mat-icon-button
+                type="button"
+                class="date-clear-btn"
+                *ngIf="accidentForm.get('FechaAlta')?.value"
+                (click)="clearOptionalDate('FechaAlta')"
+                matTooltip="Quitar fecha"
+                aria-label="Quitar fecha de alta">
+                <mat-icon>close</mat-icon>
+              </button>
+              <mat-datepicker-toggle [for]="fechaAltaPicker"></mat-datepicker-toggle>
+            </span>
+            <mat-datepicker #fechaAltaPicker></mat-datepicker>
+          </mat-form-field>
+
+          <mat-form-field appearance="outline">
+            <mat-label>Días perdidos finales</mat-label>
+            <input matInput type="text" [value]="diasPerdidosFinalDisplay" readonly>
+            <mat-hint>Fecha alta − fecha accidente</mat-hint>
           </mat-form-field>
         </div>
 
@@ -162,11 +188,13 @@
               label="Trabajador *"
               [options]="trabajadorOpts"
               [required]="true"
+              [showEdit]="true"
               formControlName="IdTrabajador"
               placeholder="Buscar trabajador..."
               [errorMessage]="getErrorMessage('IdTrabajador')"
               [loading]="isCreatingCatalogItem"
-              (addClick)="onAddCatalog('IdTrabajador')">
+              (addClick)="onAddTrabajador()"
+              (editClick)="onEditTrabajador($event)">
             </app-smart-selector>
           </div>
 
@@ -361,25 +389,39 @@
 
       <!-- Navegación entre pasos -->
       <div class="form-navigation">
-        <button mat-stroked-button type="button" (click)="prevStep()" *ngIf="currentStep > 0">
-          <mat-icon>arrow_back</mat-icon>
-          Anterior
-        </button>
-        <span class="spacer"></span>
-        <button mat-stroked-button type="button" (click)="onReset()" *ngIf="currentStep === 0 && !isEditMode">
-          <mat-icon>refresh</mat-icon>
-          Limpiar
-        </button>
-        <button mat-flat-button color="primary" type="button" (click)="nextStep()"
-                *ngIf="currentStep < 4" [disabled]="!isStepValid(currentStep)">
-          Siguiente
-          <mat-icon>arrow_forward</mat-icon>
-        </button>
-        <button mat-flat-button color="primary" type="submit" *ngIf="currentStep === 4"
-                [disabled]="isLoading">
-          <mat-icon>save</mat-icon>
-          {{ isEditMode ? 'Actualizar Accidente' : 'Guardar Registro' }}
-        </button>
+        <div class="form-navigation__main">
+          <button mat-stroked-button type="button" (click)="prevStep()" *ngIf="currentStep > 0">
+            <mat-icon>arrow_back</mat-icon>
+            Anterior
+          </button>
+          <span class="spacer"></span>
+          <button mat-stroked-button type="button" (click)="onReset()" *ngIf="currentStep === 0 && !isEditMode">
+            <mat-icon>refresh</mat-icon>
+            Limpiar
+          </button>
+          <button mat-flat-button color="primary" type="button" (click)="nextStep()"
+                  *ngIf="currentStep < 4" [disabled]="!isStepValid(currentStep)">
+            Siguiente
+            <mat-icon>arrow_forward</mat-icon>
+          </button>
+        </div>
+        <div class="form-navigation__actions" *ngIf="isEditMode || currentStep === 4">
+          <button
+            *ngIf="isEditMode && mostrarBotonAnular"
+            mat-stroked-button
+            color="warn"
+            type="button"
+            [disabled]="isAnnuling || isLoading"
+            (click)="anularAccidente()">
+            <mat-icon>block</mat-icon>
+            Anular accidente
+          </button>
+          <button mat-flat-button color="primary" type="submit"
+                  [disabled]="isLoading">
+            <mat-icon>save</mat-icon>
+            {{ isEditMode ? 'Actualizar Accidente' : 'Guardar Registro' }}
+          </button>
+        </div>
       </div>
     </form>
 

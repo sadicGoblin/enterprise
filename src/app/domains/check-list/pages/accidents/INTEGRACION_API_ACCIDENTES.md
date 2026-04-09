@@ -130,6 +130,7 @@ La API devuelve las siguientes listas para poblar los `<mat-select>`:
 | `Descripcion`          | `Descripcion`           | Min 10 caracteres            |
 | `DiasPerdidosEstimados`| `DiasPerdidosEstimados` |                              |
 | `FechaControl`         | `FechaControl`          | Se formatea a `YYYY-MM-DD`   |
+| `FechaAlta`            | `FechaAlta`             | Se formatea a `YYYY-MM-DD` (opcional) |
 | `IdCargo`              | `IdCargo`               |                              |
 | `IdSupervisor`         | `IdSupervisor`          | ID de trabajador             |
 | `IdPTerreno`           | `IdPTerreno`            | ID de trabajador             |

@@ -209,6 +209,17 @@ $border-color: #e0e0e0;
   .span-2 { grid-column: span 2; }
 }
 
+.date-pair-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  grid-column: 1 / -1;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
 .full-width { width: 100%; }
 
 .mt-4 { margin-top: 16px; }
@@ -316,12 +327,33 @@ $border-color: #e0e0e0;
 .form-navigation {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: 32px;
   padding-top: 20px;
   border-top: 1px solid $border-color;
 
-  .spacer { flex: 1; }
+  .form-navigation__main {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+
+    .spacer {
+      flex: 1;
+      min-width: 8px;
+    }
+  }
+
+  .form-navigation__actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex-shrink: 0;
+  }
 
   button {
     display: flex;
@@ -353,6 +385,29 @@ $border-color: #e0e0e0;
   }
 }
 
+// Fecha control / alta: limpiar junto al calendario
+.date-suffix-actions {
+  display: inline-flex;
+  align-items: center;
+}
+
+.date-clear-btn {
+  width: 36px;
+  height: 36px;
+  padding: 0;
+
+  mat-icon {
+    font-size: 20px;
+    width: 20px;
+    height: 20px;
+    color: $text-secondary;
+  }
+
+  &:hover mat-icon {
+    color: $text-primary;
+  }
+}
+
 // Material overrides
 ::ng-deep {
   .mat-mdc-form-field { width: 100%; }
@@ -368,5 +423,15 @@ $border-color: #e0e0e0;
   .form-grid { grid-template-columns: 1fr; }
   .form-grid.cols-2 { grid-template-columns: 1fr; }
   .form-grid .span-2 { grid-column: span 1; }
-  .form-navigation { flex-wrap: wrap; }
+  .form-navigation {
+    flex-direction: column;
+    align-items: stretch;
+    .form-navigation__main {
+      width: 100%;
+    }
+    .form-navigation__actions {
+      width: 100%;
+      justify-content: flex-end;
+    }
+  }
 }

@@ -13,6 +13,26 @@ import {
   ListarAccidentesRequest
 } from '../pages/accidents/models/accident.model';
 
+export interface TrabajadorDto {
+  IdTrabajador: string;
+  RUT: string | null;
+  Nombre: string | null;
+  FechaNacimiento: string | null; // YYYY-MM-DD
+  Telefono: string | null;
+  Email: string | null;
+  is_active: string | null;
+}
+
+export interface ListarTrabajadoresResponseItem {
+  IdTrabajador: string;
+  RUT: string | null;
+  Nombre: string | null;
+  FechaNacimiento: string | null;
+  Telefono: string | null;
+  Email: string | null;
+  is_active: string | number | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -112,7 +132,7 @@ export class AccidenteService {
   /**
    * Crear un nuevo elemento en una tabla de catálogo (botón +)
    */
-  crearCatalogo(tabla: string, nombre: string, descripcion?: string, extra?: Record<string, any>): Observable<ApiResponse<{ id: number; nombre: string; exists: boolean }>> {
+  crearCatalogo(tabla: string, nombre: string, descripcion?: string, extra?: Record<string, any>): Observable<ApiResponse<{ id: number; nombre: string; exists: boolean; existsByRut?: boolean; rut?: string }>> {
     const request: any = { caso: 'CreaCatalogo', tabla, Nombre: nombre };
     if (descripcion) {
       request.Descripcion = descripcion;
@@ -121,9 +141,48 @@ export class AccidenteService {
       request.extra = extra;
     }
     console.log('[AccidenteService] crearCatalogo REQUEST:', JSON.stringify(request));
-    return this.proxyService.post<ApiResponse<{ id: number; nombre: string; exists: boolean }>>(
+    return this.proxyService.post<ApiResponse<{ id: number; nombre: string; exists: boolean; existsByRut?: boolean; rut?: string }>>(
       environment.apiBaseUrl + this.apiEndpoint, request
     );
+  }
+
+  getTrabajador(idTrabajador: number): Observable<ApiResponse<TrabajadorDto>> {
+    const request = { caso: 'ConsultaTrabajador', IdTrabajador: idTrabajador };
+    return this.proxyService.post<ApiResponse<TrabajadorDto>>(
+      environment.apiBaseUrl + this.apiEndpoint, request
+    );
+  }
+
+  actualizarTrabajador(
+    idTrabajador: number,
+    data: {
+      FechaNacimiento?: string | null;
+      Telefono?: string | null;
+      Email?: string | null;
+      is_active?: number;
+    }
+  ): Observable<ApiResponse<any>> {
+    const request: any = { caso: 'ActualizaTrabajador', IdTrabajador: idTrabajador, ...data };
+    return this.proxyService.post<ApiResponse<any>>(
+      environment.apiBaseUrl + this.apiEndpoint, request
+    );
+  }
+
+  listarTrabajadores(filters?: { q?: string; include_inactive?: boolean; limit?: number; offset?: number }): Observable<ApiResponse<ListarTrabajadoresResponseItem[]>> {
+    const request: any = { caso: 'ListaTrabajadores', ...(filters || {}) };
+    return this.proxyService.post<ApiResponse<ListarTrabajadoresResponseItem[]>>(
+      environment.apiBaseUrl + this.apiEndpoint, request
+    );
+  }
+
+  crearTrabajador(data: { Nombre: string; RUT?: string | null; FechaNacimiento?: string | null; Telefono?: string | null; Email?: string | null; is_active?: number }): Observable<ApiResponse<{ id: number; nombre: string; exists: boolean; existsByRut?: boolean; rut?: string }>> {
+    const extra: any = {};
+    if (data.RUT) extra.RUT = data.RUT;
+    if (data.FechaNacimiento) extra.FechaNacimiento = data.FechaNacimiento;
+    if (data.Telefono) extra.Telefono = data.Telefono;
+    if (data.Email) extra.Email = data.Email;
+    if (typeof data.is_active === 'number') extra.is_active = data.is_active;
+    return this.crearCatalogo('TB_Trabajadores', data.Nombre, undefined, extra);
   }
 
   /**

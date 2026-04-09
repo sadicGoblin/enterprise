@@ -1,0 +1,108 @@
+<div class="workers-container">
+  <div class="page-header">
+    <div class="header-left">
+      <mat-icon class="header-icon">badge</mat-icon>
+      <div class="header-text">
+        <h1>Trabajadores</h1>
+        <p>Administración de trabajadores para Accidentes</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button type="button" (click)="toggleIncludeInactive()">
+        <mat-icon>{{ includeInactive ? 'toggle_on' : 'toggle_off' }}</mat-icon>
+        {{ includeInactive ? 'Incluye inactivos' : 'Solo activos' }}
+      </button>
+      <button mat-flat-button color="primary" type="button" (click)="createNew()">
+        <mat-icon>add</mat-icon>
+        Nuevo
+      </button>
+    </div>
+  </div>
+
+  <mat-card class="filters-card">
+    <div class="filters-row">
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar</mat-label>
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput [(ngModel)]="q" (keyup.enter)="load()" placeholder="Nombre o RUT">
+        <button
+          mat-icon-button
+          matSuffix
+          type="button"
+          class="clear-btn"
+          *ngIf="q"
+          (click)="q=''; load()"
+          matTooltip="Limpiar búsqueda"
+          aria-label="Limpiar búsqueda">
+          <mat-icon>close</mat-icon>
+        </button>
+      </mat-form-field>
+      <button mat-flat-button color="primary" type="button" class="search-btn" (click)="load()">
+        <mat-icon>search</mat-icon>
+        Buscar
+      </button>
+    </div>
+  </mat-card>
+
+  <div *ngIf="isLoading" class="loading">
+    <mat-spinner diameter="48"></mat-spinner>
+    <p>Cargando trabajadores...</p>
+  </div>
+
+  <mat-card class="table-card" *ngIf="!isLoading">
+    <div class="table-container">
+      <table mat-table [dataSource]="dataSource" matSort class="workers-table">
+        <ng-container matColumnDef="Nombre">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Nombre</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="name-cell">
+              <span class="name">{{ row.Nombre || '-' }}</span>
+              <span class="sub">{{ row.FechaNacimiento || '' }}</span>
+            </div>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="RUT">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>RUT</th>
+          <td mat-cell *matCellDef="let row">{{ row.RUT || '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="Email">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Email</th>
+          <td mat-cell *matCellDef="let row">{{ row.Email || '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="Telefono">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Teléfono</th>
+          <td mat-cell *matCellDef="let row">{{ row.Telefono || '-' }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="is_active">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
+          <td mat-cell *matCellDef="let row">
+            <span class="status-pill" [class.inactive]="isActiveLabel(row.is_active) === 'Inactivo'">
+              {{ isActiveLabel(row.is_active) }}
+            </span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let row" class="cell-actions">
+            <div class="actions-row">
+              <button mat-icon-button color="primary" (click)="edit(row)" matTooltip="Editar">
+                <mat-icon>edit</mat-icon>
+              </button>
+            </div>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+
+    <mat-paginator [pageSize]="20" [pageSizeOptions]="[10, 20, 50, 100]" showFirstLastButtons></mat-paginator>
+  </mat-card>
+</div>
+

@@ -1,11 +1,58 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import { HttpErrorResponse, HttpEvent, HttpInterceptorFn, HttpResponse } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { throwError } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export const httpInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
+  const isDev = !environment.production;
+
+  const safeJson = (value: unknown): unknown => {
+    try {
+      return JSON.parse(JSON.stringify(value));
+    } catch {
+      return '[Unserializable payload]';
+    }
+  };
+
+  const logRequest = () => {
+    if (!isDev) return;
+    // Evitar loguear headers completos (tokens) por seguridad
+    const body = req.body ?? null;
+    console.log('[HTTP][REQ]', {
+      method: req.method,
+      url: req.urlWithParams,
+      payload: safeJson(body),
+    });
+  };
+
+  const logResponse = (event: HttpEvent<unknown>) => {
+    if (!isDev) return;
+    if (event instanceof HttpResponse) {
+      console.log('[HTTP][RES]', {
+        url: req.urlWithParams,
+        status: event.status,
+        body: safeJson(event.body),
+      });
+    }
+  };
+
+  const logError = (error: unknown) => {
+    if (!isDev) return;
+    if (error instanceof HttpErrorResponse) {
+      console.log('[HTTP][ERR]', {
+        url: req.urlWithParams,
+        status: error.status,
+        message: error.message,
+        error: safeJson(error.error),
+      });
+    } else {
+      console.log('[HTTP][ERR]', { url: req.urlWithParams, error: safeJson(error) });
+    }
+  };
+
   // Lista de endpoints que NO requieren token (login y recuperar contraseña)
   const excludedEndpoints = [
     '/ws/UsuariosSvcImpl.php',  // Login endpoint
@@ -19,8 +66,14 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Si es un endpoint excluido, continuar sin token
   if (isExcluded) {
-    console.log('[HttpInterceptor] Skipping token for excluded endpoint:', req.url);
-    return next(req);
+    logRequest();
+    return next(req).pipe(
+      tap((event) => logResponse(event)),
+      catchError((error) => {
+        logError(error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Obtener token del localStorage
@@ -28,8 +81,17 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
 
   // Si no hay token, continuar sin modificar la request
   if (!token) {
-    console.warn('[HttpInterceptor] No token found, request will proceed without Authorization header');
-    return next(req);
+    if (isDev) {
+      console.warn('[HttpInterceptor] No token found, request will proceed without Authorization header');
+    }
+    logRequest();
+    return next(req).pipe(
+      tap((event) => logResponse(event)),
+      catchError((error) => {
+        logError(error);
+        return throwError(() => error);
+      })
+    );
   }
 
   // Clonar la request y agregar el header Authorization con el token
@@ -39,14 +101,18 @@ export const httpInterceptor: HttpInterceptorFn = (req, next) => {
     }
   });
 
-  console.log('[HttpInterceptor] Added Authorization header to request:', req.url);
+  logRequest();
   
   // Manejar la respuesta y detectar errores de autenticación
   return next(tokenReq).pipe(
+    tap((event) => logResponse(event)),
     catchError((error) => {
+      logError(error);
       // Si es error 401 (Unauthorized) o token inválido, hacer logout automático
       if (error.status === 401) {
-        console.warn('[HttpInterceptor] Token expired or invalid, logging out...');
+        if (isDev) {
+          console.warn('[HttpInterceptor] Token expired or invalid, logging out...');
+        }
         
         // Limpiar localStorage
         localStorage.removeItem('authToken');

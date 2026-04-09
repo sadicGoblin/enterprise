@@ -1,0 +1,76 @@
+<div class="worker-form-container">
+  <div class="page-header">
+    <div class="header-left">
+      <mat-icon class="header-icon">{{ isEditMode ? 'edit' : 'person_add' }}</mat-icon>
+      <div class="header-text">
+        <h1>{{ isEditMode ? 'Editar Trabajador' : 'Nuevo Trabajador' }}</h1>
+        <p *ngIf="isEditMode && nombreReadonly">Editando <strong>{{ nombreReadonly }}</strong></p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button mat-stroked-button type="button" (click)="goBack()">
+        <mat-icon>arrow_back</mat-icon>
+        Volver
+      </button>
+    </div>
+  </div>
+
+  <mat-card class="form-card">
+    <form [formGroup]="form" (ngSubmit)="submit()">
+      <div class="form-intro">
+        <div class="intro-left">
+          <h2>Datos del trabajador</h2>
+          <p>Completa o actualiza la información de contacto. Nombre y RUT quedan bloqueados en edición.</p>
+        </div>
+      </div>
+      <div class="form-grid">
+        <mat-form-field appearance="outline">
+          <mat-label>Nombre *</mat-label>
+          <input matInput formControlName="Nombre" placeholder="Nombre completo">
+          <mat-error *ngIf="form.get('Nombre')?.hasError('required')">Requerido</mat-error>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>RUT</mat-label>
+          <input matInput formControlName="RUT" placeholder="12.345.678-9">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Fecha nacimiento</mat-label>
+          <input matInput type="date" formControlName="FechaNacimiento">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+          <mat-label>Teléfono</mat-label>
+          <input matInput formControlName="Telefono" placeholder="+56 9 ...">
+        </mat-form-field>
+
+        <mat-form-field appearance="outline" class="span-2">
+          <mat-label>Email</mat-label>
+          <input matInput formControlName="Email" placeholder="correo@empresa.cl">
+          <mat-error *ngIf="form.get('Email')?.hasError('email')">Email inválido</mat-error>
+        </mat-form-field>
+
+        <div class="span-2 active-row">
+          <mat-checkbox formControlName="is_active" color="primary">Activo</mat-checkbox>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button mat-stroked-button type="button" (click)="goBack()" [disabled]="isLoading">
+          Cancelar
+        </button>
+        <button mat-flat-button color="primary" type="submit" [disabled]="isLoading">
+          <mat-icon>save</mat-icon>
+          {{ isEditMode ? 'Guardar cambios' : 'Crear trabajador' }}
+        </button>
+      </div>
+
+      <div *ngIf="isLoading" class="loading">
+        <mat-spinner diameter="32"></mat-spinner>
+        <p>Guardando...</p>
+      </div>
+    </form>
+  </mat-card>
+</div>
+

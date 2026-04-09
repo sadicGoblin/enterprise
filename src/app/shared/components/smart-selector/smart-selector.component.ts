@@ -72,8 +72,6 @@ export class SmartSelectorComponent implements OnInit, OnChanges, ControlValueAc
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['options']) {
-      console.log(`[Selector-${this.label}] ngOnChanges: ${this.options.length} opciones, selectedValue=${this.selectedValue}`);
-      
       const previousValue = this.selectedValue;
       this.updateMode();
       this.setupAutocompleteFilter();
@@ -81,14 +79,12 @@ export class SmartSelectorComponent implements OnInit, OnChanges, ControlValueAc
       // Preservar el valor seleccionado cuando las opciones cambian
       if (previousValue !== null && previousValue !== undefined) {
         const stillExists = this.options.some(o => o.value === previousValue);
-        console.log(`[Selector-${this.label}] Valor ${previousValue} ${stillExists ? 'EXISTE' : 'NO EXISTE'} en nuevas opciones`);
         
         if (stillExists) {
           this.selectedValue = previousValue;
           // SIEMPRE actualizar display text si es autocomplete, sin importar cómo llegó el valor
           if (this.isAutocomplete) {
             this.updateDisplayText();
-            console.log(`[Selector-${this.label}] Display text actualizado para valor ${previousValue}`);
           }
         }
       }
@@ -121,11 +117,9 @@ export class SmartSelectorComponent implements OnInit, OnChanges, ControlValueAc
 
   private updateDisplayText(): void {
     const found = this.options.find(o => o.value === this.selectedValue);
-    console.log(`[Selector-${this.label}] updateDisplayText: buscando value=${this.selectedValue}, found=${found ? found.label : 'NO'}`);
     if (found) {
       // Setear el objeto completo, no solo el label
       this.searchControl.setValue(found, { emitEvent: false });
-      console.log(`[Selector-${this.label}] searchControl.setValue(objeto completo: "${found.label}")`);
     }
   }
 
@@ -194,8 +188,6 @@ export class SmartSelectorComponent implements OnInit, OnChanges, ControlValueAc
   // ControlValueAccessor
   writeValue(value: any): void {
     const found = value !== null && value !== undefined ? this.options.find(o => o.value === value) : null;
-    console.log(`[Selector-${this.label}] writeValue(${value}): ${this.options.length} opts, ${this.isAutocomplete ? 'autocomplete' : 'select'}, ${found ? `FOUND (${found.label})` : 'NOT FOUND'}`);
-    
     this.selectedValue = value;
     
     if (this.isAutocomplete) {

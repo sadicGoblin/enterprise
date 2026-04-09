@@ -25,6 +25,7 @@ export interface AccidenteApiResponse {
   FechaAccidente: string | null;
   HoraAccidente: string | null;
   FechaControl: string | null;
+  FechaAlta: string | null;
   Descripcion: string | null;
   DiaSemana: string | null;
   NombreTrabajador: string;
@@ -62,7 +63,8 @@ export interface AccidenteApiResponse {
   Observaciones: string | null;
   TipoAccidente: string | null;
   CategoriaTipoAccidente: string | null;
-  Estado: EstadoAccidente;
+  /** ENUM backend: `Anulado` (comparación en UI tolera variantes de mayúsculas). */
+  Estado: string;
   FechaReporte: string;
   created_at: string;
   updated_at: string | null;
@@ -94,7 +96,9 @@ export interface CrearAccidenteRequest {
   Descripcion?: string;
   NumEnfermedadProfesional?: string;
   DiasPerdidosEstimados?: number;
+  DiasPerdidosFinal?: number;
   FechaControl?: string;           // YYYY-MM-DD
+  FechaAlta?: string;             // YYYY-MM-DD
   IdCargo?: number;
   IdSupervisor?: number;
   IdPTerreno?: number;
@@ -135,7 +139,9 @@ export interface ActualizarAccidenteRequest {
   NumEnfermedadProfesional?: string;
   DiasPerdidosEstimados?: number;
   DiasPerdidosFinal?: number;
-  FechaControl?: string;
+  /** `null` limpia la fecha en BD; omitir la clave = no modificar (clientes viejos). */
+  FechaControl?: string | null;
+  FechaAlta?: string | null;
   Estado?: string;
   IdCargo?: number;
   IdSupervisor?: number;
@@ -266,9 +272,15 @@ export const ESTADO_ACCIDENTE_OPTIONS: EstadoAccidente[] = [
   'Reportado', 'En_Investigacion', 'Cerrado', 'Anulado'
 ];
 
-export const ESTADO_LABELS: Record<EstadoAccidente, string> = {
+/** Etiquetas de UI; `anulado` minúsculas solo por datos legados si existieran. */
+export const ESTADO_LABELS: Record<string, string> = {
   'Reportado': 'Reportado',
   'En_Investigacion': 'En Investigación',
   'Cerrado': 'Cerrado',
-  'Anulado': 'Anulado'
+  'Anulado': 'Anulado',
+  'anulado': 'Anulado'
 };
+
+export function isAccidenteAnulado(estado: string | null | undefined): boolean {
+  return typeof estado === 'string' && estado.trim().length > 0 && estado.trim().toLowerCase() === 'anulado';
+}

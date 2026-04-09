@@ -26,6 +26,8 @@ import { AccidentsComponent } from './pages/accidents/accidents.component';
 import { AccidentsListComponent } from './pages/accidents/accidents-list/accidents-list.component';
 import { AccidentsStatisticsComponent } from './pages/accidents/accidents-statistics/accidents-statistics.component';
 import { MasaLaboralComponent } from './pages/accidents/masa-laboral/masa-laboral.component';
+import { AccidentWorkersListComponent } from './pages/accidents/workers/accident-workers-list.component';
+import { AccidentWorkerFormComponent } from './pages/accidents/workers/accident-worker-form.component';
 
 export const checkListRoutes: Routes = [
   {
@@ -88,6 +90,9 @@ export const checkListRoutes: Routes = [
           { path: 'list', component: AccidentsListComponent },
           { path: 'statistics', component: AccidentsStatisticsComponent },
           { path: 'masa-laboral', component: MasaLaboralComponent },
+          { path: 'workers', component: AccidentWorkersListComponent },
+          { path: 'workers/new', component: AccidentWorkerFormComponent },
+          { path: 'workers/edit/:id', component: AccidentWorkerFormComponent },
         ],
       },
     ],
