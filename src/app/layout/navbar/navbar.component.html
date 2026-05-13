@@ -15,11 +15,11 @@
       <ng-container *ngFor="let c of crumbs; let i = index; let last = last">
         <a
           *ngIf="!last && c.link"
-          class="breadcrumb breadcrumb--link"
+          class="crumb crumb--link"
           [routerLink]="c.link"
         >{{ c.label }}</a>
-        <span *ngIf="!last && c.link" class="breadcrumb-sep" aria-hidden="true">/</span>
-        <span *ngIf="last" class="breadcrumb breadcrumb--current">{{ c.label }}</span>
+        <span *ngIf="!last && c.link" class="crumb-sep" aria-hidden="true">/</span>
+        <span *ngIf="last" class="crumb crumb--current">{{ c.label }}</span>
       </ng-container>
     </nav>
   </div>

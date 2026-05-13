@@ -62,10 +62,11 @@
 }
 
 // ----- Breadcrumbs ---------------------------------------------------------
-// El truco para que el hamburger y el texto queden alineados visualmente:
-// todos los hijos del topbar ocupan height: 100% y centran su contenido por
-// flex (cross-axis center). Así el baseline del glyph de la fuente de iconos
-// (Material Symbols Rounded) deja de competir con el baseline del texto.
+// Los items usan el prefijo `.crumb` (no `.breadcrumb`) para evitar colisión
+// con la `.breadcrumb` de Bootstrap, que aplica `margin-bottom: 1rem` y
+// desplaza ~8px hacia arriba el texto cuando el padre flex centra por
+// margin-box. Mismo patrón que `.app-topbar` (renombrado para no chocar con
+// `.navbar` de Bootstrap).
 .breadcrumbs {
   display: flex;
   align-items: center;
@@ -78,10 +79,9 @@
   white-space: nowrap;
 }
 
-.breadcrumb {
+.crumb {
   display: inline-flex;
   align-items: center;
-  height: 100%;
   font-weight: 500;
   text-decoration: none;
   line-height: 1;
@@ -102,10 +102,9 @@
   }
 }
 
-.breadcrumb-sep {
+.crumb-sep {
   display: inline-flex;
   align-items: center;
-  height: 100%;
   color: var(--slate-300);
   font-weight: 500;
   line-height: 1;
