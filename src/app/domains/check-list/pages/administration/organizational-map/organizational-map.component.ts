@@ -22,6 +22,7 @@ import { UsuarioService } from '../../../services/usuario.service';
 import { UsuarioItem } from '../../../models/usuario.models';
 import { finalize } from 'rxjs/operators';
 import { forkJoin } from 'rxjs';
+import { BtnComponent } from '../../../../../shared/ui';
 
 @Component({
   selector: 'app-organizational-map',
@@ -41,6 +42,7 @@ import { forkJoin } from 'rxjs';
     MatSnackBarModule,
     CustomSelectComponent,
     DataTableComponent,
+    BtnComponent,
   ],
   templateUrl: './organizational-map.component.html',
   styleUrl: './organizational-map.component.scss',

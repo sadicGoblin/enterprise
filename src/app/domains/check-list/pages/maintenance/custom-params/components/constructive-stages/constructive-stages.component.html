@@ -37,23 +37,24 @@
       </mat-form-field>
     </div>
     <div class="form-row button-row action-buttons-right">
-      <button
-        mat-raised-button
-        color="primary"
-        (click)="addStage()"
-        [disabled]="!newStageCode || !newStageName"
-      >
-        {{ editingStage ? "Actualizar Etapa" : "Agregar Etapa" }}
-      </button>
-      <button
-        mat-stroked-button
-        color="warn"
-        (click)="cancelEditStage()"
+      <app-btn
         *ngIf="editingStage"
-        class="ml-2"
+        variant="ghost"
+        size="md"
+        icon="close"
+        (click)="cancelEditStage()"
       >
-        Cancelar Edición
-      </button>
+        Cancelar edición
+      </app-btn>
+      <app-btn
+        variant="accent"
+        size="md"
+        [icon]="editingStage ? 'save' : 'add'"
+        [disabled]="!newStageCode || !newStageName"
+        (click)="addStage()"
+      >
+        {{ editingStage ? "Actualizar etapa" : "Agregar etapa" }}
+      </app-btn>
     </div>
   </div>
 

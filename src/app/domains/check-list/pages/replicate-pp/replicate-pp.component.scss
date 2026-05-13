@@ -1,496 +1,296 @@
-.dashboard-container {
+// =============================================================================
+// Replicar PP · DS Inarco SSTMA §5.8
+// =============================================================================
+
+:host {
+  display: block;
+}
+
+.page {
+  min-height: 100%;
+  padding: 28px 32px;
+  background: var(--paper);
+  font-family: var(--font-text);
+  color: var(--slate-900);
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--slate-500);
+}
+
+.mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+// ----- Page header ----------------------------------------------------------
+.page-header {
   display: flex;
-  justify-content: center;
-  padding: 20px;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 24px;
 }
 
-.dashboard-card {
-  width: 100%;
-  max-width: 1200px;
-  padding: 24px;
-  overflow-x: auto;
+.page-header__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--slate-900);
+  line-height: 1.1;
+}
+
+.page-header__description {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--slate-500);
+  max-width: 64ch;
+}
+
+// ----- Card ----------------------------------------------------------------
+.card {
+  background: #fff;
+  border: 1px solid var(--slate-100);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   position: relative;
+  margin-bottom: 16px;
 }
 
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.card-header__text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.card-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-md);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--slate-900);
+}
+
+.card-header__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// ----- Spinner --------------------------------------------------------------
 .spinner-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.8);
+  inset: 0;
+  z-index: 20;
   display: flex;
-  justify-content: center;
   align-items: center;
-  z-index: 10;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.85);
 }
 
-.dashboard-header {
-  margin-bottom: 24px;
-  
-  .title {
-    margin: 0;
-    font-size: 24px;
-    font-weight: 500;
-    color: #333;
-  }
-}
-
-.filters-section {
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-  border: 1px solid #e0e0e0;
-  
-  .filters-header {
-    margin-bottom: 20px;
-    
-    h3 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 500;
-      color: #444;
-    }
-  }
+// ----- Filters --------------------------------------------------------------
+.filters-body {
+  padding: 20px 24px;
 }
 
 .filters-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 16px;
-  margin-bottom: 24px;
-  
-  @media (max-width: 768px) {
-    grid-template-columns: 1fr;
-  }
 }
 
-.filter-field {
-  width: 100%;
-  
-  ::ng-deep .mat-form-field {
-    width: 100%;
-    
-    .mat-form-field-wrapper {
-      padding-bottom: 0.75em;
-    }
-    
-    .mat-form-field-infix {
-      padding: 0.5em 0;
-      font-size: 14px;
-    }
-  }
-  
-  ::ng-deep app-custom-select {
-    width: 100%;
-    
-    .mat-form-field {
-      width: 100%;
-    }
-  }
-}
-
-.compact-field {
-  ::ng-deep .mat-form-field-wrapper {
-    padding-bottom: 0.75em;
-  }
-  
-  ::ng-deep .mat-form-field-infix {
-    padding: 0.5em 0;
-    font-size: 14px;
-  }
-}
-
-.button-row {
+.field {
   display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  margin-top: 20px;
-  
-  button {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    
-    .mat-spinner {
-      margin-right: 2px;
-      font-size: 18px;
-    }
-    
-    &[mat-stroked-button] {
-      border-color: #ddd;
-      color: #666;
-      
-      &:hover:not(:disabled) {
-        background-color: #f5f5f5;
-      }
-    }
-    
-    &[mat-raised-button] {
-      box-shadow: 0 2px 5px rgba(0,0,0,0.15);
-      
-      &:hover:not(:disabled) {
-        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
-      }
-    }
-    
-    &:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-  }
-  
-  @media (max-width: 480px) {
-    flex-direction: column;
-    
-    button {
-      width: 100%;
-      justify-content: center;
-    }
-  }
+  flex-direction: column;
+  gap: 6px;
 }
 
-// Responsiveness improvements
-@media (max-width: 768px) {
-  .dashboard-container {
-    padding: 12px;
-  }
-  
-  .dashboard-card {
-    padding: 16px;
-  }
-  
-  .filters-section {
-    padding: 16px;
-  }
+.field__label {
+  font-family: var(--font-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.10em;
+  color: var(--slate-500);
 }
 
-// Angular Material form field size adjustments
-::ng-deep .mat-form-field-appearance-outline {
-  .mat-form-field-wrapper {
-    margin: 0;
-  }
-  
-  .mat-form-field-flex {
-    padding: 0 0.75em 0 0.75em;
-    min-height: 48px;
-  }
-  
-  .mat-form-field-infix {
-    padding: 0.75em 0;
-    min-height: auto;
-  }
-}
+.field__control {
+  width: 100%;
 
-// Ensure consistent sizing across all form controls
-::ng-deep .mat-select-trigger,
-::ng-deep .mat-input-element {
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-::ng-deep .mat-datepicker-toggle {
-  color: rgba(0,0,0,0.54);
-}
-
-// Custom select component styling
-::ng-deep app-custom-select .mat-form-field-appearance-outline {
-  .mat-form-field-outline {
-    color: rgba(0,0,0,0.12);
-  }
-  
-  &.mat-focused .mat-form-field-outline-thick {
-    color: #1976d2;
-  }
-}
-
-// Month-Year picker styles
-::ng-deep .month-year-picker {
-  .mat-calendar-period-button {
-    pointer-events: none;
-  }
-  
-  .mat-calendar-arrow {
+  :host ::ng-deep & .mat-mdc-form-field-subscript-wrapper {
     display: none;
   }
-  
-  // Hide the day view and only show month/year selection
-  .mat-calendar-content {
-    .mat-calendar-table {
-      .mat-calendar-body-cell:not(.mat-calendar-body-disabled):hover {
-        background-color: rgba(25, 118, 210, 0.1);
-      }
-    }
+}
+
+.filters-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 24px;
+  border-top: 1px solid var(--slate-100);
+  background: var(--slate-50);
+}
+
+// ----- Período destino bar --------------------------------------------------
+.periodo-destino-bar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 24px;
+  background: var(--slate-50);
+  border-bottom: 1px solid var(--slate-100);
+}
+
+.periodo-destino-bar__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 220px;
+}
+
+.periodo-destino-bar__info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: rgba(31, 95, 184, 0.06);
+  border: 1px solid rgba(31, 95, 184, 0.18);
+  border-radius: var(--radius-md);
+  color: var(--info);
+  font-size: var(--text-base);
+  flex: 1;
+  min-width: 220px;
+
+  .ms-r { font-size: 18px; }
+
+  strong { color: var(--slate-900); }
+}
+
+.periodo-destino-bar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// ----- Tabla ---------------------------------------------------------------
+.table-wrap {
+  display: flex;
+  flex-direction: column;
+  overflow-x: auto;
+}
+
+.tasks-table {
+  width: 100%;
+  background: transparent;
+
+  :host ::ng-deep th.mat-mdc-header-cell {
+    background: #fff;
+    color: var(--slate-500);
+    font-family: var(--font-text);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.10em;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--slate-100);
+    white-space: nowrap;
+  }
+
+  :host ::ng-deep td.mat-mdc-cell {
+    padding: 14px 16px;
+    font-size: var(--text-base);
+    color: var(--slate-700);
+    border-bottom: 1px solid var(--slate-100);
+    vertical-align: middle;
+  }
+
+  :host ::ng-deep tr.mat-mdc-row:nth-of-type(even) td.mat-mdc-cell {
+    background: var(--slate-50);
+  }
+
+  :host ::ng-deep tr.mat-mdc-row:hover td.mat-mdc-cell {
+    background: rgba(11, 27, 63, 0.04);
   }
 }
 
-// Ensure datepicker input shows formatted month/year
-.filter-field {
-  .mat-form-field {
-    .mat-input-element {
-      cursor: pointer;
-    }
+.cell-strong {
+  font-weight: 600;
+  color: var(--slate-900);
+}
+
+.cell-dash {
+  color: var(--slate-300);
+}
+
+.cell-actions {
+  width: 96px;
+  text-align: right;
+
+  &__header { text-align: right; }
+}
+
+// ----- Empty state ---------------------------------------------------------
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 48px 24px;
+  color: var(--slate-500);
+}
+
+.empty-state__icon {
+  font-size: 48px;
+  color: var(--slate-300);
+}
+
+.empty-state__text {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--slate-500);
+}
+
+// ----- Responsive ---------------------------------------------------------
+@media (max-width: 1100px) {
+  .filters-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
-// Tasks section styling
-.tasks-section {
-  margin-top: 24px;
-  padding: 20px;
-  background-color: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e0e0e0;
-  
-  .tasks-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    padding: 0 8px;
-    
-    h3 {
-      margin: 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: #333;
-    }
-    
-    .header-controls {
-      display: flex;
-      gap: 12px;
-      align-items: center;
-      
-      .mat-mdc-button {
-        font-size: 14px;
-      }
-    }
-  }
-
-  // Período Destino section styling
-  .periodo-destino-section {
-    background-color: #f0f8ff;
-    border: 1px solid #b3d9ff;
-    border-radius: 8px;
-    padding: 16px;
-    margin-bottom: 20px;
-    
-    .periodo-destino-field {
-      margin-bottom: 12px;
-      
-      .compact-field {
-        width: 300px;
-      }
-    }
-    
-    .periodo-info {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #1976d2;
-      font-size: 14px;
-      
-      mat-icon {
-        font-size: 18px;
-        width: 18px;
-        height: 18px;
-      }
-      
-      strong {
-        color: #0d47a1;
-      }
-    }
-  }
-}
-
-// Table container and styling
-.table-container {
-  background: white;
-  border-radius: 6px;
-  overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  
-  .tasks-table {
-    width: 100%;
-    
-    .mat-mdc-header-row {
-      background-color: #f5f5f5;
-      
-      .mat-mdc-header-cell {
-        font-weight: 600;
-        color: #333;
-        font-size: 13px;
-        padding: 12px 8px;
-      }
-    }
-    
-    .mat-mdc-row {
-      border-bottom: 1px solid #eee;
-      transition: background-color 0.2s ease;
-      
-      &:hover {
-        background-color: #f9f9f9;
-      }
-      
-      &:last-child {
-        border-bottom: none;
-      }
-      
-      .mat-mdc-cell {
-        padding: 12px 8px;
-        font-size: 13px;
-        vertical-align: middle;
-      }
-    }
-    
-    // Specific column styling
-    .task-name {
-      max-width: 200px;
-      
-      strong {
-        color: #1976d2;
-        font-weight: 500;
-      }
-    }
-    
-    .task-stage {
-      max-width: 180px;
-      word-wrap: break-word;
-      font-size: 12px;
-      color: #666;
-    }
-    
-    .ambito-badge {
-      display: inline-block;
-      padding: 4px 8px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 500;
-      text-transform: uppercase;
-      
-      &.ambito-1 {
-        background-color: #e3f2fd;
-        color: #1976d2;
-      }
-      
-      &.ambito-2 {
-        background-color: #f3e5f5;
-        color: #7b1fa2;
-      }
-      
-      &.ambito-3 {
-        background-color: #fff3e0;
-        color: #f57c00;
-      }
-      
-      &.ambito-4 {
-        background-color: #e8f5e8;
-        color: #388e3c;
-      }
-    }
-    
-    .frequency-badge {
-      display: inline-block;
-      padding: 3px 8px;
-      background-color: #e8eaf6;
-      color: #3f51b5;
-      border-radius: 10px;
-      font-size: 11px;
-      font-weight: 500;
-    }
-    
-    .days-cell {
-      text-align: center;
-      
-      .days-badge {
-        display: inline-block;
-        padding: 3px 8px;
-        background-color: #e1f5fe;
-        color: #0288d1;
-        border-radius: 10px;
-        font-size: 11px;
-        font-weight: 600;
-      }
-      
-      .no-days {
-        color: #999;
-        font-style: italic;
-      }
-    }
-    
-    .selection-header {
-      width: 70px;
-      text-align: center;
-    }
-    
-    .selection-cell {
-      width: 70px;
-      text-align: center;
-      padding: 8px 4px !important;
-      
-      .mat-mdc-checkbox {
-        margin: 0 auto;
-      }
-    }
-  }
-  
-  .no-tasks {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px;
-    color: #666;
-    
-    .mat-icon {
-      font-size: 48px;
-      margin-bottom: 12px;
-      opacity: 0.5;
-    }
-    
-    p {
-      margin: 0;
-      font-size: 14px;
-    }
-  }
-}
-
-// Enhanced button styling
-.button-row {
-  button {
-    .mat-spinner {
-      margin-right: 8px;
-    }
-  }
-}
-
-// Responsive design
-@media (max-width: 768px) {
-  .tasks-section {
-    margin: 16px -16px 0;
-    border-radius: 0;
-    
-    .tasks-header {
-      flex-direction: column;
-      align-items: stretch;
-      gap: 12px;
-      
-      button {
-        align-self: flex-end;
-      }
-    }
-  }
-  
-  .table-container {
-    overflow-x: auto;
-    
-    .tasks-table {
-      min-width: 800px;
-    }
-  }
-  
+@media (max-width: 900px) {
   .filters-grid {
     grid-template-columns: 1fr;
-    gap: 12px;
+  }
+
+  .periodo-destino-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (max-width: 640px) {
+  .page {
+    padding: 20px 16px;
   }
 }

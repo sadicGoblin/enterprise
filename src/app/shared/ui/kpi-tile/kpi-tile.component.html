@@ -1,0 +1,17 @@
+<article class="kpi-tile" [class.is-highlight]="highlight">
+  <header class="kpi-tile__header">
+    <div class="kpi-tile__labels">
+      <span *ngIf="eyebrow" class="kpi-tile__eyebrow">{{ eyebrow }}</span>
+      <span class="kpi-tile__label">{{ label }}</span>
+    </div>
+    <span *ngIf="icon" class="kpi-tile__icon-box" aria-hidden="true">
+      <span class="ms-r">{{ icon }}</span>
+    </span>
+  </header>
+
+  <p class="kpi-tile__value">{{ value }}</p>
+
+  <p *ngIf="delta" class="kpi-tile__delta" [ngClass]="'kpi-tile__delta--' + deltaTone">
+    {{ delta }}
+  </p>
+</article>

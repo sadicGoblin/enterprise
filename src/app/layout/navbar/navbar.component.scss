@@ -1,10 +1,262 @@
-.navbar {
-  background-color: #0d1b42;
+// =============================================================================
+// Navbar (topbar) · DS Inarco SSTMA §3.2
+// Alto 56px, fondo blanco. Renombrado a .app-topbar para evitar colisión con
+// Bootstrap .navbar (que aplica flex-wrap y rompe la alineación).
+// =============================================================================
+
+:host {
+  display: block;
 }
 
-
-.navbar-toggler {
-  border: none;
-  color: white;
+.app-topbar {
+  display: flex;
+  align-items: stretch; // hijos ocupan altura completa, centrado por flex anidado
+  justify-content: space-between;
+  gap: 16px;
+  height: 56px;
+  padding: 0 20px;
+  background: #fff;
+  border-bottom: 1px solid var(--slate-100);
+  font-family: var(--font-text);
+  color: var(--slate-900);
+  flex-wrap: nowrap; // anula cualquier herencia de Bootstrap .navbar
 }
 
+.app-topbar__left,
+.app-topbar__right {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: 12px;
+  min-width: 0;
+}
+
+// ----- Icon button ---------------------------------------------------------
+.app-topbar__icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center; // centra dentro del padre stretch
+  width: 36px;
+  height: 36px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--slate-500);
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 120ms ease, color 120ms ease, border-color 120ms ease;
+
+  .ms-r { font-size: 20px; line-height: 1; }
+
+  &:hover {
+    background: var(--slate-50);
+    color: var(--ink);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(11, 27, 63, 0.12);
+  }
+}
+
+// ----- Breadcrumbs ---------------------------------------------------------
+// El truco para que el hamburger y el texto queden alineados visualmente:
+// todos los hijos del topbar ocupan height: 100% y centran su contenido por
+// flex (cross-axis center). Así el baseline del glyph de la fuente de iconos
+// (Material Symbols Rounded) deja de competir con el baseline del texto.
+.breadcrumbs {
+  display: flex;
+  align-items: center;
+  height: 100%;
+  gap: 6px;
+  font-size: var(--text-sm);
+  line-height: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  font-weight: 500;
+  text-decoration: none;
+  line-height: 1;
+  font-size: var(--text-sm);
+
+  &--link {
+    color: var(--slate-500);
+    transition: color 120ms ease;
+
+    &:hover {
+      color: var(--ink);
+    }
+  }
+
+  &--current {
+    color: var(--slate-900);
+    font-weight: 600;
+  }
+}
+
+.breadcrumb-sep {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  color: var(--slate-300);
+  font-weight: 500;
+  line-height: 1;
+}
+
+// ----- Obra selector (trigger del mat-menu) --------------------------------
+.obra-select {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 8px;
+  padding: 0 12px;
+  height: 38px;
+  border: 1px solid var(--slate-200);
+  border-radius: var(--radius-md);
+  background: #fff;
+  color: var(--slate-900);
+  font-family: var(--font-text);
+  font-size: var(--text-base);
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+  min-width: 240px;
+  max-width: 340px;
+
+  &:hover {
+    border-color: var(--slate-300);
+  }
+
+  &:focus-visible,
+  &[aria-expanded="true"] {
+    outline: none;
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(11, 27, 63, 0.08);
+  }
+}
+
+.obra-select__icon {
+  font-size: 18px;
+  color: var(--slate-500);
+  flex-shrink: 0;
+}
+
+.obra-select__chevron {
+  font-size: 18px;
+  color: var(--slate-500);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.obra-select__label {
+  flex: 1;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// ----- User button ---------------------------------------------------------
+.user-button {
+  display: inline-flex;
+  align-items: center;
+  align-self: center;
+  gap: 10px;
+  padding: 4px 10px 4px 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  font-family: var(--font-text);
+  color: var(--slate-900);
+  flex-shrink: 0;
+  transition: background 120ms ease, border-color 120ms ease;
+
+  &:hover {
+    background: var(--slate-50);
+    border-color: var(--slate-200);
+  }
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--ink);
+    box-shadow: 0 0 0 3px rgba(11, 27, 63, 0.12);
+  }
+}
+
+.user-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--yellow);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border: 1px solid var(--ink-3);
+  flex-shrink: 0;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+  min-width: 0;
+}
+
+.user-info__name {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--slate-900);
+  line-height: 1.1;
+  max-width: 18ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-info__role {
+  font-size: 11px;
+  color: var(--slate-500);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 600;
+  line-height: 1.1;
+}
+
+.user-button__chevron {
+  font-size: 18px;
+  color: var(--slate-500);
+}
+
+// ----- Responsive ----------------------------------------------------------
+@media (max-width: 1100px) {
+  .user-info { display: none; }
+}
+
+@media (max-width: 900px) {
+  .breadcrumbs { display: none; }
+  .obra-select {
+    min-width: 160px;
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 640px) {
+  .app-topbar { padding: 0 12px; }
+  .obra-select { display: none; }
+}

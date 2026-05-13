@@ -335,17 +335,19 @@ export class SstmaInspectionComponent implements OnInit, AfterViewInit {
           });
           
           this.inspeccionesFiltradas = [...this.inspecciones];
-          this.dataSource = new MatTableDataSource<InspeccionSSTMA>(this.inspeccionesFiltradas);
-          
-          // Configurar el ordenador y paginador
-          if (this.paginator) this.dataSource.paginator = this.paginator;
+          // Reusar la instancia de dataSource para no perder el wiring del paginator.
+          this.dataSource.data = this.inspeccionesFiltradas;
+          if (this.paginator) {
+            this.dataSource.paginator = this.paginator;
+            this.paginator.firstPage();
+          }
           if (this.sort) this.dataSource.sort = this.sort;
-          
+
           console.log('[SSTMA] Inspecciones cargadas y ordenadas por fecha descendente:', this.inspecciones.length);
         } else {
           this.inspecciones = [];
           this.inspeccionesFiltradas = [];
-          this.dataSource = new MatTableDataSource<InspeccionSSTMA>([]);
+          this.dataSource.data = [];
           this.errorMessage = 'No se encontraron inspecciones para la obra seleccionada';
           console.warn('[SSTMA] No inspections found in response');
         }

@@ -17,6 +17,7 @@ import { Chart, ChartConfiguration, registerables } from 'chart.js';
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 import { EstadisticasApiResponse } from '../models/accident.model';
 import { AccidenteService } from '../../../services/accidente.service';
+import { BtnComponent, KpiTileComponent, PillComponent } from '../../../../../shared/ui';
 
 Chart.register(...registerables, ChartDataLabels);
 
@@ -35,7 +36,10 @@ Chart.register(...registerables, ChartDataLabels);
     MatTableModule,
     MatProgressSpinnerModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    BtnComponent,
+    PillComponent,
+    KpiTileComponent
   ],
   providers: [
     { provide: DateAdapter, useClass: CustomDateAdapter },
@@ -399,6 +403,34 @@ export class AccidentsStatisticsComponent implements OnInit, AfterViewInit, OnDe
   getGravedadTotal(gravedad: string): number {
     const found = this.porGravedad.find(g => g.Gravedad === gravedad);
     return found ? parseInt(found.Total, 10) : 0;
+  }
+
+  /** Días entre el accidente más reciente y hoy (hero KPI). */
+  get diasSinAccidente(): number | null {
+    if (!this.accidentesRaw || this.accidentesRaw.length === 0) return null;
+    let maxMs = 0;
+    for (const a of this.accidentesRaw) {
+      const raw = a.FechaAccidente || a.fechaAccidente;
+      if (!raw) continue;
+      const t = new Date(typeof raw === 'string' && !raw.includes('T') ? raw + 'T00:00:00' : raw).getTime();
+      if (!isNaN(t) && t > maxMs) maxMs = t;
+    }
+    if (!maxMs) return null;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diff = today.getTime() - maxMs;
+    return Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+  }
+
+  get diasSinAccidenteLabel(): string {
+    const v = this.diasSinAccidente;
+    if (v === null) return 'Sin datos';
+    if (v === 0) return 'Hoy registrado';
+    return `Último hace ${v} ${v === 1 ? 'día' : 'días'}`;
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.fechaDesde || this.fechaHasta) && this.tipoFecha !== 'creacion';
   }
 
   // Métodos auxiliares para el nuevo diseño

@@ -33,25 +33,24 @@
         </mat-form-field>
       </div>
       <div class="form-row button-row action-buttons-right">
-        <button
-          mat-stroked-button
-          color="warn"
-          (click)="cancelEditSubprocess()"
+        <app-btn
           *ngIf="editingSubprocess"
-          class="cancel-button"
+          variant="ghost"
+          size="md"
+          icon="close"
+          (click)="cancelEditSubprocess()"
         >
-          <mat-icon>cancel</mat-icon> Cancelar
-        </button>
-        <button
-          mat-raised-button
-          color="primary"
-          (click)="addSubprocess()"
+          Cancelar
+        </app-btn>
+        <app-btn
+          variant="accent"
+          size="md"
+          [icon]="editingSubprocess ? 'save' : 'add'"
           [disabled]="!newSubprocessCode || !newSubprocessName"
-          class="add-button"
+          (click)="addSubprocess()"
         >
-          <mat-icon>{{ editingSubprocess ? 'edit' : 'add_circle' }}</mat-icon>
           {{ editingSubprocess ? 'Actualizar' : 'Agregar' }} Sub-proceso
-        </button>
+        </app-btn>
       </div>
     </div>
 

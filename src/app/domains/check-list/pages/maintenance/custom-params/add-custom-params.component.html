@@ -1,7 +1,19 @@
-<div class="container">
-  <mat-card class="mat-container">
-    <mat-tab-group>
-      <mat-tab label="Etapas Constructivas">
+<section class="page" aria-labelledby="custom-params-title">
+  <!-- Page header -->
+  <header class="page-header">
+    <div class="page-header__text">
+      <span class="eyebrow">MANTENEDOR</span>
+      <h1 id="custom-params-title" class="page-header__title">Parámetros del plan personalizado</h1>
+      <p class="page-header__description">
+        Administra etapas constructivas, sub-procesos, ámbitos y actividades disponibles para los planes.
+      </p>
+    </div>
+  </header>
+
+  <!-- Card con tabs internos -->
+  <section class="card tabs-card">
+    <mat-tab-group class="custom-params-tabs" animationDuration="160ms">
+      <mat-tab label="Etapas constructivas">
         <app-constructive-stages></app-constructive-stages>
       </mat-tab>
 
@@ -9,7 +21,7 @@
         <app-subprocesses></app-subprocesses>
       </mat-tab>
 
-      <mat-tab label="Ambitos">
+      <mat-tab label="Ámbitos">
         <app-ambits></app-ambits>
       </mat-tab>
 
@@ -17,5 +29,5 @@
         <app-activities></app-activities>
       </mat-tab>
     </mat-tab-group>
-  </mat-card>
-</div>
+  </section>
+</section>

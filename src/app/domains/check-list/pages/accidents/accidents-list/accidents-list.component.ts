@@ -26,6 +26,7 @@ import {
 import { AccidenteService } from '../../../services/accidente.service';
 import { ExportService, ExportColumn } from '../../../../../shared/services/export.service';
 import { AccidentDetailDialogComponent } from '../accident-detail-dialog/accident-detail-dialog.component';
+import { BtnComponent, KpiTileComponent, PillComponent, PillVariant } from '../../../../../shared/ui';
 
 // Formato de fecha DD/MM/YYYY
 const MY_DATE_FORMATS = {
@@ -60,7 +61,10 @@ const MY_DATE_FORMATS = {
     MatProgressSpinnerModule,
     MatDialogModule,
     MatDatepickerModule,
-    MatNativeDateModule
+    MatNativeDateModule,
+    BtnComponent,
+    PillComponent,
+    KpiTileComponent
   ],
   providers: [
     { provide: DateAdapter, useClass: CustomDateAdapter },
@@ -124,7 +128,7 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
     private dialog: MatDialog,
     private accidenteService: AccidenteService,
     private exportService: ExportService,
-    private dateAdapter: DateAdapter<Date>
+    private dateAdapter: DateAdapter<Date>,
   ) {
     this.dateAdapter.setLocale('es-CL');
   }
@@ -246,31 +250,66 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
     this.loadData();
   }
 
-  getGravedadClass(gravedad: string | null): string {
-    if (!gravedad) return '';
-    const classes: Record<string, string> = {
-      'Leve': 'severity-leve',
-      'Menor': 'severity-menor',
-      'Importante': 'severity-importante',
-      'Grave': 'severity-grave',
-      'Fatal': 'severity-fatal'
-    };
-    return classes[gravedad] || '';
+  severityVariant(gravedad: string | null | undefined): PillVariant {
+    if (!gravedad) return 'neutral';
+    const v = gravedad.toLowerCase();
+    if (v === 'fatal') return 'danger';
+    if (v === 'grave') return 'danger';
+    if (v === 'importante') return 'warn';
+    if (v === 'menor') return 'info';
+    if (v === 'leve') return 'success';
+    return 'neutral';
   }
 
-  getEstadoClass(estado: string): string {
-    const classes: Record<string, string> = {
-      'Reportado': 'estado-reportado',
-      'En_Investigacion': 'estado-investigacion',
-      'Cerrado': 'estado-cerrado',
-      'anulado': 'estado-anulado',
-      'Anulado': 'estado-anulado'
-    };
-    return classes[estado] || '';
+  severityIcon(gravedad: string | null | undefined): string {
+    switch (this.severityVariant(gravedad)) {
+      case 'danger': return 'warning';
+      case 'warn': return 'error';
+      case 'success': return 'check_circle';
+      case 'info': return 'info';
+      default: return 'circle';
+    }
+  }
+
+  estadoVariant(estado: string | null | undefined): PillVariant {
+    if (!estado) return 'neutral';
+    const v = estado.toLowerCase();
+    if (v === 'cerrado') return 'success';
+    if (v === 'en_investigacion') return 'info';
+    if (v === 'reportado') return 'warn';
+    if (v === 'anulado') return 'neutral';
+    return 'neutral';
+  }
+
+  estadoIcon(estado: string | null | undefined): string {
+    switch ((estado || '').toLowerCase()) {
+      case 'cerrado': return 'check_circle';
+      case 'en_investigacion': return 'search';
+      case 'reportado': return 'flag';
+      case 'anulado': return 'block';
+      default: return 'circle';
+    }
   }
 
   getEstadoLabel(estado: string): string {
     return (this.estadoLabels as any)[estado] || estado;
+  }
+
+  hasActiveFilters(): boolean {
+    return !!(
+      this.searchText ||
+      this.filterEstado !== 'all' ||
+      this.filterGravedad !== 'all' ||
+      this.filterObra !== 'all'
+    );
+  }
+
+  clearFilters(): void {
+    this.searchText = '';
+    this.filterEstado = 'all';
+    this.filterGravedad = 'all';
+    this.filterObra = 'all';
+    this.applyFilters();
   }
 
   viewDetails(accident: AccidenteApiResponse): void {
@@ -346,5 +385,15 @@ export class AccidentsListComponent implements OnInit, AfterViewInit {
     return this.accidents.filter(a =>
       a.CalificacionPS === 'Grave' || a.CalificacionPS === 'Fatal'
     ).length;
+  }
+
+  get kpiAbiertos(): number {
+    return this.accidents.filter(
+      a => a.Estado !== 'Cerrado' && a.Estado !== 'Anulado' && a.Estado !== 'anulado',
+    ).length;
+  }
+
+  get kpiCerrados(): number {
+    return this.accidents.filter(a => a.Estado === 'Cerrado').length;
   }
 }

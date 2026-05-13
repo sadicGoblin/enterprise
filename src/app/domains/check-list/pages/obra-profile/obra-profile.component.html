@@ -1,0 +1,210 @@
+<section class="page" aria-labelledby="obra-profile-title">
+  <!-- Page header -->
+  <header class="page-header">
+    <div class="page-header__text">
+      <span class="eyebrow">OBRA · #{{ obraId }}</span>
+      <h1 id="obra-profile-title" class="page-header__title">
+        {{ obra?.Obra || 'Cargando…' }}
+      </h1>
+      <p class="page-header__description" *ngIf="obra">
+        {{ obra.Direccion }}{{ obra.Comuna ? ', ' + obra.Comuna : '' }}
+        <ng-container *ngIf="obra.Region"> · {{ obra.Region }}</ng-container>
+      </p>
+    </div>
+    <div class="page-header__actions">
+      <app-btn variant="ghost" size="md" icon="list" (click)="goToAccidents()">Accidentes</app-btn>
+      <app-btn variant="ghost" size="md" icon="bar_chart" (click)="goToReports()">Reportes</app-btn>
+      <app-btn variant="secondary" size="md" icon="event_available" (click)="goToPlanning()">Plan</app-btn>
+      <app-btn variant="ghost" size="md" icon="refresh" [disabled]="isLoading" (click)="reload()">Actualizar</app-btn>
+    </div>
+  </header>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="card load-card">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando perfil de la obra…</p>
+  </div>
+
+  <!-- Error -->
+  <div *ngIf="hasError" class="card error-card">
+    <span class="ms-r is-filled error-card__icon" aria-hidden="true">error</span>
+    <p>{{ errorMessage }}</p>
+    <app-btn variant="primary" icon="refresh" (click)="reload()">Reintentar</app-btn>
+  </div>
+
+  <ng-container *ngIf="!isLoading && !hasError">
+    <!-- Hero · días sin accidente -->
+    <section class="card hero-card">
+      <div class="hero-card__text">
+        <span class="eyebrow eyebrow--on-ink">PROYECTO SEGURO</span>
+        <p class="hero-card__label">Días sin accidente</p>
+        <p class="hero-card__value mono">{{ diasSinAccidente !== null ? diasSinAccidente : '—' }}</p>
+        <p class="hero-card__hint">
+          <ng-container *ngIf="diasSinAccidente !== null; else noData">
+            Último accidente registrado {{ diasSinAccidente === 0 ? 'hoy' : 'hace ' + diasSinAccidente + ' días' }}
+          </ng-container>
+          <ng-template #noData>Sin accidentes registrados para esta obra.</ng-template>
+        </p>
+      </div>
+      <div class="hero-card__icon" aria-hidden="true">
+        <span class="ms-r is-filled">verified</span>
+      </div>
+    </section>
+
+    <!-- KPI strip -->
+    <div class="kpi-strip">
+      <app-kpi-tile
+        eyebrow="OBRA"
+        label="Total accidentes"
+        [value]="totalAccidentes"
+        icon="report"
+        [highlight]="true"
+      ></app-kpi-tile>
+      <app-kpi-tile
+        label="Trabajadores"
+        [value]="totalTrabajadores"
+        icon="groups"
+        delta="Activos en catálogo"
+      ></app-kpi-tile>
+      <app-kpi-tile
+        label="Días perdidos"
+        [value]="diasPerdidosAcumulados"
+        icon="event_busy"
+      ></app-kpi-tile>
+      <app-kpi-tile
+        label="Reportes últ. mes"
+        [value]="reportesUltMes"
+        icon="trending_up"
+        delta="Creados en últimos 30 d."
+      ></app-kpi-tile>
+    </div>
+
+    <!-- Grid principal -->
+    <div class="profile-grid">
+      <!-- Columna izquierda: charts -->
+      <div class="profile-main">
+        <!-- Tendencia mensual de accidentes -->
+        <section class="card chart-card">
+          <header class="card-header">
+            <div class="card-header__text">
+              <span class="eyebrow">TENDENCIA</span>
+              <h2 class="card-title">Accidentes por mes</h2>
+            </div>
+            <app-pill variant="brand" icon="bar_chart">Últimos 6 meses</app-pill>
+          </header>
+          <div class="bar-chart">
+            <div class="bar-chart__item" *ngFor="let m of accidentsByMonth">
+              <div class="bar-chart__track">
+                <div
+                  class="bar-chart__bar"
+                  [style.height.%]="m.count > 0 ? (m.count / maxMonthCount) * 100 : 4"
+                  [class.is-empty]="m.count === 0"
+                ></div>
+                <span class="bar-chart__count mono" *ngIf="m.count > 0">{{ m.count }}</span>
+              </div>
+              <span class="bar-chart__label">{{ m.label }}</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Partes del cuerpo afectadas -->
+        <section class="card breakdown-card">
+          <header class="card-header">
+            <div class="card-header__text">
+              <span class="eyebrow">DESGLOSE</span>
+              <h2 class="card-title">Partes del cuerpo afectadas</h2>
+            </div>
+            <app-pill variant="neutral" icon="accessibility">
+              {{ bodyParts.length }} tipos
+            </app-pill>
+          </header>
+          <ul class="breakdown-list" *ngIf="bodyParts.length > 0; else noBodyParts">
+            <li class="breakdown-list__item" *ngFor="let bp of bodyParts">
+              <div class="breakdown-list__head">
+                <span class="breakdown-list__label">{{ bp.label }}</span>
+                <span class="breakdown-list__pct mono">{{ bp.percent }}%</span>
+              </div>
+              <div class="breakdown-bar">
+                <div class="breakdown-bar__fill" [style.width.%]="bp.percent"></div>
+              </div>
+              <div class="breakdown-list__meta">
+                <span class="mono">{{ bp.count }}</span>
+                <span>·</span>
+                <span>de {{ totalAccidentes }} accidentes</span>
+              </div>
+            </li>
+          </ul>
+          <ng-template #noBodyParts>
+            <div class="empty-state">
+              <span class="ms-r is-filled empty-state__icon" aria-hidden="true">accessibility_new</span>
+              <p>Sin lesiones registradas para esta obra.</p>
+            </div>
+          </ng-template>
+        </section>
+      </div>
+
+      <!-- Sidebar derecho: listas -->
+      <aside class="profile-aside">
+        <!-- Accidentes recientes -->
+        <section class="card list-card">
+          <header class="card-header">
+            <div class="card-header__text">
+              <span class="eyebrow">RECIENTES</span>
+              <h2 class="card-title">Últimos accidentes</h2>
+            </div>
+          </header>
+          <ul class="entry-list" *ngIf="recentAccidents.length > 0; else noRecent">
+            <li class="entry-list__item" *ngFor="let a of recentAccidents">
+              <div class="entry-list__top">
+                <span class="entry-list__title">{{ a.NombreTrabajador || '—' }}</span>
+                <app-pill
+                  *ngIf="a.CalificacionPS"
+                  [variant]="severityVariant(a.CalificacionPS)"
+                  icon="warning"
+                >
+                  {{ a.CalificacionPS }}
+                </app-pill>
+              </div>
+              <div class="entry-list__meta">
+                <span class="mono">{{ formatDate(a.FechaAccidente) }}</span>
+                <span *ngIf="a.NumeroAccidente">· {{ a.NumeroAccidente }}</span>
+              </div>
+            </li>
+          </ul>
+          <ng-template #noRecent>
+            <div class="empty-state">
+              <span class="ms-r empty-state__icon" aria-hidden="true">event_busy</span>
+              <p>Sin accidentes recientes.</p>
+            </div>
+          </ng-template>
+        </section>
+
+        <!-- Trabajadores -->
+        <section class="card list-card">
+          <header class="card-header">
+            <div class="card-header__text">
+              <span class="eyebrow">EQUIPO</span>
+              <h2 class="card-title">Trabajadores activos</h2>
+            </div>
+            <app-pill variant="brand" icon="badge">{{ totalTrabajadores }}</app-pill>
+          </header>
+          <ul class="worker-list" *ngIf="topWorkers.length > 0; else noWorkers">
+            <li class="worker-list__item" *ngFor="let w of topWorkers">
+              <span class="avatar" aria-hidden="true">{{ initials(w.Nombre) }}</span>
+              <div class="worker-list__text">
+                <span class="worker-list__name">{{ w.Nombre }}</span>
+                <span class="worker-list__rut mono">{{ w.RUT || '—' }}</span>
+              </div>
+            </li>
+          </ul>
+          <ng-template #noWorkers>
+            <div class="empty-state">
+              <span class="ms-r empty-state__icon" aria-hidden="true">person_off</span>
+              <p>Sin trabajadores en catálogo.</p>
+            </div>
+          </ng-template>
+        </section>
+      </aside>
+    </div>
+  </ng-container>
+</section>

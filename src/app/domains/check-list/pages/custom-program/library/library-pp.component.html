@@ -1,102 +1,182 @@
-<div class="container">
-    <mat-card class="mat-container">
-      <h2 class="title">Biblioteca</h2>
-      <div class="tab-content">
-        <div class="form-grid">
-          <mat-form-field appearance="fill">
-            <mat-label>Título</mat-label>
+<section class="page" aria-labelledby="library-title">
+  <!-- Page header -->
+  <header class="page-header">
+    <div class="page-header__text">
+      <span class="eyebrow">PROGRAMA PERSONALIZADO</span>
+      <h1 id="library-title" class="page-header__title">Biblioteca</h1>
+      <p class="page-header__description">
+        Repositorio de estándares, procedimientos e instructivos vinculados al programa.
+      </p>
+    </div>
+  </header>
+
+  <!-- KPI strip (4) -->
+  <div class="kpi-strip">
+    <app-kpi-tile
+      eyebrow="ACERVO"
+      label="Total documentos"
+      [value]="kpiTotal"
+      icon="library_books"
+      [highlight]="true"
+    ></app-kpi-tile>
+    <app-kpi-tile
+      label="Estándares"
+      [value]="kpiByType('ESTANDAR')"
+      icon="verified"
+    ></app-kpi-tile>
+    <app-kpi-tile
+      label="Procedimientos"
+      [value]="kpiByType('PROCEDIMIENTOS')"
+      icon="menu_book"
+    ></app-kpi-tile>
+    <app-kpi-tile
+      label="Instructivos"
+      [value]="kpiByType('INSTRUCTIVOS')"
+      icon="description"
+    ></app-kpi-tile>
+  </div>
+
+  <!-- Form card -->
+  <section class="card form-card">
+    <header class="card-header">
+      <span class="eyebrow">REGISTRO</span>
+      <h2 class="card-title">Subir documento</h2>
+    </header>
+
+    <div class="form-body">
+      <div class="form-grid">
+        <div class="field">
+          <label class="field__label">Título</label>
+          <mat-form-field appearance="outline" class="field__control">
             <input matInput [(ngModel)]="title" />
           </mat-form-field>
-  
-          <mat-form-field appearance="fill">
-            <mat-label>Año</mat-label>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Año</label>
+          <mat-form-field appearance="outline" class="field__control">
             <input matInput type="number" [(ngModel)]="year" />
           </mat-form-field>
-  
-          <mat-form-field appearance="fill">
-            <mat-label>Tipo Documento</mat-label>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Tipo de documento</label>
+          <mat-form-field appearance="outline" class="field__control">
             <mat-select [(ngModel)]="documentType">
-              <mat-option value="">Seleccione...</mat-option>
+              <mat-option value="">Seleccione…</mat-option>
               <mat-option *ngFor="let t of types" [value]="t">{{ t }}</mat-option>
             </mat-select>
           </mat-form-field>
-  
-          <mat-form-field appearance="fill">
-            <mat-label>Adj. Documento</mat-label>
+        </div>
+
+        <div class="field">
+          <label class="field__label">Adjunto Excel</label>
+          <mat-form-field appearance="outline" class="field__control">
             <input matInput type="text" [value]="selectedFileName || 'Ningún archivo seleccionado'" readonly />
             <button matSuffix mat-icon-button type="button" (click)="fileInput.click()">
-              <mat-icon>attach_file</mat-icon>
+              <span class="ms-r" aria-hidden="true">attach_file</span>
             </button>
             <input #fileInput type="file" hidden accept=".xls,.xlsx" (change)="onFileSelected($event)" />
           </mat-form-field>
         </div>
-  
-        <div class="button-row">
-          <button mat-raised-button color="accent" (click)="saveDocument()">
-            Crear Documento
-          </button>
-        </div>
-  
-        <!-- Loading spinner -->
-        <div class="loading-container" *ngIf="isLoading">
-          <mat-spinner diameter="40"></mat-spinner>
-          <p>Cargando documentos...</p>
-        </div>
-
-        <!-- Table -->
-        <div class="table-container" *ngIf="!isLoading">
-          <table mat-table [dataSource]="documents" class="mat-elevation-z2 full-width">
-    
-            <ng-container matColumnDef="title">
-              <th mat-header-cell *matHeaderCellDef>Título</th>
-              <td mat-cell *matCellDef="let element">{{ element.title }}</td>
-            </ng-container>
-    
-            <ng-container matColumnDef="year">
-              <th mat-header-cell *matHeaderCellDef>Año</th>
-              <td mat-cell *matCellDef="let element">{{ element.year }}</td>
-            </ng-container>
-    
-            <ng-container matColumnDef="name">
-              <th mat-header-cell *matHeaderCellDef>Nombre</th>
-              <td mat-cell *matCellDef="let element">{{ element.name }}</td>
-            </ng-container>
-    
-            <ng-container matColumnDef="type">
-              <th mat-header-cell *matHeaderCellDef>Tipo</th>
-              <td mat-cell *matCellDef="let element">{{ element.type }}</td>
-            </ng-container>
-    
-            <ng-container matColumnDef="view">
-              <th mat-header-cell *matHeaderCellDef>Ver</th>
-              <td mat-cell *matCellDef="let element" class="action-cell">
-                <button mat-icon-button color="primary" (click)="viewDocument(element)" [disabled]="loadingDocumentId === element.id">
-                  <mat-spinner diameter="20" *ngIf="loadingDocumentId === element.id"></mat-spinner>
-                  <mat-icon *ngIf="loadingDocumentId !== element.id">visibility</mat-icon>
-                </button>
-              </td>
-            </ng-container>
-    
-            <ng-container matColumnDef="delete">
-              <th mat-header-cell *matHeaderCellDef>Eliminar</th>
-              <td mat-cell *matCellDef="let element" class="action-cell">
-                <button mat-icon-button color="warn" (click)="deleteDocument(element)">
-                  <mat-icon>delete</mat-icon>
-                </button>
-              </td>
-            </ng-container>
-    
-            <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-            <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
-            
-            <!-- No data row -->
-            <tr class="mat-row" *matNoDataRow>
-              <td class="mat-cell no-data-cell" colspan="6">
-                No hay documentos disponibles
-              </td>
-            </tr>
-          </table>
-        </div>
       </div>
-    </mat-card>
-  </div>
+
+      <footer class="form-footer">
+        <app-btn variant="accent" size="md" icon="upload" (click)="saveDocument()">
+          Crear documento
+        </app-btn>
+      </footer>
+    </div>
+  </section>
+
+  <!-- Tabla -->
+  <section class="card report-card">
+    <div *ngIf="isLoading" class="spinner-overlay" role="status" aria-live="polite">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p class="spinner-text">Cargando documentos…</p>
+    </div>
+
+    <header class="card-header">
+      <div class="card-header__text">
+        <span class="eyebrow">REGISTROS</span>
+        <h2 class="card-title">Documentos disponibles</h2>
+      </div>
+      <app-pill *ngIf="documents.length > 0" variant="brand" icon="library_books">
+        {{ documents.length }} documentos
+      </app-pill>
+    </header>
+
+    <div class="table-wrap" *ngIf="!isLoading">
+      <table mat-table [dataSource]="documents" class="library-table">
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>Título</th>
+          <td mat-cell *matCellDef="let element" class="cell-strong">{{ element.title }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="year">
+          <th mat-header-cell *matHeaderCellDef>Año</th>
+          <td mat-cell *matCellDef="let element">
+            <span class="mono">{{ element.year }}</span>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef>Nombre</th>
+          <td mat-cell *matCellDef="let element">{{ element.name }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="type">
+          <th mat-header-cell *matHeaderCellDef>Tipo</th>
+          <td mat-cell *matCellDef="let element">
+            <app-pill
+              *ngIf="element.type; else dashType"
+              [variant]="typeVariant(element.type)"
+              [icon]="typeIcon(element.type)"
+            >
+              {{ element.type }}
+            </app-pill>
+            <ng-template #dashType><span class="cell-dash">—</span></ng-template>
+          </td>
+        </ng-container>
+
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="cell-actions__header">Acciones</th>
+          <td mat-cell *matCellDef="let element" class="cell-actions">
+            <button
+              type="button"
+              class="row-action"
+              [disabled]="loadingDocumentId === element.id"
+              (click)="viewDocument(element)"
+              matTooltip="Ver documento"
+              aria-label="Ver documento"
+            >
+              <mat-spinner diameter="16" *ngIf="loadingDocumentId === element.id"></mat-spinner>
+              <span class="ms-r" *ngIf="loadingDocumentId !== element.id" aria-hidden="true">visibility</span>
+            </button>
+            <button
+              type="button"
+              class="row-action row-action--danger"
+              (click)="deleteDocument(element)"
+              matTooltip="Eliminar"
+              aria-label="Eliminar"
+            >
+              <span class="ms-r" aria-hidden="true">delete</span>
+            </button>
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell no-data-cell" colspan="5">
+            <div class="empty-state">
+              <span class="ms-r is-filled empty-state__icon" aria-hidden="true">inbox</span>
+              <p class="empty-state__text">No hay documentos disponibles.</p>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </div>
+  </section>
+</section>

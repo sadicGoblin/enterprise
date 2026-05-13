@@ -1,0 +1,117 @@
+:host {
+  display: block;
+  height: 100%; // grid-stretch: todas las tiles igualan la altura del más alto
+}
+
+.kpi-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%; // ocupa todo el host (que el grid estira)
+  min-height: 110px;
+  padding: 16px 18px;
+  background: #fff;
+  border: 1px solid var(--slate-100);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  gap: 8px;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+
+  &.is-highlight {
+    background: var(--ink);
+    border-color: var(--ink);
+
+    .kpi-tile__eyebrow {
+      color: var(--yellow);
+    }
+    .kpi-tile__label {
+      color: rgba(255, 255, 255, 0.78);
+    }
+    .kpi-tile__value {
+      color: #fff;
+    }
+    .kpi-tile__icon-box {
+      background: rgba(255, 198, 41, 0.16);
+      color: var(--yellow);
+    }
+    .kpi-tile__delta--neutral {
+      color: rgba(255, 255, 255, 0.65);
+    }
+  }
+}
+
+.kpi-tile__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.kpi-tile__labels {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.kpi-tile__eyebrow {
+  font-family: var(--font-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--slate-500);
+}
+
+.kpi-tile__label {
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--slate-700);
+  line-height: 1.3;
+}
+
+.kpi-tile__icon-box {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-md);
+  background: var(--slate-50);
+  color: var(--ink);
+
+  .ms-r {
+    font-size: var(--icon-size-default);
+  }
+}
+
+.kpi-tile__value {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 38px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--slate-900);
+  line-height: 1;
+}
+
+.kpi-tile__delta {
+  margin: 0;
+  font-family: var(--font-text);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  line-height: 1.2;
+
+  &--positive {
+    color: var(--success);
+  }
+  &--negative {
+    color: var(--danger);
+  }
+  &--neutral {
+    color: var(--slate-500);
+  }
+}

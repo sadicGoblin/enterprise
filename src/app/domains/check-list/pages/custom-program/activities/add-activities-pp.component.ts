@@ -29,6 +29,7 @@ import { CalendarDialogComponent } from '../../../../../shared/controls/multi-da
 import { CalendarSelectComponent } from '../../../../../shared/controls/multi-date-calendar/calendar-select.component';
 import { environment } from '../../../../../../environments/environment';
 import { ActividadService } from '../../../services/actividad.service';
+import { BtnComponent, PillComponent } from '../../../../../shared/ui';
 
 // Interfaces para los diferentes tipos de objetos usados en el componente
 interface ProjectApiRequestBody {
@@ -148,6 +149,8 @@ interface ActivityApiRequestBody {
     ConfirmationDialogComponent,
     CustomSelectComponent,
     CalendarSelectComponent,
+    BtnComponent,
+    PillComponent,
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: 'es-ES' }

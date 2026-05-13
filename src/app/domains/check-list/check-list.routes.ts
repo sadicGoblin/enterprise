@@ -80,6 +80,12 @@ export const checkListRoutes: Routes = [
       },
       // Planning route
       { path: 'planning', component: ActivityPlanningComponent },
+      // Obra profile (perfil agregado por obra)
+      {
+        path: 'obras/:id',
+        loadComponent: () =>
+          import('./pages/obra-profile/obra-profile.component').then(m => m.ObraProfileComponent),
+      },
       // Accidents routes grouped logically
       {
         path: 'accidents',

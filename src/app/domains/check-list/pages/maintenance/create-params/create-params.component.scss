@@ -1,6 +1,85 @@
 // Variables para escala de texto
 $scale-factor: 0.9; // Factor de escala global
 
+// =============================================================================
+// DS Inarco SSTMA · page wrapper agregado para create-params
+// =============================================================================
+:host { display: block; }
+
+.page {
+  min-height: 100%;
+  padding: 28px 32px;
+  background: var(--paper);
+  font-family: var(--font-text);
+  color: var(--slate-900);
+}
+
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--slate-500);
+}
+
+.page-header {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+
+.page-header__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--slate-900);
+  line-height: 1.1;
+}
+
+.page-header__description {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--slate-500);
+  max-width: 64ch;
+}
+
+.card.params-card {
+  background: #fff;
+  border: 1px solid var(--slate-100);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.params-tabs {
+  :host ::ng-deep & .mat-mdc-tab-header {
+    border-bottom: 1px solid var(--slate-100);
+    padding: 0 16px;
+  }
+  :host ::ng-deep & .mat-mdc-tab .mdc-tab__text-label {
+    font-family: var(--font-text);
+    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--slate-500);
+  }
+  :host ::ng-deep & .mat-mdc-tab--active .mdc-tab__text-label {
+    color: var(--ink);
+  }
+  :host ::ng-deep & .mat-mdc-tab .mdc-tab-indicator__content--underline {
+    border-color: var(--yellow);
+  }
+}
+
+@media (max-width: 640px) {
+  .page { padding: 20px 16px; }
+}
+
+// ----- Estilos legacy preservados ------------------------------------------
 .params-container {
   display: flex;
   flex-direction: column;

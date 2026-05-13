@@ -1,5 +1,12 @@
+<section class="page" aria-labelledby="work-maint-title">
+  <header class="page-header">
+    <div class="page-header__text">
+      <span class="eyebrow">MANTENEDOR</span>
+      <h1 id="work-maint-title" class="page-header__title">Obras</h1>
+      <p class="page-header__description">Administra el catálogo de obras y proyectos del sistema.</p>
+    </div>
+  </header>
 <div class="container">
-  <h2 class="mb-4">Mantenedor de Obras</h2>
 
   <mat-card class="mat-container">
     <mat-card-header>
@@ -134,10 +141,10 @@
       </div>
   
       <div class="button-container">
-        <button mat-raised-button color="primary" type="submit">
+        <app-btn variant="ghost" size="md" icon="close" (click)="cancel()">Cancelar</app-btn>
+        <app-btn variant="accent" size="md" type="submit" [icon]="isEditing ? 'save' : 'add'">
           {{ isEditing ? 'Actualizar' : 'Crear' }}
-        </button>
-        <button mat-raised-button color="warn" type="button" (click)="cancel()">Cancelar</button>
+        </app-btn>
       </div>
       </form>
     </mat-card>
@@ -197,8 +204,8 @@
           <th mat-header-cell *matHeaderCellDef class="actions-header">Acciones</th>
           <td mat-cell *matCellDef="let w; let i = index" class="actions-cell">
             <div class="actions-container">
-              <button mat-icon-button color="primary" (click)="edit(i)" class="edit-btn">
-                <mat-icon>edit</mat-icon>
+              <button type="button" class="row-action" matTooltip="Editar" (click)="edit(i)" aria-label="Editar">
+                <span class="ms-r" aria-hidden="true">edit</span>
               </button>
               <mat-slide-toggle 
                 [checked]="w.is_active === '1'"
@@ -225,4 +232,5 @@
     </div>
     </mat-card>
   </div>
+</section>
   

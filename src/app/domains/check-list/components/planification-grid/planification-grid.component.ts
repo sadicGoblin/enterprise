@@ -12,6 +12,24 @@ import { ChecklistReportModalComponent } from '../checklist-report-modal/checkli
 import { SstmaModalComponent } from '../sstma-modal/sstma-modal.component';
 import { ARTViewModalComponent } from '../planification-table/components/art-view-modal/art-view-modal.component';
 import { environment } from '../../../../../environments/environment';
+import { PillComponent, PillVariant } from '../../../../shared/ui';
+
+export interface GridAmbitSummary {
+  ambit: string;
+  variant: PillVariant;
+  activities: number;
+  assigned: number;
+  realized: number;
+  compliance: number;
+}
+
+export interface GridSummary {
+  totalActivities: number;
+  totalAssigned: number;
+  totalRealized: number;
+  compliance: number;
+  byAmbit: GridAmbitSummary[];
+}
 
 // Interface for simplified API response
 export interface PlanificacionSimpleItem {
@@ -62,9 +80,10 @@ export interface GridActivity {
     CommonModule, 
     MatIconModule, 
     MatButtonModule, 
-    MatDialogModule, 
+    MatDialogModule,
     MatTooltipModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    PillComponent
   ],
   templateUrl: './planification-grid.component.html',
   styleUrls: ['./planification-grid.component.scss'],
@@ -84,15 +103,20 @@ export class PlanificationGridComponent implements OnInit, OnChanges {
   @Input() projectId: string | null = null;
   @Input() selectedCollaboratorName: string | null = null;
   @Input() selectedCollaboratorId: string | null = null;
-  
+  /** Vista de calendario: diaria (1 columna por día) o semanal (5 buckets). */
+  @Input() viewMode: 'daily' | 'weekly' = 'daily';
+
   // Output events
   @Output() activityClicked = new EventEmitter<{activity: GridActivity, day: number}>();
+  @Output() summaryChange = new EventEmitter<GridSummary>();
   
   // Component state
   isLoading = false;
   rawData: PlanificacionSimpleItem[] = [];
   groupedActivities: {ambit: string, activities: GridActivity[]}[] = [];
   days: number[] = [];
+  /** Buckets para vista semanal: cada uno con `from` y `to` (día inclusive). */
+  weekBuckets: { label: string; from: number; to: number }[] = [];
   selectedPeriod: Date | null = null;
   
   // Summary totals
@@ -178,12 +202,23 @@ export class PlanificationGridComponent implements OnInit, OnChanges {
     const month = parseInt(periodoStr.substring(4, 6)) - 1; // JS months are 0-indexed
 
     this.selectedPeriod = new Date(year, month, 1);
-    
+
     // Get number of days in the month
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     this.days = Array.from({ length: daysInMonth }, (_, i) => i + 1);
-    
-    console.log('Generated days array:', this.days.length, 'days for', year, month + 1);
+
+    // Compute 5 weekly buckets (1–7, 8–14, 15–21, 22–28, 29–end).
+    this.weekBuckets = [];
+    for (let i = 0; i < 4; i++) {
+      const from = 1 + i * 7;
+      const to = Math.min(from + 6, daysInMonth);
+      this.weekBuckets.push({ label: `Sem ${i + 1}`, from, to });
+    }
+    if (daysInMonth >= 29) {
+      this.weekBuckets.push({ label: 'Sem 5', from: 29, to: daysInMonth });
+    }
+
+    console.log('Generated days:', this.days.length, 'buckets:', this.weekBuckets.length);
   }
 
   /**
@@ -283,22 +318,70 @@ export class PlanificationGridComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Calculate totals for the summary row
+   * Calculate totals for the summary row and emit summaryChange.
    */
   private calculateTotals(): void {
     this.totalAssigned = 0;
     this.totalRealized = 0;
+    let totalActivities = 0;
+    const byAmbit: GridAmbitSummary[] = [];
 
     this.groupedActivities.forEach(group => {
+      let gAssigned = 0;
+      let gRealized = 0;
       group.activities.forEach(activity => {
         this.totalAssigned += activity.assigned;
         this.totalRealized += activity.realized;
+        gAssigned += activity.assigned;
+        gRealized += activity.realized;
+        totalActivities += 1;
+      });
+      byAmbit.push({
+        ambit: group.ambit,
+        variant: this.ambitVariant(group.ambit),
+        activities: group.activities.length,
+        assigned: gAssigned,
+        realized: gRealized,
+        compliance: gAssigned > 0 ? Math.round((gRealized / gAssigned) * 100) : 0,
       });
     });
 
-    this.totalCompliancePercentage = this.totalAssigned > 0 
-      ? Math.round((this.totalRealized / this.totalAssigned) * 100) 
+    this.totalCompliancePercentage = this.totalAssigned > 0
+      ? Math.round((this.totalRealized / this.totalAssigned) * 100)
       : 0;
+
+    this.summaryChange.emit({
+      totalActivities,
+      totalAssigned: this.totalAssigned,
+      totalRealized: this.totalRealized,
+      compliance: this.totalCompliancePercentage,
+      byAmbit,
+    });
+  }
+
+  /**
+   * Heurística de variante de pill por nombre de ámbito.
+   * Mapea palabras clave habituales en SSTMA a colores semánticos.
+   */
+  ambitVariant(ambit: string | null | undefined): PillVariant {
+    const v = (ambit || '').toLowerCase();
+    if (/segur/.test(v)) return 'danger';
+    if (/salud/.test(v)) return 'info';
+    if (/(medio|ambient|eco)/.test(v)) return 'success';
+    if (/calid|qual/.test(v)) return 'warn';
+    if (/inarco|operac/.test(v)) return 'brand';
+    return 'neutral';
+  }
+
+  ambitIcon(ambit: string | null | undefined): string {
+    switch (this.ambitVariant(ambit)) {
+      case 'danger':  return 'health_and_safety';
+      case 'info':    return 'medical_services';
+      case 'success': return 'eco';
+      case 'warn':    return 'verified';
+      case 'brand':   return 'business';
+      default:        return 'category';
+    }
   }
 
   /**
@@ -478,5 +561,42 @@ export class PlanificationGridComponent implements OnInit, OnChanges {
    */
   reload(): void {
     this.fetchData();
+  }
+
+  // ---------------------------------------------------------------------------
+  // Vista semanal — buckets agregados
+  // ---------------------------------------------------------------------------
+
+  /** Conteo dentro de un bucket: días asignados, realizados y % cumplimiento. */
+  bucketStats(activity: GridActivity, bucket: { from: number; to: number }): {
+    assigned: number;
+    realized: number;
+    compliance: number;
+  } {
+    let assigned = 0;
+    let realized = 0;
+    for (let d = bucket.from; d <= bucket.to; d++) {
+      const s = activity.dayStatus.get(d);
+      if (s && s !== 'none') {
+        assigned++;
+        if (s === 'cumplida') realized++;
+      }
+    }
+    const compliance = assigned > 0 ? Math.round((realized / assigned) * 100) : 0;
+    return { assigned, realized, compliance };
+  }
+
+  /** Color semántico del bucket según cumplimiento. */
+  bucketTone(activity: GridActivity, bucket: { from: number; to: number }): 'success' | 'warn' | 'danger' | 'empty' {
+    const { assigned, compliance } = this.bucketStats(activity, bucket);
+    if (assigned === 0) return 'empty';
+    if (compliance >= 80) return 'success';
+    if (compliance >= 50) return 'warn';
+    return 'danger';
+  }
+
+  /** Rango formateado del bucket: "1–7", "29–30". */
+  bucketRangeLabel(bucket: { from: number; to: number }): string {
+    return `${bucket.from}–${bucket.to}`;
   }
 }

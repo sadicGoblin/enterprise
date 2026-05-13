@@ -1,215 +1,92 @@
-.tab-content {
-  margin-top: 40px;
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+// =============================================================================
+// Mantenedor · Parámetros del plan personalizado · DS Inarco SSTMA
+// =============================================================================
+
+:host {
+  display: block;
 }
 
-mat-form-field {
-  width: 300px;
+.page {
+  min-height: 100%;
+  padding: 28px 32px;
+  background: var(--paper);
+  font-family: var(--font-text);
+  color: var(--slate-900);
 }
 
-.button-row {
-  display: flex;
-  margin-top: -20px;
-  gap: 1rem;
+.eyebrow {
+  display: inline-block;
+  font-family: var(--font-text);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--slate-500);
 }
 
-.full-width-table {
-  width: 100%;
-}
-
-.mat-column-edit, .mat-column-delete {
-  width: 4%;
-  text-align: center;
-}
-
-.action-cell {
-  text-align: center !important;
-  padding: 0.2rem !important;
-}
-
-.table-container {
-  position: relative;
-  min-height: 150px; 
-}
-
-.spinner-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(255, 255, 255, 0.7); 
-  z-index: 10;
-}
-
-.table-controls {
-  display: flex;
-  justify-content: flex-start; // Aligns search to the left
-  padding: 8px 0;
-
-  .search-field {
-    width: 300px; // Adjust width as needed
-    font-size: 0.9em; // Consistent with other small text, per memory
-
-    .mat-mdc-form-field-subscript-wrapper {
-        display: none; // Hide the underline/hint space if not used
-    }
-    .mat-mdc-text-field-wrapper {
-        height: 55px; // Adjust to match other inputs if necessary
-    }
-  }
-}
-
-.empty-state-message {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100px; 
-  color: grey;
-  font-style: italic;
-}
-
-table {
-  margin-top: 20px;
-}
-
-.container {
-  padding: 20px;
-  margin-top: 2rem;
-}
-
-mat-card {
-  padding: 1rem;
-  margin-bottom: 2rem;
-}
-
-.stage-form-container {
-  display: flex;
-  flex-direction: column; // Stack rows vertically
-  width: 100%; // Take full width to allow content alignment
-  gap: 1rem; // Space between form rows
-  margin-bottom: 1.5rem; // Space before the search bar/table
-}
-
-.selection-row {
-  display: flex;
-  gap: 16px; // Space between the dropdowns
-  width: 100%;
-
-  > app-custom-select {
-    flex: 1; // Each dropdown takes up equal space
-  }
-}
-
-.form-row {
-  display: flex;
-  width: 100%;
-  gap: 1rem; // Space between items in a row (inputs or buttons)
-}
-
-.input-row {
-  justify-content: flex-start; // Align inputs to the left
-
-  .form-field {
-    flex-grow: 1; // Allow input fields to share space
-    max-width: 100%; // Max width for each input field, adjust as needed
-  }
-}
-
-.action-buttons-right {
-  justify-content: flex-end; // Align buttons to the right
-}
-
-// Override for .tab-content if it's interfering with the form layout
-// This makes the direct children of .tab-content (like .stage-form-container and .custom-params-section) stack vertically.
-.tab-content {
-  display: flex;
-  flex-direction: column; // Change from row to column
-  align-items: flex-start; // Align items to the start of the cross axis
-  // gap: 1rem; // Keep the gap - already defined, might not need to repeat or adjust
-  // margin-top: 20px; // Adjusted from 40px to be more standard - already defined
-}
-
-// Ensure the search bar and table section take full width
-.custom-params-section {
-  width: 100%;
-}
-
-// Ambitos tab specific styles
-.ambitos-form-container {
-  display: flex;
-  width: 100%;
-  margin-bottom: 20px;
-  align-items: center;
-  justify-content: space-between;
-  
-  .ambitos-inputs {
-    display: flex;
-    gap: 16px;
-    
-    mat-form-field {
-      width: 240px;
-    }
-  }
-  
-  .ambitos-buttons {
-    display: flex;
-    gap: 8px;
-    margin-left: 16px;
-  }
-}
-
-// Make sure tables take full width
-.full-width-table {
-  width: 100% !important;
-}
-
-// Ensure action buttons stay horizontal
-.mat-column-actions {
-  width: 120px !important;
-  min-width: 120px !important;
-  text-align: center !important;
-}
-
-// Empty state styling
-.empty-state {
-  width: 100%;
+// ----- Page header ---------------------------------------------------------
+.page-header {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px 0;
-  color: rgba(0, 0, 0, 0.54);
-  
-  mat-icon {
-    font-size: 48px;
-    height: 48px;
-    width: 48px;
-    margin-bottom: 16px;
+  gap: 6px;
+  margin-bottom: 24px;
+}
+
+.page-header__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--slate-900);
+  line-height: 1.1;
+}
+
+.page-header__description {
+  margin: 0;
+  font-size: var(--text-base);
+  color: var(--slate-500);
+  max-width: 64ch;
+}
+
+// ----- Card con tabs --------------------------------------------------------
+.card {
+  background: #fff;
+  border: 1px solid var(--slate-100);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+
+.custom-params-tabs {
+  :host ::ng-deep & .mat-mdc-tab-header {
+    border-bottom: 1px solid var(--slate-100);
+    padding: 0 16px;
   }
-  
-  p {
-    font-size: 16px;
-    text-align: center;
+
+  :host ::ng-deep & .mat-mdc-tab .mdc-tab__text-label {
+    font-family: var(--font-text);
+    font-weight: 600;
+    font-size: var(--text-base);
+    color: var(--slate-500);
+    letter-spacing: 0.01em;
+  }
+
+  :host ::ng-deep & .mat-mdc-tab--active .mdc-tab__text-label {
+    color: var(--ink);
+  }
+
+  :host ::ng-deep & .mat-mdc-tab .mdc-tab-indicator__content--underline {
+    border-color: var(--yellow);
+  }
+
+  :host ::ng-deep & .mat-mdc-tab-body-content {
+    padding: 20px 24px;
   }
 }
 
-// Loading state styling
-.loading-state {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 30px 0;
-  
-  p {
-    margin-top: 16px;
-    font-size: 16px;
-    color: rgba(0, 0, 0, 0.54);
+@media (max-width: 640px) {
+  .page {
+    padding: 20px 16px;
   }
 }

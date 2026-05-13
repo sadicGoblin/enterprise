@@ -13,6 +13,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MasaLaboralService } from '../../../services/masa-laboral.service';
 import { MasaLaboral, MasaLaboralMapper, MasaLaboralApiResponse } from '../models/masa-laboral.model';
+import { BtnComponent, KpiTileComponent, PillComponent, PillVariant } from '../../../../../shared/ui';
 
 interface TipoEmpresa {
   value: string;
@@ -36,7 +37,10 @@ interface TipoEmpresa {
     MatCardModule,
     MatSnackBarModule,
     MatProgressSpinnerModule,
-    MatTooltipModule
+    MatTooltipModule,
+    BtnComponent,
+    PillComponent,
+    KpiTileComponent
   ],
   templateUrl: './masa-laboral.component.html',
   styleUrl: './masa-laboral.component.scss'
@@ -266,6 +270,49 @@ export class MasaLaboralComponent implements OnInit {
 
   formatPeriodo(periodo: string): string {
     return MasaLaboralMapper.formatPeriodo(periodo);
+  }
+
+  // ---------------------------------------------------------------------------
+  // DS §5.6 — KPIs derivados de los registros visibles
+  // (El modelo actual no tiene "inducciones"; ese KPI queda como TODO.)
+  // ---------------------------------------------------------------------------
+  get kpiTotalActual(): number {
+    return this.filteredData.reduce((sum, r) => sum + (r.cantidadTrabajadores || 0), 0);
+  }
+
+  get kpiInarco(): number {
+    return this.filteredData
+      .filter(r => r.tipoEmpresa === 'INARCO')
+      .reduce((sum, r) => sum + (r.cantidadTrabajadores || 0), 0);
+  }
+
+  get kpiSubcontrato(): number {
+    return this.filteredData
+      .filter(r => r.tipoEmpresa === 'SUBCONTRATO')
+      .reduce((sum, r) => sum + (r.cantidadTrabajadores || 0), 0);
+  }
+
+  get kpiRegistros(): number {
+    return this.filteredData.length;
+  }
+
+  empresaVariant(tipo: string | null | undefined): PillVariant {
+    if (!tipo) return 'neutral';
+    return tipo === 'INARCO' ? 'brand' : 'warn';
+  }
+
+  empresaIcon(tipo: string | null | undefined): string {
+    return tipo === 'INARCO' ? 'verified' : 'engineering';
+  }
+
+  hasActiveFilters(): boolean {
+    return this.filtroAnio !== null || this.filtroTipoEmpresa !== null;
+  }
+
+  clearFilters(): void {
+    this.filtroAnio = null;
+    this.filtroTipoEmpresa = null;
+    this.loadMasaLaboral();
   }
 
   showMessage(message: string, type: 'success' | 'error'): void {

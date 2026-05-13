@@ -1,5 +1,8 @@
-import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Subscription } from 'rxjs';
+import { debounceTime } from 'rxjs/operators';
+import { BtnComponent, PillComponent, KpiTileComponent } from '../../../../shared/ui';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -68,7 +71,10 @@ const MY_DATE_FORMATS = {
     MatTabsModule,
     MatTooltipModule,
     MatDialogModule,
-    SmartSelectorComponent
+    SmartSelectorComponent,
+    BtnComponent,
+    PillComponent,
+    KpiTileComponent
   ],
   providers: [
     { provide: DateAdapter, useClass: CustomDateAdapter },
@@ -78,7 +84,7 @@ const MY_DATE_FORMATS = {
   templateUrl: './accidents.component.html',
   styleUrl: './accidents.component.scss'
 })
-export class AccidentsComponent implements OnInit {
+export class AccidentsComponent implements OnInit, OnDestroy {
   isLoading = false;
   isLoadingDropdowns = true;
   isCreatingCatalogItem = false;
@@ -116,6 +122,40 @@ export class AccidentsComponent implements OnInit {
   maquinaEquipoOpts: SmartSelectorOption[] = [];
   causaRaizOpts: SmartSelectorOption[] = [];
   calificacionPSOpts: SmartSelectorOption[] = [];
+
+  // ----- DS §5.3 — Severity card selector --------------------------------
+  // Mapea opciones backend a una tarjeta visual con color semántico.
+  readonly severityCards = [
+    { value: 'Leve',        label: 'Leve',        icon: 'check_circle', tone: 'success' as const },
+    { value: 'Menor',       label: 'Menor',       icon: 'info',         tone: 'info'    as const },
+    { value: 'Importante',  label: 'Importante',  icon: 'error',        tone: 'warn'    as const },
+    { value: 'Grave',       label: 'Grave',       icon: 'warning',      tone: 'orange'  as const },
+    { value: 'Fatal',       label: 'Fatal',       icon: 'dangerous',    tone: 'danger'  as const },
+  ];
+
+  // ----- DS §5.3 — Sidebar contextual (obra KPIs) ------------------------
+  // TODO: cablear a un endpoint real cuando exista (ObraSvcImpl). Por ahora
+  // placeholders para validar la maqueta del sidebar.
+  obraKpis = [
+    { label: 'Días sin accidente', value: '—', icon: 'event_available' },
+    { label: 'Trabajadores',       value: '—', icon: 'groups' },
+    { label: 'Accidentes YTD',     value: '—', icon: 'report' },
+    { label: 'Cumplimiento',       value: '—', icon: 'verified' },
+  ];
+
+  // ----- Auto-save -------------------------------------------------------
+  private autoSaveSub?: Subscription;
+  private static readonly AUTO_SAVE_KEY = 'accidents:autosave:draft';
+  lastSavedAt: Date | null = null;
+
+  // Mapeo de pasos para el sidebar de completitud
+  readonly stepLabels = [
+    'Datos del Accidente',
+    'Trabajador',
+    'Línea de Mando',
+    'Análisis',
+    'Controles',
+  ];
 
   // Mapeo tabla backend por campo de formulario
   private catalogMap: Record<string, { tabla: string; title: string; fieldLabel: string }> = {
@@ -160,7 +200,15 @@ export class AccidentsComponent implements OnInit {
       this.isEditMode = true;
       this.editId = parseInt(idParam, 10);
       this.loadAccidentData(this.editId);
+    } else {
+      this.restoreDraft();
     }
+
+    this.setupAutoSave();
+  }
+
+  ngOnDestroy(): void {
+    this.autoSaveSub?.unsubscribe();
   }
 
   private loadAccidentData(id: number): void {
@@ -980,5 +1028,105 @@ export class AccidentsComponent implements OnInit {
       verticalPosition: 'top',
       panelClass: type === 'success' ? 'snackbar-success' : 'snackbar-error'
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // DS §5.3 — Severity cards
+  // ---------------------------------------------------------------------------
+  selectSeverity(value: string): void {
+    this.accidentForm.get('CalificacionPS')?.setValue(value);
+  }
+
+  severityIsActive(value: string): boolean {
+    return this.accidentForm.get('CalificacionPS')?.value === value;
+  }
+
+  // ---------------------------------------------------------------------------
+  // Auto-save (localStorage, debounce 1.5s)
+  // ---------------------------------------------------------------------------
+  private setupAutoSave(): void {
+    this.autoSaveSub = this.accidentForm.valueChanges
+      .pipe(debounceTime(1500))
+      .subscribe(() => this.persistDraft());
+  }
+
+  private persistDraft(): void {
+    if (this.isEditMode) return; // En edición no escribimos draft local.
+    try {
+      const value = JSON.stringify(this.accidentForm.getRawValue());
+      localStorage.setItem(AccidentsComponent.AUTO_SAVE_KEY, value);
+      this.lastSavedAt = new Date();
+    } catch {
+      // Silencioso: sin telemetría — el usuario sigue trabajando.
+    }
+  }
+
+  private restoreDraft(): void {
+    try {
+      const raw = localStorage.getItem(AccidentsComponent.AUTO_SAVE_KEY);
+      if (!raw) return;
+      const parsed = JSON.parse(raw) as Record<string, unknown>;
+      // Re-hidratar fechas a Date
+      ['FechaAccidente', 'FechaControl', 'FechaAlta'].forEach((k) => {
+        const v = parsed[k];
+        if (typeof v === 'string' && v) parsed[k] = new Date(v);
+      });
+      this.accidentForm.patchValue(parsed as object, { emitEvent: false });
+      this.lastSavedAt = new Date();
+    } catch {
+      // Draft corrupto: ignorar.
+    }
+  }
+
+  clearDraft(): void {
+    localStorage.removeItem(AccidentsComponent.AUTO_SAVE_KEY);
+    this.lastSavedAt = null;
+  }
+
+  get autoSaveStatus(): string {
+    if (this.isEditMode) return 'Cambios en edición';
+    if (!this.lastSavedAt) return 'Sin guardar';
+    const secs = Math.max(1, Math.floor((Date.now() - this.lastSavedAt.getTime()) / 1000));
+    if (secs < 60) return `Guardado hace ${secs}s`;
+    const mins = Math.floor(secs / 60);
+    return `Guardado hace ${mins} min`;
+  }
+
+  // ---------------------------------------------------------------------------
+  // DS §5.3 — Sidebar completitud + progreso
+  // ---------------------------------------------------------------------------
+  private readonly stepFields: Record<number, string[]> = {
+    0: ['IdObra', 'FechaAccidente'],
+    1: ['IdTrabajador'],
+    2: ['IdSupervisor'],
+    3: ['IdRiesgoAsociado', 'IdLesion', 'CalificacionPS'],
+    4: ['IdCausaRaiz'],
+  };
+
+  isStepComplete(step: number): boolean {
+    const fields = this.stepFields[step] ?? [];
+    if (fields.length === 0) return true;
+    return fields.every((f) => {
+      const v = this.accidentForm.get(f)?.value;
+      return v !== null && v !== '' && v !== undefined;
+    });
+  }
+
+  get completedStepsCount(): number {
+    return [0, 1, 2, 3, 4].filter((s) => this.isStepComplete(s)).length;
+  }
+
+  get progressPercent(): number {
+    return Math.round((this.completedStepsCount / 5) * 100);
+  }
+
+  goBack(): void {
+    this.goToList();
+  }
+
+  saveAndExit(): void {
+    this.persistDraft();
+    this.showMessage('Borrador guardado', 'success');
+    this.goToList();
   }
 }

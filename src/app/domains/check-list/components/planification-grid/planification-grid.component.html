@@ -1,25 +1,38 @@
-<div class="horizontal-calendar-container">
+<div class="horizontal-calendar-container" [class.is-weekly]="viewMode === 'weekly'">
   <!-- Loading overlay -->
   <div *ngIf="isLoading" class="loading-overlay">
     <mat-spinner diameter="40"></mat-spinner>
-    <span class="loading-text">Cargando planificación...</span>
+    <span class="loading-text">Cargando planificación…</span>
   </div>
 
   <div class="horizontal-calendar-wrapper">
-    <table class="horizontal-calendar-table mat-elevation-z2">
+    <table class="horizontal-calendar-table">
       <!-- Header Row -->
       <tr class="calendar-header-row weekday-row">
         <th class="fixed-first-column activity-column">Actividad</th>
         <th class="fixed-second-column periodicity-column">Período</th>
-        <th
-          *ngFor="let day of days"
-          class="day-column"
-          [ngClass]="{ 'weekend-column': isWeekend(day) }"
-        >
-          <div class="weekday-label">{{ getDayOfWeekAbbr(day) }}</div>
-          <div class="day-number">{{ day < 10 ? "0" + day : day }}</div>
-        </th>
-        <th class="sticky-end-column">Asigna.</th>
+
+        <!-- Daily header -->
+        <ng-container *ngIf="viewMode === 'daily'">
+          <th
+            *ngFor="let day of days"
+            class="day-column"
+            [ngClass]="{ 'weekend-column': isWeekend(day) }"
+          >
+            <div class="weekday-label">{{ getDayOfWeekAbbr(day) }}</div>
+            <div class="day-number mono">{{ day < 10 ? "0" + day : day }}</div>
+          </th>
+        </ng-container>
+
+        <!-- Weekly header -->
+        <ng-container *ngIf="viewMode === 'weekly'">
+          <th *ngFor="let bucket of weekBuckets" class="week-column">
+            <div class="weekday-label">{{ bucket.label }}</div>
+            <div class="day-number mono">{{ bucketRangeLabel(bucket) }}</div>
+          </th>
+        </ng-container>
+
+        <th class="sticky-end-column">Asign.</th>
         <th class="sticky-end-column">Realiz.</th>
         <th class="sticky-end-column">% Cump.</th>
       </tr>
@@ -29,14 +42,29 @@
         <!-- Group Header Row -->
         <tr class="ambito-header-row">
           <td class="fixed-full-width ambito-header" colspan="2">
-            <mat-icon class="ambito-icon">arrow_right</mat-icon>
-            Ámbito: {{ group.ambit }}
+            <app-pill
+              [variant]="ambitVariant(group.ambit)"
+              [icon]="ambitIcon(group.ambit)"
+            >
+              {{ group.ambit }}
+            </app-pill>
+            <span class="ambito-header__count mono">
+              {{ group.activities.length }} {{ group.activities.length === 1 ? 'actividad' : 'actividades' }}
+            </span>
           </td>
-          <td
-            *ngFor="let day of days"
-            class="day-column ambito-header-cell"
-            [ngClass]="{ 'weekend-column': isWeekend(day) }"
-          ></td>
+
+          <ng-container *ngIf="viewMode === 'daily'">
+            <td
+              *ngFor="let day of days"
+              class="day-column ambito-header-cell"
+              [ngClass]="{ 'weekend-column': isWeekend(day) }"
+            ></td>
+          </ng-container>
+
+          <ng-container *ngIf="viewMode === 'weekly'">
+            <td *ngFor="let bucket of weekBuckets" class="week-column ambito-header-cell"></td>
+          </ng-container>
+
           <td class="sticky-end-column ambito-header-cell"></td>
           <td class="sticky-end-column ambito-header-cell"></td>
           <td class="sticky-end-column ambito-header-cell"></td>
@@ -53,37 +81,68 @@
           <td class="fixed-second-column periodicity-column">
             {{ formatPeriodicity(activity.periodicity) }}
           </td>
-          <td
-            *ngFor="let day of days"
-            class="day-column status-cell"
-            [ngClass]="getCellClass(activity, day)"
-          >
-            <button
-              mat-icon-button
-              class="status-icon-button"
-              [disabled]="!isActivityCompleted(activity, day)"
-              (click)="onStatusClick(activity, day)"
+
+          <!-- Daily cells -->
+          <ng-container *ngIf="viewMode === 'daily'">
+            <td
+              *ngFor="let day of days"
+              class="day-column status-cell"
+              [ngClass]="getCellClass(activity, day)"
+            >
+              <button
+                type="button"
+                class="status-icon-button"
+                [disabled]="!isActivityCompleted(activity, day)"
+                (click)="onStatusClick(activity, day)"
+                [matTooltip]="
+                  isActivityCompleted(activity, day)
+                    ? 'Ver detalles de la actividad completada'
+                    : ''
+                "
+                [attr.aria-label]="getStatusClass(activity, day)"
+              >
+                <span
+                  class="ms-r status-icon"
+                  [class.is-filled]="isActivityCompleted(activity, day)"
+                  [ngClass]="getStatusClass(activity, day)"
+                >
+                  {{ getStatusIcon(activity, day) }}
+                </span>
+              </button>
+            </td>
+          </ng-container>
+
+          <!-- Weekly cells -->
+          <ng-container *ngIf="viewMode === 'weekly'">
+            <td
+              *ngFor="let bucket of weekBuckets"
+              class="week-column week-cell"
+              [ngClass]="'week-cell--' + bucketTone(activity, bucket)"
               [matTooltip]="
-                isActivityCompleted(activity, day)
-                  ? 'Ver detalles de la actividad completada'
-                  : ''
+                bucketStats(activity, bucket).assigned > 0
+                  ? bucketStats(activity, bucket).realized + ' / ' + bucketStats(activity, bucket).assigned + ' días (' + bucketStats(activity, bucket).compliance + '%)'
+                  : 'Sin actividad asignada'
               "
             >
-              <span
-                class="material-symbols-outlined status-icon"
-                [ngClass]="getStatusClass(activity, day)"
-              >
-                {{ getStatusIcon(activity, day) }}
-              </span>
-            </button>
-          </td>
-          <td class="sticky-end-column numeric-cell">
+              <ng-container *ngIf="bucketStats(activity, bucket).assigned > 0; else weekEmpty">
+                <span class="week-cell__count mono">
+                  {{ bucketStats(activity, bucket).realized }}/{{ bucketStats(activity, bucket).assigned }}
+                </span>
+                <span class="week-cell__pct mono">{{ bucketStats(activity, bucket).compliance }}%</span>
+              </ng-container>
+              <ng-template #weekEmpty>
+                <span class="week-cell__dash">—</span>
+              </ng-template>
+            </td>
+          </ng-container>
+
+          <td class="sticky-end-column numeric-cell mono">
             {{ activity.assigned }}
           </td>
-          <td class="sticky-end-column numeric-cell">
+          <td class="sticky-end-column numeric-cell mono">
             {{ activity.realized }}
           </td>
-          <td class="sticky-end-column numeric-cell compliance-cell">
+          <td class="sticky-end-column numeric-cell compliance-cell mono">
             {{ activity.compliance }}%
           </td>
         </tr>
@@ -91,10 +150,10 @@
 
       <!-- Empty state when no data -->
       <tr *ngIf="groupedActivities.length === 0 && !isLoading" class="empty-row">
-        <td [attr.colspan]="days.length + 5" class="empty-cell">
+        <td [attr.colspan]="(viewMode === 'weekly' ? weekBuckets.length : days.length) + 5" class="empty-cell">
           <div class="empty-state">
-            <mat-icon>event_busy</mat-icon>
-            <span>No hay actividades para mostrar</span>
+            <span class="ms-r is-filled empty-state__icon" aria-hidden="true">event_busy</span>
+            <span>No hay actividades para mostrar.</span>
           </div>
         </td>
       </tr>
@@ -102,18 +161,26 @@
       <!-- Summary row with totals -->
       <tr class="summary-row" *ngIf="groupedActivities.length > 0">
         <td class="fixed-first-column total-column" colspan="2">TOTAL</td>
-        <td
-          *ngFor="let day of days"
-          class="day-column summary-cell"
-          [ngClass]="{ 'weekend-column': isWeekend(day) }"
-        ></td>
-        <td class="sticky-end-column numeric-cell total-cell">
+
+        <ng-container *ngIf="viewMode === 'daily'">
+          <td
+            *ngFor="let day of days"
+            class="day-column summary-cell"
+            [ngClass]="{ 'weekend-column': isWeekend(day) }"
+          ></td>
+        </ng-container>
+
+        <ng-container *ngIf="viewMode === 'weekly'">
+          <td *ngFor="let bucket of weekBuckets" class="week-column summary-cell"></td>
+        </ng-container>
+
+        <td class="sticky-end-column numeric-cell total-cell mono">
           {{ totalAssigned }}
         </td>
-        <td class="sticky-end-column numeric-cell total-cell">
+        <td class="sticky-end-column numeric-cell total-cell mono">
           {{ totalRealized }}
         </td>
-        <td class="sticky-end-column numeric-cell compliance-cell total-cell">
+        <td class="sticky-end-column numeric-cell compliance-cell total-cell mono">
           {{ totalCompliancePercentage }}%
         </td>
       </tr>

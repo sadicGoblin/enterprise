@@ -1,0 +1,15 @@
+<button
+  [type]="type"
+  [attr.form]="formId || null"
+  [attr.aria-label]="ariaLabel || null"
+  [disabled]="disabled || loading"
+  [class.is-loading]="loading"
+  [class.is-block]="block"
+  class="btn"
+  [ngClass]="['btn--' + variant, 'btn--' + size]"
+>
+  <span *ngIf="icon && !iconRight" class="ms-r btn__icon" aria-hidden="true">{{ icon }}</span>
+  <span class="btn__label"><ng-content></ng-content></span>
+  <span *ngIf="icon && iconRight" class="ms-r btn__icon btn__icon--right" aria-hidden="true">{{ icon }}</span>
+  <span *ngIf="loading" class="btn__spinner" aria-hidden="true"></span>
+</button>

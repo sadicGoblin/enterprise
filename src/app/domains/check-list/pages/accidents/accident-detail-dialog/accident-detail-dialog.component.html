@@ -1,29 +1,35 @@
 <div class="detail-dialog">
-  <div class="dialog-header">
+  <header class="dialog-header">
     <div class="header-title">
-      <div class="header-icon-wrap" aria-hidden="true">
-        <mat-icon class="title-icon">assignment</mat-icon>
-      </div>
+      <span class="header-icon-wrap" aria-hidden="true">
+        <span class="ms-r">assignment</span>
+      </span>
       <div class="header-text">
-        <p class="header-eyebrow">Prevención de riesgos</p>
-        <h2>Ficha del accidente</h2>
+        <span class="eyebrow">PREVENCIÓN DE RIESGOS</span>
+        <h2 class="dialog-title">Ficha del accidente</h2>
         <div class="header-meta" *ngIf="data.NumeroAccidente">
-          <span class="numero-pill">{{ data.NumeroAccidente }}</span>
+          <span class="numero-pill mono">{{ data.NumeroAccidente }}</span>
           <span class="meta-dot" *ngIf="data.NombreObra">·</span>
           <span class="meta-obra" *ngIf="data.NombreObra">{{ data.NombreObra }}</span>
         </div>
       </div>
     </div>
     <div class="header-actions">
-      <button mat-flat-button class="btn-pdf" (click)="exportToPdf()" [disabled]="isExporting" matTooltip="Descargar PDF">
-        <mat-icon>picture_as_pdf</mat-icon>
+      <app-btn
+        variant="primary"
+        size="md"
+        icon="picture_as_pdf"
+        [disabled]="isExporting"
+        [loading]="isExporting"
+        (click)="exportToPdf()"
+      >
         {{ isExporting ? 'Generando…' : 'PDF' }}
-      </button>
-      <button mat-icon-button mat-dialog-close class="btn-close" matTooltip="Cerrar" aria-label="Cerrar">
-        <mat-icon>close</mat-icon>
+      </app-btn>
+      <button type="button" mat-dialog-close class="btn-close" matTooltip="Cerrar" aria-label="Cerrar">
+        <span class="ms-r" aria-hidden="true">close</span>
       </button>
     </div>
-  </div>
+  </header>
 
   <div class="export-banner" *ngIf="isExporting" role="status">
     <mat-spinner diameter="28"></mat-spinner>
@@ -41,10 +47,10 @@
             <p class="hero-sub" *ngIf="data.NumeroAccidente">Identificador <strong>N° {{ data.NumeroAccidente }}</strong></p>
           </div>
           <div class="hero-tags">
-            <span class="tag tag-estado" [ngClass]="estadoClass">{{ estadoLabel }}</span>
-            <span class="tag tag-gravedad" [ngClass]="gravedadClass" *ngIf="data.CalificacionPS">
+            <app-pill [variant]="estadoVariant" [icon]="estadoIcon">{{ estadoLabel }}</app-pill>
+            <app-pill *ngIf="data.CalificacionPS" [variant]="severityVariant" [icon]="severityIcon">
               {{ data.CalificacionPS }}
-            </span>
+            </app-pill>
           </div>
         </div>
       </div>
@@ -52,7 +58,7 @@
       <div class="pdf-block pdf-section">
         <header class="section-head">
           <span class="section-index">01</span>
-          <mat-icon>event</mat-icon>
+          <span class="ms-r" aria-hidden="true">event</span>
           <h4>Datos del accidente</h4>
         </header>
         <div class="section-body">
@@ -79,7 +85,7 @@
       <div class="pdf-block pdf-section">
         <header class="section-head">
           <span class="section-index">02</span>
-          <mat-icon>person</mat-icon>
+          <span class="ms-r" aria-hidden="true">person</span>
           <h4>Trabajador</h4>
         </header>
         <div class="section-body">
@@ -95,7 +101,7 @@
       <div class="pdf-block pdf-section">
         <header class="section-head">
           <span class="section-index">03</span>
-          <mat-icon>supervisor_account</mat-icon>
+          <span class="ms-r" aria-hidden="true">supervisor_account</span>
           <h4>Línea de mando</h4>
         </header>
         <div class="section-body">
@@ -111,7 +117,7 @@
       <div class="pdf-block pdf-section">
         <header class="section-head">
           <span class="section-index">04</span>
-          <mat-icon>analytics</mat-icon>
+          <span class="ms-r" aria-hidden="true">analytics</span>
           <h4>Análisis y tipología</h4>
         </header>
         <div class="section-body">
@@ -119,7 +125,15 @@
             <div class="field"><dt>Riesgo asociado</dt><dd>{{ data.RiesgoAsociado || '—' }}</dd></div>
             <div class="field"><dt>Lesión</dt><dd>{{ data.TipoLesion || '—' }}</dd></div>
             <div class="field"><dt>Parte del cuerpo</dt><dd>{{ data.ParteCuerpo || '—' }}</dd></div>
-            <div class="field"><dt>Calificación P/S</dt><dd [ngClass]="gravedadClass">{{ data.CalificacionPS || '—' }}</dd></div>
+            <div class="field">
+              <dt>Calificación P/S</dt>
+              <dd>
+                <app-pill *ngIf="data.CalificacionPS; else dashCalif" [variant]="severityVariant" [icon]="severityIcon">
+                  {{ data.CalificacionPS }}
+                </app-pill>
+                <ng-template #dashCalif>—</ng-template>
+              </dd>
+            </div>
             <div class="field"><dt>Fuente / agente</dt><dd>{{ data.FuenteAgente || '—' }}</dd></div>
             <div class="field"><dt>Máquina / equipo</dt><dd>{{ data.MaquinaEquipo || '—' }}</dd></div>
           </dl>
@@ -137,7 +151,7 @@
       <div class="pdf-block pdf-section">
         <header class="section-head">
           <span class="section-index">05</span>
-          <mat-icon>security</mat-icon>
+          <span class="ms-r" aria-hidden="true">security</span>
           <h4>Gestión del cambio</h4>
         </header>
         <div class="section-body">

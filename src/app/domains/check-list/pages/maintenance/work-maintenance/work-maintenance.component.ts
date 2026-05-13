@@ -18,6 +18,7 @@ import { MatSlideToggleModule, MatSlideToggleChange } from '@angular/material/sl
 
 // Import custom select component
 import { CustomSelectComponent, ParameterType, SelectOption } from '../../../../../shared/controls/custom-select/custom-select.component';
+import { BtnComponent } from '../../../../../shared/ui';
 import { ObraService } from '../../../services/obra.service';
 
 // Formato de fecha personalizado para Chile (DD/MM/AAAA)
@@ -73,7 +74,8 @@ interface Obra {
     MatSnackBarModule,
     MatDialogModule,
     MatSlideToggleModule,
-    CustomSelectComponent
+    CustomSelectComponent,
+    BtnComponent
   ],
   providers: [
     { provide: MAT_DATE_LOCALE, useValue: 'es-CL' },

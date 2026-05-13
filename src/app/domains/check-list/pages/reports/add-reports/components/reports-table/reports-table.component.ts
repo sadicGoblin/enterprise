@@ -1,8 +1,9 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { MatPaginatorModule, MatPaginator } from '@angular/material/paginator';
+import { MatTableDataSource } from '@angular/material/table';
 import { MatSortModule, MatSort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
@@ -24,6 +25,7 @@ import { ReportModalComponent } from '../../../../../components/report-modal/rep
 import { ARTReportModalComponent } from '../../../../../components/art-report-modal/art-report-modal.component';
 import { ChecklistReportModalComponent } from '../../../../../components/checklist-report-modal/checklist-report-modal.component';
 import { ExportService, ExportColumn } from '../../../../../../../shared/services/export.service';
+import { BtnComponent } from '../../../../../../../shared/ui';
 
 // Interface for the API response
 interface ReportResponse {
@@ -68,6 +70,7 @@ interface Report {
     MatSelectModule,
     MatOptionModule,
     MatCardModule,
+    BtnComponent,
   ],
   templateUrl: './reports-table.component.html',
   styleUrls: ['./reports-table.component.scss'],
@@ -84,7 +87,7 @@ interface Report {
     ])
   ]
 })
-export class ReportsTableComponent implements OnInit {
+export class ReportsTableComponent implements OnInit, AfterViewInit {
   // Date format options
   private dateFormatOptions: Intl.DateTimeFormatOptions = {
     year: 'numeric',
@@ -93,6 +96,7 @@ export class ReportsTableComponent implements OnInit {
   };
   searchControl = new FormControl('');
   filteredReports: any[] = [];
+  dataSource = new MatTableDataSource<any>([]);
   // Controles para el filtro de período
   dateControl = new FormControl(new Date());
   period: number = this.getCurrentPeriod(); // Período actual en formato YYYYMM
@@ -141,6 +145,18 @@ export class ReportsTableComponent implements OnInit {
     // Inicializar el displayPeriod con el período actual
     this.updateDisplayPeriod();
     this.loadReports();
+  }
+
+  ngAfterViewInit(): void {
+    // Wiring del paginator + sort al MatTableDataSource (paginación funcional).
+    this.dataSource.paginator = this.paginator;
+    this.dataSource.sort = this.sort;
+  }
+
+  /** Sincroniza filteredReports → dataSource.data y reinicia paginación. */
+  private syncDataSource(): void {
+    this.dataSource.data = this.filteredReports;
+    if (this.paginator) this.paginator.firstPage();
   }
 
   /**
@@ -253,6 +269,7 @@ export class ReportsTableComponent implements OnInit {
           } else {
             this.reports = [];
             this.filteredReports = [];
+            this.syncDataSource();
             this.error =
               response.message ||
               'No se encontraron reportes para este período';
@@ -263,6 +280,7 @@ export class ReportsTableComponent implements OnInit {
         error: (err: any) => {
           this.reports = [];
           this.filteredReports = [];
+          this.syncDataSource();
           this.error = 'Error de conexión al servicio';
           this.isLoading = false;
           console.error('Error fetching reports:', err);
@@ -303,6 +321,7 @@ export class ReportsTableComponent implements OnInit {
   applyFilters(): void {
     if (!this.reports) {
       this.filteredReports = [];
+      this.syncDataSource();
       return;
     }
     
@@ -338,6 +357,7 @@ export class ReportsTableComponent implements OnInit {
       // All filters must match
       return matchesSearch && matchesTipo && matchesObra && matchesResponsable && matchesEstado;
     });
+    this.syncDataSource();
   }
   
   /**

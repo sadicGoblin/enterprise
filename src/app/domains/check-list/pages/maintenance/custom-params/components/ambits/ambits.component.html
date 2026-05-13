@@ -13,15 +13,15 @@
           </mat-form-field>
         </div>
         <div class="form-row button-row action-buttons-right">
-          <button 
-            mat-raised-button 
-            color="primary" 
-            (click)="addAmbito()" 
+          <app-btn
+            variant="accent"
+            size="md"
+            [icon]="editingAmbito ? 'save' : 'add'"
             [disabled]="!newAmbitoCode || !newAmbitoName"
-            class="add-button"
+            (click)="addAmbito()"
           >
-            {{ editingAmbito ? "Actualizar" : "Agregar Ambito" }}
-          </button>
+            {{ editingAmbito ? "Actualizar" : "Agregar Ámbito" }}
+          </app-btn>
           
           <button 
             *ngIf="editingAmbito" 

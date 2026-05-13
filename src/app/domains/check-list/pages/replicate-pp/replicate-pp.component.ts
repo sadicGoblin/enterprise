@@ -18,6 +18,7 @@ import { CustomSelectComponent, ParameterType } from '../../../../shared/control
 import { ProxyService } from '../../../../core/services/proxy.service';
 import { CloningService, TaskItem, GetControlFilterResponse } from '../../services/cloning.service';
 import { ConfirmationDialogComponent } from './confirmation-dialog.component';
+import { BtnComponent, PillComponent, PillVariant } from '../../../../shared/ui';
 
 @Component({
   selector: 'app-replicate-pp',
@@ -38,7 +39,9 @@ import { ConfirmationDialogComponent } from './confirmation-dialog.component';
     MatTableModule,
     MatTooltipModule,
     MatCheckboxModule,
-    CustomSelectComponent
+    CustomSelectComponent,
+    BtnComponent,
+    PillComponent
   ],
   templateUrl: './replicate-pp.component.html',
   styleUrl: './replicate-pp.component.scss'
@@ -612,5 +615,17 @@ export class ReplicatePpComponent implements OnInit {
       horizontalPosition: 'center',
       verticalPosition: 'bottom'
     });
+  }
+
+  // DS §5.8: ámbito → variant
+  ambitoVariant(idAmbito: number | string | undefined | null): PillVariant {
+    const n = typeof idAmbito === 'string' ? parseInt(idAmbito, 10) : (idAmbito ?? 0);
+    switch (n % 4) {
+      case 0: return 'info';
+      case 1: return 'success';
+      case 2: return 'warn';
+      case 3: return 'brand';
+      default: return 'neutral';
+    }
   }
 }

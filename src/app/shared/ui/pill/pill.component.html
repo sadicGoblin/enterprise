@@ -1,0 +1,4 @@
+<span class="pill" [ngClass]="'pill--' + variant">
+  <span *ngIf="icon" class="ms-r pill__icon" aria-hidden="true">{{ icon }}</span>
+  <span class="pill__label"><ng-content></ng-content></span>
+</span>

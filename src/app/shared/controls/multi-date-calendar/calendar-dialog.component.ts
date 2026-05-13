@@ -1,8 +1,8 @@
 import { Component, Inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MAT_DIALOG_DATA, MatDialogRef, MatDialogModule } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
 import { MultiDateCalendarComponent } from './multi-date-calendar.component';
+import { BtnComponent } from '../../ui';
 
 export interface CalendarDialogData {
   selectedDates: Date[];
@@ -33,8 +33,8 @@ export interface CalendarDialogData {
         </app-multi-date-calendar>
       </div>
       <div class="calendar-dialog-actions">
-        <button mat-button (click)="onCancel()">Cancelar</button>
-        <button mat-raised-button color="primary" [disabled]="!hasChanges" (click)="onSave()">Guardar</button>
+        <app-btn variant="ghost" size="md" icon="close" (click)="onCancel()">Cancelar</app-btn>
+        <app-btn variant="accent" size="md" icon="save" [disabled]="!hasChanges" (click)="onSave()">Guardar</app-btn>
       </div>
     </div>
   `,
@@ -174,8 +174,8 @@ export interface CalendarDialogData {
   imports: [
     CommonModule,
     MatDialogModule,
-    MatButtonModule,
-    MultiDateCalendarComponent
+    MultiDateCalendarComponent,
+    BtnComponent
   ]
 })
 export class CalendarDialogComponent {

@@ -17,6 +17,7 @@ import { ParametroService } from '../../../services/parametro.service';
 import { SubParametroService } from '../../../services/sub-parametro.service';
 import { ParametroItem } from '../../../models/parametro.models';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../../shared/components/confirm-dialog/confirm-dialog.component';
+import { BtnComponent } from '../../../../../shared/ui';
 
 // Define a local interface for API responses
 interface SelectOption {
@@ -55,6 +56,7 @@ interface Param {
     MatDividerModule,
     MatSnackBarModule,
     MatDialogModule,
+    BtnComponent,
   ],
   templateUrl: './create-params.component.html',
   styleUrls: ['./create-params.component.scss'],

@@ -1,0 +1,161 @@
+:host {
+  display: inline-flex;
+}
+
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 16px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  font-family: var(--font-text);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  transition: background-color 120ms ease, border-color 120ms ease,
+    color 120ms ease, box-shadow 120ms ease, transform 120ms ease;
+  white-space: nowrap;
+
+  &:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(11, 27, 63, 0.12);
+  }
+
+  &:disabled,
+  &.is-loading {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+
+  &.is-loading .btn__label,
+  &.is-loading .btn__icon {
+    visibility: hidden;
+  }
+
+  &.is-block {
+    width: 100%;
+  }
+}
+
+.btn--md {
+  height: 38px;
+  font-size: 13px;
+}
+
+.btn--sm {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.btn__icon {
+  font-size: var(--icon-size-default);
+  line-height: 1;
+}
+
+.btn--sm .btn__icon {
+  font-size: var(--icon-size-sm);
+}
+
+.btn__icon--right {
+  order: 2;
+}
+
+.btn__label {
+  display: inline-flex;
+  align-items: center;
+}
+
+// ----- Variant: primary ------------------------------------------------------
+.btn--primary {
+  background: var(--ink);
+  color: #fff;
+
+  &:hover:not(:disabled):not(.is-loading) {
+    background: var(--ink-2);
+  }
+  &:active:not(:disabled):not(.is-loading) {
+    background: var(--ink-3);
+  }
+}
+
+// ----- Variant: accent (yellow CTA) ------------------------------------------
+.btn--accent {
+  background: var(--yellow);
+  color: var(--ink);
+
+  &:hover:not(:disabled):not(.is-loading) {
+    background: var(--yellow-deep);
+    color: var(--ink);
+  }
+  &:active:not(:disabled):not(.is-loading) {
+    background: var(--yellow-deep);
+  }
+}
+
+// ----- Variant: secondary ----------------------------------------------------
+.btn--secondary {
+  background: #fff;
+  color: var(--ink);
+  border-color: var(--slate-200);
+
+  &:hover:not(:disabled):not(.is-loading) {
+    background: var(--slate-50);
+    border-color: var(--slate-300);
+  }
+  &:active:not(:disabled):not(.is-loading) {
+    background: var(--slate-100);
+  }
+}
+
+// ----- Variant: ghost --------------------------------------------------------
+.btn--ghost {
+  background: transparent;
+  color: var(--ink);
+
+  &:hover:not(:disabled):not(.is-loading) {
+    background: var(--slate-50);
+  }
+  &:active:not(:disabled):not(.is-loading) {
+    background: var(--slate-100);
+  }
+}
+
+// ----- Variant: danger -------------------------------------------------------
+.btn--danger {
+  background: var(--danger);
+  color: #fff;
+
+  &:hover:not(:disabled):not(.is-loading) {
+    background: #b02b18;
+  }
+  &:active:not(:disabled):not(.is-loading) {
+    background: #93220f;
+  }
+}
+
+// ----- Loading spinner -------------------------------------------------------
+.btn__spinner {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  animation: btn-spin 600ms linear infinite;
+  pointer-events: none;
+}
+
+@keyframes btn-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

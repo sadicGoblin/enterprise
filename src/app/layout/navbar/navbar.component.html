@@ -1,25 +1,129 @@
-<nav class="navbar navbar-light justify-content-between px-3">
-  <button
-    class="navbar-toggler text-white"
-    type="button"
-    (click)="toggleSidebar()"
-  >
-    <mat-icon>menu</mat-icon>
-  </button>
-
-  <button
-    mat-button
-    [matMenuTriggerFor]="userMenu"
-    class="d-flex align-items-center text-white"
-  >
-    <span>{{ userName }}</span>
-    <mat-icon class="me-2">account_circle</mat-icon>
-  </button>
-
-  <mat-menu #userMenu="matMenu">
-    <button mat-menu-item (click)="logout()" class="custom-menu-item">
-      <span>Cerrar sesión</span>
-      <mat-icon>logout</mat-icon>
+<header class="app-topbar" role="banner">
+  <!-- Left: hamburger + breadcrumbs -->
+  <div class="app-topbar__left">
+    <button
+      type="button"
+      class="app-topbar__icon-btn"
+      (click)="toggleSidebar()"
+      aria-label="Mostrar/ocultar menú"
+      matTooltip="Menú"
+    >
+      <span class="ms-r" aria-hidden="true">menu</span>
     </button>
-  </mat-menu>
-</nav>
+
+    <nav class="breadcrumbs" aria-label="Migas de pan">
+      <ng-container *ngFor="let c of crumbs; let i = index; let last = last">
+        <a
+          *ngIf="!last && c.link"
+          class="breadcrumb breadcrumb--link"
+          [routerLink]="c.link"
+        >{{ c.label }}</a>
+        <span *ngIf="!last && c.link" class="breadcrumb-sep" aria-hidden="true">/</span>
+        <span *ngIf="last" class="breadcrumb breadcrumb--current">{{ c.label }}</span>
+      </ng-container>
+    </nav>
+  </div>
+
+  <!-- Right: obra selector + notif + user -->
+  <div class="app-topbar__right">
+    <!-- Obra selector con mat-menu estilizado -->
+    <button
+      type="button"
+      class="obra-select"
+      [matMenuTriggerFor]="obraMenu"
+      matTooltip="Obra activa"
+      aria-label="Seleccionar obra"
+    >
+      <span class="ms-r obra-select__icon" aria-hidden="true">apartment</span>
+      <span class="obra-select__label">{{ selectedObraLabel }}</span>
+      <span class="ms-r obra-select__chevron" aria-hidden="true">expand_more</span>
+    </button>
+
+    <mat-menu #obraMenu="matMenu" xPosition="before" class="obra-menu-panel">
+      <ng-template matMenuContent>
+        <div class="obra-menu__header">
+          <span class="obra-menu__eyebrow">SELECCIONA OBRA</span>
+          <span class="obra-menu__count">{{ obras.length }}</span>
+        </div>
+        <button
+          mat-menu-item
+          *ngFor="let o of obras"
+          class="obra-menu__item"
+          [class.is-active]="o.IdObra === selectedObraId"
+          (click)="onObraChange(o.IdObra)"
+        >
+          <span class="ms-r obra-menu__item-check" aria-hidden="true">
+            {{ o.IdObra === selectedObraId ? 'check_circle' : 'apartment' }}
+          </span>
+          <span class="obra-menu__item-label">{{ o.Obra }}</span>
+        </button>
+        <div *ngIf="obras.length === 0" class="obra-menu__empty">
+          Sin obras disponibles
+        </div>
+      </ng-template>
+    </mat-menu>
+
+    <!-- Notifications -->
+    <button
+      type="button"
+      class="app-topbar__icon-btn"
+      matTooltip="Notificaciones"
+      aria-label="Notificaciones"
+    >
+      <span class="ms-r" aria-hidden="true">notifications</span>
+    </button>
+
+    <!-- User menu -->
+    <button
+      type="button"
+      class="user-button"
+      [matMenuTriggerFor]="userMenu"
+      aria-label="Menú de usuario"
+    >
+      <span class="user-avatar" aria-hidden="true">{{ userInitials }}</span>
+      <span class="user-info">
+        <span class="user-info__name">{{ userName }}</span>
+        <span class="user-info__role">Prevencionista · INARCO</span>
+      </span>
+      <span class="ms-r user-button__chevron" aria-hidden="true">expand_more</span>
+    </button>
+
+    <mat-menu #userMenu="matMenu" xPosition="before" class="user-menu-panel">
+      <!-- Header del menú con identidad del usuario -->
+      <div class="user-menu__header" (click)="$event.stopPropagation()">
+        <span class="user-menu__avatar" aria-hidden="true">{{ userInitials }}</span>
+        <div class="user-menu__text">
+          <span class="user-menu__name">{{ userName }}</span>
+          <span class="user-menu__role">Prevencionista · INARCO</span>
+        </div>
+      </div>
+
+      <button mat-menu-item class="user-menu__item" (click)="goToProfile()">
+        <span class="ms-r user-menu__item-icon" aria-hidden="true">person</span>
+        <span class="user-menu__item-label">Mi perfil</span>
+      </button>
+
+      <button mat-menu-item class="user-menu__item" (click)="goToPasswordChange()">
+        <span class="ms-r user-menu__item-icon" aria-hidden="true">vpn_key</span>
+        <span class="user-menu__item-label">Cambiar clave</span>
+      </button>
+
+      <button mat-menu-item class="user-menu__item" (click)="$event.stopPropagation(); toggleTheme()">
+        <span class="ms-r user-menu__item-icon" aria-hidden="true">
+          {{ themeMode === 'dark' ? 'light_mode' : 'dark_mode' }}
+        </span>
+        <span class="user-menu__item-label">{{ themeMode === 'dark' ? 'Modo claro' : 'Modo oscuro' }}</span>
+        <span class="user-menu__theme-switch" [class.is-on]="themeMode === 'dark'" aria-hidden="true">
+          <span class="user-menu__theme-knob"></span>
+        </span>
+      </button>
+
+      <div class="user-menu__sep" aria-hidden="true"></div>
+
+      <button mat-menu-item class="user-menu__item user-menu__item--danger" (click)="logout()">
+        <span class="ms-r user-menu__item-icon" aria-hidden="true">logout</span>
+        <span class="user-menu__item-label">Cerrar sesión</span>
+      </button>
+    </mat-menu>
+  </div>
+</header>

@@ -1,76 +1,95 @@
-<div class="worker-form-container">
-  <div class="page-header">
-    <div class="header-left">
-      <mat-icon class="header-icon">{{ isEditMode ? 'edit' : 'person_add' }}</mat-icon>
-      <div class="header-text">
-        <h1>{{ isEditMode ? 'Editar Trabajador' : 'Nuevo Trabajador' }}</h1>
-        <p *ngIf="isEditMode && nombreReadonly">Editando <strong>{{ nombreReadonly }}</strong></p>
+<section class="page" aria-labelledby="worker-form-title">
+  <!-- Page header -->
+  <header class="page-header">
+    <div class="page-header__main">
+      <span class="avatar avatar--lg" aria-hidden="true">{{ workerInitials }}</span>
+      <div class="page-header__text">
+        <span class="eyebrow">{{ isEditMode ? 'EDITAR TRABAJADOR' : 'NUEVO TRABAJADOR' }}</span>
+        <h1 id="worker-form-title" class="page-header__title">
+          {{ isEditMode && nombreReadonly ? nombreReadonly : (isEditMode ? 'Editar trabajador' : 'Nuevo trabajador') }}
+        </h1>
+        <p *ngIf="isEditMode" class="page-header__description">
+          Nombre y RUT quedan bloqueados en edición. Actualiza datos de contacto y estado.
+        </p>
+        <p *ngIf="!isEditMode" class="page-header__description">
+          Completa la información para registrar un nuevo trabajador.
+        </p>
       </div>
     </div>
-    <div class="header-actions">
-      <button mat-stroked-button type="button" (click)="goBack()">
-        <mat-icon>arrow_back</mat-icon>
-        Volver
-      </button>
+    <div class="page-header__actions">
+      <app-btn variant="ghost" size="md" icon="arrow_back" (click)="goBack()">Volver</app-btn>
     </div>
-  </div>
+  </header>
 
-  <mat-card class="form-card">
-    <form [formGroup]="form" (ngSubmit)="submit()">
-      <div class="form-intro">
-        <div class="intro-left">
-          <h2>Datos del trabajador</h2>
-          <p>Completa o actualiza la información de contacto. Nombre y RUT quedan bloqueados en edición.</p>
-        </div>
+  <!-- Form card -->
+  <section class="card form-card">
+    <header class="card-header">
+      <div>
+        <span class="eyebrow">DATOS</span>
+        <h2 class="card-title">Información del trabajador</h2>
       </div>
+      <!-- TODO: tabs Datos · Inducciones · Accidentes · EPP — requieren campos backend que no existen aún. -->
+    </header>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form-body">
       <div class="form-grid">
-        <mat-form-field appearance="outline">
-          <mat-label>Nombre *</mat-label>
-          <input matInput formControlName="Nombre" placeholder="Nombre completo">
-          <mat-error *ngIf="form.get('Nombre')?.hasError('required')">Requerido</mat-error>
-        </mat-form-field>
+        <div class="field">
+          <label class="field__label">Nombre *</label>
+          <mat-form-field appearance="outline" class="field__control">
+            <input matInput formControlName="Nombre" placeholder="Nombre completo">
+            <mat-error *ngIf="form.get('Nombre')?.hasError('required')">Requerido</mat-error>
+            <mat-error *ngIf="form.get('Nombre')?.hasError('minlength')">Mínimo 3 caracteres</mat-error>
+          </mat-form-field>
+        </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>RUT</mat-label>
-          <input matInput formControlName="RUT" placeholder="12.345.678-9">
-        </mat-form-field>
+        <div class="field">
+          <label class="field__label">RUT</label>
+          <mat-form-field appearance="outline" class="field__control">
+            <input matInput formControlName="RUT" placeholder="12.345.678-9">
+          </mat-form-field>
+        </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Fecha nacimiento</mat-label>
-          <input matInput type="date" formControlName="FechaNacimiento">
-        </mat-form-field>
+        <div class="field">
+          <label class="field__label">Fecha de nacimiento</label>
+          <mat-form-field appearance="outline" class="field__control">
+            <input matInput type="date" formControlName="FechaNacimiento">
+          </mat-form-field>
+        </div>
 
-        <mat-form-field appearance="outline">
-          <mat-label>Teléfono</mat-label>
-          <input matInput formControlName="Telefono" placeholder="+56 9 ...">
-        </mat-form-field>
+        <div class="field">
+          <label class="field__label">Teléfono</label>
+          <mat-form-field appearance="outline" class="field__control">
+            <input matInput formControlName="Telefono" placeholder="+56 9 ...">
+          </mat-form-field>
+        </div>
 
-        <mat-form-field appearance="outline" class="span-2">
-          <mat-label>Email</mat-label>
-          <input matInput formControlName="Email" placeholder="correo@empresa.cl">
-          <mat-error *ngIf="form.get('Email')?.hasError('email')">Email inválido</mat-error>
-        </mat-form-field>
+        <div class="field span-2">
+          <label class="field__label">Email</label>
+          <mat-form-field appearance="outline" class="field__control">
+            <input matInput formControlName="Email" placeholder="correo@empresa.cl">
+            <mat-error *ngIf="form.get('Email')?.hasError('email')">Email inválido</mat-error>
+          </mat-form-field>
+        </div>
 
-        <div class="span-2 active-row">
-          <mat-checkbox formControlName="is_active" color="primary">Activo</mat-checkbox>
+        <div class="field span-2 active-row">
+          <mat-checkbox formControlName="is_active" color="primary">Trabajador activo</mat-checkbox>
         </div>
       </div>
 
-      <div class="actions">
-        <button mat-stroked-button type="button" (click)="goBack()" [disabled]="isLoading">
+      <footer class="form-footer">
+        <app-btn variant="ghost" size="md" icon="close" (click)="goBack()" [disabled]="isLoading">
           Cancelar
-        </button>
-        <button mat-flat-button color="primary" type="submit" [disabled]="isLoading">
-          <mat-icon>save</mat-icon>
+        </app-btn>
+        <app-btn
+          [variant]="isEditMode ? 'primary' : 'accent'"
+          size="md"
+          type="submit"
+          icon="save"
+          [loading]="isLoading"
+        >
           {{ isEditMode ? 'Guardar cambios' : 'Crear trabajador' }}
-        </button>
-      </div>
-
-      <div *ngIf="isLoading" class="loading">
-        <mat-spinner diameter="32"></mat-spinner>
-        <p>Guardando...</p>
-      </div>
+        </app-btn>
+      </footer>
     </form>
-  </mat-card>
-</div>
-
+  </section>
+</section>

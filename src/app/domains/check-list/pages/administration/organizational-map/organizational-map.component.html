@@ -1,3 +1,11 @@
+<section class="page" aria-labelledby="org-map-title">
+  <header class="page-header">
+    <div class="page-header__text">
+      <span class="eyebrow">ADMINISTRACIÓN</span>
+      <h1 id="org-map-title" class="page-header__title">Mapa organizacional</h1>
+      <p class="page-header__description">Estructura jerárquica de la organización y sus relaciones.</p>
+    </div>
+  </header>
 <div class="map-container">
   <mat-card class="map-card">
     <div *ngIf="isLoading" class="spinner-overlay">
@@ -6,14 +14,15 @@
     
     <div class="map-card-header">
       <h2 class="title">Mapa Organizacional</h2>
-      <button 
-        mat-flat-button 
-        color="primary" 
-        class="add-user-button" 
-        (click)="toggleFormVisibility(); isEditMode = false; resetForm();" 
-        *ngIf="!isFormVisible">
-        <mat-icon>person_add</mat-icon> Agregar usuario
-      </button>
+      <app-btn
+        *ngIf="!isFormVisible"
+        variant="accent"
+        size="md"
+        icon="person_add"
+        (click)="toggleFormVisibility(); isEditMode = false; resetForm();"
+      >
+        Agregar usuario
+      </app-btn>
     </div>
 
     <div #formContainer class="map-card-content" [class.form-collapsed]="!isFormVisible">
@@ -101,15 +110,9 @@
         </div>
 
         <div class="button-row">
-          <button mat-stroked-button type="button" (click)="resetForm()">
-            <mat-icon>refresh</mat-icon> Limpiar
-          </button>
-          <button mat-raised-button color="primary" type="submit" *ngIf="!isEditMode">
-            <mat-icon>save</mat-icon> Crear
-          </button>
-          <button mat-raised-button color="accent" type="button" (click)="onSubmit()" *ngIf="isEditMode">
-            <mat-icon>update</mat-icon> Actualizar
-          </button>
+          <app-btn variant="ghost" size="md" icon="refresh" (click)="resetForm()">Limpiar</app-btn>
+          <app-btn *ngIf="!isEditMode" variant="accent" size="md" icon="save" type="submit">Crear</app-btn>
+          <app-btn *ngIf="isEditMode" variant="primary" size="md" icon="update" (click)="onSubmit()">Actualizar</app-btn>
         </div>
       </form>
       </div>
@@ -128,3 +131,4 @@
     ></app-data-table>
   </mat-card>
 </div>
+</section>

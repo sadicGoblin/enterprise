@@ -10,6 +10,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { RouterLink } from '@angular/router';
 import { ProxyService } from '../../../../../core/services/proxy.service';
 import { environment } from '../../../../../../environments/environment';
+import { BtnComponent } from '../../../../../shared/ui';
 
 @Component({
   selector: 'app-change-passwords',
@@ -23,6 +24,7 @@ import { environment } from '../../../../../../environments/environment';
     MatButtonModule,
     MatSnackBarModule,
     MatIconModule,
+    BtnComponent,
   ],
   templateUrl: './change-passwords.component.html',
   styleUrls: ['./change-passwords.component.scss']

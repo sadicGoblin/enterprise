@@ -1,281 +1,321 @@
-<div class="accidents-list-container">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-left">
-      <mat-icon class="header-icon">list_alt</mat-icon>
-      <div class="header-text">
-        <h1>Listado de Accidentes</h1>
-        <p>Gestión y seguimiento de accidentes laborales</p>
-      </div>
+<section class="page" aria-labelledby="accidents-list-title">
+  <!-- Page header -->
+  <header class="page-header">
+    <div class="page-header__text">
+      <span class="eyebrow">ACCIDENTES</span>
+      <h1 id="accidents-list-title" class="page-header__title">Listado de accidentes</h1>
+      <p class="page-header__description">
+        Consolidado de accidentes registrados — filtra por obra, gravedad, estado o rango de fechas.
+      </p>
     </div>
-    <div class="header-actions">
-      <button mat-stroked-button (click)="viewStatistics()">
-        <mat-icon>analytics</mat-icon>
-        Estadísticas
-      </button>
-      <button mat-stroked-button (click)="exportToExcel()" [disabled]="dataSource.filteredData.length === 0">
-        <mat-icon>download</mat-icon>
+    <div class="page-header__actions">
+      <app-btn variant="ghost" size="md" icon="analytics" (click)="viewStatistics()">Estadísticas</app-btn>
+      <app-btn
+        variant="secondary"
+        size="md"
+        icon="file_download"
+        [disabled]="dataSource.filteredData.length === 0"
+        (click)="exportToExcel()"
+      >
         Exportar Excel
-      </button>
-      <button mat-flat-button color="primary" (click)="createNewAccident()">
-        <mat-icon>add</mat-icon>
-        Nuevo Accidente
-      </button>
+      </app-btn>
+      <app-btn variant="accent" size="md" icon="add" (click)="createNewAccident()">Nuevo accidente</app-btn>
     </div>
+  </header>
+
+  <!-- KPI strip (5) -->
+  <div class="kpi-strip">
+    <app-kpi-tile
+      eyebrow="ACCIDENTES"
+      label="Total registros"
+      [value]="accidents.length"
+      icon="report"
+      [highlight]="true"
+    ></app-kpi-tile>
+    <app-kpi-tile
+      label="Abiertos"
+      [value]="kpiAbiertos"
+      icon="folder_open"
+      delta="No cerrado / no anulado"
+      deltaTone="neutral"
+    ></app-kpi-tile>
+    <app-kpi-tile
+      label="Cerrados"
+      [value]="kpiCerrados"
+      icon="check_circle"
+      deltaTone="positive"
+    ></app-kpi-tile>
+    <app-kpi-tile
+      label="Días perdidos"
+      [value]="totalDiasPerdidos"
+      icon="event_busy"
+    ></app-kpi-tile>
+    <app-kpi-tile
+      label="Críticos"
+      [value]="gravedadAltaCount"
+      icon="warning"
+      delta="Grave / Fatal"
+      [deltaTone]="gravedadAltaCount > 0 ? 'negative' : 'neutral'"
+    ></app-kpi-tile>
   </div>
 
-  <!-- Summary Cards -->
-  <div class="summary-cards">
-    <div class="summary-card total">
-      <mat-icon>report_problem</mat-icon>
-      <div class="card-content">
-        <span class="value">{{ accidents.length }}</span>
-        <span class="label">Total Accidentes</span>
+  <!-- Card edge-to-edge -->
+  <section class="card report-card">
+    <div *ngIf="isLoading" class="spinner-overlay" role="status" aria-live="polite">
+      <mat-spinner diameter="40"></mat-spinner>
+      <p class="spinner-text">Cargando accidentes…</p>
+    </div>
+
+    <header class="card-header">
+      <div class="card-header__text">
+        <span class="eyebrow">RESULTADOS</span>
+        <h2 class="card-title">Registros</h2>
       </div>
-    </div>
-    <div class="summary-card dias">
-      <mat-icon>event_busy</mat-icon>
-      <div class="card-content">
-        <span class="value">{{ totalDiasPerdidos }}</span>
-        <span class="label">Días Perdidos</span>
-      </div>
-    </div>
-    <div class="summary-card investigacion">
-      <mat-icon>search</mat-icon>
-      <div class="card-content">
-        <span class="value">{{ investigacionCount }}</span>
-        <span class="label">En Investigación</span>
-      </div>
-    </div>
-    <div class="summary-card grave">
-      <mat-icon>priority_high</mat-icon>
-      <div class="card-content">
-        <span class="value">{{ gravedadAltaCount }}</span>
-        <span class="label">Alta Gravedad</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Filters -->
-  <mat-card class="filters-card">
-    <div class="filters-row">
-      <mat-form-field appearance="outline" class="search-field">
-        <mat-label>Buscar</mat-label>
-        <mat-icon matPrefix>search</mat-icon>
-        <input matInput [(ngModel)]="searchText" (ngModelChange)="applyFilters()" 
-               placeholder="Obra, trabajador, empresa...">
-      </mat-form-field>
-    </div>
-
-    <!-- Filtros de Fecha -->
-    <div class="filters-row date-filters">
-      <mat-form-field appearance="outline">
-        <mat-label>Filtrar por</mat-label>
-        <mat-select [(ngModel)]="tipoFecha">
-          <mat-option value="creacion">Fecha de Creación</mat-option>
-          <mat-option value="accidente">Fecha de Accidente</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Desde</mat-label>
-        <input matInput [matDatepicker]="pickerDesde" [(ngModel)]="fechaDesde">
-        <mat-datepicker-toggle matSuffix [for]="pickerDesde"></mat-datepicker-toggle>
-        <mat-datepicker #pickerDesde></mat-datepicker>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Hasta</mat-label>
-        <input matInput [matDatepicker]="pickerHasta" [(ngModel)]="fechaHasta">
-        <mat-datepicker-toggle matSuffix [for]="pickerHasta"></mat-datepicker-toggle>
-        <mat-datepicker #pickerHasta></mat-datepicker>
-      </mat-form-field>
-
-      <button mat-raised-button color="primary" (click)="applyDateFilters()">
-        <mat-icon>filter_list</mat-icon>
-        Aplicar
-      </button>
-
-      <button mat-stroked-button (click)="clearDateFilters()">
-        <mat-icon>clear</mat-icon>
-        Limpiar
-      </button>
-    </div>
-  </mat-card>
-
-  <!-- Loading -->
-  <div *ngIf="isLoading" class="loading-overlay" style="position:relative;min-height:200px">
-    <mat-spinner diameter="48"></mat-spinner>
-    <p>Cargando accidentes...</p>
-  </div>
-
-  <!-- Table -->
-  <mat-card class="table-card" *ngIf="!isLoading">
-    <!-- Filtros Adicionales (Expandibles) -->
-    <div class="advanced-filters-section">
-      <button mat-stroked-button class="toggle-filters-btn" (click)="showAdvancedFilters = !showAdvancedFilters">
-        <mat-icon>{{ showAdvancedFilters ? 'expand_less' : 'expand_more' }}</mat-icon>
-        {{ showAdvancedFilters ? 'Ocultar' : 'Mostrar' }} Filtros Adicionales
-      </button>
-      
-      <div class="advanced-filters-content" *ngIf="showAdvancedFilters">
-        <div class="filters-row">
-          <mat-form-field appearance="outline">
-            <mat-label>Obra</mat-label>
-            <mat-select [(ngModel)]="filterObra" (ngModelChange)="applyFilters()">
-              <mat-option value="all">Todas</mat-option>
-              <mat-option *ngFor="let obra of obrasUnicas" [value]="obra">{{ obra }}</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Estado</mat-label>
-            <mat-select [(ngModel)]="filterEstado" (ngModelChange)="applyFilters()">
-              <mat-option value="all">Todos</mat-option>
-              <mat-option value="Reportado">Reportado</mat-option>
-              <mat-option value="En_Investigacion">En Investigación</mat-option>
-              <mat-option value="Cerrado">Cerrado</mat-option>
-              <mat-option value="Anulado">Anulado</mat-option>
-            </mat-select>
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Gravedad</mat-label>
-            <mat-select [(ngModel)]="filterGravedad" (ngModelChange)="applyFilters()">
-              <mat-option value="all">Todas</mat-option>
-              <mat-option value="Leve">Leve</mat-option>
-              <mat-option value="Menor">Menor</mat-option>
-              <mat-option value="Importante">Importante</mat-option>
-              <mat-option value="Grave">Grave</mat-option>
-              <mat-option value="Fatal">Fatal</mat-option>
-            </mat-select>
-          </mat-form-field>
+      <div class="card-header__meta">
+        <app-pill *ngIf="dataSource.filteredData.length > 0" variant="brand" icon="apartment">
+          {{ dataSource.filteredData.length }} registros
+        </app-pill>
+        <div class="search-control">
+          <span class="ms-r search-control__icon" aria-hidden="true">search</span>
+          <input
+            type="search"
+            class="search-control__input"
+            placeholder="Buscar obra, trabajador, empresa…"
+            [(ngModel)]="searchText"
+            (ngModelChange)="applyFilters()"
+            aria-label="Búsqueda global"
+          />
         </div>
       </div>
-    </div>
-    <div class="table-container">
-      <table mat-table [dataSource]="dataSource" matSort class="accidents-table">
+    </header>
 
-        <!-- Obra Column -->
+    <!-- Filtros -->
+    <div class="filters-bar">
+      <div class="filter-chip">
+        <mat-form-field appearance="outline" class="filter-chip__field">
+          <mat-label>Tipo de fecha</mat-label>
+          <mat-select [(ngModel)]="tipoFecha" (selectionChange)="applyDateFilters()">
+            <mat-option value="creacion">Creación</mat-option>
+            <mat-option value="accidente">Accidente</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="filter-chip">
+        <mat-form-field appearance="outline" class="filter-chip__field">
+          <mat-label>Desde</mat-label>
+          <input matInput [matDatepicker]="desdePicker" [(ngModel)]="fechaDesde" (dateChange)="applyDateFilters()">
+          <mat-datepicker-toggle matSuffix [for]="desdePicker"></mat-datepicker-toggle>
+          <mat-datepicker #desdePicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <div class="filter-chip">
+        <mat-form-field appearance="outline" class="filter-chip__field">
+          <mat-label>Hasta</mat-label>
+          <input matInput [matDatepicker]="hastaPicker" [(ngModel)]="fechaHasta" (dateChange)="applyDateFilters()">
+          <mat-datepicker-toggle matSuffix [for]="hastaPicker"></mat-datepicker-toggle>
+          <mat-datepicker #hastaPicker></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <div class="filter-chip">
+        <mat-form-field appearance="outline" class="filter-chip__field">
+          <mat-label>Estado</mat-label>
+          <mat-select [(ngModel)]="filterEstado" (selectionChange)="applyFilters()">
+            <mat-option value="all">Todos</mat-option>
+            <mat-option value="Reportado">Reportado</mat-option>
+            <mat-option value="En_Investigacion">En investigación</mat-option>
+            <mat-option value="Cerrado">Cerrado</mat-option>
+            <mat-option value="Anulado">Anulado</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="filter-chip">
+        <mat-form-field appearance="outline" class="filter-chip__field">
+          <mat-label>Gravedad</mat-label>
+          <mat-select [(ngModel)]="filterGravedad" (selectionChange)="applyFilters()">
+            <mat-option value="all">Todas</mat-option>
+            <mat-option value="Leve">Leve</mat-option>
+            <mat-option value="Menor">Menor</mat-option>
+            <mat-option value="Importante">Importante</mat-option>
+            <mat-option value="Grave">Grave</mat-option>
+            <mat-option value="Fatal">Fatal</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="filter-chip">
+        <mat-form-field appearance="outline" class="filter-chip__field">
+          <mat-label>Obra</mat-label>
+          <mat-select [(ngModel)]="filterObra" (selectionChange)="applyFilters()">
+            <mat-option value="all">Todas</mat-option>
+            <mat-option *ngFor="let obra of obrasUnicas" [value]="obra">{{ obra }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <app-btn
+        *ngIf="hasActiveFilters()"
+        variant="ghost"
+        size="sm"
+        icon="close"
+        (click)="clearFilters()"
+      >
+        Limpiar
+      </app-btn>
+    </div>
+
+    <!-- Tabla -->
+    <div class="table-wrap">
+      <table mat-table [dataSource]="dataSource" matSort class="reports-table">
         <ng-container matColumnDef="NombreObra">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Obra</th>
-          <td mat-cell *matCellDef="let row">
-            <strong>{{ row.NombreObra }}</strong>
-          </td>
+          <td mat-cell *matCellDef="let row" class="cell-strong">{{ row.NombreObra || '—' }}</td>
         </ng-container>
 
-        <!-- Fecha Creación Column -->
         <ng-container matColumnDef="FechaCreacion">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>F. Creación</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>F. creación</th>
           <td mat-cell *matCellDef="let row">
-            {{ formatDate(row.created_at) }}
+            <span class="mono cell-date">{{ formatDate(row.created_at) || '—' }}</span>
           </td>
         </ng-container>
 
-        <!-- Fecha Accidente Column -->
         <ng-container matColumnDef="FechaAccidente">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>F. Accidente</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>F. accidente</th>
           <td mat-cell *matCellDef="let row">
-            {{ formatDate(row.FechaAccidente) }}
+            <span class="mono cell-date">{{ formatDate(row.FechaAccidente) || '—' }}</span>
           </td>
         </ng-container>
 
-        <!-- Fecha Control Column -->
         <ng-container matColumnDef="FechaControl">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>F. Control</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>F. control</th>
           <td mat-cell *matCellDef="let row">
-            {{ formatDate(row.FechaControl) }}
+            <span class="mono cell-date">{{ formatDate(row.FechaControl) || '—' }}</span>
           </td>
         </ng-container>
 
-        <!-- Fecha Alta Column -->
         <ng-container matColumnDef="FechaAlta">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>F. Alta</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>F. alta</th>
           <td mat-cell *matCellDef="let row">
-            {{ formatDate(row.FechaAlta) }}
+            <span class="mono cell-date">{{ formatDate(row.FechaAlta) || '—' }}</span>
           </td>
         </ng-container>
 
-        <!-- Trabajador Column -->
         <ng-container matColumnDef="NombreTrabajador">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Trabajador</th>
-          <td mat-cell *matCellDef="let row">
-            <div class="worker-info">
-              <span class="worker-name">{{ row.NombreTrabajador }}</span>
-              <span class="worker-cargo">{{ row.Cargo || '' }}</span>
-            </div>
-          </td>
+          <td mat-cell *matCellDef="let row">{{ row.NombreTrabajador || '—' }}</td>
         </ng-container>
 
-        <!-- Empresa Column -->
         <ng-container matColumnDef="NombreEmpresa">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Empresa</th>
-          <td mat-cell *matCellDef="let row">{{ row.NombreEmpresa }}</td>
+          <td mat-cell *matCellDef="let row">{{ row.NombreEmpresa || '—' }}</td>
         </ng-container>
 
-        <!-- Tipo Column -->
         <ng-container matColumnDef="TipoAccidente">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Tipo</th>
-          <td mat-cell *matCellDef="let row">
-            <span class="tipo-badge">{{ row.TipoAccidente || '-' }}</span>
-          </td>
+          <td mat-cell *matCellDef="let row">{{ row.TipoAccidente || '—' }}</td>
         </ng-container>
 
-        <!-- Gravedad Column -->
         <ng-container matColumnDef="CalificacionPS">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Gravedad</th>
           <td mat-cell *matCellDef="let row">
-            <span class="severity-badge" [ngClass]="getGravedadClass(row.CalificacionPS)">
-              {{ row.CalificacionPS || '-' }}
-            </span>
+            <app-pill
+              *ngIf="row.CalificacionPS; else dashGravedad"
+              [variant]="severityVariant(row.CalificacionPS)"
+              [icon]="severityIcon(row.CalificacionPS)"
+            >
+              {{ row.CalificacionPS }}
+            </app-pill>
+            <ng-template #dashGravedad><span class="cell-dash">—</span></ng-template>
           </td>
         </ng-container>
 
-        <!-- Días Perdidos Column -->
         <ng-container matColumnDef="DiasPerdidos">
-          <th mat-header-cell *matHeaderCellDef mat-sort-header>Días Perd.</th>
+          <th mat-header-cell *matHeaderCellDef mat-sort-header>Días</th>
           <td mat-cell *matCellDef="let row">
-            <span class="dias-value">{{ row.DiasPerdidosFinal || 0 }}</span>
+            <span class="mono">{{ row.DiasPerdidosFinal || '0' }}</span>
           </td>
         </ng-container>
 
-        <!-- Estado Column -->
         <ng-container matColumnDef="Estado">
           <th mat-header-cell *matHeaderCellDef mat-sort-header>Estado</th>
           <td mat-cell *matCellDef="let row">
-            <span class="estado-badge" [ngClass]="getEstadoClass(row.Estado)">
+            <app-pill
+              *ngIf="row.Estado; else dashEstado"
+              [variant]="estadoVariant(row.Estado)"
+              [icon]="estadoIcon(row.Estado)"
+            >
               {{ getEstadoLabel(row.Estado) }}
-            </span>
+            </app-pill>
+            <ng-template #dashEstado><span class="cell-dash">—</span></ng-template>
           </td>
         </ng-container>
 
-        <!-- Actions Column -->
         <ng-container matColumnDef="actions">
-          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <th mat-header-cell *matHeaderCellDef class="cell-actions__header">Acciones</th>
           <td mat-cell *matCellDef="let row" class="cell-actions">
-            <div class="actions-row">
-              <button mat-icon-button color="primary" (click)="viewDetails(row)" matTooltip="Ver detalles">
-                <mat-icon>visibility</mat-icon>
-              </button>
-              <button mat-icon-button (click)="editAccident(row)" matTooltip="Editar">
-                <mat-icon>edit</mat-icon>
-              </button>
-            </div>
+            <button
+              type="button"
+              class="row-action"
+              matTooltip="Ver detalle"
+              (click)="viewDetails(row)"
+              aria-label="Ver detalle"
+            >
+              <span class="ms-r" aria-hidden="true">visibility</span>
+            </button>
+            <button
+              type="button"
+              class="row-action"
+              matTooltip="Editar"
+              (click)="editAccident(row)"
+              aria-label="Editar"
+            >
+              <span class="ms-r" aria-hidden="true">edit</span>
+            </button>
           </td>
         </ng-container>
 
         <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="table-row"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+
+        <tr class="mat-row" *matNoDataRow>
+          <td class="mat-cell no-data-cell" [attr.colspan]="displayedColumns.length">
+            <div class="empty-state">
+              <span class="ms-r is-filled empty-state__icon" aria-hidden="true">inbox</span>
+              <p class="empty-state__text">
+                {{ hasActiveFilters() ? 'No hay resultados con los filtros aplicados.' : 'Aún no hay accidentes registrados.' }}
+              </p>
+              <app-btn
+                *ngIf="hasActiveFilters()"
+                variant="ghost"
+                size="sm"
+                icon="close"
+                (click)="clearFilters()"
+              >
+                Limpiar filtros
+              </app-btn>
+              <app-btn
+                *ngIf="!hasActiveFilters()"
+                variant="accent"
+                size="sm"
+                icon="add"
+                (click)="createNewAccident()"
+              >
+                Nuevo accidente
+              </app-btn>
+            </div>
+          </td>
+        </tr>
       </table>
 
-      <div *ngIf="dataSource.filteredData.length === 0" class="no-data">
-        <mat-icon>search_off</mat-icon>
-        <p>No se encontraron accidentes con los filtros aplicados</p>
-      </div>
+      <mat-paginator
+        [pageSizeOptions]="[10, 25, 50, 100]"
+        [pageSize]="25"
+        showFirstLastButtons
+        aria-label="Seleccionar página"
+      ></mat-paginator>
     </div>
-
-    <mat-paginator [pageSizeOptions]="[10, 25, 50]" showFirstLastButtons></mat-paginator>
-    
-    
-  </mat-card>
-</div>
+  </section>
+</section>

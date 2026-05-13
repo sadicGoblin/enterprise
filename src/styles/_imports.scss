@@ -1,2 +1,4 @@
-// Archivo para importar todos los componentes de estilos
+// Archivo para importar todos los componentes de estilos.
+// Tokens primero — los componentes los consumen vía var(--token).
+@import './tokens';
 @import './components/dialogs';

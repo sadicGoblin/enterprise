@@ -32,6 +32,7 @@ import {
 import { MatIconModule } from '@angular/material/icon';
 import { ProxyService } from '../../../../../../../../../core/services/proxy.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { BtnComponent } from '../../../../../../../../../shared/ui';
 
 @Component({
   selector: 'app-activity-form',
@@ -45,6 +46,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
     MatButtonModule,
     MatSelectModule,
     CustomSelectComponent,
+    BtnComponent,
   ],
   templateUrl: './activity-form.component.html',
   styleUrls: ['./activity-form.component.scss'],

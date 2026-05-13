@@ -1,0 +1,29 @@
+<div class="spinner" [class.is-block]="block" [ngClass]="'spinner--' + tone">
+  <svg
+    class="spinner__ring"
+    [attr.width]="pxSize"
+    [attr.height]="pxSize"
+    [attr.viewBox]="'0 0 ' + pxSize + ' ' + pxSize"
+    role="status"
+    [attr.aria-label]="label || 'Cargando'"
+  >
+    <circle
+      class="spinner__track"
+      [attr.cx]="pxSize / 2"
+      [attr.cy]="pxSize / 2"
+      [attr.r]="(pxSize - 4) / 2"
+      fill="none"
+      stroke-width="3"
+    ></circle>
+    <circle
+      class="spinner__arc"
+      [attr.cx]="pxSize / 2"
+      [attr.cy]="pxSize / 2"
+      [attr.r]="(pxSize - 4) / 2"
+      fill="none"
+      stroke-width="3"
+      stroke-linecap="round"
+    ></circle>
+  </svg>
+  <span *ngIf="label" class="spinner__label">{{ label }}</span>
+</div>

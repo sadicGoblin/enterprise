@@ -1,0 +1,53 @@
+:host {
+  display: inline-flex;
+}
+
+.spinner {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+
+  &.is-block {
+    display: flex;
+    width: 100%;
+    padding: 24px;
+  }
+}
+
+.spinner__ring {
+  display: block;
+  animation: app-spin 1s linear infinite;
+}
+
+.spinner__track {
+  stroke: rgba(11, 27, 63, 0.10);
+}
+
+.spinner__arc {
+  stroke: var(--ink);
+  stroke-dasharray: 60 200;
+  stroke-dashoffset: 0;
+  transform-origin: center;
+}
+
+.spinner--yellow .spinner__arc { stroke: var(--yellow); }
+.spinner--inherit .spinner__arc { stroke: currentColor; }
+
+.spinner__label {
+  font-family: var(--font-text);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--slate-500);
+  text-align: center;
+}
+
+@keyframes app-spin {
+  to { transform: rotate(360deg); }
+}
+
+// Modo oscuro · track más claro para contraste
+[data-theme="dark"] .spinner__track {
+  stroke: rgba(255, 255, 255, 0.12);
+}

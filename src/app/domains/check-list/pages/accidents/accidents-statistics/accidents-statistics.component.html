@@ -1,180 +1,204 @@
-<div class="statistics-container">
-  <!-- Header -->
-  <div class="page-header">
-    <div class="header-left">
-      <mat-icon class="header-icon">analytics</mat-icon>
-      <div class="header-text">
-        <h1>Estadísticas de Accidentes</h1>
-        <p>Dashboard de análisis y métricas de seguridad</p>
+<section class="page" aria-labelledby="stats-title">
+  <!-- Page header -->
+  <header class="page-header">
+    <div class="page-header__text">
+      <span class="eyebrow">ACCIDENTES</span>
+      <h1 id="stats-title" class="page-header__title">Estadísticas</h1>
+      <p class="page-header__description">
+        Dashboard de análisis y métricas de seguridad — agregado en cliente desde el listado de accidentes.
+      </p>
+    </div>
+    <div class="page-header__actions">
+      <app-btn variant="ghost" size="md" icon="list" (click)="goToList()">Listado</app-btn>
+      <app-btn variant="accent" size="md" icon="add" (click)="goToForm()">Nuevo accidente</app-btn>
+    </div>
+  </header>
+
+  <!-- Filtros de fecha -->
+  <section class="card filters-card">
+    <header class="card-header">
+      <div class="card-header__text">
+        <span class="eyebrow">RANGO</span>
+        <h2 class="card-title">Filtros de fecha</h2>
       </div>
+      <div class="card-header__meta">
+        <app-pill variant="brand" icon="event">{{ totalAccidentes }} accidentes en rango</app-pill>
+      </div>
+    </header>
+    <div class="filters-bar">
+      <div class="filter-chip">
+        <mat-form-field appearance="outline" class="filter-chip__field">
+          <mat-label>Tipo de fecha</mat-label>
+          <mat-select [(ngModel)]="tipoFecha">
+            <mat-option value="creacion">Creación</mat-option>
+            <mat-option value="accidente">Accidente</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+
+      <div class="filter-chip">
+        <mat-form-field appearance="outline" class="filter-chip__field">
+          <mat-label>Desde</mat-label>
+          <input matInput [matDatepicker]="pickerDesde" [(ngModel)]="fechaDesde">
+          <mat-datepicker-toggle matSuffix [for]="pickerDesde"></mat-datepicker-toggle>
+          <mat-datepicker #pickerDesde></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <div class="filter-chip">
+        <mat-form-field appearance="outline" class="filter-chip__field">
+          <mat-label>Hasta</mat-label>
+          <input matInput [matDatepicker]="pickerHasta" [(ngModel)]="fechaHasta">
+          <mat-datepicker-toggle matSuffix [for]="pickerHasta"></mat-datepicker-toggle>
+          <mat-datepicker #pickerHasta></mat-datepicker>
+        </mat-form-field>
+      </div>
+
+      <app-btn variant="primary" size="sm" icon="filter_alt" (click)="applyDateFilters()">Aplicar</app-btn>
+      <app-btn variant="ghost" size="sm" icon="close" (click)="clearDateFilters()">Limpiar</app-btn>
     </div>
-    <div class="header-actions">
-      <button mat-stroked-button (click)="goToList()">
-        <mat-icon>list</mat-icon>
-        Ver Listado
-      </button>
-      <button mat-flat-button color="primary" (click)="goToForm()">
-        <mat-icon>add</mat-icon>
-        Nuevo Registro
-      </button>
-    </div>
-  </div>
+  </section>
 
-  <!-- Filtros de Fecha -->
-  <mat-card class="filters-card">
-    <div class="filters-row date-filters">
-      <mat-form-field appearance="outline">
-        <mat-label>Filtrar por</mat-label>
-        <mat-select [(ngModel)]="tipoFecha">
-          <mat-option value="creacion">Fecha de Creación</mat-option>
-          <mat-option value="accidente">Fecha de Accidente</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Desde</mat-label>
-        <input matInput [matDatepicker]="pickerDesde" [(ngModel)]="fechaDesde">
-        <mat-datepicker-toggle matSuffix [for]="pickerDesde"></mat-datepicker-toggle>
-        <mat-datepicker #pickerDesde></mat-datepicker>
-      </mat-form-field>
-
-      <mat-form-field appearance="outline">
-        <mat-label>Hasta</mat-label>
-        <input matInput [matDatepicker]="pickerHasta" [(ngModel)]="fechaHasta">
-        <mat-datepicker-toggle matSuffix [for]="pickerHasta"></mat-datepicker-toggle>
-        <mat-datepicker #pickerHasta></mat-datepicker>
-      </mat-form-field>
-
-      <button mat-raised-button color="primary" (click)="applyDateFilters()">
-        <mat-icon>filter_list</mat-icon>
-        Aplicar
-      </button>
-
-      <button mat-stroked-button (click)="clearDateFilters()">
-        <mat-icon>clear</mat-icon>
-        Limpiar
-      </button>
-    </div>
-  </mat-card>
-
-  <!-- Loading -->
-  <div *ngIf="isLoading" class="loading-overlay" style="position:relative;min-height:200px">
-    <mat-spinner diameter="48"></mat-spinner>
-    <p>Cargando estadísticas...</p>
+  <!-- Loading state -->
+  <div *ngIf="isLoading" class="card load-card">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando estadísticas…</p>
   </div>
 
   <ng-container *ngIf="!isLoading">
-  <!-- KPI Summary Cards -->
-  <div class="kpi-grid">
-    <div class="kpi-card total">
-      <div class="kpi-header">
-        <mat-icon>report_problem</mat-icon>
-        <span class="kpi-title">Total Accidentes</span>
+    <!-- Hero KPI: Días sin accidente -->
+    <section class="card hero-card">
+      <div class="hero-card__text">
+        <span class="eyebrow eyebrow--on-ink">PROYECTO SEGURO</span>
+        <p class="hero-card__label">Días sin accidente</p>
+        <p class="hero-card__value mono">{{ diasSinAccidente !== null ? diasSinAccidente : '—' }}</p>
+        <p class="hero-card__hint">{{ diasSinAccidenteLabel }}</p>
       </div>
-      <div class="kpi-value">{{ totalAccidentes }}</div>
+      <div class="hero-card__icon" aria-hidden="true">
+        <span class="ms-r is-filled">verified</span>
+      </div>
+    </section>
+
+    <!-- KPI strip -->
+    <div class="kpi-strip">
+      <app-kpi-tile
+        eyebrow="ACCIDENTES"
+        label="Total"
+        [value]="totalAccidentes"
+        icon="report"
+      ></app-kpi-tile>
+      <app-kpi-tile
+        label="Alta gravedad"
+        [value]="getGravedadTotal('Grave') + getGravedadTotal('Fatal')"
+        icon="warning"
+        delta="Grave + Fatal"
+        [deltaTone]="(getGravedadTotal('Grave') + getGravedadTotal('Fatal')) > 0 ? 'negative' : 'neutral'"
+      ></app-kpi-tile>
+      <app-kpi-tile
+        label="Importante"
+        [value]="getGravedadTotal('Importante')"
+        icon="priority_high"
+      ></app-kpi-tile>
+      <app-kpi-tile
+        label="Leve + Menor"
+        [value]="getGravedadTotal('Leve') + getGravedadTotal('Menor')"
+        icon="check_circle"
+        deltaTone="positive"
+      ></app-kpi-tile>
+      <app-kpi-tile
+        label="Días perdidos prom."
+        [value]="diasPerdidosPromedio"
+        icon="event_busy"
+      ></app-kpi-tile>
     </div>
 
-    <div class="kpi-card gravedad">
-      <div class="kpi-header">
-        <mat-icon>priority_high</mat-icon>
-        <span class="kpi-title">Alta Gravedad</span>
-      </div>
-      <div class="kpi-value">{{ getGravedadTotal('Grave') + getGravedadTotal('Fatal') }}</div>
-      <div class="kpi-detail">
-        <span>Grave: {{ getGravedadTotal('Grave') }}</span>
-        <span>Fatal: {{ getGravedadTotal('Fatal') }}</span>
-      </div>
+    <!-- Charts grid (3 cols) -->
+    <div class="charts-grid">
+      <section class="card chart-card">
+        <header class="chart-card__header">
+          <div>
+            <span class="eyebrow">DISTRIBUCIÓN</span>
+            <h3 class="chart-card__title">Por gravedad</h3>
+          </div>
+          <app-pill variant="neutral" icon="pie_chart">{{ porGravedad.length }} categorías</app-pill>
+        </header>
+        <div class="chart-card__body">
+          <canvas #gravedadChart></canvas>
+        </div>
+      </section>
+
+      <section class="card chart-card">
+        <header class="chart-card__header">
+          <div>
+            <span class="eyebrow">DISTRIBUCIÓN</span>
+            <h3 class="chart-card__title">Tipo de accidente</h3>
+          </div>
+          <app-pill variant="neutral" icon="category">{{ porTipo.length }} tipos</app-pill>
+        </header>
+        <div class="chart-card__body">
+          <canvas #tipoChart></canvas>
+        </div>
+      </section>
+
+      <section class="card chart-card">
+        <header class="chart-card__header">
+          <div>
+            <span class="eyebrow">DISTRIBUCIÓN</span>
+            <h3 class="chart-card__title">Riesgos asociados</h3>
+          </div>
+          <app-pill variant="neutral" icon="warning">{{ porRiesgo.length }} riesgos</app-pill>
+        </header>
+        <div class="chart-card__body">
+          <canvas #riesgoChart></canvas>
+        </div>
+      </section>
+
+      <section class="card chart-card chart-card--wide">
+        <header class="chart-card__header">
+          <div>
+            <span class="eyebrow">TENDENCIA</span>
+            <h3 class="chart-card__title">Mensual de accidentes</h3>
+          </div>
+          <app-pill variant="neutral" icon="trending_up">{{ porMes.length }} meses</app-pill>
+        </header>
+        <div class="chart-card__body chart-card__body--tall">
+          <canvas #tendenciaChart></canvas>
+        </div>
+      </section>
+
+      <section class="card chart-card chart-card--wide">
+        <header class="chart-card__header">
+          <div>
+            <span class="eyebrow">TENDENCIA</span>
+            <h3 class="chart-card__title">Mensual por tipo</h3>
+          </div>
+          <app-pill variant="neutral" icon="show_chart">{{ porTipo.length }} tipos</app-pill>
+        </header>
+        <div class="chart-card__body chart-card__body--tall">
+          <canvas #tendenciaTipoChart></canvas>
+        </div>
+      </section>
     </div>
 
-    <div class="kpi-card indices">
-      <div class="kpi-header">
-        <mat-icon>warning</mat-icon>
-        <span class="kpi-title">Importante</span>
-      </div>
-      <div class="kpi-value">{{ getGravedadTotal('Importante') }}</div>
-    </div>
+    <!-- Tabla resumen: partes del cuerpo afectadas -->
+    <section class="card summary-card" *ngIf="porParteCuerpo.length > 0">
+      <header class="card-header">
+        <div class="card-header__text">
+          <span class="eyebrow">DESGLOSE</span>
+          <h2 class="card-title">Partes del cuerpo afectadas</h2>
+        </div>
+        <app-pill variant="neutral" icon="accessibility">{{ porParteCuerpo.length }} categorías</app-pill>
+      </header>
 
-    <div class="kpi-card dias">
-      <div class="kpi-header">
-        <mat-icon>check_circle</mat-icon>
-        <span class="kpi-title">Leve / Menor</span>
+      <div class="indicators-grid">
+        <div class="indicator-item" *ngFor="let p of porParteCuerpo">
+          <span class="indicator-item__label">{{ p.ParteCuerpo }}</span>
+          <span class="indicator-item__value mono">{{ p.Total }}</span>
+          <span class="indicator-item__hint">
+            {{ ((+p.Total / totalAccidentes) * 100).toFixed(1) }}% del total
+          </span>
+        </div>
       </div>
-      <div class="kpi-value">{{ getGravedadTotal('Leve') + getGravedadTotal('Menor') }}</div>
-      <div class="kpi-detail">
-        <span>Leve: {{ getGravedadTotal('Leve') }}</span>
-        <span>Menor: {{ getGravedadTotal('Menor') }}</span>
-      </div>
-    </div>
-  </div>
-
-  <!-- Charts Grid - Dark Theme -->
-  <div class="charts-grid">
-    <!-- Gravedad Chart -->
-    <mat-card class="chart-card dark-card">
-      <div class="chart-card-header">
-        <h3><mat-icon>pie_chart</mat-icon> Distribución por Gravedad</h3>
-        <span class="chart-badge">{{ porGravedad.length }} categorías</span>
-      </div>
-      <div class="chart-container">
-        <canvas #gravedadChart></canvas>
-      </div>
-    </mat-card>
-
-    <!-- Tipo Accidente Chart -->
-    <mat-card class="chart-card dark-card">
-      <div class="chart-card-header">
-        <h3><mat-icon>category</mat-icon> Tipo de Accidente</h3>
-        <span class="chart-badge">{{ porTipo.length }} tipos</span>
-      </div>
-      <div class="chart-container">
-        <canvas #tipoChart></canvas>
-      </div>
-    </mat-card>
-
-    <!-- Riesgo Asociado Chart -->
-    <mat-card class="chart-card dark-card">
-      <div class="chart-card-header">
-        <h3><mat-icon>warning</mat-icon> Riesgos Asociados</h3>
-        <span class="chart-badge">{{ porRiesgo.length }} riesgos</span>
-      </div>
-      <div class="chart-container">
-        <canvas #riesgoChart></canvas>
-      </div>
-    </mat-card>
-
-    <!-- Tendencia Mensual Chart -->
-    <mat-card class="chart-card dark-card wide">
-      <div class="chart-card-header">
-        <h3><mat-icon>trending_up</mat-icon> Tendencia Mensual de Accidentes</h3>
-        <span class="chart-badge">{{ porMes.length }} meses</span>
-      </div>
-      <div class="chart-container tall">
-        <canvas #tendenciaChart></canvas>
-      </div>
-    </mat-card>
-
-    <!-- Tendencia por Tipo de Accidente Chart -->
-    <mat-card class="chart-card dark-card wide">
-      <div class="chart-card-header">
-        <h3><mat-icon>show_chart</mat-icon> Tendencia Mensual por Tipo de Accidente</h3>
-        <span class="chart-badge">{{ porTipo.length }} tipos</span>
-      </div>
-      <div class="chart-container tall">
-        <canvas #tendenciaTipoChart></canvas>
-      </div>
-    </mat-card>
-  </div>
-
-  <!-- Parte del Cuerpo Afectada -->
-  <mat-card class="indicators-card dark-card" *ngIf="porParteCuerpo.length > 0">
-    <h3><mat-icon>accessibility</mat-icon> Partes del Cuerpo Afectadas</h3>
-    <div class="indicators-grid">
-      <div class="indicator-item" *ngFor="let p of porParteCuerpo">
-        <span class="indicator-label">{{ p.ParteCuerpo }}</span>
-        <span class="indicator-value">{{ p.Total }}</span>
-        <span class="indicator-formula">{{ ((+p.Total / totalAccidentes) * 100).toFixed(1) }}% del total</span>
-      </div>
-    </div>
-  </mat-card>
+    </section>
   </ng-container>
-</div>
+</section>

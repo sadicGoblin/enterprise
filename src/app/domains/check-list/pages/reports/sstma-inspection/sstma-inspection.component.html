@@ -1,3 +1,11 @@
+<section class="page" aria-labelledby="sstma-insp-title">
+  <header class="page-header">
+    <div class="page-header__text">
+      <span class="eyebrow">REPORTES</span>
+      <h1 id="sstma-insp-title" class="page-header__title">Inspección SSTMA</h1>
+      <p class="page-header__description">Reporte y seguimiento de inspecciones SSTMA por obra.</p>
+    </div>
+  </header>
 <div class="map-container">
   <mat-card class="map-card">
     <!-- Spinner overlay para carga -->
@@ -164,9 +172,9 @@
               <ng-container matColumnDef="actions">
                 <th mat-header-cell *matHeaderCellDef> Acciones </th>
                 <td mat-cell *matCellDef="let inspeccion" class="action-buttons">
-                  <button mat-icon-button color="primary" (click)="openInspectionModal(inspeccion)" 
-                          matTooltip="Ver detalles de inspección">
-                    <mat-icon>visibility</mat-icon>
+                  <button type="button" class="row-action" (click)="openInspectionModal(inspeccion)"
+                          matTooltip="Ver detalle" aria-label="Ver detalle">
+                    <span class="ms-r" aria-hidden="true">visibility</span>
                   </button>
                 </td>
               </ng-container>
@@ -187,3 +195,4 @@
     </div>
   </mat-card>
 </div>
+</section>

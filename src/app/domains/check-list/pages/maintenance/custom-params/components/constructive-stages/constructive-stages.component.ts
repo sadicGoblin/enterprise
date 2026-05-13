@@ -14,6 +14,7 @@ import { DataTableComponent } from '../../../../../../../shared/components/data-
 import { SubParametroService, EtapaConstructivaItem } from '../../../../../services/sub-parametro.service';
 import { ProjectSelectionService } from '../../../../../services/project-selection.service';
 import { ProxyService } from '../../../../../../../core/services/proxy.service';
+import { BtnComponent } from '../../../../../../../shared/ui';
 
 // Define interfaces localmente
 export interface TableColumn {
@@ -43,7 +44,8 @@ export interface ActionButton {
     MatSnackBarModule,
     CustomSelectComponent,
     ReactiveFormsModule,
-    DataTableComponent
+    DataTableComponent,
+    BtnComponent,
   ],
   templateUrl: './constructive-stages.component.html',
   styleUrls: ['./constructive-stages.component.scss']

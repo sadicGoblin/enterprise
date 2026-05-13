@@ -108,18 +108,17 @@
 
   <!-- Botones de acción -->
   <div class="form-actions">
-    <button
-      mat-stroked-button
-      type="button"
+    <app-btn
       *ngIf="activityBeingEdited"
+      variant="ghost"
+      size="md"
+      icon="close"
       (click)="cancelEditActivity()"
-      class="cancel-button"
     >
-      <mat-icon>close</mat-icon> Cancelar
-    </button>
-    <button mat-raised-button color="primary" type="submit" class="add-button">
-      <mat-icon>{{ activityBeingEdited ? "save" : "add_circle" }}</mat-icon>
+      Cancelar
+    </app-btn>
+    <app-btn variant="accent" size="md" type="submit" [icon]="activityBeingEdited ? 'save' : 'add'">
       {{ activityBeingEdited ? "Actualizar" : "Agregar" }}
-    </button>
+    </app-btn>
   </div>
 </form>

@@ -22,6 +22,7 @@ import { SelectOption } from '../../../../../shared/controls/custom-select/custo
 
 // New import for modal-file component
 import { ModalFileComponent } from '../../../components/modal-file/modal-file.component';
+import { BtnComponent, KpiTileComponent, PillComponent, PillVariant } from '../../../../../shared/ui';
 
 @Component({
   selector: 'app-library-pp',
@@ -41,7 +42,10 @@ import { ModalFileComponent } from '../../../components/modal-file/modal-file.co
     MatIconModule,
     MatProgressSpinnerModule,
     MatSnackBarModule,
-    MatDialogModule
+    MatDialogModule,
+    BtnComponent,
+    PillComponent,
+    KpiTileComponent
   ]
 })
 export class LibraryPpComponent implements OnInit {
@@ -53,7 +57,7 @@ export class LibraryPpComponent implements OnInit {
 
   // Data sources
   documents: any[] = [];
-  displayedColumns = ['title', 'year', 'name', 'type', 'view', 'delete'];
+  displayedColumns = ['title', 'year', 'name', 'type', 'actions'];
   
   // States
   isLoading = false;
@@ -247,5 +251,35 @@ export class LibraryPpComponent implements OnInit {
       horizontalPosition: 'center',
       verticalPosition: 'bottom'
     });
+  }
+
+  // ---------------------------------------------------------------------------
+  // DS §5.8 — helpers
+  // ---------------------------------------------------------------------------
+  typeVariant(type: string | null | undefined): PillVariant {
+    if (!type) return 'neutral';
+    switch (type.toUpperCase()) {
+      case 'ESTANDAR':       return 'brand';
+      case 'PROCEDIMIENTOS': return 'info';
+      case 'INSTRUCTIVOS':   return 'success';
+      default:               return 'neutral';
+    }
+  }
+
+  typeIcon(type: string | null | undefined): string {
+    switch ((type || '').toUpperCase()) {
+      case 'ESTANDAR':       return 'verified';
+      case 'PROCEDIMIENTOS': return 'menu_book';
+      case 'INSTRUCTIVOS':   return 'description';
+      default:               return 'article';
+    }
+  }
+
+  get kpiTotal(): number {
+    return this.documents.length;
+  }
+
+  kpiByType(t: string): number {
+    return this.documents.filter(d => (d.type || '').toUpperCase() === t).length;
   }
 }

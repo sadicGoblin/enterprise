@@ -1,134 +1,225 @@
-<div class="container">
-  <mat-card class="mat-container">
-    <h2 class="title">Planificación Actividades</h2>
+<section class="page" aria-labelledby="planning-title">
+  <!-- Page header -->
+  <header class="page-header">
+    <div class="page-header__text">
+      <span class="eyebrow">PROGRAMA DE ACTIVIDADES</span>
+      <h1 id="planning-title" class="page-header__title">Plan personalizado</h1>
+      <p class="page-header__description">
+        Vista mensual de cumplimiento por colaborador. Consulta filtros y revisa el cronograma con
+        sus estados diarios.
+      </p>
+    </div>
+  </header>
 
-    <div class="filters-container">
-      <app-custom-select
-        label="Proyecto"
-        [formControl]="projectControl"
-        [parameterType]="projectParameterType"
-        [loadFromApi]="true"
-        [customApiEndpoint]="projectApiEndpoint"
-        [customApiRequestBody]="projectApiRequestBody"
-        [customOptionValueKey]="projectOptionValue"
-        [customOptionLabelKey]="projectOptionLabel"
-        (selectionChange)="onProjectSelectionChange($event)"
-        placeholder="Seleccionar Proyecto"
-        [required]="true"
-        appearance="fill"
-      ></app-custom-select>
-
-      <app-custom-select
-        #collaboratorSelect
-        label="Colaborador"
-        [formControl]="collaboratorControl"
-        [parameterType]="collaboratorParameterType"
-        [loadFromApi]="true"
-        [customApiEndpoint]="collaboratorApiEndpoint"
-        [customApiRequestBody]="collaboratorApiRequestBody"
-        [customOptionValueKey]="collaboratorOptionValue"
-        [customOptionLabelKey]="collaboratorOptionLabel"
-        (selectionChange)="onCollaboratorSelectionChange($event)"
-        placeholder="Seleccionar Colaborador"
-        appearance="fill"
-      ></app-custom-select>
-
-      <mat-form-field appearance="fill">
-        <mat-label>Periodo (Actual)</mat-label>
-        <input
-          matInput
-          [matDatepicker]="picker"
-          [(ngModel)]="selectedPeriod"
-          [value]="selectedPeriod"
-          (dateChange)="onPeriodChange($event)"
-          [placeholder]="formattedPeriod || 'MM/YYYY'"
-          readonly
-        />
-        <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-        <mat-datepicker
-          #picker
-          startView="multi-year"
-          [startAt]="selectedPeriod"
-          (monthSelected)="setMonthAndYear($event, picker)"
-          panelClass="month-picker"
-        ></mat-datepicker>
-      </mat-form-field>
-
-      <div class="button-container">
-        <button
-          mat-raised-button
-          color="primary"
-          class="consultar-btn"
-          (click)="onConsultarClick()"
-        >
-          <mat-icon>search</mat-icon>
-          Consultar
-        </button>
+  <!-- Filtros -->
+  <section class="card filters-card">
+    <header class="card-header">
+      <div class="card-header__text">
+        <span class="eyebrow">CONSULTA</span>
+        <h2 class="card-title">Filtros</h2>
       </div>
-    </div>
+    </header>
 
-    <div class="section-separator" *ngIf="showPlanificationTable"></div>
+    <div class="filters-body">
+      <div class="filters-grid">
+        <div class="field">
+          <label class="field__label">Proyecto *</label>
+          <app-custom-select
+            label="Proyecto"
+            [formControl]="projectControl"
+            [parameterType]="projectParameterType"
+            [loadFromApi]="true"
+            [customApiEndpoint]="projectApiEndpoint"
+            [customApiRequestBody]="projectApiRequestBody"
+            [customOptionValueKey]="projectOptionValue"
+            [customOptionLabelKey]="projectOptionLabel"
+            (selectionChange)="onProjectSelectionChange($event)"
+            placeholder="Seleccionar proyecto"
+            [required]="true"
+            appearance="outline"
+            class="field__control"
+          ></app-custom-select>
+        </div>
 
-    <!-- Loading indicator -->
-    <div class="loading-container" *ngIf="isLoading">
-      <mat-spinner diameter="40"></mat-spinner>
-      <p>Cargando actividades...</p>
-    </div>
+        <div class="field">
+          <label class="field__label">Colaborador</label>
+          <app-custom-select
+            #collaboratorSelect
+            label="Colaborador"
+            [formControl]="collaboratorControl"
+            [parameterType]="collaboratorParameterType"
+            [loadFromApi]="true"
+            [customApiEndpoint]="collaboratorApiEndpoint"
+            [customApiRequestBody]="collaboratorApiRequestBody"
+            [customOptionValueKey]="collaboratorOptionValue"
+            [customOptionLabelKey]="collaboratorOptionLabel"
+            (selectionChange)="onCollaboratorSelectionChange($event)"
+            placeholder="Seleccionar colaborador"
+            appearance="outline"
+            class="field__control"
+          ></app-custom-select>
+        </div>
 
-    <div class="no-activities" *ngIf="noActivities">
-      <p>No se encontraron actividades para este proyecto y/o colaborador.</p>
-    </div>
-
-    <div *ngIf="showPlanificationTable">
-      <div class="cronograma-header">
-        <h3>DETALLE CRONOGRAMA MENSUAL</h3>
-        <div class="header-actions">
-          <button
-            mat-icon-button
-            (click)="viewCronogramaPdf()"
-            class="view-button"
-            aria-label="Visualizar cronograma PDF"
-            [disabled]="viewingPdf"
-            title="Visualizar PDF"
-          >
-            <mat-icon>visibility</mat-icon>
-          </button>
-          <button
-            mat-icon-button
-            (click)="exportCronogramaToPdf()"
-            class="export-button"
-            aria-label="Exportar cronograma a PDF"
-            [disabled]="exportingPdf"
-            title="Descargar PDF"
-          >
-            <mat-icon>picture_as_pdf</mat-icon>
-          </button>
+        <div class="field">
+          <label class="field__label">Período</label>
+          <mat-form-field appearance="outline" class="field__control">
+            <input
+              matInput
+              [matDatepicker]="picker"
+              [(ngModel)]="selectedPeriod"
+              [value]="selectedPeriod"
+              (dateChange)="onPeriodChange($event)"
+              [placeholder]="formattedPeriod || 'MM/YYYY'"
+              readonly
+            />
+            <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+            <mat-datepicker
+              #picker
+              startView="multi-year"
+              [startAt]="selectedPeriod"
+              (monthSelected)="setMonthAndYear($event, picker)"
+              panelClass="month-picker"
+            ></mat-datepicker>
+          </mat-form-field>
         </div>
       </div>
+    </div>
 
+    <footer class="filters-footer">
+      <app-btn variant="primary" size="md" icon="search" (click)="onConsultarClick()">
+        Consultar
+      </app-btn>
+    </footer>
+  </section>
+
+  <!-- Loading -->
+  <div *ngIf="isLoading" class="card load-card">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando actividades…</p>
+  </div>
+
+  <!-- Empty state -->
+  <div *ngIf="noActivities" class="card empty-card">
+    <span class="ms-r is-filled empty-card__icon" aria-hidden="true">event_busy</span>
+    <p>No se encontraron actividades para este proyecto y/o colaborador.</p>
+  </div>
+
+  <!-- Grid de cronograma -->
+  <section *ngIf="showPlanificationTable" class="card cronograma-card">
+    <header class="card-header">
+      <div class="card-header__text">
+        <span class="eyebrow">CRONOGRAMA</span>
+        <h2 class="card-title">Detalle mensual</h2>
+      </div>
+      <div class="card-header__actions">
+        <div class="view-toggle" role="group" aria-label="Modo de vista">
+          <button
+            type="button"
+            class="view-toggle__btn"
+            [class.is-active]="gridViewMode === 'daily'"
+            (click)="setGridViewMode('daily')"
+            [attr.aria-pressed]="gridViewMode === 'daily'"
+          >
+            <span class="ms-r" aria-hidden="true">calendar_view_day</span>
+            <span>Diario</span>
+          </button>
+          <button
+            type="button"
+            class="view-toggle__btn"
+            [class.is-active]="gridViewMode === 'weekly'"
+            (click)="setGridViewMode('weekly')"
+            [attr.aria-pressed]="gridViewMode === 'weekly'"
+          >
+            <span class="ms-r" aria-hidden="true">calendar_view_week</span>
+            <span>Semanal</span>
+          </button>
+        </div>
+        <app-pill *ngIf="gridSummary" variant="brand" icon="event_available">
+          {{ gridSummary.totalActivities }} actividades
+        </app-pill>
+        <app-btn
+          variant="ghost"
+          size="sm"
+          icon="visibility"
+          [disabled]="viewingPdf"
+          (click)="viewCronogramaPdf()"
+        >
+          Visualizar PDF
+        </app-btn>
+        <app-btn
+          variant="secondary"
+          size="sm"
+          icon="picture_as_pdf"
+          [disabled]="exportingPdf"
+          (click)="exportCronogramaToPdf()"
+        >
+          Descargar PDF
+        </app-btn>
+      </div>
+    </header>
+
+    <div class="cronograma-grid">
       <div class="cronograma-content" id="cronograma-content">
-        <!-- Comentado temporalmente - usando planification-grid en su lugar
-        <app-planification-table
-          [activities]="activities"
-          [days]="days"
-          [selectedPeriod]="selectedPeriod"
-          [projectId]="selectedProjectId"
-          [selectedCollaboratorName]="selectedCollaboratorName"
-          [selectedCollaboratorId]="selectedCollaboratorId"
-          (activityStatusChanged)="handleActivityStatusChanged($event)"
-          (saveChanges)="saveAllChanges()"
-        ></app-planification-table>
-        -->
-
         <app-planification-grid
           [periodo]="numericPeriod"
           [idUsuario]="selectedCollaboratorId ? +selectedCollaboratorId : null"
           [projectId]="selectedProjectId"
           [selectedCollaboratorName]="selectedCollaboratorName"
           [selectedCollaboratorId]="selectedCollaboratorId"
+          [viewMode]="gridViewMode"
           (activityClicked)="handleGridActivityClicked($event)"
+          (summaryChange)="onGridSummaryChange($event)"
         ></app-planification-grid>
       </div>
+
+      <!-- Sidebar de cumplimiento -->
+      <aside class="cumpl-sidebar" *ngIf="gridSummary">
+        <section class="card cumpl-card cumpl-card--ink">
+          <header class="cumpl-card__header">
+            <span class="eyebrow eyebrow--on-ink">CUMPLIMIENTO GLOBAL</span>
+            <p class="cumpl-card__value mono">{{ gridSummary.compliance }}%</p>
+            <p class="cumpl-card__hint">
+              {{ gridSummary.totalRealized }} / {{ gridSummary.totalAssigned }} días
+            </p>
+          </header>
+          <div class="cumpl-progress">
+            <div
+              class="cumpl-progress__bar"
+              [style.width.%]="gridSummary.compliance"
+              [class.is-low]="gridSummary.compliance < 50"
+              [class.is-mid]="gridSummary.compliance >= 50 && gridSummary.compliance < 80"
+            ></div>
+          </div>
+        </section>
+
+        <section class="card cumpl-card">
+          <header class="cumpl-card__plain-header">
+            <span class="eyebrow">POR ÁMBITO</span>
+            <h3 class="cumpl-card__title">{{ gridSummary.byAmbit.length }} grupos</h3>
+          </header>
+          <ul class="ambit-list">
+            <li *ngFor="let a of gridSummary.byAmbit" class="ambit-list__item">
+              <div class="ambit-list__head">
+                <app-pill [variant]="a.variant" icon="category">{{ a.ambit }}</app-pill>
+                <span class="ambit-list__pct mono">{{ a.compliance }}%</span>
+              </div>
+              <div class="cumpl-progress cumpl-progress--sm">
+                <div
+                  class="cumpl-progress__bar"
+                  [style.width.%]="a.compliance"
+                  [class.is-low]="a.compliance < 50"
+                  [class.is-mid]="a.compliance >= 50 && a.compliance < 80"
+                ></div>
+              </div>
+              <div class="ambit-list__meta">
+                <span class="mono">{{ a.realized }} / {{ a.assigned }}</span>
+                <span>·</span>
+                <span>{{ a.activities }} {{ a.activities === 1 ? 'actividad' : 'actividades' }}</span>
+              </div>
+            </li>
+          </ul>
+        </section>
+      </aside>
     </div>
-  </mat-card>
-</div>
+  </section>
+</section>

@@ -11,6 +11,7 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { AccidenteService, TrabajadorDto } from '../../../services/accidente.service';
+import { BtnComponent, PillComponent } from '../../../../../shared/ui';
 
 @Component({
   selector: 'app-accident-worker-form',
@@ -18,14 +19,13 @@ import { AccidenteService, TrabajadorDto } from '../../../services/accidente.ser
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    MatCardModule,
-    MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
-    MatIconModule,
     MatCheckboxModule,
     MatSnackBarModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    BtnComponent,
+    PillComponent
   ],
   templateUrl: './accident-worker-form.component.html',
   styleUrl: './accident-worker-form.component.scss'
@@ -170,6 +170,14 @@ export class AccidentWorkerFormComponent implements OnInit {
 
   goBack(): void {
     this.router.navigate(['/check-list/accidents/workers']);
+  }
+
+  get workerInitials(): string {
+    const n = (this.nombreReadonly || this.form?.get('Nombre')?.value || '').toString().trim();
+    if (!n) return '—';
+    const parts = n.split(/\s+/);
+    if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   }
 
   private show(message: string, type: 'success' | 'error'): void {

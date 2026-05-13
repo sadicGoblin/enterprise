@@ -1,4 +1,29 @@
-/* Estilo para el contenedor del DataTable */
-.dynamic-table-container {
-  width: 100%;
+/* history-table · ViewEncapsulation.None — todo selector prefijado con
+   `app-history-table` para no contaminar otras pantallas que usen <app-datatable>. */
+
+app-history-table {
+  .dynamic-table-container {
+    width: 100%;
+  }
+
+  /* Datos tabulares en mono según §1.2 del DS. Solo afecta esta pantalla. */
+  table {
+    font-family: var(--font-text);
+  }
+
+  td {
+    font-feature-settings: 'tnum';
+    font-variant-numeric: tabular-nums;
+    color: var(--slate-700);
+  }
+
+  /* Headers de columna en eyebrow uppercase. */
+  th {
+    font-family: var(--font-text);
+    font-size: var(--text-xs) !important;
+    font-weight: 600 !important;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--slate-500) !important;
+  }
 }

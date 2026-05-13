@@ -1,14 +1,13 @@
 import { Component, Inject, ElementRef, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 import { AccidenteApiResponse } from '../models/accident.model';
+import { BtnComponent, PillComponent, PillVariant } from '../../../../../shared/ui';
 
 @Component({
   selector: 'app-accident-detail-dialog',
@@ -16,11 +15,11 @@ import { AccidenteApiResponse } from '../models/accident.model';
   imports: [
     CommonModule,
     MatDialogModule,
-    MatButtonModule,
-    MatIconModule,
     MatDividerModule,
     MatTooltipModule,
-    MatProgressSpinnerModule
+    MatProgressSpinnerModule,
+    BtnComponent,
+    PillComponent
   ],
   templateUrl: './accident-detail-dialog.component.html',
   styleUrl: './accident-detail-dialog.component.scss'
@@ -56,28 +55,42 @@ export class AccidentDetailDialogComponent {
     return labels[this.data.Estado] || this.data.Estado;
   }
 
-  get estadoClass(): string {
-    const classes: Record<string, string> = {
-      'Reportado': 'estado-reportado',
-      'En_Investigacion': 'estado-investigacion',
-      'Cerrado': 'estado-cerrado',
-      'anulado': 'estado-anulado',
-      'Anulado': 'estado-anulado'
-    };
-    return classes[this.data.Estado] || '';
+  get estadoVariant(): PillVariant {
+    const v = (this.data.Estado || '').toLowerCase();
+    if (v === 'cerrado') return 'success';
+    if (v === 'en_investigacion') return 'info';
+    if (v === 'reportado') return 'warn';
+    if (v === 'anulado') return 'neutral';
+    return 'neutral';
   }
 
-  get gravedadClass(): string {
-    const ps = this.data.CalificacionPS;
-    if (!ps) return '';
-    const classes: Record<string, string> = {
-      'Leve': 'gravedad-leve',
-      'Menor': 'gravedad-menor',
-      'Importante': 'gravedad-importante',
-      'Grave': 'gravedad-grave',
-      'Fatal': 'gravedad-fatal'
-    };
-    return classes[ps] || '';
+  get estadoIcon(): string {
+    switch ((this.data.Estado || '').toLowerCase()) {
+      case 'cerrado': return 'check_circle';
+      case 'en_investigacion': return 'search';
+      case 'reportado': return 'flag';
+      case 'anulado': return 'block';
+      default: return 'circle';
+    }
+  }
+
+  get severityVariant(): PillVariant {
+    const v = (this.data.CalificacionPS || '').toLowerCase();
+    if (v === 'fatal' || v === 'grave') return 'danger';
+    if (v === 'importante') return 'warn';
+    if (v === 'menor') return 'info';
+    if (v === 'leve') return 'success';
+    return 'neutral';
+  }
+
+  get severityIcon(): string {
+    switch (this.severityVariant) {
+      case 'danger': return 'warning';
+      case 'warn': return 'error';
+      case 'success': return 'check_circle';
+      case 'info': return 'info';
+      default: return 'circle';
+    }
   }
 
   get controlesAplicados(): string[] {

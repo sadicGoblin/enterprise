@@ -1,434 +1,510 @@
-<div class="accidents-container">
-  <!-- Header con navegación -->
-  <div class="page-header">
-    <div class="header-left">
-      <mat-icon class="header-icon">{{ isEditMode ? 'edit_note' : 'report_problem' }}</mat-icon>
-      <div class="header-text">
-        <h1>{{ isEditMode ? 'Editar Accidente' : 'Registro de Accidente' }}</h1>
-        <p *ngIf="!isEditMode">Complete la información del accidente laboral</p>
-        <p *ngIf="isEditMode && numeroAccidente">
-          Editando accidente <strong>{{ numeroAccidente }}</strong>
+<section class="page" aria-labelledby="accidents-title">
+  <!-- Header destacado con barra roja izquierda + EN CURSO pill + auto-save -->
+  <header class="page-header">
+    <div class="page-header__main">
+      <span class="page-header__icon-box" aria-hidden="true">
+        <span class="ms-r is-filled">report</span>
+      </span>
+      <div class="page-header__text">
+        <div class="page-header__eyebrow-row">
+          <span class="eyebrow">ACCIDENTES</span>
+          <app-pill variant="danger" icon="play_circle">{{ isEditMode ? 'EN EDICIÓN' : 'EN CURSO' }}</app-pill>
+        </div>
+        <h1 id="accidents-title" class="page-header__title">
+          {{ isEditMode ? 'Editar accidente' : 'Registro de accidente' }}
+        </h1>
+        <p *ngIf="!isEditMode" class="page-header__description">
+          Complete los 5 pasos del wizard para registrar el evento de SSTMA.
+        </p>
+        <p *ngIf="isEditMode && numeroAccidente" class="page-header__description">
+          Editando <span class="mono">{{ numeroAccidente }}</span>
         </p>
       </div>
     </div>
-    <div class="header-actions">
-      <button mat-stroked-button (click)="goToList()">
-        <mat-icon>list</mat-icon>
-        Ver Listado
-      </button>
-      <button mat-stroked-button (click)="goToStatistics()">
-        <mat-icon>analytics</mat-icon>
-        Estadísticas
-      </button>
-      <button mat-stroked-button (click)="goToMasaLaboral()">
-        <mat-icon>groups</mat-icon>
-        Masa Laboral
-      </button>
+    <div class="page-header__meta">
+      <app-pill variant="neutral" icon="autorenew">{{ autoSaveStatus }}</app-pill>
+      <div class="page-header__actions">
+        <app-btn variant="secondary" size="sm" icon="list" (click)="goToList()">Listado</app-btn>
+        <app-btn variant="ghost" size="sm" icon="analytics" (click)="goToStatistics()">Estadísticas</app-btn>
+        <app-btn variant="ghost" size="sm" icon="groups" (click)="goToMasaLaboral()">Masa laboral</app-btn>
+      </div>
     </div>
-  </div>
+  </header>
 
-  <!-- Loading Dropdowns -->
-  <div *ngIf="isLoadingDropdowns" class="loading-overlay" style="position:relative;min-height:200px">
-    <mat-spinner diameter="48"></mat-spinner>
-    <p>Cargando datos del formulario...</p>
+  <!-- Loading dropdowns -->
+  <div *ngIf="isLoadingDropdowns" class="card load-card">
+    <mat-spinner diameter="40"></mat-spinner>
+    <p>Cargando catálogos del formulario…</p>
   </div>
 
   <ng-container *ngIf="!isLoadingDropdowns">
-  <!-- Progress Steps -->
-  <div class="steps-container">
-    <div class="step" [class.active]="currentStep === 0" [class.completed]="currentStep > 0" (click)="currentStep = 0">
-      <div class="step-number">1</div>
-      <span class="step-label">Datos del Accidente</span>
-    </div>
-    <div class="step-connector" [class.completed]="currentStep > 0"></div>
-    <div class="step" [class.active]="currentStep === 1" [class.completed]="currentStep > 1" (click)="currentStep = 1">
-      <div class="step-number">2</div>
-      <span class="step-label">Trabajador</span>
-    </div>
-    <div class="step-connector" [class.completed]="currentStep > 1"></div>
-    <div class="step" [class.active]="currentStep === 2" [class.completed]="currentStep > 2" (click)="currentStep = 2">
-      <div class="step-number">3</div>
-      <span class="step-label">Línea de Mando</span>
-    </div>
-    <div class="step-connector" [class.completed]="currentStep > 2"></div>
-    <div class="step" [class.active]="currentStep === 3" [class.completed]="currentStep > 3" (click)="currentStep = 3">
-      <div class="step-number">4</div>
-      <span class="step-label">Análisis</span>
-    </div>
-    <div class="step-connector" [class.completed]="currentStep > 3"></div>
-    <div class="step" [class.active]="currentStep === 4" [class.completed]="currentStep > 4" (click)="currentStep = 4">
-      <div class="step-number">5</div>
-      <span class="step-label">Controles</span>
-    </div>
-  </div>
+    <!-- Stepper grande horizontal -->
+    <nav class="stepper" aria-label="Pasos del formulario">
+      <ng-container *ngFor="let label of stepLabels; let i = index">
+        <button
+          type="button"
+          class="step"
+          [class.is-active]="currentStep === i"
+          [class.is-completed]="currentStep > i"
+          [class.is-done]="isStepComplete(i)"
+          (click)="currentStep = i"
+          [attr.aria-current]="currentStep === i ? 'step' : null"
+        >
+          <span class="step__badge">
+            <span *ngIf="currentStep > i || isStepComplete(i)" class="ms-r is-filled" aria-hidden="true">check</span>
+            <span *ngIf="!(currentStep > i || isStepComplete(i))">{{ i + 1 }}</span>
+          </span>
+          <span class="step__label">{{ label }}</span>
+        </button>
+        <span *ngIf="i < stepLabels.length - 1" class="step-connector" [class.is-completed]="currentStep > i"></span>
+      </ng-container>
+    </nav>
 
-  <mat-card class="form-card">
-    <form [formGroup]="accidentForm" (ngSubmit)="onSubmit()">
+    <!-- Grid: formulario 1fr + sidebar contextual 320px -->
+    <div class="wizard-grid">
+      <!-- Formulario -->
+      <section class="card form-card">
+        <form id="accidentForm" [formGroup]="accidentForm" (ngSubmit)="onSubmit()">
+          <!-- PASO 1: Datos del Accidente -->
+          <div class="step-content" [hidden]="currentStep !== 0">
+            <div class="section-header">
+              <span class="ms-r" aria-hidden="true">description</span>
+              <h2 class="section-header__title">Datos principales del accidente</h2>
+            </div>
 
-      <!-- PASO 1: Datos del Accidente -->
-      <div class="step-content" [hidden]="currentStep !== 0">
-        <div class="section-header">
-          <mat-icon>description</mat-icon>
-          <h2>Datos Principales del Accidente</h2>
-        </div>
+            <div class="form-grid">
+              <app-smart-selector
+                label="Obra / Proyecto *"
+                [options]="obraOpts"
+                [required]="true"
+                formControlName="IdObra"
+                placeholder="Seleccione obra"
+                [errorMessage]="getErrorMessage('IdObra')"
+                [loading]="isCreatingCatalogItem"
+                (addClick)="onAddCatalog('IdObra')">
+              </app-smart-selector>
 
-        <div class="form-grid">
-          <app-smart-selector
-            label="Obra / Proyecto *"
-            [options]="obraOpts"
-            [required]="true"
-            formControlName="IdObra"
-            placeholder="Seleccione obra"
-            [errorMessage]="getErrorMessage('IdObra')"
-            [loading]="isCreatingCatalogItem"
-            (addClick)="onAddCatalog('IdObra')">
-          </app-smart-selector>
+              <app-smart-selector
+                label="Empresa"
+                [options]="empresaOpts"
+                [loading]="isCreatingCatalogItem"
+                formControlName="IdEmpresa"
+                placeholder="Seleccione empresa"
+                (addClick)="onAddCatalog('IdEmpresa')">
+              </app-smart-selector>
 
-          <app-smart-selector
-            label="Empresa"
-            [options]="empresaOpts"
-            [loading]="isCreatingCatalogItem"
-            formControlName="IdEmpresa"
-            placeholder="Seleccione empresa"
-            (addClick)="onAddCatalog('IdEmpresa')">
-          </app-smart-selector>
+              <app-smart-selector
+                label="Tipo de accidente"
+                [options]="tipoAccidenteOpts"
+                formControlName="IdTipoAccidente"
+                placeholder="Seleccione tipo"
+                [loading]="isCreatingCatalogItem"
+                (addClick)="onAddCatalog('IdTipoAccidente')">
+              </app-smart-selector>
 
-          <app-smart-selector
-            label="Tipo de Accidente"
-            [options]="tipoAccidenteOpts"
-            formControlName="IdTipoAccidente"
-            placeholder="Seleccione tipo"
-            [loading]="isCreatingCatalogItem"
-            (addClick)="onAddCatalog('IdTipoAccidente')">
-          </app-smart-selector>
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha del accidente *</mat-label>
+                <input matInput [matDatepicker]="fechaAccPicker" formControlName="FechaAccidente">
+                <mat-datepicker-toggle matSuffix [for]="fechaAccPicker"></mat-datepicker-toggle>
+                <mat-datepicker #fechaAccPicker></mat-datepicker>
+                <mat-error>{{ getErrorMessage('FechaAccidente') }}</mat-error>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Fecha del Accidente *</mat-label>
-            <input matInput [matDatepicker]="fechaAccPicker" formControlName="FechaAccidente">
-            <mat-datepicker-toggle matSuffix [for]="fechaAccPicker"></mat-datepicker-toggle>
-            <mat-datepicker #fechaAccPicker></mat-datepicker>
-            <mat-error>{{ getErrorMessage('FechaAccidente') }}</mat-error>
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Hora del accidente</mat-label>
+                <input matInput type="time" formControlName="HoraAccidente">
+              </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Hora del Accidente</mat-label>
-            <input matInput type="time" formControlName="HoraAccidente">
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha control</mat-label>
+                <input matInput [matDatepicker]="fechaCtrlPicker" formControlName="FechaControl">
+                <span matSuffix class="date-suffix-actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    class="date-clear-btn"
+                    *ngIf="accidentForm.get('FechaControl')?.value"
+                    (click)="clearOptionalDate('FechaControl')"
+                    matTooltip="Quitar fecha"
+                    aria-label="Quitar fecha de control">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                  <mat-datepicker-toggle [for]="fechaCtrlPicker"></mat-datepicker-toggle>
+                </span>
+                <mat-datepicker #fechaCtrlPicker></mat-datepicker>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Fecha Control</mat-label>
-            <input matInput [matDatepicker]="fechaCtrlPicker" formControlName="FechaControl">
-            <span matSuffix class="date-suffix-actions">
-              <button
-                mat-icon-button
-                type="button"
-                class="date-clear-btn"
-                *ngIf="accidentForm.get('FechaControl')?.value"
-                (click)="clearOptionalDate('FechaControl')"
-                matTooltip="Quitar fecha"
-                aria-label="Quitar fecha de control">
-                <mat-icon>close</mat-icon>
-              </button>
-              <mat-datepicker-toggle [for]="fechaCtrlPicker"></mat-datepicker-toggle>
-            </span>
-            <mat-datepicker #fechaCtrlPicker></mat-datepicker>
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Días perdidos estimados</mat-label>
+                <input matInput type="text" [value]="diasPerdidosEstimadosDisplay" readonly>
+                <mat-hint>Fecha control − fecha accidente</mat-hint>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Días perdidos estimados</mat-label>
-            <input matInput type="text" [value]="diasPerdidosEstimadosDisplay" readonly>
-            <mat-hint>Fecha control − fecha accidente</mat-hint>
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Fecha alta</mat-label>
+                <input matInput [matDatepicker]="fechaAltaPicker" formControlName="FechaAlta">
+                <span matSuffix class="date-suffix-actions">
+                  <button
+                    mat-icon-button
+                    type="button"
+                    class="date-clear-btn"
+                    *ngIf="accidentForm.get('FechaAlta')?.value"
+                    (click)="clearOptionalDate('FechaAlta')"
+                    matTooltip="Quitar fecha"
+                    aria-label="Quitar fecha de alta">
+                    <mat-icon>close</mat-icon>
+                  </button>
+                  <mat-datepicker-toggle [for]="fechaAltaPicker"></mat-datepicker-toggle>
+                </span>
+                <mat-datepicker #fechaAltaPicker></mat-datepicker>
+              </mat-form-field>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Fecha Alta</mat-label>
-            <input matInput [matDatepicker]="fechaAltaPicker" formControlName="FechaAlta">
-            <span matSuffix class="date-suffix-actions">
-              <button
-                mat-icon-button
-                type="button"
-                class="date-clear-btn"
-                *ngIf="accidentForm.get('FechaAlta')?.value"
-                (click)="clearOptionalDate('FechaAlta')"
-                matTooltip="Quitar fecha"
-                aria-label="Quitar fecha de alta">
-                <mat-icon>close</mat-icon>
-              </button>
-              <mat-datepicker-toggle [for]="fechaAltaPicker"></mat-datepicker-toggle>
-            </span>
-            <mat-datepicker #fechaAltaPicker></mat-datepicker>
-          </mat-form-field>
+              <mat-form-field appearance="outline">
+                <mat-label>Días perdidos finales</mat-label>
+                <input matInput type="text" [value]="diasPerdidosFinalDisplay" readonly>
+                <mat-hint>Fecha alta − fecha accidente</mat-hint>
+              </mat-form-field>
+            </div>
 
-          <mat-form-field appearance="outline">
-            <mat-label>Días perdidos finales</mat-label>
-            <input matInput type="text" [value]="diasPerdidosFinalDisplay" readonly>
-            <mat-hint>Fecha alta − fecha accidente</mat-hint>
-          </mat-form-field>
-        </div>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Descripción del Accidente</mat-label>
-          <textarea matInput formControlName="Descripcion" rows="4"
-                    placeholder="Describa detalladamente cómo ocurrió el accidente..."></textarea>
-          <mat-hint>Mínimo 10 caracteres</mat-hint>
-          <mat-error>{{ getErrorMessage('Descripcion') }}</mat-error>
-        </mat-form-field>
-      </div>
-
-      <!-- PASO 2: Datos del Trabajador -->
-      <div class="step-content" [hidden]="currentStep !== 1">
-        <div class="section-header">
-          <mat-icon>person</mat-icon>
-          <h2>Antecedentes del Trabajador</h2>
-        </div>
-
-        <div class="form-grid">
-          <div class="span-2">
-            <app-smart-selector
-              label="Trabajador *"
-              [options]="trabajadorOpts"
-              [required]="true"
-              [showEdit]="true"
-              formControlName="IdTrabajador"
-              placeholder="Buscar trabajador..."
-              [errorMessage]="getErrorMessage('IdTrabajador')"
-              [loading]="isCreatingCatalogItem"
-              (addClick)="onAddTrabajador()"
-              (editClick)="onEditTrabajador($event)">
-            </app-smart-selector>
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Descripción del accidente</mat-label>
+              <textarea matInput formControlName="Descripcion" rows="4"
+                        placeholder="Describa detalladamente cómo ocurrió el accidente…"></textarea>
+              <mat-hint>Mínimo 10 caracteres</mat-hint>
+              <mat-error>{{ getErrorMessage('Descripcion') }}</mat-error>
+            </mat-form-field>
           </div>
 
-          <app-smart-selector
-            label="Cargo"
-            [options]="cargoOpts"
-            formControlName="IdCargo"
-            placeholder="Seleccione cargo"
-            [loading]="isCreatingCatalogItem"
-            (addClick)="onAddCatalog('IdCargo')">
-          </app-smart-selector>
+          <!-- PASO 2: Trabajador -->
+          <div class="step-content" [hidden]="currentStep !== 1">
+            <div class="section-header">
+              <span class="ms-r" aria-hidden="true">person</span>
+              <h2 class="section-header__title">Antecedentes del trabajador</h2>
+            </div>
+
+            <div class="form-grid">
+              <div class="span-2">
+                <app-smart-selector
+                  label="Trabajador *"
+                  [options]="trabajadorOpts"
+                  [required]="true"
+                  [showEdit]="true"
+                  formControlName="IdTrabajador"
+                  placeholder="Buscar trabajador…"
+                  [errorMessage]="getErrorMessage('IdTrabajador')"
+                  [loading]="isCreatingCatalogItem"
+                  (addClick)="onAddTrabajador()"
+                  (editClick)="onEditTrabajador($event)">
+                </app-smart-selector>
+              </div>
+
+              <app-smart-selector
+                label="Cargo"
+                [options]="cargoOpts"
+                formControlName="IdCargo"
+                placeholder="Seleccione cargo"
+                [loading]="isCreatingCatalogItem"
+                (addClick)="onAddCatalog('IdCargo')">
+              </app-smart-selector>
+            </div>
+          </div>
+
+          <!-- PASO 3: Línea de Mando -->
+          <div class="step-content" [hidden]="currentStep !== 2">
+            <div class="section-header">
+              <span class="ms-r" aria-hidden="true">supervisor_account</span>
+              <h2 class="section-header__title">Línea de mando</h2>
+            </div>
+
+            <div class="form-grid cols-2">
+              <app-smart-selector
+                label="Supervisor"
+                [options]="trabajadorOpts"
+                formControlName="IdSupervisor"
+                placeholder="Buscar supervisor…"
+                [loading]="isCreatingCatalogItem"
+                (addClick)="onAddCatalog('IdSupervisor')">
+              </app-smart-selector>
+
+              <app-smart-selector
+                label="Profesional terreno"
+                [options]="trabajadorOpts"
+                formControlName="IdPTerreno"
+                placeholder="Buscar profesional…"
+                [loading]="isCreatingCatalogItem"
+                (addClick)="onAddCatalog('IdPTerreno')">
+              </app-smart-selector>
+
+              <app-smart-selector
+                label="APR"
+                [options]="trabajadorOpts"
+                formControlName="IdAPR"
+                placeholder="Buscar APR…"
+                [loading]="isCreatingCatalogItem"
+                (addClick)="onAddCatalog('IdAPR')">
+              </app-smart-selector>
+
+              <app-smart-selector
+                label="ADO"
+                [options]="trabajadorOpts"
+                formControlName="IdADO"
+                placeholder="Buscar ADO…"
+                [loading]="isCreatingCatalogItem"
+                (addClick)="onAddCatalog('IdADO')">
+              </app-smart-selector>
+            </div>
+
+            <div class="info-card">
+              <span class="ms-r" aria-hidden="true">info</span>
+              <p>Seleccione las personas responsables en la línea de mando al momento del accidente.</p>
+            </div>
+          </div>
+
+          <!-- PASO 4: Análisis / Tipología -->
+          <div class="step-content" [hidden]="currentStep !== 3">
+            <div class="section-header">
+              <span class="ms-r" aria-hidden="true">analytics</span>
+              <h2 class="section-header__title">Análisis / Tipología</h2>
+            </div>
+
+            <!-- Severity card selector -->
+            <div class="severity-field">
+              <span class="field-eyebrow">Calificación potencial / severidad</span>
+              <div class="severity-grid" role="radiogroup" aria-label="Calificación de severidad">
+                <button
+                  *ngFor="let s of severityCards"
+                  type="button"
+                  class="severity-card"
+                  [class]="'severity-card--' + s.tone"
+                  [class.is-active]="severityIsActive(s.value)"
+                  role="radio"
+                  [attr.aria-checked]="severityIsActive(s.value)"
+                  (click)="selectSeverity(s.value)"
+                >
+                  <span class="ms-r severity-card__icon is-filled" aria-hidden="true">{{ s.icon }}</span>
+                  <span class="severity-card__label">{{ s.label }}</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-grid cols-2">
+              <app-smart-selector
+                label="Riesgo asociado"
+                [options]="riesgoOpts"
+                formControlName="IdRiesgoAsociado"
+                placeholder="Buscar riesgo…"
+                [loading]="isCreatingCatalogItem"
+                (addClick)="onAddCatalog('IdRiesgoAsociado')">
+              </app-smart-selector>
+
+              <app-smart-selector
+                label="Lesión"
+                [options]="lesionOpts"
+                formControlName="IdLesion"
+                placeholder="Buscar lesión…"
+                [loading]="isCreatingCatalogItem"
+                (addClick)="onAddCatalog('IdLesion')">
+              </app-smart-selector>
+
+              <app-smart-selector
+                label="Parte del cuerpo afectada"
+                [options]="parteCuerpoOpts"
+                formControlName="IdParteCuerpo"
+                placeholder="Buscar parte del cuerpo…"
+                [loading]="isCreatingCatalogItem"
+                (addClick)="onAddCatalog('IdParteCuerpo')">
+              </app-smart-selector>
+
+              <app-smart-selector
+                label="Máquina / Equipo"
+                [options]="maquinaEquipoOpts"
+                formControlName="IdMaquinaEquipo"
+                placeholder="Buscar máquina/equipo…"
+                [loading]="isCreatingCatalogItem"
+                (addClick)="onAddCatalog('IdMaquinaEquipo')">
+              </app-smart-selector>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Fuente (agente)</mat-label>
+                <input matInput formControlName="FuenteAgente" placeholder="Ej: Línea de media tensión">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline">
+                <mat-label>Acción</mat-label>
+                <input matInput formControlName="Accion" placeholder="Ej: posicionarse con herramienta manual">
+              </mat-form-field>
+
+              <mat-form-field appearance="outline" class="span-2">
+                <mat-label>Condición</mat-label>
+                <input matInput formControlName="Condicion" placeholder="Ej: Falta de limitación física sobre cables">
+              </mat-form-field>
+            </div>
+          </div>
+
+          <!-- PASO 5: Gestión del Cambio / Jerarquía de Controles -->
+          <div class="step-content" [hidden]="currentStep !== 4">
+            <div class="section-header">
+              <span class="ms-r" aria-hidden="true">security</span>
+              <h2 class="section-header__title">Gestión del cambio / Jerarquía de controles</h2>
+            </div>
+
+            <div class="full-width">
+              <app-smart-selector
+                label="Causa raíz"
+                [options]="causaRaizOpts"
+                formControlName="IdCausaRaiz"
+                placeholder="Buscar causa raíz…"
+                [loading]="isCreatingCatalogItem"
+                (addClick)="onAddCatalog('IdCausaRaiz')">
+              </app-smart-selector>
+            </div>
+
+            <div class="controls-grid">
+              <label class="control-card" [class.is-selected]="accidentForm.get('CtrlE')?.value">
+                <mat-checkbox formControlName="CtrlE" color="primary"></mat-checkbox>
+                <span class="control-card__letter">E</span>
+                <span class="control-card__name">Eliminación</span>
+              </label>
+
+              <label class="control-card" [class.is-selected]="accidentForm.get('CtrlS')?.value">
+                <mat-checkbox formControlName="CtrlS" color="primary"></mat-checkbox>
+                <span class="control-card__letter">S</span>
+                <span class="control-card__name">Sustitución</span>
+              </label>
+
+              <label class="control-card" [class.is-selected]="accidentForm.get('CtrlI')?.value">
+                <mat-checkbox formControlName="CtrlI" color="primary"></mat-checkbox>
+                <span class="control-card__letter">I</span>
+                <span class="control-card__name">Ingeniería de control</span>
+              </label>
+
+              <label class="control-card" [class.is-selected]="accidentForm.get('CtrlA')?.value">
+                <mat-checkbox formControlName="CtrlA" color="primary"></mat-checkbox>
+                <span class="control-card__letter">A</span>
+                <span class="control-card__name">Administración</span>
+              </label>
+
+              <label class="control-card" [class.is-selected]="accidentForm.get('CtrlEPP')?.value">
+                <mat-checkbox formControlName="CtrlEPP" color="primary"></mat-checkbox>
+                <span class="control-card__letter control-card__letter--small">EPP</span>
+                <span class="control-card__name">Equipo de protección personal</span>
+              </label>
+            </div>
+
+            <mat-form-field appearance="outline" class="full-width">
+              <mat-label>Observaciones</mat-label>
+              <textarea matInput formControlName="Observaciones" rows="3"
+                        placeholder="Observaciones adicionales…"></textarea>
+            </mat-form-field>
+          </div>
+        </form>
+
+        <div *ngIf="isLoading" class="form-loading">
+          <mat-spinner diameter="40"></mat-spinner>
+          <p>Guardando…</p>
         </div>
+      </section>
 
-      </div>
+      <!-- Sidebar contextual -->
+      <aside class="sidebar">
+        <!-- KPIs obra -->
+        <section class="card sidebar-card sidebar-card--ink">
+          <header class="sidebar-card__header">
+            <span class="eyebrow eyebrow--on-ink">OBRA EN CONTEXTO</span>
+            <h3 class="sidebar-card__title">Indicadores</h3>
+          </header>
+          <div class="obra-kpis">
+            <div *ngFor="let kpi of obraKpis" class="obra-kpi">
+              <span class="ms-r obra-kpi__icon" aria-hidden="true">{{ kpi.icon }}</span>
+              <div class="obra-kpi__text">
+                <span class="obra-kpi__label">{{ kpi.label }}</span>
+                <span class="obra-kpi__value mono">{{ kpi.value }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
 
-      <!-- PASO 3: Línea de Mando -->
-      <div class="step-content" [hidden]="currentStep !== 2">
-        <div class="section-header">
-          <mat-icon>supervisor_account</mat-icon>
-          <h2>Línea de Mando</h2>
-        </div>
-
-        <div class="form-grid cols-2">
-          <app-smart-selector
-            label="Supervisor"
-            [options]="trabajadorOpts"
-            formControlName="IdSupervisor"
-            placeholder="Buscar supervisor..."
-            [loading]="isCreatingCatalogItem"
-            (addClick)="onAddCatalog('IdSupervisor')">
-          </app-smart-selector>
-
-          <app-smart-selector
-            label="Profesional Terreno"
-            [options]="trabajadorOpts"
-            formControlName="IdPTerreno"
-            placeholder="Buscar profesional..."
-            [loading]="isCreatingCatalogItem"
-            (addClick)="onAddCatalog('IdPTerreno')">
-          </app-smart-selector>
-
-          <app-smart-selector
-            label="APR"
-            [options]="trabajadorOpts"
-            formControlName="IdAPR"
-            placeholder="Buscar APR..."
-            [loading]="isCreatingCatalogItem"
-            (addClick)="onAddCatalog('IdAPR')">
-          </app-smart-selector>
-
-          <app-smart-selector
-            label="ADO"
-            [options]="trabajadorOpts"
-            formControlName="IdADO"
-            placeholder="Buscar ADO..."
-            [loading]="isCreatingCatalogItem"
-            (addClick)="onAddCatalog('IdADO')">
-          </app-smart-selector>
-        </div>
-
-        <div class="info-card">
-          <mat-icon>info</mat-icon>
-          <p>Seleccione las personas responsables en la línea de mando al momento del accidente.</p>
-        </div>
-      </div>
-
-      <!-- PASO 4: Análisis / Tipología -->
-      <div class="step-content" [hidden]="currentStep !== 3">
-        <div class="section-header">
-          <mat-icon>analytics</mat-icon>
-          <h2>Análisis / Tipología</h2>
-        </div>
-
-        <div class="form-grid cols-2">
-          <app-smart-selector
-            label="Riesgo Asociado"
-            [options]="riesgoOpts"
-            formControlName="IdRiesgoAsociado"
-            placeholder="Buscar riesgo..."
-            [loading]="isCreatingCatalogItem"
-            (addClick)="onAddCatalog('IdRiesgoAsociado')">
-          </app-smart-selector>
-
-          <app-smart-selector
-            label="Lesión"
-            [options]="lesionOpts"
-            formControlName="IdLesion"
-            placeholder="Buscar lesión..."
-            [loading]="isCreatingCatalogItem"
-            (addClick)="onAddCatalog('IdLesion')">
-          </app-smart-selector>
-
-          <app-smart-selector
-            label="Parte del Cuerpo Afectada"
-            [options]="parteCuerpoOpts"
-            formControlName="IdParteCuerpo"
-            placeholder="Buscar parte del cuerpo..."
-            [loading]="isCreatingCatalogItem"
-            (addClick)="onAddCatalog('IdParteCuerpo')">
-          </app-smart-selector>
-
-          <app-smart-selector
-            label="Calificación Potencial/Severidad"
-            [options]="calificacionPSOpts"
-            formControlName="CalificacionPS"
-            placeholder="Seleccione calificación"
-            [showAdd]="false">
-          </app-smart-selector>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Fuente (Agente)</mat-label>
-            <input matInput formControlName="FuenteAgente" placeholder="Ej: Línea de media tensión">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline">
-            <mat-label>Acción</mat-label>
-            <input matInput formControlName="Accion" placeholder="Ej: posicionarse con herramienta manual">
-          </mat-form-field>
-
-          <mat-form-field appearance="outline" class="span-2">
-            <mat-label>Condición</mat-label>
-            <input matInput formControlName="Condicion" placeholder="Ej: Falta de limitación física sobre cables">
-          </mat-form-field>
-
-          <app-smart-selector
-            label="Máquina / Equipo"
-            [options]="maquinaEquipoOpts"
-            formControlName="IdMaquinaEquipo"
-            placeholder="Buscar máquina/equipo..."
-            [loading]="isCreatingCatalogItem"
-            (addClick)="onAddCatalog('IdMaquinaEquipo')">
-          </app-smart-selector>
-        </div>
-      </div>
-
-      <!-- PASO 5: Gestión del Cambio / Jerarquía de Controles -->
-      <div class="step-content" [hidden]="currentStep !== 4">
-        <div class="section-header">
-          <mat-icon>security</mat-icon>
-          <h2>Gestión del Cambio / Jerarquía de Controles</h2>
-        </div>
-
-        <div class="full-width">
-          <app-smart-selector
-            label="Causa Raíz"
-            [options]="causaRaizOpts"
-            formControlName="IdCausaRaiz"
-            placeholder="Buscar causa raíz..."
-            [loading]="isCreatingCatalogItem"
-            (addClick)="onAddCatalog('IdCausaRaiz')">
-          </app-smart-selector>
-        </div>
-
-        <div class="controls-grid">
-          <label class="control-card" [class.selected]="accidentForm.get('CtrlE')?.value">
-            <mat-checkbox formControlName="CtrlE" color="primary"></mat-checkbox>
-            <span class="control-letter">E</span>
-            <span class="control-name">Eliminación</span>
-          </label>
-
-          <label class="control-card" [class.selected]="accidentForm.get('CtrlS')?.value">
-            <mat-checkbox formControlName="CtrlS" color="primary"></mat-checkbox>
-            <span class="control-letter">S</span>
-            <span class="control-name">Sustitución</span>
-          </label>
-
-          <label class="control-card" [class.selected]="accidentForm.get('CtrlI')?.value">
-            <mat-checkbox formControlName="CtrlI" color="primary"></mat-checkbox>
-            <span class="control-letter">I</span>
-            <span class="control-name">Ingeniería de Control</span>
-          </label>
-
-          <label class="control-card" [class.selected]="accidentForm.get('CtrlA')?.value">
-            <mat-checkbox formControlName="CtrlA" color="primary"></mat-checkbox>
-            <span class="control-letter">A</span>
-            <span class="control-name">Administración</span>
-          </label>
-
-          <label class="control-card" [class.selected]="accidentForm.get('CtrlEPP')?.value">
-            <mat-checkbox formControlName="CtrlEPP" color="primary"></mat-checkbox>
-            <span class="control-letter epp">EPP</span>
-            <span class="control-name">Equipo de Protección Personal</span>
-          </label>
-        </div>
-
-        <mat-form-field appearance="outline" class="full-width">
-          <mat-label>Observaciones</mat-label>
-          <textarea matInput formControlName="Observaciones" rows="3"
-                    placeholder="Observaciones adicionales..."></textarea>
-        </mat-form-field>
-      </div>
-
-      <!-- Navegación entre pasos -->
-      <div class="form-navigation">
-        <div class="form-navigation__main">
-          <button mat-stroked-button type="button" (click)="prevStep()" *ngIf="currentStep > 0">
-            <mat-icon>arrow_back</mat-icon>
-            Anterior
-          </button>
-          <span class="spacer"></span>
-          <button mat-stroked-button type="button" (click)="onReset()" *ngIf="currentStep === 0 && !isEditMode">
-            <mat-icon>refresh</mat-icon>
-            Limpiar
-          </button>
-          <button mat-flat-button color="primary" type="button" (click)="nextStep()"
-                  *ngIf="currentStep < 4" [disabled]="!isStepValid(currentStep)">
-            Siguiente
-            <mat-icon>arrow_forward</mat-icon>
-          </button>
-        </div>
-        <div class="form-navigation__actions" *ngIf="isEditMode || currentStep === 4">
-          <button
-            *ngIf="isEditMode && mostrarBotonAnular"
-            mat-stroked-button
-            color="warn"
-            type="button"
-            [disabled]="isAnnuling || isLoading"
-            (click)="anularAccidente()">
-            <mat-icon>block</mat-icon>
-            Anular accidente
-          </button>
-          <button mat-flat-button color="primary" type="submit"
-                  [disabled]="isLoading">
-            <mat-icon>save</mat-icon>
-            {{ isEditMode ? 'Actualizar Accidente' : 'Guardar Registro' }}
-          </button>
-        </div>
-      </div>
-    </form>
-
-    <div *ngIf="isLoading" class="loading-overlay">
-      <mat-spinner diameter="48"></mat-spinner>
-      <p>Guardando...</p>
+        <!-- Checklist + progress -->
+        <section class="card sidebar-card">
+          <header class="sidebar-card__header">
+            <span class="eyebrow">COMPLETITUD</span>
+            <h3 class="sidebar-card__title">{{ completedStepsCount }} / 5 pasos</h3>
+          </header>
+          <div class="progress">
+            <div class="progress__bar" [style.width.%]="progressPercent"></div>
+          </div>
+          <ul class="checklist">
+            <li
+              *ngFor="let label of stepLabels; let i = index"
+              class="checklist__item"
+              [class.is-done]="isStepComplete(i)"
+              [class.is-current]="currentStep === i"
+            >
+              <span class="ms-r checklist__icon" aria-hidden="true">
+                {{ isStepComplete(i) ? 'check_circle' : (currentStep === i ? 'radio_button_checked' : 'radio_button_unchecked') }}
+              </span>
+              <span class="checklist__label">{{ label }}</span>
+            </li>
+          </ul>
+        </section>
+      </aside>
     </div>
-  </mat-card>
+
+    <!-- Footer sticky con acciones -->
+    <footer class="wizard-footer">
+      <div class="wizard-footer__left">
+        <app-btn variant="ghost" icon="arrow_back" (click)="goBack()">Cancelar</app-btn>
+        <span *ngIf="currentStep < 4" class="wizard-footer__hint">
+          Próximo paso: <strong>{{ stepLabels[currentStep + 1] }}</strong>
+        </span>
+      </div>
+      <div class="wizard-footer__right">
+        <app-btn
+          *ngIf="!isEditMode"
+          variant="secondary"
+          icon="save"
+          (click)="saveAndExit()"
+        >
+          Guardar y salir
+        </app-btn>
+        <app-btn
+          *ngIf="currentStep > 0"
+          variant="ghost"
+          icon="arrow_back"
+          (click)="prevStep()"
+        >
+          Anterior
+        </app-btn>
+        <app-btn
+          *ngIf="currentStep < 4"
+          variant="accent"
+          icon="arrow_forward"
+          [iconRight]="true"
+          [disabled]="!isStepValid(currentStep)"
+          (click)="nextStep()"
+        >
+          Continuar al paso {{ currentStep + 2 }}
+        </app-btn>
+        <app-btn
+          *ngIf="currentStep === 4"
+          variant="accent"
+          icon="check"
+          type="submit"
+          [formId]="'accidentForm'"
+          [loading]="isLoading"
+        >
+          {{ isEditMode ? 'Actualizar' : 'Guardar registro' }}
+        </app-btn>
+        <app-btn
+          *ngIf="isEditMode && mostrarBotonAnular"
+          variant="danger"
+          icon="block"
+          [disabled]="isAnnuling || isLoading"
+          (click)="anularAccidente()"
+        >
+          Anular
+        </app-btn>
+      </div>
+    </footer>
   </ng-container>
-</div>
+</section>

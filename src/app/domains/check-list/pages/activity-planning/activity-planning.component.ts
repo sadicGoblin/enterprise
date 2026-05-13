@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { Component, OnInit, OnDestroy, ViewChild, AfterViewInit } from '@angular/core';
 import { animate, state, style, transition, trigger } from '@angular/animations';
 import { CommonModule } from '@angular/common';
 import { MatDialog } from '@angular/material/dialog';
@@ -27,7 +27,10 @@ import { catchError, finalize } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { ProxyService } from '../../../../core/services/proxy.service';
-import { PlanificationGridComponent, GridActivity } from '../../components/planification-grid/planification-grid.component';
+import { PlanificationGridComponent, GridActivity, GridSummary } from '../../components/planification-grid/planification-grid.component';
+import { BtnComponent, KpiTileComponent, PillComponent } from '../../../../shared/ui';
+import { ProjectSelectionService } from '../../services/project-selection.service';
+import { Subscription } from 'rxjs';
 
 // Activity interface definition - extended from the one used in PlanificationTableComponent
 export interface Activity extends PlanificationActivity {
@@ -69,6 +72,9 @@ export interface Activity extends PlanificationActivity {
     CustomSelectComponent,
     PlanificationTableComponent,
     PlanificationGridComponent,
+    BtnComponent,
+    PillComponent,
+    KpiTileComponent,
   ],
   templateUrl: './activity-planning.component.html',
   styleUrls: ['./activity-planning.component.scss'],
@@ -80,7 +86,7 @@ export interface Activity extends PlanificationActivity {
     ]),
   ],
 })
-export class ActivityPlanningComponent implements OnInit, AfterViewInit {
+export class ActivityPlanningComponent implements OnInit, OnDestroy, AfterViewInit {
   // Toast notification properties
   showToast = false;
   toastMessage = '';
@@ -97,15 +103,32 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   
   // Flag to control table visibility
   showPlanificationTable = false;
+
+  /** Resumen emitido por <app-planification-grid> al cargar datos. */
+  gridSummary: GridSummary | null = null;
+
+  /** Vista activa del calendario. */
+  gridViewMode: 'daily' | 'weekly' = 'daily';
+
+  onGridSummaryChange(summary: GridSummary): void {
+    this.gridSummary = summary;
+  }
+
+  setGridViewMode(mode: 'daily' | 'weekly'): void {
+    this.gridViewMode = mode;
+  }
   
   @ViewChild('collaboratorSelect') collaboratorSelect!: CustomSelectComponent;
   @ViewChild(PlanificationTableComponent) planificationTable!: PlanificationTableComponent;
+  private obraSub?: Subscription;
+
   constructor(
     private controlService: ControlService,
     private dialog: MatDialog,
     private snackBar: MatSnackBar,
     private http: HttpClient,
-    private proxyService: ProxyService
+    private proxyService: ProxyService,
+    private projectSelection: ProjectSelectionService,
   ) {
     // Initialize with current date as default
     const now = new Date();
@@ -134,6 +157,13 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
       "idObra": 0,
       "idUsuario": userId || ''
     };
+
+    // Nota: el cableo de obra global como pre-llenado se removió por confundir
+    // al usuario. La pantalla solo empuja al servicio en onProjectSelectionChange.
+  }
+
+  ngOnDestroy(): void {
+    // sin suscripciones activas
   }
   
   /**
@@ -274,10 +304,13 @@ export class ActivityPlanningComponent implements OnInit, AfterViewInit {
   
   onProjectSelectionChange(selectedProject: SelectOption | null): void {
     console.log('Selected project:', selectedProject);
-    
+
     // Store the selected project ID and name
     this.selectedProjectId = selectedProject ? selectedProject.value : null;
     this.selectedProjectName = selectedProject ? selectedProject.label : null;
+
+    // DS §3.2 — propagar al obra selector global de la topbar.
+    this.projectSelection.setSelectedProjectId(this.selectedProjectId);
     
     // Reset activities when project changes
     this.activities = [];

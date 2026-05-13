@@ -1,58 +1,101 @@
-// Variables
-$primary-color: #1976d2;
-$secondary-color: #252a3e;
-$text-primary: #ffffff;
-$text-secondary: rgba(255, 255, 255, 0.7);
-$border-color: rgba(255, 255, 255, 0.1);
-$badge-bg: rgba(255, 255, 255, 0.02);
-$badge-color: #60a5fa;
-$hover-color: rgba(255, 255, 255, 0.05);
+// =============================================================================
+// dynamic-chart · retematizado con tokens del DS Inarco SSTMA
+// =============================================================================
 
-// KPI Dashboard Card - Dark style
+$text-primary: var(--slate-900);
+$text-secondary: var(--slate-500);
+$border-color: var(--slate-100);
+$badge-bg: var(--slate-50);
+$badge-color: var(--ink);
+$hover-color: var(--slate-50);
+
 .kpi-dashboard-card {
-  // Quitamos la altura máxima fija
-  // max-height: 200px;
   margin: 0 0 16px 0;
   padding: 0;
-  border-radius: 5px;
-  background: linear-gradient(145deg, #1e2132, #2d3042);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15), 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-radius: var(--radius-lg);
+  background: #fff;
+  border: 1px solid var(--slate-100);
+  box-shadow: var(--shadow-sm);
   overflow: hidden;
-  border: none;
-  
+
   // Chart Header
   .chart-header {
-    padding: 0px 16px;
+    padding: 8px 16px;
     margin: 0;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    min-height: 30px;
-    
+    min-height: 38px;
+    border-bottom: 1px solid var(--slate-100);
+
     .title-container {
       display: flex;
       flex: 1;
       align-items: center;
       justify-content: space-between;
     }
-    
+
     .chart-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      .editable-title {
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border-radius: var(--radius-sm);
+        padding: 2px 4px;
+
+        &:hover {
+          background-color: var(--slate-50);
+        }
+      }
+
+      .title-input {
+        background: #fff;
+        color: var(--slate-900);
+        border: 1.5px solid var(--ink);
+        border-radius: var(--radius-sm);
+        padding: 4px 8px;
+        font-size: var(--text-base);
+        font-weight: 500;
+        font-family: var(--font-text);
+        outline: none;
+        min-width: 200px;
+
+        &:focus {
+          box-shadow: 0 0 0 4px rgba(11, 27, 63, 0.10);
+        }
+      }
+
+      mat-icon {
+        font-size: 16px;
+        height: 16px;
+        width: 16px;
+        color: var(--slate-500);
+      }
+
       h3 {
         display: flex;
         align-items: center;
-        
+        margin: 0;
+        font-family: var(--font-display);
+        font-size: var(--text-xs);
+        font-weight: 600;
+        color: var(--slate-700);
+        letter-spacing: 0.10em;
+        text-transform: uppercase;
+
         .inline-details-button {
           margin-left: 8px;
           padding: 0;
           height: 24px;
           width: 24px;
           line-height: 24px;
-          color: rgba(255, 255, 255, 0.7);
-          
-          &:hover {
-            color: white;
-          }
-          
+          color: var(--slate-500);
+
+          &:hover { color: var(--ink); }
+
           .mat-icon {
             font-size: 18px;
             height: 18px;
@@ -61,226 +104,113 @@ $hover-color: rgba(255, 255, 255, 0.05);
         }
       }
     }
-    
+
     .action-buttons {
       display: flex;
       align-items: center;
       gap: 4px;
       height: 100%;
-      
+
       .details-button,
-      .export-button {
-        padding: 0;
-        height: 28px;
-        width: 28px;
-        line-height: 28px;
-        color: $text-primary;
-        opacity: 0.7;
-        transition: all 0.2s ease;
-        margin-top: 0;
-        
-        .mat-icon {
-          font-size: 20px;
-          height: 20px;
-          width: 20px;
-          line-height: 20px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-        }
-        
-        &:hover {
-          opacity: 1;
-          transform: scale(1.05);
-        }
-      }
-      
-      .export-button {
-        &:hover {
-          .mat-icon {
-            color: #4CAF50; // Verde para indicar descarga
-          }
-        }
-      }
-      
+      .export-button,
       .sort-button {
-        &:hover {
-          .mat-icon {
-            color: #2196F3; // Azul para indicar ordenamiento
-          }
-        }
-        
-        &.active {
-          opacity: 1;
-          background-color: rgba(33, 150, 243, 0.2);
-          border-radius: 4px;
-          
-          .mat-icon {
-            color: #2196F3 !important;
-          }
-        }
-      }
-    }
-    
-    .chart-actions {
-      display: flex;
-      align-items: center;
-      height: 100%;
-      
-      .details-button {
         padding: 0;
         height: 28px;
         width: 28px;
         line-height: 28px;
-        color: $text-primary;
-        opacity: 0.7;
-        transition: all 0.2s ease;
-        margin-top: 0;
-        
+        color: var(--slate-500);
+        transition: all 0.15s ease;
+        border-radius: var(--radius-sm);
+
         .mat-icon {
-          font-size: 20px;
-          height: 20px;
-          width: 20px;
-          line-height: 20px;
+          font-size: 18px;
+          height: 18px;
+          width: 18px;
+          line-height: 18px;
           display: flex;
           align-items: center;
           justify-content: center;
         }
-        
+
         &:hover {
-          opacity: 1;
-          transform: scale(1.05);
+          color: var(--ink);
+          background-color: var(--slate-50);
         }
+      }
+
+      .sort-button.active {
+        color: var(--ink);
+        background-color: var(--slate-100);
       }
     }
-    
-    .chart-title {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      
-      .editable-title {
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border-radius: 4px;
-        padding: 2px 4px;
-        
-        &:hover {
-          background-color: rgba(255, 255, 255, 0.1);
-          transform: scale(1.02);
-        }
-      }
-      
-      .title-input {
-        background: rgba(255, 255, 255, 0.9);
-        color: #333;
-        border: 2px solid #1976d2;
-        border-radius: 4px;
-        padding: 4px 8px;
-        font-size: 1.125rem;
-        font-weight: 500;
-        font-family: inherit;
-        outline: none;
-        min-width: 200px;
-        
-        &:focus {
-          border-color: #2196f3;
-          box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
-        }
-      }
-      
-      mat-icon {
-        font-size: 13px;
-        height: 13px;
-        width: 13px;
-        color: $text-primary;
-      }
-      
-      h3 {
-        margin: 0;
-        font-size: 11px !important;
-        font-weight: 400;
-        color: $text-primary;
-        letter-spacing: 0.5px;
-      }
-    }
-    
+
     .total-badge {
       display: flex;
       align-items: center;
       background-color: $badge-bg;
       padding: 2px 8px;
-      border-radius: 4px;
+      border-radius: var(--radius-sm);
       height: 22px;
-      
+      border: 1px solid var(--slate-100);
+
       .total-value {
+        font-family: var(--font-mono);
         font-weight: 600;
         font-size: 12px;
-        color: #60a5fa;
+        color: var(--ink);
         margin-right: 4px;
       }
-      
+
       .total-label {
         font-size: 10px;
         font-weight: 500;
-        color: $text-secondary;
+        color: var(--slate-500);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
       }
     }
   }
-  
-  // Chart Content
+
   .chart-content {
     padding: 0;
     overflow: hidden;
-    // Eliminamos restricción de altura fija
-    // height: calc(200px - 50px - 8px); // Total height minus header and padding
-    min-height: 142px; // Mantenemos una altura mínima
-    
+    min-height: 142px;
+
     .metrics-row {
       display: flex;
       height: 100%;
       padding: 0 8px;
       gap: 12px;
       width: 100%;
-      
-      &::-webkit-scrollbar {
-        height: 4px;
-        width: 4px;
-      }
-      
-      &::-webkit-scrollbar-thumb {
-        background-color: rgba(255, 255, 255, 0.2);
-        border-radius: 2px;
-      }
-      
-      // Equal columns (25%)
+
+      &::-webkit-scrollbar { height: 4px; width: 4px; }
+      &::-webkit-scrollbar-thumb { background-color: var(--slate-200); border-radius: 2px; }
+
       .column-equal {
         width: 25%;
         display: flex;
         flex-direction: column;
         height: 100%;
         overflow: hidden;
-        
+
         &:not(:last-child) {
           padding-right: 8px;
           border-right: 1px solid $border-color;
           margin-right: 4px;
         }
       }
-      
-      // Metrics and charts section
-      .metrics-section, .chart-container {
+
+      .metrics-section,
+      .chart-container {
         flex: 1 1 auto;
         width: 100%;
         padding: 8px;
         height: 50%;
         overflow: hidden;
         margin-bottom: 8px;
-        
-        &:last-child {
-          margin-bottom: 0;
-        }
-        
+
+        &:last-child { margin-bottom: 0; }
+
         .section-header {
           display: flex;
           align-items: center;
@@ -288,32 +218,34 @@ $hover-color: rgba(255, 255, 255, 0.05);
           margin-bottom: 8px;
           padding-bottom: 4px;
           border-bottom: 1px solid $border-color;
-          
+
           mat-icon {
-            font-size: 13px;
-            height: 13px;
-            width: 13px;
-            color: $text-secondary;
+            font-size: 14px;
+            height: 14px;
+            width: 14px;
+            color: var(--slate-500);
           }
-          
+
           span {
+            font-family: var(--font-text);
             font-size: 10px;
-            font-weight: 400;
-            color: $text-primary;
+            font-weight: 600;
+            color: var(--slate-700);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.10em;
           }
-          
+
           .count-indicator {
+            font-family: var(--font-mono);
             font-size: 10px;
-            color: $text-secondary;
+            color: var(--slate-500);
             margin-left: 4px;
           }
         }
-        
+
         .metrics-list {
           display: flex;
-          flex-direction: row; // Horizontal by default
+          flex-direction: row;
           flex-wrap: nowrap;
           gap: 0;
           height: calc(100% - 26px);
@@ -321,112 +253,97 @@ $hover-color: rgba(255, 255, 255, 0.05);
           overflow-y: hidden;
           white-space: nowrap;
           padding: 5px 0;
-          
+
           &.vertical-list {
-            flex-direction: column; // Vertical for 4-column layout
+            flex-direction: column;
             overflow-y: auto;
             overflow-x: hidden;
-            white-space: normal; // Allow text wrapping
+            white-space: normal;
             padding: 0;
             gap: 4px;
           }
-          
-          &.custom-scrollbar::-webkit-scrollbar {
-            height: 3px; // Adjusted for horizontal scroll
-            width: 3px;
-          }
-          
-          &.custom-scrollbar::-webkit-scrollbar-thumb {
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 2px;
-          }
-          
+
+          &.custom-scrollbar::-webkit-scrollbar { height: 3px; width: 3px; }
+          &.custom-scrollbar::-webkit-scrollbar-thumb { background-color: var(--slate-200); border-radius: 2px; }
+
           .metric-item {
             display: flex;
             align-items: center;
             gap: 8px;
-            background-color: transparent; // No background
+            background-color: transparent;
             padding: 2px 6px;
-            height: 14px;
-            flex: 0 0 auto; // Don't grow or shrink
+            height: 16px;
+            flex: 0 0 auto;
             position: relative;
             margin-right: 0;
             margin-bottom: 0;
             border-radius: 0;
-            transition: color 0.2s ease;
-            
-            // No vertical separator in vertical mode
+            transition: color 0.15s ease;
+
             .vertical-list & {
-              &:not(:last-child)::after {
-                display: none;
-              }
-              
-              // Bottom border in vertical mode
+              &:not(:last-child)::after { display: none; }
               &:not(:last-child) {
-                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                border-bottom: 1px solid var(--slate-100);
                 padding-bottom: 4px;
                 margin-bottom: 4px;
               }
             }
-            
-            // Vertical separator only for horizontal lists
+
             &:not(:last-child)::after {
               content: '|';
               position: absolute;
               right: -2px;
-              color: rgba(255, 255, 255, 0.3);
+              color: var(--slate-200);
               font-weight: 100;
             }
-            
-            &:hover {
-              color: #60a5fa;
-            }
-            
+
+            &:hover { color: var(--ink); }
+
             .metric-dot {
               width: 8px;
               height: 8px;
               border-radius: 50%;
               flex-shrink: 0;
-              box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
               margin-right: 2px;
             }
-            
+
             .metric-name {
-              font-size: 9px;
-              color: $text-primary;
+              font-family: var(--font-text);
+              font-size: 10px;
+              color: var(--slate-700);
               white-space: nowrap;
               overflow: hidden;
               text-overflow: ellipsis;
               text-transform: uppercase;
               font-weight: 600;
-              letter-spacing: 0.5px;
+              letter-spacing: 0.06em;
               max-width: 120px;
             }
-            
+
             .metric-value {
-              font-size: 10px;
+              font-family: var(--font-mono);
+              font-size: 11px;
               font-weight: 600;
-              color: #60a5fa;
+              color: var(--ink);
               margin-left: 4px;
               margin-right: 8px;
             }
           }
         }
 
-        // Pie chart specific styles
         .pie-chart-container {
           height: calc(100% - 50px);
           display: flex;
           align-items: center;
           justify-content: center;
-          
+
           .pie-chart-placeholder {
             width: 100%;
             height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
-            
+
             canvas {
               width: 100% !important;
               height: 100% !important;
@@ -437,27 +354,27 @@ $hover-color: rgba(255, 255, 255, 0.05);
       }
     }
   }
-  
-  // No data message
-  .no-data-message, .no-data-container {
+
+  .no-data-message,
+  .no-data-container {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     height: 200px;
     padding: 20px;
-    
+
     mat-icon {
-      font-size: 24px;
-      height: 24px;
-      width: 24px;
-      color: $text-secondary;
+      font-size: 28px;
+      height: 28px;
+      width: 28px;
+      color: var(--slate-300);
       margin-bottom: 8px;
     }
-    
+
     span {
-      font-size: 14px;
-      color: $text-secondary;
+      font-size: var(--text-base);
+      color: var(--slate-500);
     }
   }
 }
@@ -467,44 +384,39 @@ $hover-color: rgba(255, 255, 255, 0.05);
   flex-grow: 1;
   position: relative;
   min-height: 150px;
-  // Quitamos la altura máxima para permitir que crezca según el contenido
-  // max-height: 300px;
   height: auto;
   width: 100%;
   padding: 0;
-  
+
   canvas {
     max-width: 100%;
-    height: auto !important; // Forzar altura automática
+    height: auto !important;
   }
 }
 
-// Additional utility class
-.mt-4 {
-  margin-top: 1rem;
-}
+.mt-4 { margin-top: 1rem; }
 
-// Estilos para el footer con estadísticas
+// Footer con estadísticas
 .chart-footer {
   padding: 10px 16px;
-  border-top: 1px solid $border-color;
+  border-top: 1px solid var(--slate-100);
   margin-top: 8px;
-  background-color: $secondary-color;
-  border-radius: 0 0 5px 5px;
-  
+  background-color: var(--slate-50);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+
   .stats-container {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
     font-size: 12px;
-    
+
     .stats-left {
       display: flex;
       align-items: center;
       flex-wrap: nowrap;
     }
-    
+
     .stats-right {
       display: flex;
       align-items: center;
@@ -512,136 +424,139 @@ $hover-color: rgba(255, 255, 255, 0.05);
       justify-content: flex-end;
       gap: 4px;
     }
-    
+
     .stat-item {
       display: inline-flex;
       align-items: center;
       white-space: nowrap;
-      
+
       .stat-label {
-        color: $text-secondary;
+        color: var(--slate-500);
         margin-right: 4px;
         font-weight: 400;
+        text-transform: uppercase;
+        font-size: 10px;
+        letter-spacing: 0.06em;
       }
-      
+
       .stat-value {
+        font-family: var(--font-mono);
         font-weight: 600;
-        color: $text-primary;
+        color: var(--slate-900);
       }
-      
-      // No necesitamos reglas específicas aquí ya que aplicamos el color directamente desde el HTML
-      // Esto elimina la necesidad de tener colores hardcodeados en el CSS
     }
-    
+
     .stat-divider {
-      color: $border-color;
+      color: var(--slate-200);
       margin: 0 6px;
     }
   }
 }
 
-/* Estilos para la tabla mensual */
+// Tabla mensual
 .monthly-table-container {
   margin-top: 20px;
-  border-top: 1px solid $border-color;
-  
+  border-top: 1px solid var(--slate-100);
+
   .monthly-table-header {
     padding: 10px 15px;
-    background-color: rgba(255, 255, 255, 0.05);
-    
+    background-color: var(--slate-50);
+
     h4 {
       margin: 0;
-      font-size: 14px;
-      font-weight: 500;
-      color: $text-primary;
+      font-family: var(--font-display);
+      font-size: var(--text-xs);
+      font-weight: 600;
+      color: var(--slate-700);
+      text-transform: uppercase;
+      letter-spacing: 0.10em;
     }
   }
-  
+
   .monthly-table-content {
     padding: 10px;
     overflow-x: auto;
-    
-    &::-webkit-scrollbar {
-      height: 4px;
-      width: 4px;
-    }
-    
-    &::-webkit-scrollbar-thumb {
-      background-color: rgba(255, 255, 255, 0.2);
-      border-radius: 2px;
-    }
+
+    &::-webkit-scrollbar { height: 4px; width: 4px; }
+    &::-webkit-scrollbar-thumb { background-color: var(--slate-200); border-radius: 2px; }
   }
-  
+
   .monthly-data-table {
     width: 100%;
     border-collapse: collapse;
+    font-family: var(--font-mono);
     font-size: 12px;
-    color: $text-primary;
-    
+    color: var(--slate-900);
+
     th, td {
       text-align: center;
       padding: 6px 5px;
-      border: 1px solid $border-color;
+      border: 1px solid var(--slate-100);
     }
-    
+
     th {
-      background-color: $secondary-color;
-      color: $text-primary;
-      font-weight: 500;
+      background-color: var(--slate-50);
+      color: var(--slate-700);
+      font-family: var(--font-text);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.08em;
     }
-    
+
     .row-header {
-      background-color: $secondary-color;
-      color: $text-primary;
+      background-color: var(--slate-50);
+      color: var(--slate-700);
+      font-family: var(--font-text);
       text-align: left;
       padding-left: 10px;
-      font-weight: 500;
+      font-weight: 600;
     }
-    
+
     .total-column {
-      background-color: rgba(255, 255, 255, 0.05);
-      font-weight: 500;
+      background-color: var(--slate-50);
+      font-weight: 600;
     }
-    
-    /* Estilos para los valores según porcentaje */
+
+    // Estado semántico de la celda según porcentaje
     td.excellent {
-      background-color: rgba(76, 175, 80, 0.3);
-      color: #4CAF50;
+      background-color: rgba(31, 122, 75, 0.14);
+      color: var(--success);
     }
-    
+
     td.good {
-      background-color: rgba(139, 195, 74, 0.3);
-      color: #8BC34A;
+      background-color: rgba(31, 122, 75, 0.08);
+      color: var(--success);
     }
-    
+
     td.average {
-      background-color: rgba(255, 193, 7, 0.3);
-      color: #FFC107;
+      background-color: rgba(255, 198, 41, 0.20);
+      color: #8a6500;
     }
-    
+
     td.poor {
-      background-color: rgba(244, 67, 54, 0.3);
-      color: #F44336;
+      background-color: rgba(200, 50, 30, 0.12);
+      color: var(--danger);
     }
-    
+
     td.no-data {
-      background-color: rgba(224, 224, 224, 0.1);
-      color: rgba(255, 255, 255, 0.3);
+      background-color: var(--slate-50);
+      color: var(--slate-300);
     }
-    
+
     .total-row {
-      border-top: 2px solid rgba(255, 255, 255, 0.3);
+      border-top: 2px solid var(--slate-200);
     }
-    
+
     .total-row-header {
-      background-color: rgba(33, 150, 243, 0.6);
-      color: white;
+      background-color: var(--ink);
+      color: #fff;
       font-weight: 700;
     }
-    
+
     .total-cell {
       font-weight: 700;
-      background-color: rgba(255, 255, 255, 0.1) !important;
+      background-color: var(--slate-100) !important;
     }
   }
 }

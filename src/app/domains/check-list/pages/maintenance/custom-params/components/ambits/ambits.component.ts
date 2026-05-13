@@ -15,6 +15,7 @@ import { SharedDataService } from '../../../../../services/shared-data.service';
 import { MatDialog, MatDialogModule } from '@angular/material/dialog';
 import { ConfirmDialogComponent, ConfirmDialogData } from '../../../../../../../shared/components/confirm-dialog/confirm-dialog.component';
 import { environment } from '../../../../../../../../environments/environment';
+import { BtnComponent } from '../../../../../../../shared/ui';
 
 // Interfaz para los ámbitos
 interface AmbitItem {
@@ -60,7 +61,8 @@ interface ActionButton {
     MatProgressSpinnerModule,
     MatSnackBarModule,
     DataTableComponent,
-    MatDialogModule
+    MatDialogModule,
+    BtnComponent,
   ],
   templateUrl: './ambits.component.html',
   styleUrls: ['./ambits.component.scss']

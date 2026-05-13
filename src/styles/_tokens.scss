@@ -1,0 +1,172 @@
+// =============================================================================
+// Inarco SSTMA · Design tokens
+// Fuente de verdad: DESIGN_SYSTEM_INARCO_SSTMA.md (§1 Tokens)
+// No hardcodear hex en componentes — consumir siempre vía var(--token).
+// =============================================================================
+
+:root {
+  // ---------- Color · Marca ----------
+  --ink:          #0B1B3F;  // Inarco Navy — chrome, CTA primario, headings
+  --ink-2:        #142455;  // Hover/depth del navy
+  --ink-3:        #1C2F6B;  // Acento sutil sobre navy
+  --yellow:       #FFC629;  // Amarillo construcción — acento, máx 1 por pantalla
+  --yellow-deep:  #E0A500;  // Hover/text del amarillo
+
+  // ---------- Color · Neutros cálidos ----------
+  --paper:     #F6F4EF;  // Fondo de página (no blanco puro)
+  --paper-2:   #EFECE4;  // Fondo secundario
+  --slate-50:  #F3F4F8;  // Hover de filas, fondos sutiles
+  --slate-100: #E8EAF0;  // Bordes default
+  --slate-200: #D3D6E1;  // Bordes de input
+  --slate-300: #B7BBCD;  // Placeholders
+  --slate-500: #6C7290;  // Texto secundario
+  --slate-700: #404662;  // Texto regular
+  --slate-900: #15192A;  // Texto principal
+
+  // ---------- Color · Estado semántico ----------
+  --danger:   #C8321E;  // Peligro / accidente fatal / errores destructivos
+  --success:  #1F7A4B;  // Confirmaciones positivas
+  --info:     #1F5FB8;  // Información neutra
+  // Atención usa --yellow
+
+  // ---------- Tipografía · Familias ----------
+  --font-display: 'Space Grotesk', 'Helvetica Neue', Arial, sans-serif;
+  --font-text:    'DM Sans', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono:    'JetBrains Mono', 'Menlo', 'Consolas', monospace;
+
+  // ---------- Tipografía · Escala fija (no usar tamaños intermedios) ----------
+  --text-xs:      11px;    // Eyebrows en mayúsculas, helpers, footer de filas
+  --text-sm:      12.5px;  // Chips, paginación, metadatos
+  --text-base:    13.5px;  // Body principal, celdas de tabla
+  --text-md:      16px;    // Subtítulos de card
+  --text-lg:      22px;    // H2 de sección
+  --text-xl:      32px;    // H1 de página
+  --text-display: 44px;    // Títulos hero (rango 44–56)
+
+  // ---------- Espaciado · Base 4 ----------
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  // ---------- Radios ----------
+  --radius-sm:   6px;   // Inputs, botones pequeños, chips
+  --radius-md:   8px;   // Botones, filtros
+  --radius-lg:   10px;  // Cards pequeñas, KPIs
+  --radius-xl:   14px;  // Paneles, cards principales
+  --radius-pill: 999px;
+
+  // ---------- Sombras ----------
+  --shadow-sm: 0 1px 0 rgba(11, 27, 63, 0.02);    // Cards
+  --shadow-md: 0 4px 12px rgba(11, 27, 63, 0.06); // Modales
+  --shadow-lg: 0 12px 32px rgba(11, 27, 63, 0.12); // Popovers
+
+  // ---------- Iconografía ----------
+  --icon-size-default: 18px;
+  --icon-size-sm:      15px;
+
+  // ---------------------------------------------------------------------------
+  // Tokens semánticos · capa de personalización
+  // Estas variables mapean primitivas (--ink, --yellow, --slate-*) a roles de
+  // UI para que un modo de "personalización" futuro pueda cambiar la apariencia
+  // sin tocar las primitivas ni los componentes.
+  // ---------------------------------------------------------------------------
+
+  // Surfaces (fondos)
+  --surface:           #fff;                  // Card / panel principal
+  --surface-muted:     var(--slate-50);       // Footer card / zona secundaria
+  --surface-page:      var(--paper);          // Fondo de página
+  --surface-strong:    var(--ink);            // Highlight navy (hero cards)
+
+  // Texto
+  --text-primary:      var(--slate-900);      // Headings, valores prominentes
+  --text-secondary:    var(--slate-700);      // Body
+  --text-muted:        var(--slate-500);      // Captions, eyebrow, descripción
+
+  // Bordes
+  --border-subtle:     var(--slate-100);      // Card border default
+  --border-strong:     var(--slate-200);      // Inputs, dividers
+
+  // Botones — primary (navy)
+  --btn-primary-bg:    var(--ink);
+  --btn-primary-fg:    #fff;
+  --btn-primary-bg-hover: var(--ink-2);
+
+  // Botones — accent (CTA amarillo)
+  --btn-accent-bg:     var(--yellow);
+  --btn-accent-fg:     var(--ink);
+  --btn-accent-bg-hover: var(--yellow-deep);
+
+  // Botones — secondary (blanco + borde)
+  --btn-secondary-bg:  #fff;
+  --btn-secondary-fg:  var(--ink);
+  --btn-secondary-border: var(--slate-200);
+
+  // Botones — ghost (transparente)
+  --btn-ghost-bg:      transparent;
+  --btn-ghost-fg:      var(--ink);
+  --btn-ghost-bg-hover: var(--slate-50);
+
+  // Botones — danger
+  --btn-danger-bg:     var(--danger);
+  --btn-danger-fg:     #fff;
+  --btn-danger-bg-hover: #b02b18;
+
+  // Pills (chips de estado)
+  --pill-neutral-bg:   var(--slate-100);
+  --pill-neutral-fg:   var(--slate-700);
+
+  // Focus ring (consistente en todo el sistema)
+  --focus-ring:        0 0 0 3px rgba(11, 27, 63, 0.12);
+}
+
+// =============================================================================
+// Iconografía · Material Symbols Rounded (familia única del nuevo DS)
+// Uso: <span class="ms-r">warning</span>
+// fill activado: <span class="ms-r is-filled">check_circle</span>
+// =============================================================================
+.ms-r,
+.material-symbols-rounded {
+  font-family: 'Material Symbols Rounded';
+  font-weight: 400;
+  font-style: normal;
+  font-size: var(--icon-size-default);
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+.ms-r.is-filled,
+.material-symbols-rounded.is-filled {
+  font-variation-settings:
+    'FILL' 1,
+    'wght' 400,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+// =============================================================================
+// Utilidad · Datos en monoespaciada (IDs, fechas, horas, contadores)
+// =============================================================================
+.mono,
+.is-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
